@@ -6,7 +6,7 @@ The design system for an original, mobile-first property marketplace serving Kol
 
 Everything here is built for that loop. If a component does not help a buyer find a property, help a seller publish one, or help an admin keep the marketplace honest, it is not in V1.
 
-> **The product name is not yet decided.** "Kolkata Property Marketplace" is a working label. The palette, type and components below are deliberately name-independent — a wordmark drops into the header without any token changing. Naming is open decision **D-17** in the project roadmap.
+> **The product name is not yet decided.** The working name is now **GharBazaar** (it replaced the earlier "Kolkata Property Marketplace" / "KPM" label); the client has not approved it, so **D-17** stays open. The palette, type and components below are deliberately name-independent — the wordmark drops into the header without any token changing. Older headings and the compiled `Kolkata-Marketplace-Design-System.html` still carry the previous label; the application itself reads its brand only from `lib/brand.ts`.
 
 ---
 

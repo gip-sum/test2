@@ -87,6 +87,11 @@ export function Footer() {
             content rules but do not verify ownership, documents, measurements or prices.
             Confirm these independently before any payment.
           </p>
+          {BRAND.isPlaceholder ? (
+            <p className="mt-1.5 text-caption text-ink-500">
+              {BRAND.name} is a temporary working name. The final brand has not been chosen.
+            </p>
+          ) : null}
         </div>
       </div>
     </footer>

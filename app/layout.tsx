@@ -16,13 +16,17 @@ export const metadata: Metadata = {
     default: `${BRAND.name} — ${BRAND.tagline}`,
     template: `%s | ${BRAND.shortName}`,
   },
-  description: BRAND.tagline,
+  description: BRAND.description,
   applicationName: BRAND.name,
   openGraph: {
     type: 'website',
     siteName: BRAND.name,
     locale: 'en_IN',
   },
+  // The card image itself comes from app/opengraph-image.png by file
+  // convention; Twitter needs the card type declared or it degrades to a
+  // thumbnail even when an image is present.
+  twitter: { card: 'summary_large_image' },
   // The placeholder origin must never be indexed. Phase 8 flips this once a
   // real domain exists.
   robots: BRAND.isPlaceholder ? { index: false, follow: false } : undefined,

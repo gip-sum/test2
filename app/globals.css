@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/*  Kolkata Property Marketplace — token layer
+/*  GharBazaar — token layer
     ------------------------------------------------------------------
     Single source of truth for colour, type, radius and elevation.
     Tailwind v4 emits each @theme entry as a CSS custom property AND a
@@ -16,8 +16,21 @@
       C7  radius scale trimmed from six steps to four
 */
 
-/* Dark mode is attribute-driven so the toggle can beat the OS setting. */
-@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+/* The `dark:` utility variant must match how the tokens below resolve:
+   an explicit data-theme="dark" wins, and failing that the OS preference
+   applies unless the user has explicitly chosen light. Covering only the
+   attribute would make dark: utilities silently no-op for the majority of
+   dark-mode users, who never set an explicit preference. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
 
 @theme {
   /* ---- Type families -------------------------------------------------

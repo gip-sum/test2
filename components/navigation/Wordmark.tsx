@@ -1,26 +1,49 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { BRAND } from '@/lib/brand'
 
 /**
- * PLACEHOLDER wordmark.
+ * Header identity.
  *
- * The mark is a token-coloured geometric form, not a designed logo — the
- * production brand has not been chosen. Swapping it means replacing this
- * component and the values in lib/brand.ts; nothing else in the app knows
- * the brand's name.
+ * Two files rather than one image plus a CSS filter: see lib/brand.ts for
+ * why the dark lockup is a real recolour. They swap on the `dark:` variant,
+ * which resolves exactly the way the colour tokens do — an explicit
+ * data-theme wins, the OS preference applies otherwise.
+ *
+ * Both are in the DOM, so both are fetched. At this size each is a couple
+ * of kilobytes once next/image re-encodes it, which is a fair price for
+ * never flashing the wrong lockup.
+ *
+ * The link carries the accessible name, so both images are decorative and
+ * alt is empty — an alt here would have a screen reader read the brand
+ * twice.
  */
-export function Wordmark({ compact = false }: { compact?: boolean }) {
+const HEIGHT = 30
+const WIDTH = Math.round((BRAND.logo.width / BRAND.logo.height) * HEIGHT)
+
+export function Wordmark() {
   return (
     <Link
       href="/"
-      className="flex shrink-0 items-center gap-2 rounded-md font-display text-heading-3 font-bold text-ink-900"
+      className="flex shrink-0 items-center rounded-md"
       aria-label={`${BRAND.name} — home`}
     >
-      <span
-        aria-hidden
-        className="size-6 rounded-sm bg-brand-600 shadow-[inset_-8px_8px_0_var(--color-supply-600)]"
+      <Image
+        src={BRAND.logo.light}
+        alt=""
+        width={WIDTH}
+        height={HEIGHT}
+        loading="eager"
+        className="h-[30px] w-auto dark:hidden"
       />
-      <span className={compact ? 'sr-only sm:not-sr-only' : undefined}>{BRAND.shortName}</span>
+      <Image
+        src={BRAND.logo.dark}
+        alt=""
+        width={WIDTH}
+        height={HEIGHT}
+        loading="eager"
+        className="hidden h-[30px] w-auto dark:block"
+      />
     </Link>
   )
 }
