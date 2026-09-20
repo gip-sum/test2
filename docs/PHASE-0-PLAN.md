@@ -322,7 +322,7 @@ The trade is deliberate: a marketplace that feels thin on launch day does not ge
 
 ## 6. Screen map — revised
 
-**28 screens.** Additions over the previous draft are marked ★.
+**31 screens.** Additions over the previous draft are marked ★.
 
 | # | Screen | Route | Render | Access | Indexed |
 |---|---|---|---|---|---|
