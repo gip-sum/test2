@@ -1,0 +1,44 @@
+<!-- @dsCard group="Feedback" height=330 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.es{max-width:400px;padding:24px 20px;text-align:center;background:var(--surface-000);
+  border:1px solid var(--border-subtle);border-radius:var(--radius-lg)}
+.es__art{width:120px;height:70px;display:block;margin:0 auto 14px}
+.es__t{margin:0 0 6px;font-family:var(--font-display,Archivo,sans-serif);font-size:18px;font-weight:700;color:var(--ink-900)}
+.es__d{margin:0 0 16px;font-size:13px;line-height:20px;color:var(--ink-500)}
+.es__acts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.b{font-family:inherit;font-size:13px;font-weight:600;height:38px;padding:0 14px;cursor:pointer;
+  border-radius:var(--radius-md);border:1px solid transparent}
+.b--pri{background:var(--brand-600);color:var(--on-brand)}
+.b--sec{background:transparent;color:var(--ink-900);border-color:var(--border-strong)}
+.b--ghost{background:transparent;color:var(--brand-600)}
+.es__alt{margin-top:16px;padding:12px;background:var(--surface-100);border-radius:var(--radius-md)}
+.es__altt{margin:0 0 6px;font-size:13px;color:var(--ink-700)}
+.es__save{margin-top:8px}
+</style>
+<div class="es">
+  <svg class="es__art" viewBox="0 0 120 70" aria-hidden="true">
+    <rect x="14" y="26" width="26" height="40" rx="3" fill="var(--brand-600)" opacity=".18"/>
+    <rect x="46" y="14" width="30" height="52" rx="3" fill="var(--brand-600)" opacity=".28"/>
+    <rect x="82" y="34" width="24" height="32" rx="3" fill="var(--brand-600)" opacity=".14"/>
+    <circle cx="86" cy="22" r="11" fill="none" stroke="var(--ink-500)" stroke-width="2.4"/>
+    <path d="M94 30l8 8" stroke="var(--ink-500)" stroke-width="2.4" stroke-linecap="round"/>
+  </svg>
+  <h3 class="es__t">No properties match all your filters</h3>
+  <p class="es__d">Your budget of <strong>₹40 L – ₹50 L</strong> is the most restrictive filter here.</p>
+  <div class="es__acts"><button class="b b--pri">Raise budget to ₹62 L</button><button class="b b--sec">Clear budget</button></div>
+  <div class="es__alt"><p class="es__altt"><strong class="tnum">12</strong> properties within 5 km of New Town</p><button class="b b--ghost">Widen the search area</button></div>
+  <button class="b b--ghost es__save">Save this search and get alerts</button>
+</div>

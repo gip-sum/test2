@@ -1,0 +1,66 @@
+<!-- @dsCard group="Seller & admin" height=250 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.st{max-width:560px}
+.st__l{display:flex;gap:4px;list-style:none;margin:0;padding:0;flex-wrap:wrap}
+.st__i{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--ink-500);
+  padding:6px 10px 6px 6px;border-radius:var(--radius-pill)}
+.st__n{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:700;
+  background:var(--surface-200);color:var(--ink-500)}
+.st__i--done{color:var(--trust-600)}
+.st__i--done .st__n{background:var(--trust-100);color:var(--trust-600)}
+.st__i--on{color:var(--brand-600);background:var(--brand-100)}
+.st__i--on .st__n{background:var(--brand-600);color:var(--on-brand)}
+.st__save{display:inline-flex;align-items:center;gap:6px;margin:10px 0 0;font-size:12px;color:var(--ink-500)}
+.st__dot{width:7px;height:7px;border-radius:50%;background:var(--trust-600)}
+.stm{max-width:400px;padding:14px 16px;background:var(--surface-000);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-md)}
+.stm__top{display:flex;justify-content:space-between;align-items:center}
+.stm__c{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-500)}
+.stm__top .st__save{margin:0}
+.stm__bar{height:4px;background:var(--surface-200);border-radius:2px;margin:10px 0;overflow:hidden}
+.stm__bar span{display:block;height:100%;background:var(--brand-600)}
+.stm__t{margin:0;font-family:var(--font-display,Archivo,sans-serif);font-size:20px;font-weight:600}
+.cs{max-width:400px;margin-top:16px;padding:14px 16px;background:var(--supply-100);border-radius:var(--radius-md)}
+.cs__h{display:flex;justify-content:space-between;align-items:baseline}
+.cs__l{font-size:13px;font-weight:600;color:var(--ink-900)}
+.cs__v{font-size:17px;font-weight:700;color:var(--supply-600)}
+.cs__bar{height:6px;background:#0000001a;border-radius:3px;margin:8px 0 10px;overflow:hidden}
+.cs__bar span{display:block;height:100%;background:var(--supply-600);border-radius:3px}
+.cs__n{margin:0;font-size:12px;line-height:17px;color:var(--ink-700)}
+</style>
+<p class="lbl">Desktop</p>
+<div class="st">
+  <ol class="st__l">
+    <li class="st__i st__i--done"><span class="st__n">✓</span>Basics</li>
+    <li class="st__i st__i--done"><span class="st__n">✓</span>Location</li>
+    <li class="st__i st__i--on"><span class="st__n">3</span>Profile</li>
+    <li class="st__i"><span class="st__n">4</span>Photos</li>
+    <li class="st__i"><span class="st__n">5</span>Pricing</li>
+    <li class="st__i"><span class="st__n">6</span>Preview</li>
+  </ol>
+  <p class="st__save"><span class="st__dot"></span>Saved just now</p>
+</div>
+<p class="lbl" style="margin-top:20px">Phone</p>
+<div class="stm">
+  <div class="stm__top"><span class="stm__c">Step 3 of 6</span><span class="st__save"><span class="st__dot"></span>Saved</span></div>
+  <div class="stm__bar"><span style="width:42%"></span></div>
+  <h3 class="stm__t">Property profile</h3>
+</div>
+<div class="cs">
+  <div class="cs__h"><span class="cs__l">Listing strength</span><span class="cs__v tnum disp">68%</span></div>
+  <div class="cs__bar"><span style="width:68%"></span></div>
+  <p class="cs__n">Add a floor plan — listings with one get <strong>18% more enquiries</strong></p>
+</div>

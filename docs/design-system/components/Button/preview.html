@@ -1,0 +1,51 @@
+<!-- @dsCard group="Actions" height=220 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .col{display:flex;flex-direction:column;gap:12px}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.btn{font-family:inherit;font-size:13px;line-height:16px;font-weight:600;letter-spacing:.02em;
+  border-radius:var(--radius-md);border:1px solid transparent;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:background .12s ease}
+.btn--sm{height:32px;padding:0 12px}
+.btn--md{height:40px;padding:0 16px}
+.btn--lg{height:48px;padding:0 24px;font-size:15px}
+.btn--primary{background:var(--brand-600);color:var(--on-brand)}
+.btn--primary:hover{background:var(--brand-700)}
+.btn--supply{background:var(--supply-600);color:var(--on-supply)}
+.btn--secondary{background:transparent;color:var(--ink-900);border-color:var(--border-strong)}
+.btn--secondary:hover{border-color:var(--ink-500)}
+.btn--tertiary{background:transparent;color:var(--brand-600);padding:0 8px}
+.btn--danger{background:var(--danger-600);color:#fff}
+.btn[disabled]{opacity:var(--opacity-disabled);cursor:not-allowed}
+.btn--loading{pointer-events:none}
+.spin{width:14px;height:14px;border:2px solid currentColor;border-right-color:transparent;
+  border-radius:50%;animation:sp .7s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+<p class="lbl">Variants</p>
+<div class="row">
+  <button class="btn btn--primary btn--md">Enquire now</button>
+  <button class="btn btn--supply btn--md">Post property</button>
+  <button class="btn btn--secondary btn--md">View phone</button>
+  <button class="btn btn--tertiary btn--md">Skip for now</button>
+  <button class="btn btn--danger btn--md">Report</button>
+</div>
+<p class="lbl" style="margin-top:20px">Sizes &amp; states</p>
+<div class="row">
+  <button class="btn btn--primary btn--sm">Small</button>
+  <button class="btn btn--primary btn--md">Medium</button>
+  <button class="btn btn--primary btn--lg">Large</button>
+  <button class="btn btn--primary btn--md" disabled>Disabled</button>
+  <button class="btn btn--primary btn--md btn--loading"><span class="spin"></span><span>Publishing</span></button>
+</div>

@@ -1,0 +1,25 @@
+{
+  "v": 3,
+  "layout": "files",
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-09-20T13:05:00Z"
+  },
+  "title": "Kolkata Property Marketplace",
+  "namespace": "KPM",
+  "libraries": [],
+  "sections": {},
+  "groups": [],
+  "assetGroups": {},
+  "blobs": {},
+  "docs": {
+    "readme": "project/README.md",
+    "sections": []
+  },
+  "lastChange": {
+    "by": "Claude",
+    "at": "2026-09-20T15:05:00Z",
+    "via": "Claude Code",
+    "note": "Renamed the Badge/StatusPill card group to Indicators; it collided with the Foundations token section."
+  }
+}

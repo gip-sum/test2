@@ -1,0 +1,48 @@
+<!-- @dsCard group="Inputs" height=200 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .col{display:flex;flex-direction:column;gap:12px}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.chip{font-family:inherit;font-size:13px;font-weight:600;letter-spacing:.02em;height:36px;padding:0 14px;
+  display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--ink-900);
+  background:var(--surface-000);border:1px solid var(--border-subtle);border-radius:var(--radius-pill)}
+.chip:hover{border-color:var(--border-strong)}
+.chip--on{background:var(--brand-100);border-color:var(--brand-600);color:var(--brand-600)}
+.chip__n{font-size:12px;font-weight:500;color:var(--ink-500);font-variant-numeric:tabular-nums}
+.chip--on .chip__n{color:var(--brand-600)}
+.chip[disabled]{opacity:var(--opacity-disabled);cursor:not-allowed}
+.ap{font-size:13px;font-weight:500;height:32px;padding:0 4px 0 12px;display:inline-flex;align-items:center;gap:2px;
+  background:var(--surface-200);border-radius:var(--radius-pill);color:var(--ink-900)}
+.ap__x{width:24px;height:24px;border:0;background:transparent;cursor:pointer;color:var(--ink-500);
+  font-size:16px;line-height:1;border-radius:50%}
+.ap__x:hover{background:var(--border-subtle);color:var(--ink-900)}
+.ap__clear{font-family:inherit;font-size:13px;font-weight:600;color:var(--brand-600);background:none;
+  border:0;cursor:pointer;padding:0 8px;height:32px}
+</style>
+<p class="lbl">Filter chips — inside the filter panel</p>
+<div class="row" style="gap:8px">
+  <button class="chip">1 BHK <span class="chip__n">412</span></button>
+  <button class="chip chip--on" aria-pressed="true">2 BHK <span class="chip__n">1,284</span></button>
+  <button class="chip chip--on" aria-pressed="true">3 BHK <span class="chip__n">906</span></button>
+  <button class="chip">4 BHK <span class="chip__n">147</span></button>
+  <button class="chip" disabled>5+ BHK <span class="chip__n">0</span></button>
+</div>
+<p class="lbl" style="margin-top:20px">Applied chips — above the results</p>
+<div class="row" style="gap:8px">
+  <span class="ap">New Town<button class="ap__x" aria-label="Remove New Town">×</button></span>
+  <span class="ap">₹40L – ₹60L<button class="ap__x" aria-label="Remove budget">×</button></span>
+  <span class="ap">2, 3 BHK<button class="ap__x" aria-label="Remove configuration">×</button></span>
+  <span class="ap">Ready to move<button class="ap__x" aria-label="Remove status">×</button></span>
+  <button class="ap__clear">Clear all</button>
+</div>

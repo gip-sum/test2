@@ -1,0 +1,33 @@
+<!-- @dsCard group="Feedback" height=250 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.tt__wrap{display:flex;flex-direction:column;gap:10px;max-width:420px}
+.tt{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface-raised);
+  border:1px solid var(--border-subtle);border-radius:var(--radius-md);box-shadow:var(--shadow-2)}
+.tt--err{border-color:var(--danger-600)}
+.tt__ic{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:700;flex:none}
+.tt__ic--ok{background:var(--trust-100);color:var(--trust-600)}
+.tt__ic--info{background:var(--brand-100);color:var(--brand-600)}
+.tt__ic--err{background:var(--danger-100);color:var(--danger-600)}
+.tt__t{flex:1;font-size:13px;line-height:19px;color:var(--ink-900)}
+.tt__a{font-family:inherit;font-size:13px;font-weight:600;color:var(--brand-600);background:none;border:0;
+  cursor:pointer;padding:6px 8px;flex:none}
+</style>
+<div class="tt__wrap">
+  <div class="tt" role="status"><span class="tt__ic tt__ic--ok">✓</span><span class="tt__t">Saved to your shortlist</span><button class="tt__a">Undo</button></div>
+  <div class="tt" role="status"><span class="tt__ic tt__ic--ok">✓</span><span class="tt__t">Published — your listing is being reviewed</span></div>
+  <div class="tt" role="status"><span class="tt__ic tt__ic--info">i</span><span class="tt__t">Phone number copied</span></div>
+  <div class="tt tt--err" role="status"><span class="tt__ic tt__ic--err">!</span><span class="tt__t">3 of 12 photos didn’t upload</span><button class="tt__a">Retry</button></div>
+</div>

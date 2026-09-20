@@ -1,0 +1,56 @@
+<!-- @dsCard group="Search & filters" height=440 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.fs{max-width:400px;background:var(--surface-000);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-xl);overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow-3)}
+.fs__h{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border-subtle)}
+.fs__x{width:36px;height:36px;border:0;background:transparent;cursor:pointer;font-size:22px;line-height:1;color:var(--ink-700)}
+.fs__t{flex:1;margin:0;font-size:17px;font-weight:600}
+.fs__clr{font-family:inherit;font-size:13px;font-weight:600;color:var(--brand-600);background:none;border:0;cursor:pointer;padding:8px}
+.fs__b{padding:4px 16px 16px;max-height:260px;overflow:auto}
+.fs__s{padding:14px 0;border-bottom:1px solid var(--border-subtle)}
+.fs__s:last-child{border-bottom:0}
+.fs__l{margin:0 0 10px;font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--ink-900)}
+.rc__track{position:relative;height:4px;background:var(--surface-200);border-radius:2px;margin:16px 10px 10px}
+.rc__fill{position:absolute;left:22%;right:42%;top:0;bottom:0;background:var(--brand-600);border-radius:2px}
+.rc__h{position:absolute;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;background:var(--surface-000);
+  border:2px solid var(--brand-600);border-radius:50%}
+.fs__rng{display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:var(--ink-900);padding:0 2px}
+.chip{font-family:inherit;font-size:13px;font-weight:600;height:36px;padding:0 13px;display:inline-flex;align-items:center;
+  gap:6px;cursor:pointer;color:var(--ink-900);background:var(--surface-000);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-pill)}
+.chip--on{background:var(--brand-100);border-color:var(--brand-600);color:var(--brand-600)}
+.chip__n{font-size:12px;font-weight:500;color:var(--ink-500);font-variant-numeric:tabular-nums}
+.chip--on .chip__n{color:var(--brand-600)}
+.chip[disabled]{opacity:var(--opacity-disabled);cursor:not-allowed}
+.fs__f{padding:12px 16px;border-top:1px solid var(--border-subtle);background:var(--surface-000)}
+.fs__go{width:100%;height:48px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;
+  background:var(--brand-600);color:var(--on-brand);border:0;border-radius:var(--radius-md)}
+</style>
+<div class="fs">
+  <header class="fs__h"><button class="fs__x" aria-label="Close">×</button><h3 class="fs__t">Filters</h3><button class="fs__clr">Clear all</button></header>
+  <div class="fs__b">
+    <section class="fs__s"><p class="fs__l">Budget</p>
+      <div class="rc__track"><div class="rc__fill"></div><span class="rc__h" style="left:22%"></span><span class="rc__h" style="left:58%"></span></div>
+      <div class="fs__rng tnum"><span>₹40 L</span><span>₹62.5 L</span></div></section>
+    <section class="fs__s"><p class="fs__l">Bedrooms</p>
+      <div class="row" style="gap:8px"><button class="chip">1 BHK<span class="chip__n">412</span></button><button class="chip chip--on">2 BHK<span class="chip__n">1,284</span></button><button class="chip chip--on">3 BHK<span class="chip__n">906</span></button><button class="chip" disabled>5+<span class="chip__n">0</span></button></div></section>
+    <section class="fs__s"><p class="fs__l">Construction status</p>
+      <div class="row" style="gap:8px"><button class="chip chip--on">Ready to move<span class="chip__n">1,902</span></button><button class="chip">Under construction<span class="chip__n">640</span></button></div></section>
+    <section class="fs__s"><p class="fs__l">Posted by</p>
+      <div class="row" style="gap:8px"><button class="chip chip--on">Owner<span class="chip__n">704</span></button><button class="chip">Agent<span class="chip__n">1,512</span></button><button class="chip">Builder<span class="chip__n">326</span></button></div></section>
+  </div>
+  <footer class="fs__f"><button class="fs__go">Show 248 properties</button></footer>
+</div>

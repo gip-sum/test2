@@ -1,0 +1,34 @@
+<!-- @dsCard group="Feedback" height=330 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.sk__wrap{display:flex;flex-direction:column;gap:10px;max-width:440px}
+.sk{display:flex;background:var(--surface-000);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg);overflow:hidden}
+.sk__m{flex:0 0 40%;max-width:160px;aspect-ratio:4/3;background:var(--surface-200)}
+.sk__b{flex:1;padding:12px;display:flex;flex-direction:column;gap:8px}
+.sk__l{display:block;height:13px;border-radius:var(--radius-xs);background:var(--surface-200)}
+.sk__a{display:flex;gap:8px;margin-top:auto}
+.sk__btn{flex:1;height:34px;border-radius:var(--radius-md);background:var(--surface-200)}
+.sk__l,.sk__btn,.sk__m{background-image:linear-gradient(90deg,transparent,#ffffff59,transparent);
+  background-size:200% 100%;background-repeat:no-repeat;animation:sh 1.3s linear infinite}
+@keyframes sh{0%{background-position:-120% 0}100%{background-position:220% 0}}
+@media (prefers-reduced-motion:reduce){.sk__l,.sk__btn,.sk__m{background-image:none;animation:none}}
+.sk__note{margin:14px 0 0;font-size:12px;color:var(--ink-500)}
+</style>
+<div class="sk__wrap" aria-hidden="true">
+  <div class="sk"><div class="sk__m"></div><div class="sk__b"><span class="sk__l" style="width:38%;height:20px"></span><span class="sk__l" style="width:66%"></span><span class="sk__l" style="width:52%"></span><span class="sk__l" style="width:44%;height:11px"></span><div class="sk__a"><span class="sk__btn"></span><span class="sk__btn"></span></div></div></div>
+  <div class="sk"><div class="sk__m"></div><div class="sk__b"><span class="sk__l" style="width:44%;height:20px"></span><span class="sk__l" style="width:60%"></span><span class="sk__l" style="width:48%"></span><span class="sk__l" style="width:40%;height:11px"></span><div class="sk__a"><span class="sk__btn"></span><span class="sk__btn"></span></div></div></div>
+</div>
+<p class="sk__note">Announced once to screen readers: “Loading properties”</p>

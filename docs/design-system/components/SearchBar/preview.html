@@ -1,0 +1,54 @@
+<!-- @dsCard group="Search & filters" height=260 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.sb{max-width:620px}
+.sb__tabs{display:inline-flex;gap:2px;background:var(--surface-200);padding:3px;border-radius:var(--radius-pill);margin-bottom:10px}
+.sb__tab{font-family:inherit;font-size:13px;font-weight:600;height:32px;padding:0 20px;cursor:pointer;
+  border:0;background:transparent;color:var(--ink-700);border-radius:var(--radius-pill)}
+.sb__tab--on{background:var(--surface-000);color:var(--ink-900);box-shadow:var(--shadow-1)}
+.sb__bar{display:flex;gap:6px;padding:6px;background:var(--surface-000);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg);flex-wrap:wrap}
+.sb__loc{flex:1;min-width:190px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:4px 6px}
+.sb__c{display:inline-flex;align-items:center;gap:2px;height:28px;padding:0 4px 0 10px;font-size:13px;font-weight:500;
+  background:var(--brand-100);color:var(--brand-600);border-radius:var(--radius-pill)}
+.sb__cx{width:20px;height:20px;border:0;background:transparent;cursor:pointer;color:inherit;font-size:14px;line-height:1}
+.sb__in{flex:1;min-width:110px;border:0;background:transparent;font-family:inherit;font-size:14px;color:var(--ink-900);height:28px}
+.sb__in::placeholder{color:var(--ink-500)}
+.sb__sel{font-family:inherit;font-size:13px;font-weight:500;height:44px;padding:0 10px;color:var(--ink-900);
+  background:var(--surface-000);border:1px solid var(--border-subtle);border-radius:var(--radius-sm)}
+.sb__go{font-family:inherit;font-size:14px;font-weight:600;height:44px;padding:0 24px;cursor:pointer;
+  background:var(--brand-600);color:var(--on-brand);border:0;border-radius:var(--radius-md)}
+.sbm{display:flex;align-items:center;gap:12px;width:100%;max-width:400px;padding:10px 14px;cursor:pointer;text-align:left;
+  background:var(--surface-000);border:1px solid var(--border-subtle);border-radius:var(--radius-pill);
+  font-family:inherit;color:var(--ink-700);box-shadow:var(--shadow-1)}
+.sbm__t{display:flex;flex-direction:column;min-width:0}
+.sbm__t strong{font-size:14px;color:var(--ink-900);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbm__t span{font-size:12px;color:var(--ink-500)}
+</style>
+<p class="lbl">Desktop</p>
+<div class="sb">
+  <div class="sb__tabs"><button class="sb__tab sb__tab--on">Buy</button><button class="sb__tab">Rent</button></div>
+  <div class="sb__bar">
+    <div class="sb__loc"><span class="sb__c">New Town <button class="sb__cx" aria-label="Remove">×</button></span><span class="sb__c">Salt Lake <button class="sb__cx" aria-label="Remove">×</button></span><input class="sb__in" placeholder="Add a locality…"></div>
+    <select class="sb__sel"><option>Flat / Apartment</option><option>Independent house</option></select>
+    <select class="sb__sel"><option>₹40 L – ₹60 L</option><option>Any budget</option></select>
+    <button class="sb__go">Search</button>
+  </div>
+</div>
+<p class="lbl" style="margin-top:20px">Phone — collapsed tap target</p>
+<button class="sbm">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+  <span class="sbm__t"><strong>New Town, Salt Lake</strong><span>Buy · 2, 3 BHK · ₹40–60 L</span></span>
+</button>

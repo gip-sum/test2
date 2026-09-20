@@ -1,0 +1,44 @@
+<!-- @dsCard height=300 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@700&family=Instrument+Sans:wght@500&display=swap">
+<style>
+  body{margin:0;background:var(--surface-100);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif)}
+  .cv{display:block;width:100%;height:auto}
+  .teal{fill:var(--brand-600)}
+  .gold{fill:var(--supply-600)}
+  .green{fill:var(--trust-600)}
+  .deep{fill:var(--ink-900)}
+  .cut{fill:var(--surface-100)}
+  .name{fill:var(--ink-900);font-family:var(--font-display,"Archivo",sans-serif);
+        font-weight:700;font-size:64px;letter-spacing:-0.02em}
+  .tag{fill:var(--ink-500);font-size:14px;font-weight:500}
+</style>
+<svg class="cv" viewBox="0 0 960 300" role="img" aria-label="Kolkata Property Marketplace design system">
+  <!-- Derivation
+       blocks: brand-600 430x110 · supply-600 230x110 · trust-600 150x110 · ink-900 150x110 — one full-width band, a third of the cover
+       arrangement: top-band skeleton (the name is too wide for a 440px zone at 64px); four unequal vertical bands, weighted teal-then-marigold by identity
+       pattern: "geometric, modular, dense UI — tiles cut by the radius tokens, some merged two-wide" — this product IS a results grid, so the grid is punched through the palette in the ground colour; 13 tiles at the property card's own 4:3
+       scales: tile 48x36 (space-7 wide, 4:3), merged 100 (48+space-1+48), gap 8 (space-2), rx 12 (radius-lg), band 110, name inset 48 -->
+  <g>
+    <rect class="teal"  x="0"   y="0" width="430" height="110"/>
+    <rect class="gold"  x="430" y="0" width="230" height="110"/>
+    <rect class="green" x="660" y="0" width="150" height="110"/>
+    <rect class="deep"  x="810" y="0" width="150" height="110"/>
+    <rect class="cut" x="40" y="37" width="48" height="36" rx="12"/>
+    <rect class="cut" x="96" y="37" width="48" height="36" rx="12"/>
+    <rect class="cut" x="152" y="37" width="100" height="36" rx="12"/>
+    <rect class="cut" x="260" y="37" width="48" height="36" rx="12"/>
+    <rect class="cut" x="316" y="37" width="48" height="36" rx="12"/>
+    <rect class="cut" x="372" y="37" width="48" height="36" rx="12"/>
+    <rect class="cut" x="428" y="37" width="100" height="36" rx="12"/>
+    <rect class="cut" x="536" y="37" width="48" height="36" rx="12"/>
+    <rect class="cut" x="592" y="37" width="48" height="36" rx="12"/>
+    <rect class="cut" x="648" y="37" width="100" height="36" rx="12"/>
+    <rect class="cut" x="756" y="37" width="48" height="36" rx="12"/>
+    <rect class="cut" x="812" y="37" width="48" height="36" rx="12"/>
+    <rect class="cut" x="868" y="37" width="48" height="36" rx="12"/>
+  </g>
+  <text class="name" x="48" y="188">Kolkata Property</text>
+  <text class="name" x="48" y="249">Marketplace</text>
+  <text class="tag"  x="48" y="276">Buy · Rent · Post — the design system for the Kolkata property loop</text>
+</svg>

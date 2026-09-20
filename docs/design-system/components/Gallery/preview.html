@@ -1,0 +1,90 @@
+<!-- @dsCard group="Property" height=330 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.g{max-width:520px}
+.g__tabs{display:flex;gap:4px;margin-bottom:10px}
+.g__tab{font-family:inherit;font-size:13px;font-weight:600;height:32px;padding:0 12px;cursor:pointer;
+  background:transparent;border:1px solid transparent;border-radius:var(--radius-pill);color:var(--ink-500)}
+.g__tab--on{background:var(--brand-100);color:var(--brand-600)}
+.g__tab .tnum{opacity:.7;font-weight:500}
+.g__stage{position:relative;aspect-ratio:4/3;border-radius:var(--radius-lg);overflow:hidden;background:var(--media-ground)}
+.g__stage .ph{width:100%;height:100%}
+.g__nav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;cursor:pointer;
+  background:var(--surface-000);border:1px solid var(--border-subtle);color:var(--ink-900);font-size:20px;line-height:1}
+.g__nav--l{left:10px}.g__nav--r{right:10px}
+.g__count{position:absolute;left:12px;bottom:12px;height:24px;padding:0 10px;display:inline-flex;align-items:center;
+  background:#14201fa6;color:#fff;border-radius:var(--radius-pill);font-size:12px;font-weight:600}
+.g__full{position:absolute;right:12px;bottom:12px;height:32px;padding:0 12px;cursor:pointer;font-family:inherit;
+  font-size:12px;font-weight:600;background:var(--surface-000);color:var(--ink-900);
+  border:1px solid var(--border-subtle);border-radius:var(--radius-md)}
+.g__thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.g__t{width:100%;aspect-ratio:4/3;border-radius:var(--radius-sm);border:2px solid transparent;display:block}
+.g__t--on{border-color:var(--brand-600)}
+</style>
+<div class="g">
+  <div class="g__tabs"><button class="g__tab g__tab--on">Photos <span class="tnum">14</span></button><button class="g__tab">Video <span class="tnum">1</span></button><button class="g__tab">Floor plan</button></div>
+  <div class="g__stage"><svg class="ph" viewBox="0 0 120 90" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<rect width="120" height="90" fill="var(--media-ground)"/>
+<rect x="14" y="30" width="26" height="60" fill="var(--brand-600)" opacity=".26"/>
+<rect x="44" y="16" width="32" height="74" fill="var(--brand-600)" opacity=".38"/>
+<rect x="80" y="40" width="28" height="50" fill="var(--brand-600)" opacity=".2"/>
+<rect x="50" y="26" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="62" y="26" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="50" y="40" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="62" y="40" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="0" y="82" width="120" height="8" fill="var(--ink-900)" opacity=".1"/></svg>
+    <button class="g__nav g__nav--l" aria-label="Previous photo">‹</button>
+    <button class="g__nav g__nav--r" aria-label="Next photo">›</button>
+    <span class="g__count tnum">4 / 14</span>
+    <button class="g__full">View all photos</button>
+  </div>
+  <div class="g__thumbs"><svg class="ph g__t g__t--on" viewBox="0 0 120 90" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<rect width="120" height="90" fill="var(--media-ground)"/>
+<rect x="14" y="30" width="26" height="60" fill="var(--brand-600)" opacity=".26"/>
+<rect x="44" y="16" width="32" height="74" fill="var(--brand-600)" opacity=".38"/>
+<rect x="80" y="40" width="28" height="50" fill="var(--brand-600)" opacity=".2"/>
+<rect x="50" y="26" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="62" y="26" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="50" y="40" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="62" y="40" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="0" y="82" width="120" height="8" fill="var(--ink-900)" opacity=".1"/></svg><svg class="ph g__t" viewBox="0 0 120 90" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<rect width="120" height="90" fill="var(--media-ground)"/>
+<rect x="14" y="30" width="26" height="60" fill="var(--brand-600)" opacity=".26"/>
+<rect x="44" y="16" width="32" height="74" fill="var(--brand-600)" opacity=".38"/>
+<rect x="80" y="40" width="28" height="50" fill="var(--brand-600)" opacity=".2"/>
+<rect x="50" y="26" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="62" y="26" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="50" y="40" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="62" y="40" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="0" y="82" width="120" height="8" fill="var(--ink-900)" opacity=".1"/></svg><svg class="ph g__t" viewBox="0 0 120 90" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<rect width="120" height="90" fill="var(--media-ground)"/>
+<rect x="14" y="30" width="26" height="60" fill="var(--brand-600)" opacity=".26"/>
+<rect x="44" y="16" width="32" height="74" fill="var(--brand-600)" opacity=".38"/>
+<rect x="80" y="40" width="28" height="50" fill="var(--brand-600)" opacity=".2"/>
+<rect x="50" y="26" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="62" y="26" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="50" y="40" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="62" y="40" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="0" y="82" width="120" height="8" fill="var(--ink-900)" opacity=".1"/></svg><svg class="ph g__t" viewBox="0 0 120 90" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+<rect width="120" height="90" fill="var(--media-ground)"/>
+<rect x="14" y="30" width="26" height="60" fill="var(--brand-600)" opacity=".26"/>
+<rect x="44" y="16" width="32" height="74" fill="var(--brand-600)" opacity=".38"/>
+<rect x="80" y="40" width="28" height="50" fill="var(--brand-600)" opacity=".2"/>
+<rect x="50" y="26" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="62" y="26" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="50" y="40" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="62" y="40" width="6" height="6" fill="var(--surface-000)" opacity=".5"/>
+<rect x="0" y="82" width="120" height="8" fill="var(--ink-900)" opacity=".1"/></svg></div>
+</div>

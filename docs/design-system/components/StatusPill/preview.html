@@ -1,0 +1,41 @@
+<!-- @dsCard group="Indicators" height=190 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .col{display:flex;flex-direction:column;gap:12px}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.pill{display:inline-flex;align-items:center;height:26px;padding:0 12px;border-radius:var(--radius-pill);
+  font-size:12px;line-height:16px;font-weight:600;letter-spacing:.02em}
+.pill--trust{background:var(--trust-100);color:var(--trust-600)}
+.pill--warn{background:var(--warn-100);color:var(--warn-600)}
+.pill--danger{background:var(--danger-100);color:var(--danger-600)}
+.pill--neutral{background:var(--neutral-100);color:var(--neutral-600)}
+.note{margin-top:18px;max-width:520px;padding:14px 16px;background:var(--danger-100);
+  border-radius:var(--radius-md);display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.note__t{margin:0;font-size:13px;line-height:20px;color:var(--ink-900)}
+.note__a{font-family:inherit;font-size:13px;font-weight:600;height:36px;padding:0 14px;cursor:pointer;
+  background:var(--danger-600);color:#fff;border:0;border-radius:var(--radius-md)}
+</style>
+<div class="row" style="gap:8px">
+  <span class="pill pill--neutral">Draft</span>
+  <span class="pill pill--warn">Being reviewed</span>
+  <span class="pill pill--trust">Live</span>
+  <span class="pill pill--danger">Needs changes</span>
+  <span class="pill pill--neutral">Expired</span>
+  <span class="pill pill--danger">Reported</span>
+</div>
+<div class="note">
+  <span class="pill pill--danger">Needs changes</span>
+  <p class="note__t">Photo 3 shows a phone number. Remove it and resubmit — we review again within a few hours.</p>
+  <button class="note__a">Edit and resubmit</button>
+</div>

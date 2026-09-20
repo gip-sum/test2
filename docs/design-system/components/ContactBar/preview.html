@@ -1,0 +1,50 @@
+<!-- @dsCard group="Property" height=260 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.sim{position:relative;max-width:440px;border:1px solid var(--border-subtle);border-radius:var(--radius-lg);
+  overflow:hidden;background:var(--surface-000)}
+.sim__page{padding:16px 16px 0}
+.cb{display:flex;align-items:center;gap:12px;padding:12px 16px;margin-top:20px;
+  background:var(--surface-000);border-top:1px solid var(--border-subtle);box-shadow:var(--shadow-3)}
+.cb__info{min-width:0;flex:1}
+.cb__price{margin:0;font-size:20px;line-height:24px;font-weight:700;color:var(--ink-900)}
+.cb__meta{margin:0;font-size:12px;line-height:16px;color:var(--ink-500)}
+.cb__acts{display:flex;gap:8px;flex:none}
+.b{font-family:inherit;font-size:13px;font-weight:600;height:40px;padding:0 14px;cursor:pointer;
+  border-radius:var(--radius-md);border:1px solid transparent}
+.b--pri{background:var(--brand-600);color:var(--on-brand)}
+.b--sec{background:transparent;color:var(--ink-900);border-color:var(--border-strong)}
+.rail{max-width:280px;padding:16px;background:var(--surface-000);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg);box-shadow:var(--shadow-2)}
+.rail__note{margin:10px 0 0;font-size:12px;line-height:16px;color:var(--ink-500)}
+</style>
+<div class="sim">
+  <div class="sim__page">
+    <p style="margin:0 0 4px;font-size:13px;color:var(--ink-500)">…property details continue…</p>
+    <p style="margin:0;font-size:13px;color:var(--ink-500)">The bar never scrolls away.</p>
+  </div>
+  <div class="cb">
+    <div class="cb__info"><p class="cb__price disp tnum">₹ 62.5 L</p><p class="cb__meta">3 BHK · 1,240 sqft carpet</p></div>
+    <div class="cb__acts"><button class="b b--sec">View phone</button><button class="b b--pri">Enquire</button></div>
+  </div>
+</div>
+<p class="lbl" style="margin-top:18px">Desktop — sticky right rail</p>
+<aside class="rail">
+  <p class="cb__price disp tnum" style="font-size:25px">₹ 62.5 L</p>
+  <p class="cb__meta">₹5,040 per sqft (carpet)</p>
+  <button class="b b--pri" style="width:100%;height:44px;margin-top:12px">Enquire now</button>
+  <button class="b b--sec" style="width:100%;height:44px;margin-top:8px">View phone number</button>
+  <p class="rail__note">You'll verify your number once. The owner sees your name and number.</p>
+</aside>

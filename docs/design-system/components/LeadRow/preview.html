@@ -1,0 +1,48 @@
+<!-- @dsCard group="Seller & admin" height=300 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.lr__wrap{display:flex;flex-direction:column;gap:10px;max-width:440px}
+.lr{padding:14px 16px;background:var(--surface-000);border:1px solid var(--border-subtle);border-radius:var(--radius-md)}
+.lr--new{border-left:3px solid var(--brand-600)}
+.lr__top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lr__nm{font-size:15px;font-weight:600;color:var(--ink-900)}
+.lr__tag{height:20px;padding:0 8px;display:inline-flex;align-items:center;border-radius:var(--radius-xs);
+  font-size:11px;font-weight:600;background:var(--surface-200);color:var(--ink-700)}
+.lr__tag--rev{background:var(--brand-100);color:var(--brand-600)}
+.lr__new{margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--brand-600)}
+.lr__ph{display:inline-block;margin-top:6px;font-size:15px;font-weight:600;color:var(--brand-600);text-decoration:none}
+.lr__pr{margin:4px 0 0;font-size:13px;line-height:20px;color:var(--ink-700)}
+.lr__msg{margin:8px 0 0;padding:8px 10px;font-size:13px;line-height:19px;color:var(--ink-700);
+  background:var(--surface-100);border-radius:var(--radius-sm)}
+.lr__foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:10px}
+.lr__t{font-size:12px;color:var(--ink-500)}
+.lr__sel{font-family:inherit;font-size:12px;font-weight:600;height:32px;padding:0 8px;color:var(--ink-900);
+  background:var(--surface-000);border:1px solid var(--border-subtle);border-radius:var(--radius-sm)}
+</style>
+<div class="lr__wrap">
+  <article class="lr lr--new">
+    <div class="lr__top"><span class="lr__nm">Sourav R.</span><span class="lr__tag lr__tag--rev">Viewed contact</span><span class="lr__new">New</span></div>
+    <a class="lr__ph tnum" href="#">+91 98•• ••4417</a>
+    <p class="lr__pr">3 BHK · Upohar Luxury Residences, New Town</p>
+    <div class="lr__foot"><span class="lr__t">2 hours ago</span><select class="lr__sel"><option>New</option><option>Contacted</option><option>Qualified</option><option>Closed</option><option>Lost</option></select></div>
+  </article>
+  <article class="lr">
+    <div class="lr__top"><span class="lr__nm">Ananya D.</span><span class="lr__tag">Enquiry</span></div>
+    <a class="lr__ph tnum" href="#">+91 90•• ••1120</a>
+    <p class="lr__pr">2 BHK · Sector V, Salt Lake</p>
+    <p class="lr__msg">“Is the flat available from 1 November? Is parking included?”</p>
+    <div class="lr__foot"><span class="lr__t">Yesterday</span><select class="lr__sel"><option selected>Contacted</option><option>New</option><option>Qualified</option></select></div>
+  </article>
+</div>

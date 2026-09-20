@@ -1,0 +1,41 @@
+<!-- @dsCard group="Search & filters" height=340 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.ta{max-width:420px}
+.ta__field{display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;background:var(--surface-000);
+  border:1px solid var(--brand-600);border-radius:var(--radius-sm) var(--radius-sm) 0 0;color:var(--ink-500)}
+.ta__in{flex:1;border:0;background:transparent;font-family:inherit;font-size:15px;color:var(--ink-900)}
+.ta__panel{background:var(--surface-raised);border:1px solid var(--border-subtle);border-top:0;
+  border-radius:0 0 var(--radius-sm) var(--radius-sm);box-shadow:var(--shadow-2);padding:6px 0;max-height:250px;overflow:auto}
+.ta__g{margin:8px 14px 4px;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-500)}
+.ta__o{display:flex;align-items:baseline;gap:8px;padding:9px 14px;font-size:14px;color:var(--ink-900);cursor:pointer}
+.ta__o--on,.ta__o:hover{background:var(--brand-100)}
+.ta__mark{font-weight:700;color:var(--brand-600)}
+.ta__p{font-size:12px;color:var(--ink-500);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ta__n{font-size:12px;color:var(--ink-500);font-weight:600;flex:none}
+</style>
+<div class="ta">
+  <div class="ta__field"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input class="ta__in" value="new t" aria-expanded="true"></div>
+  <div class="ta__panel" role="listbox">
+    <p class="ta__g">Locality</p>
+    <div class="ta__o ta__o--on" role="option" aria-selected="true"><span class="ta__mark">New T</span>own<span class="ta__p">Kolkata</span><span class="ta__n tnum">1,240</span></div>
+    <div class="ta__o" role="option"><span class="ta__mark">New T</span>own Action Area I<span class="ta__p">New Town, Kolkata</span><span class="ta__n tnum">486</span></div>
+    <div class="ta__o" role="option"><span class="ta__mark">New T</span>own Action Area III<span class="ta__p">New Town, Kolkata</span><span class="ta__n tnum">213</span></div>
+    <p class="ta__g">Society / project</p>
+    <div class="ta__o" role="option"><span class="ta__mark">New T</span>own Heights<span class="ta__p">Action Area II, New Town</span><span class="ta__n tnum">34</span></div>
+    <p class="ta__g">City</p>
+    <div class="ta__o" role="option">Kolkata<span class="ta__p">West Bengal</span><span class="ta__n tnum">18,902</span></div>
+  </div>
+</div>

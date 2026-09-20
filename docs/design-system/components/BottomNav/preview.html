@@ -1,0 +1,36 @@
+<!-- @dsCard group="Navigation" height=220 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.bn{display:flex;max-width:400px;background:var(--surface-000);border:1px solid var(--border-subtle);
+  border-radius:var(--radius-lg);box-shadow:var(--shadow-3);padding:6px 4px}
+.bn__i{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;min-height:52px;
+  text-decoration:none;font-size:10px;font-weight:600;letter-spacing:.01em;color:var(--ink-500)}
+.bn__i svg{width:22px;height:22px}
+.bn__i--on{color:var(--brand-600)}
+.bn__i--post{color:var(--supply-600)}
+.bn__fab{display:grid;place-items:center;width:34px;height:34px;margin-top:-10px;border-radius:50%;
+  background:var(--supply-600);color:var(--on-supply);box-shadow:var(--shadow-2)}
+.bn__fab svg{width:20px;height:20px}
+.bn__wrap{position:relative;display:block}
+.bn__b{position:absolute;top:-4px;right:-7px;min-width:16px;height:16px;padding:0 4px;display:grid;place-items:center;
+  background:var(--danger-600);color:#fff;border-radius:var(--radius-pill);font-size:10px;font-weight:700}
+</style>
+<nav class="bn">
+  <a class="bn__i bn__i--on" href="#"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Search</a>
+  <a class="bn__i" href="#"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 20s-7-4.4-7-9a4 4 0 017-2.6A4 4 0 0119 11c0 4.6-7 9-7 9z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>Saved</a>
+  <a class="bn__i bn__i--post" href="#"><span class="bn__fab"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 6v12M6 12h12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></span>Post</a>
+  <a class="bn__i" href="#"><span class="bn__wrap"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="1.8"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg><span class="bn__b tnum">3</span></span>Enquiries</a>
+  <a class="bn__i" href="#"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="9" r="3.4" stroke="currentColor" stroke-width="1.8"/><path d="M5.5 19.5c1-3.2 3.5-4.8 6.5-4.8s5.5 1.6 6.5 4.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Account</a>
+</nav>

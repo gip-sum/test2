@@ -1,0 +1,54 @@
+<!-- @dsCard group="Navigation" height=250 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;background:var(--surface-100);color:var(--ink-900);
+       font-family:var(--font-sans,"Instrument Sans",system-ui,sans-serif);font-size:15px;line-height:23px}
+  .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+  .lbl{font-size:11px;line-height:14px;font-weight:600;letter-spacing:.08em;
+       text-transform:uppercase;color:var(--ink-500);margin:0 0 8px}
+  .tnum{font-variant-numeric:tabular-nums}
+  .disp{font-family:var(--font-display,"Archivo",sans-serif)}
+  :focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.hd{display:flex;align-items:center;gap:16px;height:60px;padding:0 16px;max-width:620px;
+  background:var(--surface-000);border:1px solid var(--border-subtle);border-radius:var(--radius-md)}
+.hd--m{max-width:400px}
+.hd__logo{display:flex;align-items:center;gap:8px;font-family:var(--font-display,Archivo,sans-serif);
+  font-size:16px;font-weight:700;color:var(--ink-900);text-decoration:none;flex:none}
+.hd__mark{width:22px;height:22px;border-radius:var(--radius-xs);background:var(--brand-600);
+  box-shadow:inset -7px 7px 0 var(--supply-600)}
+.hd__nav{display:flex;gap:4px;flex:1}
+.hd__a{font-size:14px;font-weight:600;color:var(--ink-700);text-decoration:none;padding:8px 10px;border-radius:var(--radius-sm)}
+.hd__a--on{color:var(--brand-600);background:var(--brand-100)}
+.hd__r{display:flex;align-items:center;gap:10px;margin-left:auto}
+.hd__post{font-family:inherit;font-size:13px;font-weight:600;height:36px;padding:0 14px;cursor:pointer;
+  background:var(--supply-600);color:var(--on-supply);border:0;border-radius:var(--radius-md)}
+.hd__login{font-family:inherit;font-size:13px;font-weight:600;height:36px;padding:0 14px;cursor:pointer;margin-left:auto;
+  background:transparent;color:var(--ink-900);border:1px solid var(--border-strong);border-radius:var(--radius-md)}
+.hd__acc{width:36px;height:36px;padding:0;border:0;background:transparent;cursor:pointer}
+.hd__av{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--brand-100);
+  color:var(--brand-600);font-size:12px;font-weight:700}
+.hd__search{flex:1;display:flex;align-items:center;gap:8px;height:38px;padding:0 14px;cursor:pointer;text-align:left;
+  font-family:inherit;font-size:13px;color:var(--ink-700);background:var(--surface-100);
+  border:1px solid var(--border-subtle);border-radius:var(--radius-pill)}
+</style>
+<p class="lbl">Desktop — signed in</p>
+<header class="hd">
+  <a class="hd__logo" href="#"><span class="hd__mark" aria-hidden="true"></span>Marketplace</a>
+  <nav class="hd__nav"><a class="hd__a hd__a--on" href="#">Buy</a><a class="hd__a" href="#">Rent</a><a class="hd__a" href="#">Localities</a></nav>
+  <div class="hd__r"><button class="hd__post">Post property</button><button class="hd__acc"><span class="hd__av">SR</span></button></div>
+</header>
+<p class="lbl" style="margin-top:18px">Desktop — scrolled, with condensed search</p>
+<header class="hd">
+  <a class="hd__logo" href="#"><span class="hd__mark" aria-hidden="true"></span></a>
+  <button class="hd__search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2"/><path d="M16 16l4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>New Town · 2,3 BHK · ₹40–60 L</button>
+  <div class="hd__r"><button class="hd__post">Post property</button><button class="hd__acc"><span class="hd__av">SR</span></button></div>
+</header>
+<p class="lbl" style="margin-top:18px">Phone — signed out</p>
+<header class="hd hd--m">
+  <a class="hd__logo" href="#"><span class="hd__mark" aria-hidden="true"></span>Marketplace</a>
+  <button class="hd__login">Log in</button>
+</header>
