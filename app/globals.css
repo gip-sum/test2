@@ -1,0 +1,257 @@
+@import "tailwindcss";
+
+/*  Kolkata Property Marketplace — token layer
+    ------------------------------------------------------------------
+    Single source of truth for colour, type, radius and elevation.
+    Tailwind v4 emits each @theme entry as a CSS custom property AND a
+    utility, so there is no second config file to drift out of sync.
+
+    Dark theme re-declares the same custom properties below; utilities
+    follow automatically because they compile to var() references.
+
+    Derived from docs/design-system/tokens.json with three Phase 0
+    corrections applied:
+      C6  `success` separated from `trust` (they mean different things)
+      C6  `neutral-600` collapsed into `ink-500` (identical values)
+      C7  radius scale trimmed from six steps to four
+*/
+
+/* Dark mode is attribute-driven so the toggle can beat the OS setting. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@theme {
+  /* ---- Type families -------------------------------------------------
+     Archivo carries U+20B9 ₹ only in its latin-ext subset, so the font
+     loader must request latin AND latin-ext. See app/fonts.ts.          */
+  --font-sans: var(--font-plex), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-archivo), "Helvetica Neue", Arial, sans-serif;
+
+  /* ---- Surfaces ---- */
+  --color-surface-000: #ffffff;      /* cards, sheets, header */
+  --color-surface-100: #f5f7f7;      /* page background */
+  --color-surface-200: #eaeeee;      /* sunken: skeletons, image wells */
+  --color-surface-raised: #ffffff;   /* dropdowns, sheets, toasts */
+  --color-media-ground: #e6ecec;     /* behind a photo before it loads */
+
+  /* ---- Ink ---- */
+  --color-ink-900: #14201f;          /* headings, prices, titles */
+  --color-ink-700: #3c4a48;          /* body copy, card attributes */
+  --color-ink-500: #5c6a68;          /* meta, helper text, timestamps */
+  --color-ink-inverse: #ffffff;
+
+  /* ---- Borders ---- */
+  --color-border-subtle: #dfe5e4;    /* default separator */
+  --color-border-strong: #c2cbca;    /* hover, selected, emphasis */
+
+  /* ---- Brand: the BUYER's action ---- */
+  --color-brand-600: #0b5563;
+  --color-brand-700: #084350;
+  --color-brand-100: #e2f0f2;
+  --color-on-brand: #ffffff;
+
+  /* ---- Supply: the SELLER's action. A different hue on purpose. ---- */
+  --color-supply-600: #c2701a;
+  --color-supply-100: #fbeedc;
+  --color-on-supply: #ffffff;
+
+  /* ---- Semantic ---- */
+  --color-success-600: #2f7d4f;      /* an action succeeded */
+  --color-success-100: #e3f2e9;
+  --color-trust-600: #2f7d4f;        /* a listing property is true */
+  --color-trust-100: #e3f2e9;
+  --color-warn-600: #a8700c;
+  --color-warn-100: #fbf0d8;
+  --color-danger-600: #b4342c;
+  --color-danger-100: #fbe7e5;
+  --color-neutral-600: #5c6a68;      /* inactive states, deliberately flat */
+  --color-neutral-100: #eaeeee;
+
+  --color-focus-ring: #0b5563;
+  --color-overlay: #14201fa6;
+
+  /* ---- Radius: four steps, by role ---- */
+  --radius-sm: 4px;                  /* badges, small tags */
+  --radius-md: 8px;                  /* buttons, inputs, cards */
+  --radius-lg: 12px;                 /* property cards, images, sheets */
+  --radius-full: 9999px;             /* pills, avatars, counters */
+
+  /* ---- Elevation: borders beat shadows in long lists ---- */
+  --shadow-e0: none;
+  --shadow-e1: 0 1px 2px #14201f14;
+  --shadow-e2: 0 4px 12px #14201f1f;
+  --shadow-e3: 0 -2px 16px #14201f1f;
+
+  /* ---- Type scale ----
+     Thirteen semantic styles. Each carries size, leading and weight so a
+     component names the role, never the pixels.                          */
+  --text-display-1: 39px;
+  --text-display-1--line-height: 42px;
+  --text-display-1--font-weight: 700;
+  --text-display-1--letter-spacing: -0.02em;
+
+  --text-heading-1: 31px;
+  --text-heading-1--line-height: 36px;
+  --text-heading-1--font-weight: 700;
+  --text-heading-1--letter-spacing: -0.01em;
+
+  --text-heading-2: 25px;
+  --text-heading-2--line-height: 30px;
+  --text-heading-2--font-weight: 700;
+
+  --text-heading-3: 20px;
+  --text-heading-3--line-height: 26px;
+  --text-heading-3--font-weight: 600;
+
+  --text-body-lg: 17px;
+  --text-body-lg--line-height: 26px;
+
+  --text-body: 15px;
+  --text-body--line-height: 23px;
+
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: 20px;
+
+  --text-label: 13px;
+  --text-label--line-height: 16px;
+  --text-label--font-weight: 600;
+  --text-label--letter-spacing: 0.02em;
+
+  --text-overline: 11px;
+  --text-overline--line-height: 14px;
+  --text-overline--font-weight: 600;
+  --text-overline--letter-spacing: 0.08em;
+
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-caption--font-weight: 500;
+
+  --text-price-lg: 25px;
+  --text-price-lg--line-height: 28px;
+  --text-price-lg--font-weight: 700;
+
+  --text-price: 20px;
+  --text-price--line-height: 24px;
+  --text-price--font-weight: 700;
+
+  --text-stat: 17px;
+  --text-stat--line-height: 22px;
+  --text-stat--font-weight: 600;
+}
+
+/* ---- Dark theme -----------------------------------------------------
+   Only the tokens change. `on-brand` and `on-supply` flip to dark ink
+   because white text on the lighter dark-theme teal fails contrast —
+   this is why components must never hardcode #fff on a filled button. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-surface-000: #0e1514;
+    --color-surface-100: #141d1c;
+    --color-surface-200: #1c2726;
+    --color-surface-raised: #1a2423;
+    --color-media-ground: #1e2a29;
+    --color-ink-900: #f2f5f4;
+    --color-ink-700: #c8d2d0;
+    --color-ink-500: #93a19f;
+    --color-ink-inverse: #0e1514;
+    --color-border-subtle: #263433;
+    --color-border-strong: #354544;
+    --color-brand-600: #4fb3c4;
+    --color-brand-700: #6bc4d3;
+    --color-brand-100: #123037;
+    --color-on-brand: #062a31;
+    --color-supply-600: #f0a63f;
+    --color-supply-100: #33250f;
+    --color-on-supply: #2a1b06;
+    --color-success-600: #5fbe86;
+    --color-success-100: #14301f;
+    --color-trust-600: #5fbe86;
+    --color-trust-100: #14301f;
+    --color-warn-600: #e0a93c;
+    --color-warn-100: #322609;
+    --color-danger-600: #f07a70;
+    --color-danger-100: #331715;
+    --color-neutral-600: #93a19f;
+    --color-neutral-100: #1c2726;
+    --color-focus-ring: #6bc4d3;
+    --color-overlay: #000000cc;
+    --shadow-e1: 0 1px 2px #00000066;
+    --shadow-e2: 0 4px 12px #00000080;
+    --shadow-e3: 0 -2px 16px #00000099;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-surface-000: #0e1514;
+  --color-surface-100: #141d1c;
+  --color-surface-200: #1c2726;
+  --color-surface-raised: #1a2423;
+  --color-media-ground: #1e2a29;
+  --color-ink-900: #f2f5f4;
+  --color-ink-700: #c8d2d0;
+  --color-ink-500: #93a19f;
+  --color-ink-inverse: #0e1514;
+  --color-border-subtle: #263433;
+  --color-border-strong: #354544;
+  --color-brand-600: #4fb3c4;
+  --color-brand-700: #6bc4d3;
+  --color-brand-100: #123037;
+  --color-on-brand: #062a31;
+  --color-supply-600: #f0a63f;
+  --color-supply-100: #33250f;
+  --color-on-supply: #2a1b06;
+  --color-success-600: #5fbe86;
+  --color-success-100: #14301f;
+  --color-trust-600: #5fbe86;
+  --color-trust-100: #14301f;
+  --color-warn-600: #e0a93c;
+  --color-warn-100: #322609;
+  --color-danger-600: #f07a70;
+  --color-danger-100: #331715;
+  --color-neutral-600: #93a19f;
+  --color-neutral-100: #1c2726;
+  --color-focus-ring: #6bc4d3;
+  --color-overlay: #000000cc;
+  --shadow-e1: 0 1px 2px #00000066;
+  --shadow-e2: 0 4px 12px #00000080;
+  --shadow-e3: 0 -2px 16px #00000099;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--color-surface-100);
+    color: var(--color-ink-900);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Every price and area in this product aligns. Neither face ships a
+     usable `tnum`, so we rely on IBM Plex Sans' uniform digit widths and
+     Archivo's near-uniform ones; this declaration is belt-and-braces. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Never remove a focus ring without replacing it. */
+  :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
