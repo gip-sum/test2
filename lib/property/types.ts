@@ -15,6 +15,28 @@ export type Furnishing = 'UNFURNISHED' | 'SEMI_FURNISHED' | 'FURNISHED'
 
 export type ConstructionStatus = 'READY' | 'UNDER_CONSTRUCTION'
 
+/** Compass facing. Genuinely load-bearing in Indian property search. */
+export type Facing = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW'
+
+/**
+ * Amenities.
+ *
+ * A closed set, not free text. Free-text amenities cannot be filtered on,
+ * cannot be counted, and turn into a hundred spellings of "car parking".
+ * The list is deliberately short — only things a buyer filters by.
+ */
+export type AmenityCode =
+  | 'LIFT'
+  | 'POWER_BACKUP'
+  | 'SECURITY'
+  | 'GYM'
+  | 'SWIMMING_POOL'
+  | 'CLUBHOUSE'
+  | 'CHILDRENS_PLAY_AREA'
+  | 'GATED_COMMUNITY'
+  | 'WATER_SUPPLY_24X7'
+  | 'PARK'
+
 export type PropertyMedia = {
   id: string
   /** Null while a listing has no photo — a real and common state. */
@@ -50,6 +72,14 @@ export type PropertySummary = {
   totalFloors?: number
   sellerType: SellerType
   sellerName?: string
+  facing?: Facing
+  /** Covered or open parking spaces. 0 is a real, common answer. */
+  parkingSpaces: number
+  amenities: AmenityCode[]
+  /** Years since completion. Absent while under construction. */
+  ageYears?: number
+  /** ISO date a rental is free from. Absent on sale listings. */
+  availableFrom?: string
   /** ISO date. Drives the "Posted N days ago" freshness signal. */
   postedAt: string
   photos: PropertyMedia[]
@@ -62,6 +92,21 @@ export const PROPERTY_TYPE_LABEL: Record<PropertyTypeCode, string> = {
   BUILDER_FLOOR: 'Builder floor',
   VILLA: 'Villa',
   STUDIO: 'Studio apartment',
+}
+
+/**
+ * Plural forms, for headings that count things.
+ *
+ * A separate map rather than appending "s": "Flat / Apartment" pluralises
+ * to "Flats / Apartments", not "Flat / Apartments", and "Independent house"
+ * to "Independent houses". No suffix rule gets both right.
+ */
+export const PROPERTY_TYPE_PLURAL: Record<PropertyTypeCode, string> = {
+  APARTMENT: 'Flats / Apartments',
+  INDEPENDENT_HOUSE: 'Independent houses',
+  BUILDER_FLOOR: 'Builder floors',
+  VILLA: 'Villas',
+  STUDIO: 'Studio apartments',
 }
 
 export const FURNISHING_LABEL: Record<Furnishing, string> = {
@@ -80,3 +125,51 @@ export const SELLER_LABEL: Record<SellerType, string> = {
   AGENT: 'Agent',
   BUILDER: 'Builder',
 }
+
+export const FACING_LABEL: Record<Facing, string> = {
+  N: 'North',
+  NE: 'North-East',
+  E: 'East',
+  SE: 'South-East',
+  S: 'South',
+  SW: 'South-West',
+  W: 'West',
+  NW: 'North-West',
+}
+
+export const AMENITY_LABEL: Record<AmenityCode, string> = {
+  LIFT: 'Lift',
+  POWER_BACKUP: 'Power backup',
+  SECURITY: 'Security',
+  GYM: 'Gym',
+  SWIMMING_POOL: 'Swimming pool',
+  CLUBHOUSE: 'Clubhouse',
+  CHILDRENS_PLAY_AREA: "Children's play area",
+  GATED_COMMUNITY: 'Gated community',
+  WATER_SUPPLY_24X7: '24x7 water supply',
+  PARK: 'Park',
+}
+
+/** Stable display order for every facet that lists these. */
+export const PROPERTY_TYPE_ORDER: PropertyTypeCode[] = [
+  'APARTMENT',
+  'INDEPENDENT_HOUSE',
+  'BUILDER_FLOOR',
+  'VILLA',
+  'STUDIO',
+]
+export const FURNISHING_ORDER: Furnishing[] = ['UNFURNISHED', 'SEMI_FURNISHED', 'FURNISHED']
+export const SELLER_ORDER: SellerType[] = ['OWNER', 'AGENT', 'BUILDER']
+export const FACING_ORDER: Facing[] = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
+export const AMENITY_ORDER: AmenityCode[] = [
+  'LIFT',
+  'POWER_BACKUP',
+  'SECURITY',
+  'GATED_COMMUNITY',
+  'WATER_SUPPLY_24X7',
+  'PARK',
+  'GYM',
+  'SWIMMING_POOL',
+  'CLUBHOUSE',
+  'CHILDRENS_PLAY_AREA',
+]

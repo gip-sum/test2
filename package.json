@@ -11,7 +11,8 @@
     "test": "vitest run",
     "verify": "npm run lint && npm run typecheck && npm run test",
     "shots": "node scripts/shot.mjs",
-    "light-check": "node scripts/light-check.mjs"
+    "light-check": "node scripts/light-check.mjs",
+    "search-check": "node scripts/search-check.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

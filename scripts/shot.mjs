@@ -8,7 +8,18 @@ const EXECUTABLE = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
 const BASE = process.env.BASE ?? 'http://127.0.0.1:3100'
 const OUT = process.env.OUT ?? '/tmp/shots'
 const WIDTHS = [390, 412, 768, 1280]
-const routes = process.argv.slice(2).length ? process.argv.slice(2) : ['/']
+const DEFAULT_ROUTES = [
+  '/',
+  '/buy/kolkata',
+  '/rent/kolkata',
+  '/buy/kolkata/new-town',
+  // The widest content the grid has to hold: a long locality name, a long
+  // society name and the widest price string, all filtered at once.
+  '/buy/kolkata?loc=uttarpara-kotrung,ballygunge&bhk=2,3,4&type=APARTMENT&sort=price_desc',
+  // Zero results, whose recovery panel has its own layout.
+  '/buy/kolkata?loc=howrah&type=VILLA&bhk=5&pmax=1600000',
+]
+const routes = process.argv.slice(2).length ? process.argv.slice(2) : DEFAULT_ROUTES
 
 mkdirSync(OUT, { recursive: true })
 const browser = await chromium.launch({ executablePath: EXECUTABLE, args: ['--no-sandbox'] })

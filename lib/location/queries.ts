@@ -55,3 +55,22 @@ export function searchLocations(query: string, limit = 8): Location[] {
 
   return scored.slice(0, limit).map((x) => x.l)
 }
+
+/**
+ * Every slug the route grammar will accept as a locality segment.
+ *
+ * Read once at module scope by the search route: deciding whether
+ * /buy/kolkata/new-town means a place or a filter has to be cheap, because
+ * it happens before anything else on every result page.
+ */
+export function getAllLocalitySlugs(): string[] {
+  return KOLKATA_LOCATIONS.filter((l) => l.type !== 'CITY').map((l) => l.slug)
+}
+
+/**
+ * slug → display name, for anything that renders a locality it only has a
+ * slug for: facet rows, active-filter chips, zero-result suggestions.
+ */
+export function getLocalityNameMap(): Map<string, string> {
+  return new Map(KOLKATA_LOCATIONS.map((l) => [l.slug, l.name]))
+}

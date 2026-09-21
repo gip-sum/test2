@@ -18,7 +18,11 @@ const BASE = process.env.BASE_URL ?? 'http://127.0.0.1:3100'
 const CHROME =
   process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
 const WIDTHS = [390, 412, 768, 1280]
-const ROUTES = ['/']
+const ROUTES = [
+  '/',
+  '/buy/kolkata',
+  '/buy/kolkata?loc=howrah&type=VILLA&bhk=5&pmax=1600000',
+]
 
 /** Relative luminance, WCAG 2.x. */
 function luminance(css) {
@@ -84,13 +88,30 @@ for (const route of ROUTES) {
           'commitment card': bg(q('section[aria-labelledby="how-it-works"] li')),
           'footer': bg(q('footer')),
           'bottom nav': bg(q('nav.fixed')),
+          // Results-page surfaces. Absent on the homepage, where they are
+          // skipped rather than failed.
+          'filter rail': bg(q('aside[aria-label="Filters"]')),
+          'rail facet row': bg(q('aside[aria-label="Filters"] button[aria-pressed]')),
+          'rail range input': bg(q('aside[aria-label="Filters"] input')),
+          'active filter chip': bg(q('button[aria-label^="Remove filter"]')?.parentElement),
+          'sort select': bg(q('select[aria-label="Sort results"]')),
+          'pagination link': bg(q('nav[aria-label="Pagination"] a:not([aria-current])')),
+          'zero-result panel': bg(q('section[aria-labelledby="zero-results"]')),
+          // The outlined suggestion chips only; the blue "Clear all" button
+          // below them is a filled action and is asserted as one.
+          'recovery option': bg(q('section[aria-labelledby="zero-results"] ul button')),
         },
         // Filled actions are deliberately saturated; they are asserted the
         // other way, as proof the accent survived rather than went pale.
         actions: {
+          'current page': bg(q('nav[aria-label="Pagination"] a[aria-current="page"]')),
           'search button': bg(form?.querySelector('button[type="submit"]')),
           'active tab': bg(q('[role="tab"][aria-selected="true"]')),
           'post property': bg(q('section[aria-labelledby="post-cta"] a')),
+          'clear all filters': bg(
+            [...document.querySelectorAll('section[aria-labelledby="zero-results"] button')]
+              .find((b) => /Clear all filters/.test(b.textContent)),
+          ),
         },
         text: {
           'h1': getComputedStyle(q('h1')).color,
@@ -110,13 +131,20 @@ for (const route of ROUTES) {
     }
 
     for (const [name, css] of Object.entries(probes.surfaces)) {
-      report(name, css, css !== null && luminance(css) > 0.5, 'must be light')
+      // A surface that does not exist on this route is not a failure.
+      if (css === null) continue
+      report(name, css, luminance(css) > 0.5, 'must be light')
     }
     for (const [name, css] of Object.entries(probes.actions)) {
-      report(name, css, css !== null && luminance(css) < 0.35, 'must stay saturated')
+      // Controls that only exist on one kind of page (the homepage search
+      // button, the results pagination) are skipped where they are absent
+      // rather than failing a page that never had them.
+      if (css === null) continue
+      report(name, css, luminance(css) < 0.35, 'must stay saturated')
     }
     for (const [name, css] of Object.entries(probes.text)) {
-      report(name, css, css !== null && luminance(css) < 0.25, 'must be dark ink')
+      if (css === null) continue
+      report(name, css, luminance(css) < 0.25, 'must be dark ink')
     }
     if (probes.colorScheme !== 'light') {
       failures++
