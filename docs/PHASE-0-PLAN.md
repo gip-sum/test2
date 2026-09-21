@@ -1,5 +1,14 @@
 # Phase 0 — Product, UX & Technical Plan (V0)
 
+> **The eight-phase build order in §10 is superseded by `docs/ROADMAP.md`.**
+> That was a V0 plan; the project is now an incremental production build
+> across many more phases, specified one at a time in `docs/phases/`.
+> Everything else in this document — the contradictions and their
+> resolutions, the scope categories, the screen map, the search state
+> model, the component architecture and the V0 data model — still stands.
+> The working agreement governing how phases are specified, built and
+> verified is in `CLAUDE.md`.
+
 **Version 1.1** — product scope revised after the "should feel like 99acres" direction.
 **Date:** 2026-09-20 · **Status:** awaiting sign-off. **No application code written.**
 **Inputs inspected:** repository (4 commits, documentation only), the 99acres reverse-engineering research, the Kolkata Marketplace Design System (tokens + 19 components), the screen-by-screen spec, the master roadmap workbook, and the V1 Product Blueprint.
