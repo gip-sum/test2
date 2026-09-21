@@ -49,9 +49,14 @@ nine sections:
 
 A section that reads "N/A" needs a sentence saying why.
 
-The roadmap in `docs/ROADMAP.md` is expected to change as the product is
-understood better or the client asks for something new. Changing it is
-normal; silently narrowing an approved scope is not.
+**`Phases.txt` at the repository root is the authoritative roadmap** — 75
+client-owned phases. `docs/ROADMAP.md` is its companion, holding the
+engineering audit and the register of which phase introduces which domain
+model. When they disagree, `Phases.txt` wins.
+
+The roadmap is expected to change as the product is understood better or
+the client asks for something new. Changing it is normal; silently
+narrowing an approved scope is not.
 
 ---
 
