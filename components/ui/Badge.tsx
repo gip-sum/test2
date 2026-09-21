@@ -15,7 +15,7 @@ type Tone = 'neutral' | 'brand' | 'supply' | 'warn' | 'danger'
 const TONE: Record<Tone, string> = {
   neutral: 'bg-surface-200 text-ink-700',
   brand: 'bg-brand-100 text-brand-600',
-  supply: 'bg-supply-100 text-supply-600',
+  supply: 'bg-supply-100 text-supply-700',
   warn: 'bg-warn-100 text-warn-600',
   danger: 'bg-danger-100 text-danger-600',
 }

@@ -36,10 +36,10 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f5f7f7' },
-    { media: '(prefers-color-scheme: dark)', color: '#141d1c' },
-  ],
+  // One value, unconditionally. A media-keyed dark entry would tint the
+  // browser chrome dark around a light product on a dark-OS phone.
+  themeColor: '#ffffff',
+  colorScheme: 'light',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

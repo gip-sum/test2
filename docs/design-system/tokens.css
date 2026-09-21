@@ -1,33 +1,35 @@
-/* Kolkata Property Marketplace — compiled from tokens.json. Do not edit by hand. */
+/* GharBazaar — compiled from tokens.json. Do not edit by hand. */
 :root {
   --surface-000: #ffffff;
-  --surface-100: #f5f7f7;
-  --surface-200: #eaeeee;
+  --surface-100: #f7f9fc;
+  --surface-200: #eef2f7;
   --surface-raised: #ffffff;
-  --ink-900: #14201f;
-  --ink-700: #3c4a48;
-  --ink-500: #5c6a68;
+  --ink-900: #0f1b2d;
+  --ink-700: #44526b;
+  --ink-500: #5f6a7d;
   --ink-inverse: #ffffff;
-  --border-subtle: #dfe5e4;
-  --border-strong: #c2cbca;
-  --brand-600: #0b5563;
-  --brand-700: #084350;
-  --brand-100: #e2f0f2;
+  --border-subtle: #e3e8ef;
+  --border-strong: #cdd5e0;
+  --brand-600: #0b57d0;
+  --brand-700: #0a49ae;
+  --brand-100: #e8f0fe;
   --on-brand: #ffffff;
-  --supply-600: #c2701a;
-  --supply-100: #fbeedc;
+  --supply-600: #cc4e00;
+  --supply-700: #a8420a;
+  --supply-100: #fff1e6;
   --on-supply: #ffffff;
-  --trust-600: #2f7d4f;
-  --trust-100: #e3f2e9;
-  --warn-600: #a8700c;
-  --warn-100: #fbf0d8;
-  --danger-600: #b4342c;
-  --danger-100: #fbe7e5;
-  --neutral-600: #5c6a68;
-  --neutral-100: #eaeeee;
-  --focus-ring: #0b5563;
-  --overlay: #14201fa6;
-  --media-ground: #e6ecec;
+  --trust-600: #177245;
+  --trust-100: #e7f6ed;
+  --warn-600: #92610a;
+  --warn-100: #fff8e6;
+  --danger-600: #b42318;
+  --danger-100: #fee4e2;
+  --on-danger: #ffffff;
+  --neutral-600: #5f6a7d;
+  --neutral-100: #eef2f7;
+  --focus-ring: #0b57d0;
+  --overlay: #0f1b2da6;
+  --media-ground: #e7edf5;
   --shadow-0: none;
   --shadow-1: 0 1px 2px #14201f14;
   --shadow-2: 0 4px 12px #14201f1f;
@@ -55,74 +57,46 @@
   --z-modal: 500;
   --z-toast: 600;
   --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
-  --font-sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Light is the product default, applied unconditionally. Declaring
+     the scheme also holds native controls (select popups, scrollbars,
+     autofill) to it on a dark-OS device. */
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-  --surface-000: #0e1514;
-  --surface-100: #141d1c;
-  --surface-200: #1c2726;
-  --surface-raised: #1a2423;
-  --ink-900: #f2f5f4;
-  --ink-700: #c8d2d0;
-  --ink-500: #93a19f;
-  --ink-inverse: #0e1514;
-  --border-subtle: #263433;
-  --border-strong: #354544;
-  --brand-600: #4fb3c4;
-  --brand-700: #6bc4d3;
-  --brand-100: #123037;
-  --on-brand: #062a31;
-  --supply-600: #f0a63f;
-  --supply-100: #33250f;
-  --on-supply: #2a1b06;
-  --trust-600: #5fbe86;
-  --trust-100: #14301f;
-  --warn-600: #e0a93c;
-  --warn-100: #322609;
-  --danger-600: #f07a70;
-  --danger-100: #331715;
-  --neutral-600: #93a19f;
-  --neutral-100: #1c2726;
-  --focus-ring: #6bc4d3;
-  --overlay: #000000cc;
-  --media-ground: #1e2a29;
-  --shadow-1: 0 1px 2px #00000066;
-  --shadow-2: 0 4px 12px #00000080;
-  --shadow-3: 0 -2px 16px #00000099;
-  }
-}
-
+/* Dark is SECONDARY: it applies only when data-theme="dark" is set.
+   There is deliberately no prefers-color-scheme arm. */
 :root[data-theme="dark"] {
-  --surface-000: #0e1514;
-  --surface-100: #141d1c;
-  --surface-200: #1c2726;
-  --surface-raised: #1a2423;
-  --ink-900: #f2f5f4;
-  --ink-700: #c8d2d0;
-  --ink-500: #93a19f;
-  --ink-inverse: #0e1514;
-  --border-subtle: #263433;
-  --border-strong: #354544;
-  --brand-600: #4fb3c4;
-  --brand-700: #6bc4d3;
-  --brand-100: #123037;
-  --on-brand: #062a31;
-  --supply-600: #f0a63f;
-  --supply-100: #33250f;
-  --on-supply: #2a1b06;
-  --trust-600: #5fbe86;
-  --trust-100: #14301f;
-  --warn-600: #e0a93c;
-  --warn-100: #322609;
-  --danger-600: #f07a70;
-  --danger-100: #331715;
-  --neutral-600: #93a19f;
-  --neutral-100: #1c2726;
-  --focus-ring: #6bc4d3;
+  color-scheme: dark;
+  --surface-000: #0d1520;
+  --surface-100: #111a27;
+  --surface-200: #1a2534;
+  --surface-raised: #16202e;
+  --ink-900: #eef2f7;
+  --ink-700: #c3ccd9;
+  --ink-500: #94a1b4;
+  --ink-inverse: #0d1520;
+  --border-subtle: #25303f;
+  --border-strong: #35414f;
+  --brand-600: #8ab4f8;
+  --brand-700: #a6c7fa;
+  --brand-100: #17304f;
+  --on-brand: #0a2647;
+  --supply-600: #f59b55;
+  --supply-100: #3a2210;
+  --on-supply: #3d1a00;
+  --trust-600: #6ac48c;
+  --trust-100: #123522;
+  --warn-600: #e3b04b;
+  --warn-100: #33280c;
+  --danger-600: #f28b82;
+  --danger-100: #3b1a17;
+  --neutral-600: #94a1b4;
+  --neutral-100: #1a2534;
+  --focus-ring: #8ab4f8;
   --overlay: #000000cc;
-  --media-ground: #1e2a29;
+  --media-ground: #1c2736;
   --shadow-1: 0 1px 2px #00000066;
   --shadow-2: 0 4px 12px #00000080;
   --shadow-3: 0 -2px 16px #00000099;

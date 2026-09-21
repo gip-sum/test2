@@ -48,7 +48,7 @@ export function BottomNav() {
                 // 44px minimum target, comfortably exceeded at 56px.
                 className={cn(
                   'flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-semibold',
-                  supply ? 'text-supply-600' : active ? 'text-brand-600' : 'text-ink-500',
+                  supply ? 'text-supply-700' : active ? 'text-brand-600' : 'text-ink-500',
                 )}
               >
                 {supply ? (

@@ -38,7 +38,9 @@ export function IntentTabs({
             onClick={() => onChange(o.value)}
             className={cn(
               'h-9 rounded-full px-6 text-label transition-colors',
-              selected ? 'bg-surface-000 text-ink-900 shadow-e1' : 'text-ink-700 hover:text-ink-900',
+              selected
+                ? 'bg-brand-600 text-on-brand shadow-e1'
+                : 'text-ink-700 hover:bg-surface-000 hover:text-ink-900',
             )}
           >
             {o.label}

@@ -13,7 +13,7 @@ export function PropertyCardSkeleton({ layout = 'vertical' }: { layout?: 'vertic
     <div
       aria-hidden
       className={cn(
-        'overflow-hidden rounded-lg border border-border-subtle bg-surface-000',
+        'overflow-hidden rounded-lg border border-border-subtle bg-surface-000 shadow-e1',
         horizontal ? 'flex' : 'flex flex-col',
       )}
     >

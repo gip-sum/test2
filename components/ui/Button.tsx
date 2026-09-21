@@ -22,7 +22,7 @@ const VARIANT: Record<Variant, string> = {
   secondary:
     'bg-transparent text-ink-900 border-border-strong hover:border-ink-500',
   tertiary: 'bg-transparent text-brand-600 border-transparent hover:bg-brand-100',
-  danger: 'bg-danger-600 text-white border-transparent hover:brightness-95',
+  danger: 'bg-danger-600 text-on-danger border-transparent hover:brightness-95',
 }
 
 // 44px minimum touch target on md and lg; sm is for dense desktop toolbars only.

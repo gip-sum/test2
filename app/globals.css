@@ -6,8 +6,18 @@
     Tailwind v4 emits each @theme entry as a CSS custom property AND a
     utility, so there is no second config file to drift out of sync.
 
-    Dark theme re-declares the same custom properties below; utilities
-    follow automatically because they compile to var() references.
+    LIGHT IS THE PRODUCT DEFAULT, not a preference. A property
+    marketplace is read in daylight, on a phone, beside photographs the
+    buyer is judging — a dark chrome fights the photography and reads as
+    a SaaS dashboard rather than a place to shop for a home. So the
+    tokens below ARE the light theme, unconditionally, and the OS
+    preference does not reach them.
+
+    Dark is retained but secondary: it applies only when something
+    explicitly sets data-theme="dark" on <html>. Nothing in the product
+    does that yet; the block exists so a future preference toggle is a
+    switch, not a rewrite. `prefers-color-scheme` is deliberately absent
+    from this file.
 
     Derived from docs/design-system/tokens.json with three Phase 0
     corrections applied:
@@ -16,21 +26,12 @@
       C7  radius scale trimmed from six steps to four
 */
 
-/* The `dark:` utility variant must match how the tokens below resolve:
-   an explicit data-theme="dark" wins, and failing that the OS preference
-   applies unless the user has explicitly chosen light. Covering only the
-   attribute would make dark: utilities silently no-op for the majority of
-   dark-mode users, who never set an explicit preference. */
-@custom-variant dark {
-  &:where([data-theme="dark"], [data-theme="dark"] *) {
-    @slot;
-  }
-  @media (prefers-color-scheme: dark) {
-    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
-      @slot;
-    }
-  }
-}
+/* Dark is opt-in, so the `dark:` utility variant keys off the attribute
+   alone — exactly how the tokens below resolve. Adding a
+   prefers-color-scheme arm here would make dark: utilities fire on
+   dark-OS devices while the tokens stayed light, which is worse than
+   either theme on its own. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
   /* ---- Type families -------------------------------------------------
@@ -39,48 +40,57 @@
   --font-sans: var(--font-plex), system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-display: var(--font-archivo), "Helvetica Neue", Arial, sans-serif;
 
-  /* ---- Surfaces ---- */
-  --color-surface-000: #ffffff;      /* cards, sheets, header */
-  --color-surface-100: #f5f7f7;      /* page background */
-  --color-surface-200: #eaeeee;      /* sunken: skeletons, image wells */
+  /* ---- Surfaces: white product, cool neutral ground ---- */
+  --color-surface-000: #ffffff;      /* cards, sheets, header, inputs */
+  --color-surface-100: #f7f9fc;      /* page background */
+  --color-surface-200: #eef2f7;      /* sunken: skeletons, tab tracks */
   --color-surface-raised: #ffffff;   /* dropdowns, sheets, toasts */
-  --color-media-ground: #e6ecec;     /* behind a photo before it loads */
+  --color-media-ground: #e7edf5;     /* behind a photo before it loads */
 
-  /* ---- Ink ---- */
-  --color-ink-900: #14201f;          /* headings, prices, titles */
-  --color-ink-700: #3c4a48;          /* body copy, card attributes */
-  --color-ink-500: #5c6a68;          /* meta, helper text, timestamps */
+  /* ---- Ink: deep navy through medium grey ----
+     Every step is measured against BOTH white and the page ground; the
+     meta step is the tight one, so it is darker than it looks it needs
+     to be (4.86:1 on the sunken surface, where captions also sit).    */
+  --color-ink-900: #0f1b2d;          /* headings, prices, titles */
+  --color-ink-700: #44526b;          /* body copy, card attributes */
+  --color-ink-500: #5f6a7d;          /* meta, helper text, timestamps */
   --color-ink-inverse: #ffffff;
 
-  /* ---- Borders ---- */
-  --color-border-subtle: #dfe5e4;    /* default separator */
-  --color-border-strong: #c2cbca;    /* hover, selected, emphasis */
+  /* ---- Borders: light grey. They carry the layout, not shadows. ---- */
+  --color-border-subtle: #e3e8ef;    /* default separator */
+  --color-border-strong: #cdd5e0;    /* hover, selected, emphasis */
 
-  /* ---- Brand: the BUYER's action ---- */
-  --color-brand-600: #0b5563;
-  --color-brand-700: #084350;
-  --color-brand-100: #e2f0f2;
+  /* ---- Brand: the BUYER's action. Strong blue. ---- */
+  --color-brand-600: #0b57d0;        /* filled buttons, links, selected */
+  --color-brand-700: #0a49ae;        /* hover on a filled brand surface */
+  --color-brand-100: #e8f0fe;        /* selected chips, tinted rows */
   --color-on-brand: #ffffff;
 
-  /* ---- Supply: the SELLER's action. A different hue on purpose. ---- */
-  --color-supply-600: #c2701a;
-  --color-supply-100: #fbeedc;
+  /* ---- Supply: the SELLER's action. Orange, a different hue on purpose.
+     TWO steps because one orange cannot do both jobs: 600 is bright
+     enough to read as orange under white text (4.51:1, the ceiling for
+     an orange that still looks orange), which leaves it too light to be
+     text itself. 700 is the text step. Never use 600 as a foreground. */
+  --color-supply-600: #cc4e00;       /* filled: Post Property, FAB */
+  --color-supply-700: #a8420a;       /* orange AS text, on any light bg */
+  --color-supply-100: #fff1e6;       /* tinted seller surfaces */
   --color-on-supply: #ffffff;
 
   /* ---- Semantic ---- */
-  --color-success-600: #2f7d4f;      /* an action succeeded */
-  --color-success-100: #e3f2e9;
-  --color-trust-600: #2f7d4f;        /* a listing property is true */
-  --color-trust-100: #e3f2e9;
-  --color-warn-600: #a8700c;
-  --color-warn-100: #fbf0d8;
-  --color-danger-600: #b4342c;
-  --color-danger-100: #fbe7e5;
-  --color-neutral-600: #5c6a68;      /* inactive states, deliberately flat */
-  --color-neutral-100: #eaeeee;
+  --color-success-600: #177245;      /* an action succeeded */
+  --color-success-100: #e7f6ed;
+  --color-trust-600: #177245;        /* a listing property is true */
+  --color-trust-100: #e7f6ed;
+  --color-warn-600: #92610a;         /* caution TEXT, on warn-100 */
+  --color-warn-100: #fff8e6;         /* light amber band */
+  --color-danger-600: #b42318;
+  --color-danger-100: #fee4e2;
+  --color-on-danger: #ffffff;
+  --color-neutral-600: #5f6a7d;      /* inactive states, deliberately flat */
+  --color-neutral-100: #eef2f7;
 
-  --color-focus-ring: #0b5563;
-  --color-overlay: #14201fa6;
+  --color-focus-ring: #0b57d0;
+  --color-overlay: #0f1b2da6;
 
   /* ---- Radius: four steps, by role ---- */
   --radius-sm: 4px;                  /* badges, small tags */
@@ -90,9 +100,9 @@
 
   /* ---- Elevation: borders beat shadows in long lists ---- */
   --shadow-e0: none;
-  --shadow-e1: 0 1px 2px #14201f14;
-  --shadow-e2: 0 4px 12px #14201f1f;
-  --shadow-e3: 0 -2px 16px #14201f1f;
+  --shadow-e1: 0 1px 2px #0f1b2d14;
+  --shadow-e2: 0 2px 4px #0f1b2d0f, 0 8px 20px #0f1b2d14;
+  --shadow-e3: 0 -2px 16px #0f1b2d1f;
 
   /* ---- Type scale ----
      Thirteen semantic styles. Each carries size, leading and weight so a
@@ -151,87 +161,63 @@
   --text-stat--font-weight: 600;
 }
 
-/* ---- Dark theme -----------------------------------------------------
-   Only the tokens change. `on-brand` and `on-supply` flip to dark ink
-   because white text on the lighter dark-theme teal fails contrast —
-   this is why components must never hardcode #fff on a filled button. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-surface-000: #0e1514;
-    --color-surface-100: #141d1c;
-    --color-surface-200: #1c2726;
-    --color-surface-raised: #1a2423;
-    --color-media-ground: #1e2a29;
-    --color-ink-900: #f2f5f4;
-    --color-ink-700: #c8d2d0;
-    --color-ink-500: #93a19f;
-    --color-ink-inverse: #0e1514;
-    --color-border-subtle: #263433;
-    --color-border-strong: #354544;
-    --color-brand-600: #4fb3c4;
-    --color-brand-700: #6bc4d3;
-    --color-brand-100: #123037;
-    --color-on-brand: #062a31;
-    --color-supply-600: #f0a63f;
-    --color-supply-100: #33250f;
-    --color-on-supply: #2a1b06;
-    --color-success-600: #5fbe86;
-    --color-success-100: #14301f;
-    --color-trust-600: #5fbe86;
-    --color-trust-100: #14301f;
-    --color-warn-600: #e0a93c;
-    --color-warn-100: #322609;
-    --color-danger-600: #f07a70;
-    --color-danger-100: #331715;
-    --color-neutral-600: #93a19f;
-    --color-neutral-100: #1c2726;
-    --color-focus-ring: #6bc4d3;
-    --color-overlay: #000000cc;
-    --shadow-e1: 0 1px 2px #00000066;
-    --shadow-e2: 0 4px 12px #00000080;
-    --shadow-e3: 0 -2px 16px #00000099;
-  }
-}
+/* ---- Dark theme: SECONDARY, opt-in only ---------------------------
+   Applies solely when something sets data-theme="dark" on <html>.
+   There is deliberately no prefers-color-scheme arm: a dark-OS visitor
+   gets the light product, because light is what this product is.
 
+   Only tokens change; every component follows, because none of them
+   hardcode a colour. `on-brand` and `on-supply` flip to dark ink here —
+   white text on the lighter dark-theme blue and orange fails contrast,
+   which is exactly why a filled button must never hardcode #fff.      */
 :root[data-theme="dark"] {
-  --color-surface-000: #0e1514;
-  --color-surface-100: #141d1c;
-  --color-surface-200: #1c2726;
-  --color-surface-raised: #1a2423;
-  --color-media-ground: #1e2a29;
-  --color-ink-900: #f2f5f4;
-  --color-ink-700: #c8d2d0;
-  --color-ink-500: #93a19f;
-  --color-ink-inverse: #0e1514;
-  --color-border-subtle: #263433;
-  --color-border-strong: #354544;
-  --color-brand-600: #4fb3c4;
-  --color-brand-700: #6bc4d3;
-  --color-brand-100: #123037;
-  --color-on-brand: #062a31;
-  --color-supply-600: #f0a63f;
-  --color-supply-100: #33250f;
-  --color-on-supply: #2a1b06;
-  --color-success-600: #5fbe86;
-  --color-success-100: #14301f;
-  --color-trust-600: #5fbe86;
-  --color-trust-100: #14301f;
-  --color-warn-600: #e0a93c;
-  --color-warn-100: #322609;
-  --color-danger-600: #f07a70;
-  --color-danger-100: #331715;
-  --color-neutral-600: #93a19f;
-  --color-neutral-100: #1c2726;
-  --color-focus-ring: #6bc4d3;
+  color-scheme: dark;
+
+  --color-surface-000: #0d1520;
+  --color-surface-100: #111a27;
+  --color-surface-200: #1a2534;
+  --color-surface-raised: #16202e;
+  --color-media-ground: #1c2736;
+  --color-ink-900: #eef2f7;
+  --color-ink-700: #c3ccd9;
+  --color-ink-500: #94a1b4;
+  --color-ink-inverse: #0d1520;
+  --color-border-subtle: #25303f;
+  --color-border-strong: #35414f;
+  --color-brand-600: #8ab4f8;
+  --color-brand-700: #a6c7fa;
+  --color-brand-100: #17304f;
+  --color-on-brand: #0a2647;
+  --color-supply-600: #f59b55;
+  --color-supply-700: #f9b782;
+  --color-supply-100: #3a2210;
+  --color-on-supply: #3d1a00;
+  --color-success-600: #6ac48c;
+  --color-success-100: #123522;
+  --color-trust-600: #6ac48c;
+  --color-trust-100: #123522;
+  --color-warn-600: #e3b04b;
+  --color-warn-100: #33280c;
+  --color-danger-600: #f28b82;
+  --color-danger-100: #3b1a17;
+  --color-on-danger: #3b0d09;
+  --color-neutral-600: #94a1b4;
+  --color-neutral-100: #1a2534;
+  --color-focus-ring: #8ab4f8;
   --color-overlay: #000000cc;
   --shadow-e1: 0 1px 2px #00000066;
-  --shadow-e2: 0 4px 12px #00000080;
+  --shadow-e2: 0 2px 4px #0000004d, 0 8px 20px #00000080;
   --shadow-e3: 0 -2px 16px #00000099;
 }
 
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+    /* Without this, a dark-OS browser renders the native <select>
+       popups, scrollbars, autofill and form focus rings dark inside an
+       otherwise white page. Declaring the scheme is the only way to
+       hold those OS-drawn parts to the product's theme. */
+    color-scheme: light;
   }
 
   body {

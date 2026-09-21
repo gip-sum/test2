@@ -49,15 +49,21 @@ Prices and areas are what people actually compare, so they are typeset, not just
 
 ### Colour
 
-The palette is built around one question: *can the user tell, at a glance, what is theirs to act on?*
+**The product is light.** White header, white cards, white inputs, a very light neutral page ground, deep navy text. That is not a theme preference — it is what the product is, applied unconditionally, because a marketplace is read in daylight beside photographs the buyer is judging, and a dark chrome fights the photography. Real property photography is meant to be the loudest thing on any screen; the interface stays quiet so it can be.
 
-- **`brand-600` (deep teal)** is the buyer's action. Search, Enquire, View Phone, Save. Exactly one filled `brand-600` button per surface.
-- **`supply-600` (marigold)** is the seller's action. Post Property, Publish, Renew. It is a different hue on purpose: in a two-sided marketplace the supply-side call to action must never be mistaken for the demand-side one. If both appear on a screen, they are visually distinguishable without reading them.
+Beyond that, the palette answers one question: *can the user tell, at a glance, what is theirs to act on?*
+
+- **`brand-600` (strong blue)** is the buyer's action. Search, Enquire, View Phone, Save. Exactly one filled `brand-600` button per surface.
+- **`supply-600` (orange)** is the seller's action. Post Property, Publish, Renew. A different hue on purpose: in a two-sided marketplace the supply-side call to action must never be mistaken for the demand-side one. If both appear on a screen, they are distinguishable without reading them.
+  - It ships in **two steps**, which is the one place this palette deviates from a flat 600/100 scale. `supply-600` is tuned as bright as an orange can be while still carrying white text (4.51:1 — the ceiling), which leaves it too light to *be* text. **`supply-700` is the foreground step.** Never set type in `supply-600`.
 - **`trust-600` (green)** means verified or active. It is never decorative.
-- **`danger-600` (brick)** means rejected, destructive or wrong.
-- **Neutrals carry a green-grey bias**, tuned to sit under the teal without going cold. A pure grey next to `brand-600` reads as unconsidered.
+- **`danger-600` (red)** means rejected, destructive or wrong.
+- **`warn-600` (amber)** is for caution, but warning *body copy* is set in `ink-900`. Amber text on an amber band reads brown and turns a light notice into a dark bar.
+- **Neutrals carry a cool navy-grey bias**, tuned to sit under the blue. A warm grey next to `brand-600` reads as unconsidered.
 
-Both themes are first-class. Every colour is declared per theme, and `on-brand` / `on-supply` exist precisely because white text on the *dark* theme's lighter teal would fail contrast — **never hardcode `#fff` on a filled button.**
+Every pairing the components actually render is measured, not eyeballed — including the tight ones, `ink-500` on the sunken surface (4.86:1) and white on `supply-600` (4.51:1). Both sit just above AA, deliberately: they are the limit of what the hue allows while staying itself.
+
+**Dark is secondary.** It is declared in full and every component follows it, but it applies only when something sets `data-theme="dark"`. `prefers-color-scheme` reaches neither the tokens nor the `dark:` variant, so a dark-OS visitor gets the light product. `on-brand` / `on-supply` / `on-danger` exist because white text on the dark theme's lighter blue and orange would fail contrast — **never hardcode `#fff` on a filled button.**
 
 ### Type
 

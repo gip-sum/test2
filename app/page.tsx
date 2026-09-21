@@ -39,7 +39,7 @@ export default function HomePage() {
       <DevDataNotice />
 
       {/* Search block — the dominant interaction. */}
-      <section className="border-b border-border-subtle bg-surface-000/60">
+      <section className="border-b border-border-subtle bg-surface-000">
         <div className="mx-auto max-w-[1320px] px-4 pb-6 pt-5 lg:px-8 lg:pb-8 lg:pt-7">
           {/* Echoes the brand line in lib/brand.ts, with the city that
               makes it a searchable heading rather than a slogan. Page copy,
