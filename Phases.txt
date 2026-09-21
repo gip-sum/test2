@@ -1,0 +1,1085 @@
+GHARBAZAAR — REAL-ESTATE MARKETPLACE
+MASTER 75-PHASE PRODUCT ROADMAP
+
+PROJECT GOAL
+Build a production-grade Indian real-estate marketplace with a user experience comparable in breadth and depth to major platforms such as 99acres, while maintaining an original brand, visual identity, implementation, and product decisions.
+
+Development philosophy:
+QUALITY > SPEED
+REAL PRODUCT > DEMO
+CORRECT UX > FEATURE COUNT
+PRODUCTION READINESS > QUICK MVP
+
+Current status:
+Phase 1 — Complete
+Phase 2 — Complete
+Phase 3 — Complete
+Phase 4 — Next
+
+Temporary brand:
+GharBazaar
+
+Final brand:
+To be decided by client later.
+
+
+==================================================
+FOUNDATION & CORE MARKETPLACE
+==================================================
+
+PHASE 1 — DESIGN SYSTEM & APPLICATION FOUNDATION
+Status: COMPLETE
+
+Build the production design-token system, typography, global styles, application shell, header, bottom navigation and reusable primitives.
+
+Key focus:
+- Tailwind v4 token architecture
+- Archivo + IBM Plex Sans
+- Responsive foundation
+- Accessibility
+- GharBazaar temporary branding
+- Automated verification
+
+
+PHASE 2 — HOMEPAGE & DISCOVERY
+Status: COMPLETE
+
+Build the search-first homepage that introduces the marketplace and gets users into property discovery quickly.
+
+Key focus:
+- Buy/Rent
+- Kolkata location search
+- Property type
+- Budget
+- BHK
+- Popular localities
+- Recent listings
+- Seller CTA
+- Trust communication
+
+
+PHASE 3 — SEARCH, FILTERS & RESULTS
+Status: COMPLETE
+
+Build the core marketplace search engine and results experience.
+
+Key focus:
+- URL-driven search state
+- Multi-locality search
+- ~20 filters
+- Facet counts
+- Sorting
+- Pagination
+- Filter chips
+- Zero-result recovery
+- Mobile filter sheet
+- Desktop filter rail
+
+
+PHASE 4 — PROPERTY DETAIL PAGE
+
+Build the complete property detail page and make it the central conversion surface of the marketplace.
+
+Key focus:
+- Gallery
+- Price
+- Property facts
+- Description
+- Amenities
+- Location
+- Seller information
+- Contact/enquiry
+- Similar properties
+
+
+PHASE 5 — PROPERTY GALLERY & MEDIA SYSTEM
+
+Build a proper property-media experience rather than simple image rendering.
+
+Key focus:
+- Multiple images
+- Full-screen gallery
+- Swipe gestures
+- Image counters
+- Lazy loading
+- Responsive images
+- Missing-image handling
+
+
+PHASE 6 — USER AUTHENTICATION
+
+Build the user identity foundation.
+
+Key focus:
+- Login
+- Registration
+- OTP
+- Session management
+- Logout
+- Account states
+- Authentication guards
+
+
+PHASE 7 — USER ACCOUNT
+
+Build the buyer's account area.
+
+Key focus:
+- Profile
+- Contact details
+- Preferences
+- Account settings
+- Authentication state
+- Basic activity
+
+
+PHASE 8 — SAVE / SHORTLIST
+
+Build property saving and shortlist functionality.
+
+Key focus:
+- Save property
+- Remove property
+- Saved properties page
+- Persistent state
+- Login handling
+- Empty state
+
+
+PHASE 9 — ENQUIRY / LEAD SYSTEM
+
+Build the core marketplace lead loop.
+
+Key focus:
+- Enquiry creation
+- Buyer information
+- Seller notification
+- Lead status
+- Duplicate enquiry handling
+- Lead history
+
+
+PHASE 10 — PHONE CONTACT & OTP REVEAL
+
+Build controlled phone-number access.
+
+Key focus:
+- OTP verification
+- Contact reveal
+- Privacy
+- Duplicate reveal handling
+- Seller contact protection
+- Audit trail
+
+
+==================================================
+SELLER / SUPPLY PLATFORM
+==================================================
+
+PHASE 11 — POST PROPERTY ENTRY FLOW
+
+Build the beginning of the seller experience.
+
+Key focus:
+- Owner
+- Agent
+- Builder
+- Intent
+- Property type
+- Guided workflow
+- Mobile-first form
+
+
+PHASE 12 — PROPERTY INFORMATION FORM
+
+Build detailed property information collection.
+
+Key focus:
+- BHK
+- Area
+- Carpet/built-up/super built-up
+- Bathrooms
+- Furnishing
+- Floor
+- Total floors
+- Property age
+- Availability
+
+
+PHASE 13 — PROPERTY LOCATION FORM
+
+Build accurate property-location selection.
+
+Key focus:
+- City
+- Locality
+- Sub-locality
+- Society
+- Address
+- Latitude/longitude collection
+- Location validation
+
+
+PHASE 14 — PROPERTY PRICING
+
+Build pricing and commercial information.
+
+Key focus:
+- Sale price
+- Rent
+- Deposit
+- Maintenance
+- Price per sqft
+- Negotiability
+- Pricing validation
+
+
+PHASE 15 — PROPERTY PHOTO UPLOAD
+
+Build production-quality seller media upload.
+
+Key focus:
+- Multiple uploads
+- Preview
+- Reorder
+- Delete
+- Compression
+- Validation
+- Upload progress
+
+
+PHASE 16 — PROPERTY DRAFT & AUTOSAVE
+
+Make property posting resilient.
+
+Key focus:
+- Draft creation
+- Autosave
+- Resume later
+- Partial completion
+- Recovery after refresh
+- Draft list
+
+
+PHASE 17 — PROPERTY PREVIEW
+
+Create the exact buyer-facing preview before publishing.
+
+Key focus:
+- Buyer-style preview
+- Missing information warnings
+- Image preview
+- Pricing preview
+- Seller information
+- Final confirmation
+
+
+PHASE 18 — PROPERTY PUBLISHING & LIFECYCLE
+
+Build the complete listing lifecycle.
+
+Key focus:
+- Draft
+- Under review
+- Active
+- Rejected
+- Expired
+- Deleted
+- Re-submit
+
+
+PHASE 19 — SELLER DASHBOARD
+
+Build the main seller workspace.
+
+Key focus:
+- My properties
+- Drafts
+- Active listings
+- Expired listings
+- Enquiries
+- Listing status
+- Quick actions
+
+
+PHASE 20 — SELLER LISTING ANALYTICS
+
+Give sellers meaningful performance information.
+
+Key focus:
+- Views
+- Saves
+- Enquiries
+- Contact reveals
+- Listing performance
+- Basic trends
+
+
+==================================================
+TRUST, MODERATION & OPERATIONS
+==================================================
+
+PHASE 21 — ADMIN DASHBOARD
+
+Build the operational control center.
+
+Key focus:
+- Overview
+- Listings
+- Users
+- Leads
+- Reports
+- Moderation
+- System status
+
+
+PHASE 22 — LISTING MODERATION
+
+Build the human moderation workflow.
+
+Key focus:
+- Review listing
+- Approve
+- Reject
+- Request correction
+- Moderation reasons
+- Audit history
+
+
+PHASE 23 — USER & SELLER MANAGEMENT
+
+Build admin-side account management.
+
+Key focus:
+- Search users
+- View accounts
+- Seller roles
+- Account status
+- Listing history
+- Lead activity
+
+
+PHASE 24 — REPORT PROPERTY / USER
+
+Build marketplace reporting.
+
+Key focus:
+- Report listing
+- Report seller
+- Report reason
+- Report status
+- Admin resolution
+- Abuse prevention
+
+
+PHASE 25 — DUPLICATE LISTING DETECTION
+
+Build initial duplicate detection.
+
+Key focus:
+- Similar properties
+- Same seller
+- Similar location
+- Similar price
+- Similar media
+- Duplicate warnings
+
+
+PHASE 26 — SPAM & QUALITY CONTROLS
+
+Improve marketplace inventory quality.
+
+Key focus:
+- Suspicious content
+- Contact information abuse
+- Repeated submissions
+- Invalid listings
+- Rate limiting
+- Quality flags
+
+
+PHASE 27 — AUDIT LOGGING
+
+Build an immutable operational history.
+
+Key focus:
+- Admin actions
+- Listing changes
+- User actions
+- Moderation actions
+- Contact reveals
+- Important system events
+
+
+==================================================
+LOCATION & DISCOVERY
+==================================================
+
+PHASE 28 — LOCATION GAZETTEER
+
+Strengthen the location system.
+
+Key focus:
+- State
+- City
+- Locality
+- Sub-locality
+- Society
+- Aliases
+- Stable IDs
+
+
+PHASE 29 — CITY HUB PAGES
+
+Create major city discovery pages.
+
+Key focus:
+- Kolkata
+- Buy
+- Rent
+- Popular localities
+- Inventory
+- SEO metadata
+- Internal linking
+
+
+PHASE 30 — LOCALITY LANDING PAGES
+
+Build inventory-backed locality pages.
+
+Key focus:
+- Locality overview
+- Available properties
+- Filters
+- Counts
+- Nearby localities
+- SEO structure
+
+
+PHASE 31 — SEO LANDING MATRIX
+
+Expand programmatic marketplace discovery.
+
+Key focus:
+- City × intent
+- City × locality
+- City × property type
+- City × BHK
+- City × budget
+- Canonical handling
+
+
+PHASE 32 — SEARCH SUGGESTIONS & TYPEAHEAD
+
+Improve location and property discovery.
+
+Key focus:
+- Locality suggestions
+- Sub-localities
+- Recent searches
+- Popular searches
+- Aliases
+- Keyboard navigation
+
+
+PHASE 33 — NEARBY LOCATION DISCOVERY
+
+Help users recover from restrictive searches.
+
+Key focus:
+- Nearby localities
+- Inventory counts
+- Distance
+- Search compatibility
+- Alternative suggestions
+
+
+PHASE 34 — MAP SEARCH
+
+Add geographic property discovery.
+
+Key focus:
+- Map
+- Property markers
+- Search area
+- Map/list synchronization
+- Clustering
+- Mobile map experience
+
+
+PHASE 35 — GEOLOCATION & DISTANCE SEARCH
+
+Improve geographic intelligence.
+
+Key focus:
+- Distance-based search
+- Nearby properties
+- Coordinates
+- Location radius
+- Future PostGIS readiness
+
+
+==================================================
+BUYER RETENTION & DISCOVERY
+==================================================
+
+PHASE 36 — SAVED SEARCHES
+
+Allow users to save search criteria.
+
+Key focus:
+- Search name
+- Filters
+- Location
+- Budget
+- BHK
+- Edit/delete
+- Search history
+
+
+PHASE 37 — SEARCH ALERTS
+
+Notify users about matching inventory.
+
+Key focus:
+- New listings
+- Price changes
+- Matching properties
+- Notification preferences
+- Email/SMS/push architecture
+
+
+PHASE 38 — RECENT SEARCHES
+
+Improve repeat discovery.
+
+Key focus:
+- Search history
+- Quick repeat
+- Clear history
+- Privacy
+- Mobile UX
+
+
+PHASE 39 — RECOMMENDED PROPERTIES
+
+Introduce recommendation logic.
+
+Key focus:
+- Search behavior
+- Saved properties
+- Viewed properties
+- Similar properties
+- Explainable recommendations
+
+
+PHASE 40 — PROPERTY COMPARISON
+
+Allow users to compare properties.
+
+Key focus:
+- Price
+- Area
+- BHK
+- Location
+- Amenities
+- Seller
+- Side-by-side comparison
+
+
+==================================================
+AGENTS, BUILDERS & PROJECTS
+==================================================
+
+PHASE 41 — AGENT PROFILES
+
+Build public agent profiles.
+
+Key focus:
+- Agent information
+- Listings
+- Contact
+- Experience
+- Location coverage
+- Lead flow
+
+
+PHASE 42 — AGENT DASHBOARD
+
+Build professional seller tools.
+
+Key focus:
+- Multiple listings
+- Leads
+- Analytics
+- Profile
+- Listing management
+- Bulk operations
+
+
+PHASE 43 — BUILDER PROFILES
+
+Build builder discovery.
+
+Key focus:
+- Builder profile
+- Projects
+- Listings
+- Contact
+- Reputation information
+- Locations
+
+
+PHASE 44 — PROJECT DATA MODEL
+
+Introduce the second major property domain.
+
+Key focus:
+- Projects
+- Configurations
+- Towers
+- Units
+- Project metadata
+- Relationships
+
+
+PHASE 45 — PROJECT DETAIL PAGES
+
+Build project discovery pages.
+
+Key focus:
+- Project gallery
+- Overview
+- Configurations
+- Amenities
+- Location
+- Builder
+- Pricing
+
+
+PHASE 46 — PROJECT CONFIGURATIONS
+
+Build detailed project inventory.
+
+Key focus:
+- 1/2/3/4 BHK
+- Area ranges
+- Price ranges
+- Availability
+- Floor plans
+- Unit types
+
+
+PHASE 47 — PROJECT PAYMENT & PRICING
+
+Add project-specific commercial information.
+
+Key focus:
+- Payment plans
+- Price ranges
+- Booking information
+- Charges
+- Possession
+- Pricing disclosures
+
+
+==================================================
+TRUST & INFORMATION ECOSYSTEM
+==================================================
+
+PHASE 48 — PROPERTY REVIEWS
+
+Introduce a structured review system.
+
+Key focus:
+- Review creation
+- Moderation
+- Ratings
+- Review status
+- Abuse controls
+- Empty-state strategy
+
+
+PHASE 49 — LOCALITY REVIEWS & INSIGHTS
+
+Expand trust beyond individual listings.
+
+Key focus:
+- Locality experience
+- Connectivity
+- Amenities
+- Lifestyle
+- Resident feedback
+- Moderated content
+
+
+PHASE 50 — LOCALITY INTELLIGENCE
+
+Build deeper locality information.
+
+Key focus:
+- Property inventory
+- Average prices
+- Property types
+- Popularity
+- Nearby locations
+- Market indicators
+
+
+PHASE 51 — PRICE TRENDS
+
+Build historical property pricing.
+
+Key focus:
+- Locality trends
+- Property type
+- BHK
+- Sale/rent
+- Historical data
+- Charts
+
+
+PHASE 52 — PROPERTY PRICE ANALYTICS
+
+Give buyers better pricing context.
+
+Key focus:
+- Price per sqft
+- Comparable listings
+- Historical movement
+- Price positioning
+- Data freshness
+
+
+PHASE 53 — PROPERTY / LOCALITY FAQ
+
+Build structured informational content.
+
+Key focus:
+- Common questions
+- Locality questions
+- Property questions
+- SEO
+- Structured data
+
+
+==================================================
+CONTENT & SEO PLATFORM
+==================================================
+
+PHASE 54 — GUIDES & ARTICLES
+
+Build the content ecosystem.
+
+Key focus:
+- Buying guides
+- Renting guides
+- Kolkata guides
+- Legal information
+- Finance
+- Moving/home information
+
+
+PHASE 55 — CONTENT MANAGEMENT SYSTEM
+
+Build admin-controlled content.
+
+Key focus:
+- Articles
+- Authors
+- Categories
+- Drafts
+- Publishing
+- SEO metadata
+
+
+PHASE 56 — ADVANCED SEO SYSTEM
+
+Strengthen organic discovery.
+
+Key focus:
+- Canonicals
+- Metadata
+- Internal links
+- Breadcrumbs
+- Structured data
+- Indexation rules
+
+
+PHASE 57 — SITEMAP & INDEXATION ENGINE
+
+Build scalable SEO infrastructure.
+
+Key focus:
+- Property sitemap
+- Locality sitemap
+- City sitemap
+- Project sitemap
+- Content sitemap
+- Indexation controls
+
+
+PHASE 58 — SEO QUALITY & THIN-CONTENT CONTROL
+
+Prevent programmatic SEO from becoming low-quality.
+
+Key focus:
+- Inventory thresholds
+- Canonical rules
+- Noindex rules
+- Duplicate detection
+- Expired pages
+- Content quality gates
+
+
+==================================================
+MONETIZATION
+==================================================
+
+PHASE 59 — SELLER PLANS
+
+Introduce seller monetization architecture.
+
+Key focus:
+- Free plan
+- Paid plans
+- Quotas
+- Listing limits
+- Feature limits
+- Plan management
+
+
+PHASE 60 — PAYMENT SYSTEM
+
+Build production payments.
+
+Key focus:
+- Payment provider
+- Orders
+- Payment status
+- Webhooks
+- Failed payments
+- Refunds
+
+
+PHASE 61 — FEATURED LISTINGS
+
+Build paid listing promotion.
+
+Key focus:
+- Featured placement
+- Promotion duration
+- Eligibility
+- Disclosure
+- Seller controls
+
+
+PHASE 62 — PROPERTY BOOSTING
+
+Build controlled ranking promotion.
+
+Key focus:
+- Boost packages
+- Ranking boundaries
+- Expiry
+- Analytics
+- Transparency
+
+
+PHASE 63 — BILLING & INVOICES
+
+Build seller financial records.
+
+Key focus:
+- Transactions
+- Invoices
+- GST information
+- Payment history
+- Refunds
+- Downloads
+
+
+PHASE 64 — QUOTA & SUBSCRIPTION LEDGER
+
+Build reliable commercial accounting.
+
+Key focus:
+- Append-only ledger
+- Usage
+- Credits
+- Debits
+- Subscription periods
+- Reconciliation
+
+
+==================================================
+ADVANCED TRUST & PLATFORM INTELLIGENCE
+==================================================
+
+PHASE 65 — VERIFICATION FRAMEWORK
+
+Introduce real verification instead of fake badges.
+
+Key focus:
+- Verification types
+- Verification status
+- Evidence
+- Expiry
+- Admin review
+- Clear user-facing meaning
+
+
+PHASE 66 — DOCUMENT VERIFICATION
+
+Add optional document-based verification.
+
+Key focus:
+- Document upload
+- Secure storage
+- Review
+- Verification status
+- Privacy
+- Audit trail
+
+
+PHASE 67 — FRAUD & RISK ENGINE
+
+Build stronger marketplace protection.
+
+Key focus:
+- Suspicious sellers
+- Duplicate accounts
+- Repeated listings
+- Contact abuse
+- Behavioral signals
+- Risk scoring
+
+
+PHASE 68 — ADVANCED LEAD MANAGEMENT
+
+Expand the lead ecosystem.
+
+Key focus:
+- Lead pipeline
+- Lead status
+- Follow-up
+- Seller notes
+- Contact history
+- Lead analytics
+
+
+PHASE 69 — MARKETPLACE ANALYTICS
+
+Build platform-wide analytics.
+
+Key focus:
+- Searches
+- Listings
+- Views
+- Enquiries
+- Contacts
+- Conversion funnels
+
+
+PHASE 70 — ADMIN REPORTING
+
+Create operational intelligence.
+
+Key focus:
+- Inventory reports
+- Seller reports
+- Lead reports
+- Revenue
+- Moderation
+- Search analytics
+
+
+==================================================
+PERFORMANCE, SCALE & PRODUCTION
+==================================================
+
+PHASE 71 — PERFORMANCE ENGINEERING
+
+Perform a complete production performance pass.
+
+Key focus:
+- LCP
+- CLS
+- INP
+- TTFB
+- JavaScript
+- CSS
+- Images
+- Requests
+
+
+PHASE 72 — CACHING & BACKGROUND JOBS
+
+Introduce infrastructure only where justified.
+
+Key focus:
+- Redis
+- Cache strategy
+- Background jobs
+- Image processing
+- Notifications
+- Expiry jobs
+
+
+PHASE 73 — ADVANCED SEARCH INFRASTRUCTURE
+
+Move beyond PostgreSQL search when scale requires it.
+
+Key focus:
+- OpenSearch/Elasticsearch
+- Indexing
+- Search ranking
+- Synonyms
+- Facets
+- Relevance tuning
+
+
+PHASE 74 — OBSERVABILITY, SECURITY & PRODUCTION HARDENING
+
+Prepare the platform for real users and real business operations.
+
+Key focus:
+- Error monitoring
+- Logs
+- Metrics
+- Tracing
+- Security
+- Rate limiting
+- Backups
+- Disaster recovery
+- Privacy
+- Production deployment
+
+
+PHASE 75 — FULL PRODUCTION LAUNCH & CONTINUOUS IMPROVEMENT
+
+Final platform-wide readiness and launch.
+
+Key focus:
+- Full regression testing
+- Security review
+- Accessibility audit
+- SEO audit
+- Performance audit
+- Real inventory migration
+- Production monitoring
+- Client acceptance testing
+- Launch checklist
+- Post-launch roadmap
+
+After Phase 75, development continues through new phases based on:
+- Client requirements
+- User feedback
+- Business requirements
+- Market opportunities
+- Analytics
+- New marketplace features
+- Operational requirements
+
+75 phases is NOT the end of the product.
+It is the first complete production roadmap.
