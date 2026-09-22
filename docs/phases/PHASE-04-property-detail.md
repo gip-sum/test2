@@ -1,118 +1,140 @@
 # Phase 4 — Property detail page
 
-**Status:** PROPOSED — awaiting approval. No code written.
-**Source of scope:** `Phases.txt` → Phase 4.
-**Depends on:** Phase 3 (results link here).
+**Status:** REVISED — awaiting approval. No application code written.
+**Scope source:** `Phases.txt` → Phase 4.
+**Behaviour source:** `docs/kolkata-marketplace-screen-spec.md` §5 (Screen 4).
+**Data source:** `docs/PHASE-0-PLAN.md` §9.
 
-> Revised after the client's master roadmap arrived. My first draft split
-> gallery, contact and similar properties into separate phases; `Phases.txt`
-> puts all three in Phase 4's key focus. This spec follows `Phases.txt`.
+> **Revision note.** The first draft was written before screen-spec §5 was
+> read, and split gallery, contact and similar properties into later
+> phases. This revision follows §5 and the client decisions of 2026-09-22
+> (B–I). Where §5 and `Phases.txt` disagree on *sequencing*, `Phases.txt`
+> wins; where they agree on *behaviour*, §5 is the detail.
 
 ---
 
 ## 1. Scope
 
-The central conversion surface of the marketplace. Everything before it
-exists to get a buyer here, and everything after it depends on the buyer
-deciding to act here.
+The central conversion surface. Every phase before this one exists to get a
+buyer here; several after it depend on the buyer acting here.
 
-### In scope — the nine key-focus areas
+Today **every property link the results page emits is a dead 404** —
+`/property/2-bhk-flat-for-sale-in-behala-p_c70il` matches no route. Phase 4
+closes a live hole in the product.
 
-| Focus | What Phase 4 delivers |
+### In scope
+
+| Area | Phase 4 delivers |
 |---|---|
-| **Gallery** | Working multi-image viewer: thumbnails, next/previous, counter, keyboard. Not the full media system — Phase 5 adds full-screen, swipe gestures and responsive sources. |
-| **Price** | Price, price per carpet sqft, rent deposit and maintenance where known, price-reduced marker |
-| **Property facts** | Carpet / built-up / super area stated separately, floor of total, facing, age or possession, furnishing, parking, ownership, availability |
+| **Route** | `/property/{slug}-p{id}`, canonicalisation, 404 |
+| **Gallery** | Multi-image viewer: thumbnail strip, next/previous, counter, keyboard, reserved aspect ratio |
+| **Development imagery** | Generated sample images so the gallery is genuinely testable, labelled as sample inventory |
+| **Price** | Price, per carpet sqft, deposit and maintenance for rent, negotiable marker, price-reduced marker |
+| **Property facts** | Full §5 grid: type, status, furnishing, floor/total, facing, age, parking, bathrooms, **balconies**, availability, **ownership** |
 | **Description** | Seller prose, clamped with an accessible expand |
-| **Amenities** | Grouped, with absence never implied as presence |
-| **Location** | Breadcrumb, locality and sub-locality, address line. No map — Phase 34. |
-| **Seller information** | Owner / agent / builder, name, listing age, response expectation |
-| **Contact / enquiry** | A working enquiry form that creates a real enquiry record through a new `lib/enquiry` seam |
-| **Similar properties** | Ranked by an explainable rule, not a black box |
+| **Amenities** | Grouped, expandable, absence never implied as presence |
+| **Location** | Breadcrumb, locality, sub-locality, **society**, **nearby landmarks** (text) |
+| **Seller information** | Owner / agent / builder, name, listing age |
+| **Contact / enquiry** | Working enquiry, **signed out**, via a new `lib/enquiry` seam |
+| **Similar properties** | §5 tiered rule, minimum 4 |
+| **Structured data** | `RealEstateListing` + `BreadcrumbList` JSON-LD |
+| **Gazetteer** | SOCIETY-type locations seeded so `society_location_id` has a target |
+| **Docs** | `README.md` refreshed; `docs/PROJECT-CONTEXT.md` created |
 
-Plus: route and canonicalisation, structured data, metadata, and the
-not-found / unavailable states.
-
-### Explicitly out of scope, and where it lives
+### Out of scope, and who owns it
 
 | Out | Phase |
 |---|---|
-| Full-screen gallery, swipe, floor plans, responsive image sources | 5 |
-| Sign-in; enquiring is possible without an account | 6 |
-| Enquiry inbox, lead status, duplicate handling, lead history | 9 |
-| **Phone number reveal and OTP** — no reveal control ships in Phase 4 | 10 |
-| Shortlist persistence — the save control stays local | 8 |
-| Map, distance, commute | 34, 35 |
-| Locality statistics, price trends, price positioning | 50, 51, 52 |
-| Project and builder links from a listing | 43, 44 |
-| Reviews, ratings, verification badges | 48, 65 |
-| Report listing | 24 |
+| Full-screen gallery, swipe gestures, video, floor plans, responsive sources | 5 |
+| Authentication; enquiry works signed out | 6 |
+| Shortlist persistence — save stays local | 8 |
+| Enquiry inbox, lead status, real duplicate handling, lead history | 9 |
+| **Phone reveal, OTP, payload protection, reveal dedup, reveal quotas** | 10 |
+| Posting flow that authors descriptions and landmarks | 11–17 |
+| **HTTP 410 "Property unavailable" (screen-spec §6)** — no lifecycle exists to make a listing unavailable | 18 |
+| Report this property (§5 mobile layout item 8) | 24 |
+| Proper adjacency and nearby-location discovery | 33 |
+| Map, coordinates, distance | 34, 35 |
+| Locality statistics, price trends, price positioning | 50–52 |
+| Builder and project links from a listing | 43, 44 |
+| Reviews and verification badges | 48, 65 |
 | Behavioural recommendations | 39 |
 
-**No phone reveal in this phase.** Phase 10 owns controlled phone access
-with OTP and an audit trail. Phase 4 ships the enquiry form only, and shows
-no phone number anywhere — not masked, not partial. A masked number now
-would have to be unshipped when the real access control arrives.
+### Explicitly NOT judged against these §5 criteria
+
+Per decision **E**, these are Phase 10's and Phase 18's:
+
+- Seller contact details absent from the payload until reveal
+- Enquiry row written *before* the number renders
+- Repeat reveals deduplicated
+- HTTP 410 for a removed listing
+
+**No phone number appears anywhere in Phase 4** — not revealed, not masked,
+not partial. A masked number would have to be unshipped when real access
+control arrives.
 
 ---
 
 ## 2. UX requirements
 
-### Content order
+### Mobile layout (§5, minus deferred items)
 
-Fixed, following the sequence a buyer actually decides in — *can I afford
-it*, *does it fit*, *where is it*, *who is selling*, *what else is there*:
+1. `AppHeader`
+2. **Gallery** — full-bleed, 4:3, counter
+3. **Header block** — price, per sqft, BHK · baths · area **with basis**, locality, badges
+4. **Key details grid**
+5. **Amenities** — grouped, expandable
+6. **Description**
+7. **Location** — society, sub-locality, locality, nearby landmarks
+8. **Seller block**
+9. **Similar properties** — horizontal scroller
+10. **Sticky contact bar** — reachable at every scroll position
+11. **Legal disclaimer**
 
-1. Breadcrumb — Kolkata › New Town › 3 BHK flat
-2. Gallery
-3. Price header — price, per-sqft, reduced marker, save control
-4. Identity — configuration, society or title, address line
-5. Key facts grid
-6. Description
-7. Amenities
-8. Area detail — three bases separately, with a sentence on why they differ
-9. Location
-10. Seller information
-11. **Contact** — the primary action
-12. Similar properties
-13. Disclaimers
-14. Footer discovery — back into search for this locality and type
+Gallery tabs for Photos / Video / Floor plan are **not rendered** in Phase
+4: there is only one media kind, and a one-tab tab bar is noise. Phase 5
+introduces the tab bar with the tabs it earns.
+
+### Desktop layout (§5)
+
+Two columns. Left: gallery, details, amenities, description, location,
+similar. Right: sticky card with price, contact action and seller block.
+In-page anchor navigation at 1280+.
 
 ### Contact behaviour
 
-- Primary CTA is present, prominent, and uses the **buyer** accent, not the
-  seller's orange.
-- On phones the CTA lives in a **sticky bottom bar** above the bottom nav,
-  because the decision to contact happens anywhere on a long page. On
-  desktop it sits in the sticky right column.
-- The form asks for name, phone and an optional message. Nothing else.
-  Every additional field measurably costs leads.
-- Submitting shows an immediate, honest confirmation: the enquiry has been
-  sent to the seller, the seller has the buyer's number, and the buyer will
-  **not** see the seller's number in this release.
-- Submitting twice for the same listing is not an error and not a silent
-  no-op. The user is told the enquiry already went; Phase 9 owns real
-  duplicate handling.
-- A failed submission preserves everything typed.
+- Primary CTA uses the **buyer** accent, never the seller's orange.
+- Reachable at every scroll position — sticky bottom bar on phones (above
+  the bottom nav), sticky right card on desktop.
+- Form asks **name, phone, optional message**. Nothing else; every extra
+  field measurably costs leads.
+- Success confirmation states plainly: the enquiry reached the seller, the
+  seller has the buyer's number, and the buyer will not see the seller's
+  number in this release.
+- **Enquiring twice** is not an error and not a silent no-op — see §5's
+  "Enquire again" behaviour and the ambiguity in §10.
+- Failed submission preserves everything typed.
 
-### Similar properties
+### Similar properties — §5 rule, verbatim
 
-Explainable, because "similar" that cannot be explained is noise:
+1. Same locality → same property type → same BHK → price within **±20%**
+2. If fewer than 4 → widen to **adjacent localities**
+3. If still fewer than 4 → widen price to **±35%**
+4. Never the current listing. Never padded. Section **omitted** if still
+   under 4.
 
-1. Same locality, same intent, same bedroom count, price within ±25%
-2. Falls back to same locality and intent within ±40%
-3. Falls back to the same sub-city area
-4. Section is **omitted entirely** when fewer than three qualify
-
-Never the current listing. Never padded to fill a row.
+§5 orders by "proximity then recency". **There are no coordinates in this
+project**, so proximity is not computable — see §10 for the options.
 
 ### Copy rules
 
 - No claim the platform cannot stand behind: no "verified", "premium",
   "trending", no view counts, no "N people enquired".
-- An absent field is absent, not "N/A" and not zero. A listing with no
-  stated floor says nothing about floors.
-- Disclaimer states plainly that listings are posted by owners, agents and
+- An absent field is absent — not "N/A", not zero.
+- **Every gallery image carries a visible sample-inventory marker.** The
+  images are generated for development and must never read as photographs
+  of a real property.
+- Disclaimer states that listings are posted by owners, agents and
   builders, that we review against content rules, and that we do **not**
   verify ownership, documents, measurements or prices.
 
@@ -120,74 +142,115 @@ Never the current listing. Never padded to fill a row.
 
 ## 3. Technical requirements
 
-- Server component. Only genuinely interactive parts — gallery, description
-  expand, save, contact form — are client components.
+### Route and identity — decision D
+
+Canonical: **`/property/{slug}-p{id}`** → `/property/2-bhk-flat-for-sale-in-behala-pc70il`
+
+- `publicId` becomes the **bare opaque id** (`c70il`); the `p` prefix lives
+  in the URL, not in the stored value. The current `p_c70il` form is
+  replaced everywhere.
+- **Id charset: lowercase `a–z0–9`, no hyphens, length 6–12.** Excluding
+  hyphens is what makes parsing unambiguous.
+- **Parsing rule:** split the final path segment on its *last* hyphen; the
+  right side must match `^p[a-z0-9]{6,12}$`; the id is that minus the
+  leading `p`. Unambiguous even when a slug ends in a word starting with
+  `p` (`…-in-park-pc70il` → `c70il`).
+- Ids are opaque and non-sequential. The fixture generator produces them
+  deterministically for reproducibility; **a real generator is Phase 19's**
+  and must not be sequential.
+- Slug is decoration. A mismatched slug **301s** to canonical rather than
+  rendering — otherwise every stale share link mints a duplicate page.
+
+### Modules
+
 - `lib/property/queries.ts` gains `getPropertyDetail(publicId)`.
-  `lib/property/similar.ts` gains `getSimilarProperties(property)`. Both
-  stay behind the existing data seam.
-- **New `lib/enquiry/` domain module** with `createEnquiry(input)` and its
-  own types. Backed by an in-memory store until the database lands, exactly
-  as listings are today — same seam, same swap. Phase 9 extends the module;
-  it does not replace it.
-- A `PropertyDetail` type extends `PropertySummary` with what a page needs
-  and a card does not. `PropertySummary` is **not** widened — the card
-  payload stays small.
-- URL is `/property/{slug}-{publicId}`. `publicId` is identity; the slug is
-  decoration. A slug that does not match **301s** to canonical rather than
-  rendering, or every stale share link mints a duplicate page.
-- `generateMetadata` per listing: title, description, canonical, OG image.
-- JSON-LD server-side. Every emitted field must be one we actually hold —
-  no inferred values, no padding.
+- **New `lib/property/similar.ts`** — `getSimilarProperties()`, pure and
+  unit-tested per tier.
+- **New `lib/enquiry/`** — `types.ts` and `commands.ts` with
+  `createEnquiry(input)`. In-memory store behind the same seam listings
+  use, so Phase 9 *extends* the module rather than replacing it.
+- `PropertyDetail` extends `PropertySummary`. **`PropertySummary` is not
+  widened** — the card payload stays small.
+- Server component. Only gallery, description expand, save and the contact
+  form are client components.
 - Enquiry submission is a **server action** with server-side validation.
-  Client validation is a convenience, never the boundary.
-- Phone numbers are validated as Indian mobile numbers, stored normalised.
+  Client validation is convenience, never the boundary.
+- Phone validated as an Indian mobile number and stored normalised.
+- JSON-LD server-side; every emitted field must be one we actually hold.
+- Similar properties load without blocking first paint (§5 acceptance).
 - No new npm dependency without naming it here first.
+
+### Development imagery — decision B
+
+**All outbound HTTP is blocked in this environment** (verified: `000` from
+every image host), so licensed stock photography cannot be fetched.
+Images are therefore **generated locally with Pillow**, which decision B
+permits.
+
+- A committed generator script produces a fixed set of interior/exterior
+  images at 4:3, several per listing.
+- They are **illustrative, not photographic** — see §10.
+- Stored under `public/dev-media/`, referenced by the fixture, and
+  **removed with the fixture** when real inventory arrives.
+- Every rendered image carries a visible sample marker, and the existing
+  development-data banner stays.
 
 ---
 
 ## 4. Data requirements
 
-Introduces one new entity (`enquiry`, per the register) and extends the
-listing fixture. No project, builder or agent entity — those are 44, 43, 41.
+No new **entity** except `enquiry`. Projects, builders and agents remain
+Phases 44, 43, 41.
 
-### New: `enquiry`
+### New entity: `enquiry`
 
 | Field | Type | Notes |
 |---|---|---|
 | `id` | string | |
 | `listingId` | string | |
 | `name` | string | |
-| `phone` | string | Normalised E.164 |
+| `phone` | string | Normalised |
 | `message` | string? | |
 | `createdAt` | ISO | |
-| `source` | enum | `property_page` for now |
+| `source` | enum | `property_page` |
 
 Deliberately **not** in Phase 4: lead status, assignment, follow-ups, read
-state, seller notes. Those are Phase 9 and Phase 68.
+state, seller notes — Phases 9 and 68.
 
-### Listing detail fields
+### New property fields — decision F
 
 | Field | Type | Notes |
 |---|---|---|
 | `description` | string? | |
-| `builtUpArea` | number? | Stated separately, never merged |
-| `possessionBy` | string? | Under construction only |
+| `builtUpArea` | number? | **Separate from carpet and super. Never merged.** |
+| `balconies` | number? | |
 | `ownershipType` | enum | Freehold / leasehold / power of attorney |
-| `deposit` | number? | Rent only |
-| `maintenanceMonthly` | number? | |
-| `isNegotiable` | boolean? | |
-| `photos` | expanded | Several per listing, for the gallery |
+| `nearbyLandmarks` | string[] | Text only; no coordinates |
+| `societyLocationId` | string? | FK to a `SOCIETY` location |
+
+Plus, for the price block: `deposit`, `maintenanceMonthly`, `isNegotiable`.
+
+### Gazetteer addition
+
+**There are currently zero `SOCIETY`-type locations**, so
+`societyLocationId` has nothing to point at. Phase 4 seeds SOCIETY
+locations from the ~30 society names already used in the fixture, parented
+to their locality. This is the `location.type` extension `PHASE-0-PLAN §9`
+anticipated and it is what lets a PDP show a project-adjacent name without
+a Project entity.
+
+Listings keep `society` as a display string **and** gain
+`societyLocationId`. Per `docs/ROADMAP.md`, the posting flow (Phase 13)
+must *select* a society rather than free-type it.
 
 ### Fixture must include, deliberately
 
-A listing with **no description**; one with a **2,000-character**
-description; one with **no photo**; one with **one photo**; one with
-**twelve photos**; one with **no floor / age / facing**; one with **all
-three area bases** and one **carpet only**; a **₹3.25 Cr** and a **₹15 L**;
-an **under-construction** listing with possession; a **rent** listing with
-deposit, maintenance and availability; and a locality with **fewer than
-three** comparable listings, so the similar-properties omission path is
-reachable.
+No description · a 2,000-character description · no photo · exactly one
+photo · twelve photos · no floor/age/facing · all three area bases · carpet
+only · ₹3.25 Cr · ₹15 L · under construction with possession · rent with
+deposit, maintenance and availability · a listing whose locality yields
+**fewer than 4** similar properties, so the omission path is reachable · a
+listing with no society.
 
 ---
 
@@ -195,101 +258,102 @@ reachable.
 
 | Case | Required behaviour |
 |---|---|
-| Unknown `publicId` | 404, correct status, branded page |
-| Slug mismatch | 301 to canonical |
-| Listing not live | 404 today; Phase 18 gives it a real "no longer available" page |
-| No photos | Architectural placeholder; gallery controls not rendered |
-| One photo | Gallery renders without next/previous or counter |
-| Twelve photos | Thumbnails scroll; no layout shift |
-| No description / no amenities | Section omitted, not an empty heading |
-| Carpet area only | Show carpet; never infer the others |
-| Fewer than three similar | Section omitted entirely |
-| Enquiry: invalid phone | Field-level error, nothing else lost |
-| Enquiry: server failure | Everything typed is preserved, retry offered |
-| Enquiry: submitted twice | Told plainly; not an error, not silent |
-| Enquiry: JS disabled | Form still submits — it is a real form posting to a server action |
-| 2,000-character description | Clamped with an accessible expand |
-| Very long society or address | Wraps; never truncates the price |
-| Direct load vs. soft navigation | Identical output |
+| Unknown id | 404, correct status |
+| Slug mismatch | **301** to canonical |
+| Malformed id (`-pXX`, `-p`, no `-p`) | 404, never a crash |
+| Listing not live | 404 in Phase 4; **410 is Phase 18** |
+| No photos | Placeholder; no gallery controls |
+| One photo | No thumbnail strip, no counter (§5) |
+| Twelve photos | Strip scrolls; no layout shift |
+| No description / amenities / landmarks / society | Section or row omitted, not an empty heading |
+| Carpet only | Show carpet; never infer the others |
+| Fewer than 4 similar after all tiers | Section omitted |
+| Enquiry: invalid phone | Field error; nothing else lost |
+| Enquiry: server failure | Input preserved, retry offered |
+| Enquiry: submitted twice | Handled per §10 decision |
+| Enquiry: **JS disabled** | Form still submits — a real form posting to a server action |
+| 2,000-char description | Clamped with accessible expand |
+| Long society or address | Wraps; never truncates the price |
+| Direct load vs soft navigation | Identical output |
+| Sticky bar + bottom nav + safe area | Never overlap, never cover content |
 
 ---
 
 ## 6. Accessibility requirements
 
-- One `h1` — the listing identity. Sections `h2`, sub-blocks `h3`, no level
-  skipped.
-- Every section is `<section aria-labelledby>` pointing at its heading.
-- Key facts are a `dl` / `dt` / `dd` — the relationship is label-to-value.
-- **Gallery**: arrow keys move between images, image position announced via
-  a live region ("Image 3 of 12"), every control has a name, focus is never
-  lost when the image changes.
-- **Description expand**: a `button` with `aria-expanded` and
-  `aria-controls`; collapsed text is not hidden from assistive tech in a way
-  that loses it.
-- **Contact form**: every input has a real `<label>`; errors use
-  `aria-describedby` and `aria-invalid`; the error summary receives focus on
-  failed submit; success is announced in a live region.
-- **Sticky mobile CTA** never covers content — the page reserves its height
-  and it does not overlap the bottom nav.
-- Breadcrumb is `nav[aria-label="Breadcrumb"]` + `ol`, current page
-  `aria-current="page"`.
+- One `h1`. Sections `h2`, sub-blocks `h3`, no level skipped.
+- Every section `<section aria-labelledby>` pointing at its heading.
+- Key details are a `dl`/`dt`/`dd` — the relation is label-to-value.
+- **Gallery** — arrow keys move between images; position announced in a
+  live region ("Image 3 of 12"); every control named; focus never lost on
+  change; images have meaningful `alt` naming configuration and locality.
+- **Description expand** — `button` with `aria-expanded` + `aria-controls`;
+  collapsed text not hidden in a way that loses it.
+- **Contact form** — real `<label>` per input; errors via
+  `aria-describedby` + `aria-invalid`; error summary receives focus on
+  failed submit; success announced in a live region.
+- **Sticky contact bar** — page reserves its height; it never covers
+  content and never overlaps the bottom nav.
+- Breadcrumb `nav[aria-label="Breadcrumb"]` + `ol`, `aria-current="page"`.
+- Similar-properties scroller is keyboard reachable and not a focus trap.
 - Every interactive target ≥ 44×44 CSS px.
 - Focus order follows reading order; focus ring never removed.
-- Contrast measured on every pairing, not eyeballed.
-- The whole page, gallery and form included, is operable by keyboard alone,
-  verified by scripted traversal.
+- Contrast measured on every new pairing, not eyeballed.
+- Whole page operable by keyboard alone, verified by scripted traversal.
 
 ---
 
 ## 7. Responsive requirements
 
-Verified at **390 / 412 / 768 / 1280**, plus 360 as a stress width.
+Verified at **390 / 412 / 768 / 1280**, plus **360** as a stress width.
 
-- **390–767** — single column. Gallery full-bleed to the gutter. Price
-  header sticky on scroll. Key facts two columns. **Contact CTA in a sticky
-  bottom bar** above the bottom nav.
-- **768–1023** — single column, wider gutters, key facts three columns,
-  gallery with a thumbnail strip.
-- **1024+** — two columns: content left; sticky right column carrying
-  price, seller and the contact form. The right column must never overlap
-  the footer.
-- Gallery reserves its aspect ratio so nothing shifts as images load.
-- No horizontal overflow at any width — `npm run shots`.
+- **390–767** — single column; gallery full-bleed; key details two columns;
+  **contact bar sticky at the bottom** above the bottom nav.
+- **768–1023** — single column, wider gutters, three-column details,
+  gallery with thumbnail strip.
+- **1024+** — two columns; sticky right card; must never overlap the
+  footer.
+- **1280+** — in-page anchor navigation (§5).
+- Gallery reserves aspect ratio; **CLS ≤ 0.05 with the gallery loading**
+  (§5 acceptance).
+- No horizontal overflow at any width — `npm run shots` extended.
 - Light theme holds under a dark-mode browser — `npm run light-check`
-  extended to this route.
+  extended.
 
 ---
 
 ## 8. Verification
 
-**Unit** — detail resolution, slug canonicalisation, similar-properties
-ranking including every fallback tier and the omission threshold, enquiry
-validation (phone formats, required fields, normalisation), JSON-LD shape,
-and section-omission logic for each absent field.
+**Unit** — detail resolution; id parsing including every malformed form;
+slug canonicalisation; similar-properties ranking **per tier** and the
+minimum-4 omission; enquiry validation (phone formats, required fields,
+normalisation); JSON-LD shape; section-omission for each absent field;
+society gazetteer resolution.
 
-**Browser** — a new `scripts/property-check.mjs` in the same shape as
-`search-check`, at all four widths:
+**Browser** — new `scripts/property-check.mjs`, shaped like
+`search-check`, at 390/412/768/1280:
 
 1. A result card links to a page rendering that same listing
-2. Slug mismatch returns a **301**, unknown id a **404** — asserted on the
-   response, not on rendered content
+2. Slug mismatch → **301**; unknown id → **404**; malformed id → **404** —
+   asserted on the response, not the rendered body
 3. Every section present for a fully-populated listing
 4. Every optional section **absent** for the sparse listing
 5. Heading hierarchy has no skipped level
-6. Gallery: arrow keys change the image, counter updates, focus retained
-7. Gallery with one photo renders no navigation; with none, no gallery
+6. Gallery: arrow keys change image, counter updates, focus retained
+7. One photo → no strip, no counter; none → no gallery
 8. Description expand toggles `aria-expanded` and reveals full text
 9. Contact form rejects an invalid phone without losing other input
 10. Contact form succeeds, announces success, and the enquiry is readable
     back through `lib/enquiry`
-11. Submitting twice is handled and explained
-12. Similar properties never include the current listing, and the section
-    is absent where fewer than three qualify
-13. Sticky CTA does not overlap the bottom nav or the footer
+11. Enquiry works with **JavaScript disabled**
+12. Similar never includes the current listing; section absent under 4
+13. Sticky contact bar reachable at **every** scroll position (top, middle,
+    bottom) and never overlapping the bottom nav or footer
 14. Keyboard traversal reaches every control in reading order
 15. Long society name and ₹3.25 Cr price do not overflow at 360
-16. JSON-LD parses and contains only fields we hold
-17. Back from the page returns to the same filtered results
+16. JSON-LD parses; contains only fields we hold
+17. Back returns to the same filtered results
+18. Every gallery image carries a visible sample-inventory marker
 
 **Standing suites** — `verify`, `build`, `shots`, `light-check`,
 `search-check` all still pass; `shots` and `light-check` extended to the
@@ -304,36 +368,93 @@ because the state it tests was never reached.
 
 - [ ] All standing suites green, plus the new property suite
 - [ ] Status codes correct — 200, 301, 404 — verified by request
-- [ ] JSON-LD validates; contains no field the platform does not hold
+- [ ] JSON-LD validates; no field the platform does not hold
 - [ ] No text asserts anything the platform has not checked
-- [ ] No phone number appears anywhere on the page
-- [ ] Enquiry validated server-side; the form works with JS disabled
+- [ ] **No phone number anywhere on the page**
+- [ ] Enquiry validated server-side; works with JS disabled
 - [ ] Phone numbers stored normalised
+- [ ] All sample imagery visibly marked as development inventory
+- [ ] Area basis labelled everywhere area appears (§5)
+- [ ] Contact action reachable at every scroll position (§5)
+- [ ] CLS ≤ 0.05 with the gallery loading (§5)
+- [ ] Similar properties do not block first paint (§5)
 - [ ] Zero horizontal overflow, 360 → 1280
-- [ ] Keyboard-only traversal completes the page including gallery and form
+- [ ] Keyboard-only traversal completes page, gallery and form
 - [ ] Contrast measured on every new pairing
-- [ ] CLS under 0.05 with a cold image cache
-- [ ] Every new string brand-independent
-- [ ] Seeded data still labelled as development data
+- [ ] `README.md` no longer references KPM or the superseded roadmap
+- [ ] `docs/PROJECT-CONTEXT.md` exists and is accurate
 
-**Known to remain incomplete by design:** no phone reveal (10), no lead
-management (9), no full-screen gallery (5), no map (34), no project or
-builder link (43, 44), no reviews (48).
+**Incomplete by design after this phase:** no phone reveal (10), no lead
+management (9), no full-screen gallery/video/floor plans (5), no 410 page
+(18), no report (24), no map (34), no project or builder link (43, 44).
 
 ---
 
-## Open questions
+## 10. Remaining ambiguities — NOT resolved
 
-1. **Sticky mobile CTA vs. sticky price.** Both compete for the same strip
-   on a 390px screen. **Recommendation: CTA wins**; the price stays in the
-   header and scrolls away. Contacting is the conversion.
+Per instruction, these are surfaced rather than decided.
 
-2. **`ownershipType`** — freehold / leasehold / power-of-attorney is
-   genuinely material in Kolkata and absent from the V0 model. It is a
-   field, not an entity, so it does not conflict with the no-premature-
-   models rule. **Recommendation: add it.**
+**A1 — "Adjacent localities" has no data behind it.** 🔴
 
-3. **Enquiry without an account.** Phase 6 is auth, so Phase 4 necessarily
-   allows enquiring while signed out. **Recommendation: keep it that way
-   permanently** — requiring an account before contact costs more leads than
-   it prevents spam, and Phase 26 owns spam properly.
+§5 tier 2 widens to adjacent localities. There is no adjacency relation:
+**32 of 37 localities share the single parent `kolkata`**, so "same parent"
+literally means "anywhere in Kolkata". Only 7 sub-localities have a
+meaningful sibling set. Decision G says use existing relationships and
+leave real adjacency to Phase 33.
+
+- **(a)** Sub-localities use true siblings; city-level localities skip tier
+  2 entirely and go straight to ±35%. Honest, no invented adjacency.
+  *Recommended.*
+- **(b)** Treat "same parent" as adjacent for everyone — tier 2 becomes
+  "anywhere in Kolkata", which reaches 4 results almost always but makes
+  "adjacent" meaningless.
+- **(c)** Hand-author an adjacency table for the 32 localities now.
+  Accurate, but it is the Phase 33 model arriving early under another name.
+
+**A2 — "Ordered by proximity" is not computable.** 🔴
+
+§5 orders similar results by proximity then recency. **No coordinates exist
+anywhere** — not on properties, not on locations.
+
+- **(a)** Order by recency alone, and state in the spec that proximity
+  ordering arrives with Phase 35. *Recommended.*
+- **(b)** Proxy proximity by price-difference from the current listing.
+  Defensible but it is not proximity and would be misleading to call it so.
+
+**A3 — Generated imagery is illustrative, not photographic.** 🟠
+
+With egress blocked, Pillow can produce consistent, attractive,
+clearly-synthetic interiors and exteriors — **not** photorealistic ones. I
+judge this a *better* fit for "do not imply sample images represent real
+properties", but you should confirm you are happy that the PDP gallery
+shows stylised illustrations during development rather than photos.
+
+**A4 — "Enquire again" needs to know who you are.** 🟠
+
+§5 says a repeat visitor sees "Enquire again" plus the previous enquiry
+date. Phase 4 has no auth and no stable identity.
+
+- **(a)** Scope it to the browser session/`localStorage` and word it
+  honestly ("You enquired about this property"). Does not survive a device
+  change, which is fine and true. *Recommended.*
+- **(b)** Omit the repeat state entirely and let Phase 9 introduce it with
+  real identity.
+
+**A5 — `nearbyLandmarks` has no author.** 🟡
+
+The field is free text written during posting, and posting is Phases 11–17.
+In Phase 4 it exists only in the fixture. Confirm that is intended, and
+that Phase 4 should not invent an editing surface for it.
+
+**A6 — Changing `publicId` changes every id in the fixture.** 🟡
+
+Decision D drops the `p_` prefix from the stored value. No production links
+exist, so nothing breaks — but every fixture id changes, and any URL you
+may have bookmarked from a local run will 404. Confirming this is expected.
+
+**A7 — `deposit` / `maintenanceMonthly` / `isNegotiable` were not in
+decision F.** 🟡
+
+§5's price block and `PHASE-0-PLAN §9` both imply them for rent listings.
+I have included them in §4 as price fields. Flagging because they were not
+in your explicit list — say if they should wait.
