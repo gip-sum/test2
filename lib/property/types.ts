@@ -15,6 +15,16 @@ export type Furnishing = 'UNFURNISHED' | 'SEMI_FURNISHED' | 'FURNISHED'
 
 export type ConstructionStatus = 'READY' | 'UNDER_CONSTRUCTION'
 
+/**
+ * How the property is owned.
+ *
+ * Materially affects what a buyer is actually purchasing and how financeable
+ * it is, which is why it is a first-class field rather than a line in the
+ * description. Power of attorney in particular is a real and consequential
+ * category in Kolkata.
+ */
+export type OwnershipType = 'FREEHOLD' | 'LEASEHOLD' | 'POWER_OF_ATTORNEY'
+
 /** Compass facing. Genuinely load-bearing in Indian property search. */
 export type Facing = 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW'
 
@@ -126,6 +136,12 @@ export const SELLER_LABEL: Record<SellerType, string> = {
   BUILDER: 'Builder',
 }
 
+export const OWNERSHIP_LABEL: Record<OwnershipType, string> = {
+  FREEHOLD: 'Freehold',
+  LEASEHOLD: 'Leasehold',
+  POWER_OF_ATTORNEY: 'Power of attorney',
+}
+
 export const FACING_LABEL: Record<Facing, string> = {
   N: 'North',
   NE: 'North-East',
@@ -173,3 +189,45 @@ export const AMENITY_ORDER: AmenityCode[] = [
   'CLUBHOUSE',
   'CHILDRENS_PLAY_AREA',
 ]
+
+/**
+ * Everything the property PAGE needs and a card does not.
+ *
+ * Deliberately a separate type rather than more optional fields on
+ * PropertySummary. A results page holds up to twenty-four summaries and
+ * serialises every one of them into the RSC payload; a description of two
+ * thousand characters and a dozen media records per card would be paid for
+ * on every search, to render none of it.
+ *
+ * `lib/property/queries.ts` is the only module that produces this.
+ */
+export type PropertyDetail = PropertySummary & {
+  /** Seller prose. Absent on plenty of real listings. */
+  description?: string
+  /**
+   * The three area bases stay three fields, forever. Merging them is the
+   * single most damaging content error in Indian property listings —
+   * super built-up is routinely 25–35% larger than carpet, so a price per
+   * sqft computed against the wrong basis understates the real cost.
+   */
+  builtUpArea?: number
+  balconies?: number
+  ownershipType: OwnershipType
+  /**
+   * Free text, plural. Phase 4 seeds these in the fixture; the posting flow
+   * becomes their author later. No coordinates — this is what a seller
+   * writes, not a geocode.
+   */
+  nearbyLandmarks: string[]
+  /**
+   * FK to a `SOCIETY` location, when the listing belongs to a known one.
+   * `society` remains as the display string so a listing in an unlisted
+   * building still reads correctly.
+   */
+  societyLocationId?: string
+  /** Rent only: refundable deposit, in integer rupees. */
+  deposit?: number
+  /** Monthly maintenance, in integer rupees. */
+  maintenanceMonthly?: number
+  isNegotiable?: boolean
+}

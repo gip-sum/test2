@@ -1,4 +1,4 @@
-import { DEMO_PROPERTIES } from './demo-data'
+import { DEMO_SUMMARIES } from './demo-data'
 import type {
   AmenityCode,
   ConstructionStatus,
@@ -325,7 +325,7 @@ export function suggestRelaxations(
   options?: { now?: Date; corpus?: PropertySummary[] },
 ): Relaxation[] {
   const now = options?.now ?? new Date()
-  const corpus = corpusFor(q, options?.corpus ?? DEMO_PROPERTIES)
+  const corpus = corpusFor(q, options?.corpus ?? DEMO_SUMMARIES)
   return activeFilterKeys(q)
     .map((key) => ({
       key,
@@ -353,7 +353,7 @@ export function suggestLocalities(
   options?: { now?: Date; corpus?: PropertySummary[]; limit?: number },
 ): NearbyLocality[] {
   const now = options?.now ?? new Date()
-  const corpus = corpusFor(q, options?.corpus ?? DEMO_PROPERTIES)
+  const corpus = corpusFor(q, options?.corpus ?? DEMO_SUMMARIES)
   const chosen = new Set(q.localities)
   const counts = new Map<string, number>()
   for (const p of corpus) {
@@ -378,7 +378,7 @@ export function countWithoutFilters(
   q: SearchQuery,
   options?: { corpus?: PropertySummary[] },
 ): number {
-  return corpusFor(q, options?.corpus ?? DEMO_PROPERTIES).length
+  return corpusFor(q, options?.corpus ?? DEMO_SUMMARIES).length
 }
 
 /* ------------------------------------------------------------------ *
@@ -409,7 +409,7 @@ export function searchProperties(
   options?: { now?: Date; corpus?: PropertySummary[] },
 ): SearchOutcome {
   const now = options?.now ?? new Date()
-  const corpus = corpusFor(q, options?.corpus ?? DEMO_PROPERTIES)
+  const corpus = corpusFor(q, options?.corpus ?? DEMO_SUMMARIES)
 
   const matched = corpus.filter((p) => matches(p, q, now))
   const sorted = sortResults(matched, q, now)

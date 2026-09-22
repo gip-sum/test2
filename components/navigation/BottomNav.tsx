@@ -15,9 +15,10 @@ import { LAUNCH_CITY } from '@/lib/brand'
  * Hidden during focused workflows — the posting wizard, auth, and (later)
  * the gallery lightbox — where a persistent nav competes with the one
  * action the screen exists for. On the property page the sticky contact
- * bar takes its place.
+ * bar takes its place: stacking a five-item nav under a primary call to
+ * action on a 390px screen leaves neither of them usable.
  */
-const HIDDEN_PREFIXES = ['/post', '/login', '/admin']
+const HIDDEN_PREFIXES = ['/post', '/login', '/admin', '/property']
 
 export function BottomNav() {
   const pathname = usePathname()

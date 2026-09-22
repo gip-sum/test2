@@ -12,6 +12,7 @@ import {
   SELLER_LABEL,
   type PropertySummary,
 } from '@/lib/property/types'
+import { propertyPath } from '@/lib/property/public-id'
 import { cn } from '@/lib/cn'
 
 /**
@@ -63,7 +64,9 @@ export function PropertyCard({
     isPriceReduced,
   } = property
 
-  const href = `/property/${slug}-${publicId}`
+  // Canonical grammar lives in one place, so a card can never emit a
+  // link the route would have to redirect.
+  const href = propertyPath(slug, publicId)
   const cover = photos[0]
   const horizontal = layout === 'horizontal'
 

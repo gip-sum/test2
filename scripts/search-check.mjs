@@ -28,7 +28,30 @@ const check = (name, ok, detail = '') => {
 }
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: 'dark' })
 const p = await ctx.newPage()
-const go = async (path) => { await p.goto(B + path, { waitUntil: 'load' }); await p.evaluate(() => document.fonts.ready) }
+/**
+ * Navigate, then wait for the loading skeleton to be GONE.
+ *
+ * 'load' fires while the streamed skeleton is still what is painted, and in
+ * that window React has already rendered the real tree into a HIDDEN
+ * container — so the filter rail and the chips are in the DOM at zero
+ * height and every layout probe reads them as absent. Nobody sees this
+ * state; it is purely a measurement hazard, and waiting here fixes the
+ * whole class of it rather than one check at a time.
+ */
+const settled = () =>
+  p.waitForFunction(
+    () =>
+      document.querySelectorAll('[role="status"]').length === 0 &&
+      (document.querySelectorAll('article').length > 0 ||
+        document.querySelector('section[aria-labelledby="zero-results"]') !== null),
+    null,
+    { timeout: 15000 },
+  )
+const go = async (path) => {
+  await p.goto(B + path, { waitUntil: 'load' })
+  await settled()
+  await p.evaluate(() => document.fonts.ready)
+}
 const countText = () => p.locator('h1 + p').first().innerText()
 const total = async () => {
   const t = await countText()

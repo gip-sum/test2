@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { searchLocations, getLocationBySlug, getPopularLocalities } from './queries'
+import { searchLocations, getLocationBySlug, getPopularLocalities, getAllLocalitySlugs, getLocationById } from './queries'
+import { KOLKATA_LOCATIONS } from './kolkata'
 
 const names = (q: string) => searchLocations(q, 20).map((l) => l.name)
 
@@ -53,5 +54,33 @@ describe('lookup helpers', () => {
     const popular = getPopularLocalities()
     expect(popular.length).toBeGreaterThan(6)
     expect(popular.every((l) => Boolean(l.slug))).toBe(true)
+  })
+})
+
+describe('societies are places, not filters', () => {
+  it('excludes societies from the slugs a route will accept as a locality', () => {
+    const slugs = new Set(getAllLocalitySlugs())
+    const society = KOLKATA_LOCATIONS.find((l) => l.type === 'SOCIETY')
+    expect(society).toBeDefined()
+    expect(slugs.has(society!.slug)).toBe(false)
+  })
+
+  it('never suggests a society in the typeahead', () => {
+    // "Upohar" is a seeded society name; typing it must not offer a search
+    // that would return nothing.
+    const hits = searchLocations('upohar', 20)
+    expect(hits.every((l) => l.type !== 'SOCIETY')).toBe(true)
+  })
+
+  it('still resolves a society by id, which is how a listing points at one', () => {
+    const society = KOLKATA_LOCATIONS.find((l) => l.type === 'SOCIETY')!
+    expect(getLocationById(society.id)?.name).toBe(society.name)
+  })
+
+  it('parents every society to a locality that exists', () => {
+    const orphans = KOLKATA_LOCATIONS.filter(
+      (l) => l.type === 'SOCIETY' && !KOLKATA_LOCATIONS.some((p) => p.slug === l.parentSlug),
+    )
+    expect(orphans).toEqual([])
   })
 })

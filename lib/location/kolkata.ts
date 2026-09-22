@@ -17,6 +17,19 @@ const L = (
   aliases?: string[],
 ): Location => ({ id: `loc_${slug}`, slug, name, type, parentSlug, displayPath, aliases })
 
+/**
+ * Society shorthand.
+ *
+ * A society is a place, not a property attribute. Modelling it in the
+ * gazetteer is what lets a listing point at a real row instead of repeating
+ * a display string, and it is what stops the same building arriving as
+ * forty spellings once sellers type it themselves. `PHASE-0-PLAN §9`
+ * anticipated exactly this: it gives the product a project-adjacent feel
+ * for the cost of one enum value, with no Project entity until Phase 44.
+ */
+const S = (slug: string, name: string, parentSlug: string, displayPath: string): Location =>
+  L(slug, name, 'SOCIETY', parentSlug, displayPath)
+
 export const KOLKATA_LOCATIONS: Location[] = [
   L('kolkata', 'Kolkata', 'CITY', null, 'West Bengal'),
 
@@ -67,6 +80,58 @@ export const KOLKATA_LOCATIONS: Location[] = [
   L('uttarpara-kotrung', 'Uttarpara Kotrung', 'LOCALITY', 'kolkata', 'Kolkata'),
   L('barrackpore', 'Barrackpore', 'LOCALITY', 'kolkata', 'Kolkata'),
   L('serampore', 'Serampore', 'LOCALITY', 'kolkata', 'Kolkata'),
+
+  // ---- Societies ------------------------------------------------
+  // Development inventory. These are invented building names, not a
+  // register of real housing societies in Kolkata.
+  // New Town
+  S('new-town-upohar-luxury-residences', 'Upohar Luxury Residences', 'new-town', 'New Town, Kolkata'),
+  S('new-town-sankalpa-greens', 'Sankalpa Greens', 'new-town', 'New Town, Kolkata'),
+  S('new-town-rosedale-garden', 'Rosedale Garden', 'new-town', 'New Town, Kolkata'),
+  // Salt Lake
+  S('salt-lake-sector-v-residency', 'Sector V Residency', 'salt-lake', 'Salt Lake, Kolkata'),
+  S('salt-lake-labony-estate', 'Labony Estate', 'salt-lake', 'Salt Lake, Kolkata'),
+  S('salt-lake-purbachal-heights', 'Purbachal Heights', 'salt-lake', 'Salt Lake, Kolkata'),
+  // Rajarhat
+  S('rajarhat-chinar-park-heights', 'Chinar Park Heights', 'rajarhat', 'Rajarhat, Kolkata'),
+  S('rajarhat-greenfield-elegance', 'Greenfield Elegance', 'rajarhat', 'Rajarhat, Kolkata'),
+  S('rajarhat-sunrise-symphony', 'Sunrise Symphony', 'rajarhat', 'Rajarhat, Kolkata'),
+  // Ballygunge
+  S('ballygunge-ballygunge-park-court', 'Ballygunge Park Court', 'ballygunge', 'Ballygunge, Kolkata'),
+  S('ballygunge-queens-mansion', 'Queens Mansion', 'ballygunge', 'Ballygunge, Kolkata'),
+  S('ballygunge-gurusaday-residency', 'Gurusaday Residency', 'ballygunge', 'Ballygunge, Kolkata'),
+  // Tollygunge
+  S('tollygunge-tolly-greens', 'Tolly Greens', 'tollygunge', 'Tollygunge, Kolkata'),
+  S('tollygunge-deshapriya-court', 'Deshapriya Court', 'tollygunge', 'Tollygunge, Kolkata'),
+  S('tollygunge-netaji-enclave', 'Netaji Enclave', 'tollygunge', 'Tollygunge, Kolkata'),
+  // Behala
+  S('behala-sakuntala-apartments', 'Sakuntala Apartments', 'behala', 'Behala, Kolkata'),
+  S('behala-diamond-harbour-residency', 'Diamond Harbour Residency', 'behala', 'Behala, Kolkata'),
+  // Garia
+  S('garia-garia-green-view', 'Garia Green View', 'garia', 'Garia, Kolkata'),
+  S('garia-kavi-nazrul-enclave', 'Kavi Nazrul Enclave', 'garia', 'Garia, Kolkata'),
+  // Jadavpur
+  S('jadavpur-jadavpur-central-apartments', 'Jadavpur Central Apartments', 'jadavpur', 'Jadavpur, Kolkata'),
+  S('jadavpur-sulekha-residency', 'Sulekha Residency', 'jadavpur', 'Jadavpur, Kolkata'),
+  // E M Bypass
+  S('em-bypass-bypass-greens', 'Bypass Greens', 'em-bypass', 'E M Bypass, Kolkata'),
+  S('em-bypass-ruby-park-residency', 'Ruby Park Residency', 'em-bypass', 'E M Bypass, Kolkata'),
+  S('em-bypass-avidipta-enclave', 'Avidipta Enclave', 'em-bypass', 'E M Bypass, Kolkata'),
+  // Howrah
+  S('howrah-shibpur-residency', 'Shibpur Residency', 'howrah', 'Howrah, Kolkata'),
+  S('howrah-ganges-view-apartments', 'Ganges View Apartments', 'howrah', 'Howrah, Kolkata'),
+  // Dum Dum
+  S('dum-dum-nagerbazar-heights', 'Nagerbazar Heights', 'dum-dum', 'Dum Dum, Kolkata'),
+  S('dum-dum-dum-dum-park-enclave', 'Dum Dum Park Enclave', 'dum-dum', 'Dum Dum, Kolkata'),
+  // Alipore
+  S('alipore-alipore-park-place', 'Alipore Park Place', 'alipore', 'Alipore, Kolkata'),
+  S('alipore-belvedere-court', 'Belvedere Court', 'alipore', 'Alipore, Kolkata'),
+  // Action Area I
+  S('new-town-action-area-i-sanjeeva-town', 'Sanjeeva Town', 'new-town-action-area-i', 'Action Area I, Kolkata'),
+  S('new-town-action-area-i-uniworld-city', 'Uniworld City', 'new-town-action-area-i', 'Action Area I, Kolkata'),
+  // Uttarpara Kotrung
+  S('uttarpara-kotrung-kotrung-riverside', 'Kotrung Riverside', 'uttarpara-kotrung', 'Uttarpara Kotrung, Kolkata'),
+  S('uttarpara-kotrung-uttarpara-garden-estate', 'Uttarpara Garden Estate', 'uttarpara-kotrung', 'Uttarpara Kotrung, Kolkata'),
 ]
 
 /** Localities shown as one-tap entry points on the homepage. */

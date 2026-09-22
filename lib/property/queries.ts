@@ -1,5 +1,5 @@
-import { DEMO_PROPERTIES } from './demo-data'
-import type { Intent, PropertySummary } from './types'
+import { DEMO_PROPERTIES, DEMO_SUMMARIES } from './demo-data'
+import type { Intent, PropertyDetail, PropertySummary } from './types'
 
 /**
  * Property reads.
@@ -15,7 +15,7 @@ export const USING_DEMO_DATA = true
 /** Newest listings first. `intent` narrows to buy or rent when supplied. */
 export function getRecentListings(options?: { intent?: Intent; limit?: number }): PropertySummary[] {
   const { intent, limit = 6 } = options ?? {}
-  return DEMO_PROPERTIES.filter((p) => !intent || p.intent === intent)
+  return DEMO_SUMMARIES.filter((p) => !intent || p.intent === intent)
     .slice()
     .sort((a, b) => b.postedAt.localeCompare(a.postedAt))
     .slice(0, limit)
@@ -30,7 +30,7 @@ export function getRecentListings(options?: { intent?: Intent; limit?: number })
  */
 export function getListingCountsByLocality(intent?: Intent): Map<string, number> {
   const counts = new Map<string, number>()
-  for (const p of DEMO_PROPERTIES) {
+  for (const p of DEMO_SUMMARIES) {
     if (intent && p.intent !== intent) continue
     counts.set(p.localitySlug, (counts.get(p.localitySlug) ?? 0) + 1)
   }
@@ -39,5 +39,16 @@ export function getListingCountsByLocality(intent?: Intent): Map<string, number>
 
 /** Total active listings for an intent. Used for honest, inventory-backed copy. */
 export function getListingCount(intent?: Intent): number {
-  return DEMO_PROPERTIES.filter((p) => !intent || p.intent === intent).length
+  return DEMO_SUMMARIES.filter((p) => !intent || p.intent === intent).length
+}
+
+/**
+ * One listing, with everything the property page needs.
+ *
+ * The only function that returns a PropertyDetail. Everything else in this
+ * module returns summaries, so the heavy fields are loaded exactly once —
+ * on the page that renders them.
+ */
+export function getPropertyDetail(publicId: string): PropertyDetail | undefined {
+  return DEMO_PROPERTIES.find((p) => p.publicId === publicId)
 }
