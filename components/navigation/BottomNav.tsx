@@ -29,7 +29,7 @@ export function BottomNav() {
     { href: '/account/saved', label: 'Saved', Icon: HeartIcon, match: ['/account/saved'] },
     { href: '/post', label: 'Post', Icon: PlusIcon, match: ['/post'], supply: true },
     { href: '/account/enquiries', label: 'Enquiries', Icon: MailIcon, match: ['/account/enquiries'] },
-    { href: '/account/profile', label: 'Account', Icon: UserIcon, match: ['/account/profile'] },
+    { href: '/account', label: 'Account', Icon: UserIcon, match: ['/account'] },
   ]
 
   return (

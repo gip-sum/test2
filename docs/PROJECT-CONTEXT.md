@@ -11,7 +11,7 @@ client approval. `lib/brand.ts` is the current source of brand values.
 - Phases 1–3 provide the responsive shell, discovery homepage and URL-driven
   buy/rent search. Filters, sorting, facets and pagination are encoded in the
   URL, so links and browser history reproduce the same state.
-- Phase 4 adds `/property/{slug}-p{id}`. Middleware chooses 200, canonical
+- Phase 4 adds `/property/{slug}-p{id}`. The proxy chooses 200, canonical
   301 and 404 status before the streamed route renders. The page displays
   gallery, listing facts, distinct area bases, description, amenities,
   location, seller identity, contact form and similar listings. It emits
@@ -20,6 +20,11 @@ client approval. `lib/brand.ts` is the current source of brand values.
   viewer, keyboard and touch navigation, image counters, lazy thumbnails and
   explicit missing/broken-image fallbacks. Development images carry visible
   sample markers in the gallery and listing cards.
+- Phase 6 implements email OTP registration and login through Supabase Auth,
+  HTTP-only token cookies, session refresh, logout and an account guard.
+  It requires a live Supabase project URL, publishable key, SMTP OTP template
+  and migration application before it is production ready. The local
+  browser suite uses a simulated provider; it does not test real email.
 - Listing, location and media data are deterministic development fixtures.
   Generated illustrations in `public/dev-media/` are explicitly labelled
   as samples. They do not represent real properties.
@@ -31,8 +36,8 @@ client approval. `lib/brand.ts` is the current source of brand values.
 
 ## Boundaries
 
-Phase 6 owns identity. Phase 8 owns
-persistent shortlists. Phase 9 owns lead delivery and history. Phase 10 owns
+Phase 7 owns account management. Phase 8 owns persistent shortlists.
+Phase 9 owns lead delivery and history. Phase 10 owns
 phone reveal and OTP. Phase 18 owns listing lifecycle and unavailable-page
 semantics. Do not imply that a seller was notified merely because a
 development enquiry reached the process-local store.
@@ -47,7 +52,7 @@ separate. Missing values are omitted rather than invented.
 `npm ci`, then `npm run verify` and `npm run build`. Start the production
 server with `npm start -- -p 3100`, then run `npm run shots`,
 `npm run light-check`, `npm run search-check`, `npm run property-check` and
-`npm run media-check`.
+`npm run media-check` and `npm run auth-check` (with a local fake Auth API).
 Browser checks require Chromium. Set `CHROME_PATH` to its executable when
 the default path is unavailable. See the Phase 4 spec for manual checks
 and explicit acceptance thresholds.

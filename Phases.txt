@@ -16,7 +16,7 @@ Phase 2 — Complete
 Phase 3 — Complete
 Phase 4 — Complete
 Phase 5 — Complete
-Phase 6 — Next
+Phase 6 — In progress (implementation built; live provider setup pending)
 
 Temporary brand:
 GharBazaar
@@ -111,6 +111,7 @@ Key focus:
 
 
 PHASE 6 — USER AUTHENTICATION
+Status: IN PROGRESS (live Supabase configuration and delivery verification pending)
 
 Build the user identity foundation.
 

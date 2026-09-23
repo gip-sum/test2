@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Wordmark } from './Wordmark'
 import { Button } from '@/components/ui/Button'
 import { LAUNCH_CITY } from '@/lib/brand'
+import { AccountLink } from './AccountLink'
 
 /**
  * Persistent top bar.
@@ -37,11 +38,7 @@ export function AppHeader() {
               Post property
             </Button>
           </Link>
-          <Link href="/login">
-            <Button variant="secondary" size="sm">
-              Log in
-            </Button>
-          </Link>
+          <AccountLink />
         </div>
       </div>
     </header>

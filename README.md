@@ -17,10 +17,13 @@ An original property marketplace for Kolkata, built around one loop:
 | 3 | Search, filters and results | complete |
 | 4 | Property detail page | complete for development-fixture scope |
 | 5 | Property gallery and media system | complete |
+| 6 | Email OTP authentication | implemented; live provider setup pending |
 
 The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
 criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)
-and [the Phase 5 spec](docs/phases/PHASE-05-media-gallery.md).
+and [the Phase 5 spec](docs/phases/PHASE-05-media-gallery.md). Phase 6's
+requirements and live-readiness checklist are in
+[the auth spec](docs/phases/PHASE-06-authentication.md).
 
 ## Getting started
 
@@ -41,6 +44,7 @@ npm run dev          # http://localhost:3000
 | `npm run search-check` | Browser assertions for search |
 | `npm run property-check` | Browser assertions for the property page, including a 360px stress width |
 | `npm run media-check` | Browser assertions for gallery navigation, touch, image loading and fallbacks |
+| `npm run auth-check` | Browser assertions using a local Auth API simulator (requires the environment below) |
 
 The browser checks need a server running (`npm run build && npm start -- -p 3100`).
 Set `CHROME_PATH` if Chromium is installed elsewhere. `shots` uses `BASE`;
@@ -48,6 +52,26 @@ the other browser checks use `BASE_URL`.
 It is the responsive check the plan requires at the end of every phase, and it
 measures `scrollWidth` rather than relying on eyeballing a screenshot — an
 earlier headless run *looked* broken at 390px when nothing was actually wrong.
+
+## Phase 6 email authentication setup
+
+Copy `.env.example` to `.env.local` and supply your **project URL** and
+**publishable key** for the intended Supabase Auth project. Never use a
+service-role key. Enable email sign-in and configure the email template with
+`{{ .Token }}` to deliver a six-digit OTP instead of a magic link. Set up
+production SMTP, your deployment domain, and appropriate provider rate
+limits. Apply `docs/migrations/006-auth-identities.sql` in that project.
+
+On the deployed site, verify real email delivery, invalid and expired codes,
+return to `/account`, refresh and logout before considering Phase 6 complete.
+Until configured, `/login` explains that sign-in is unavailable and creates
+no local test account. To exercise the browser flow without a live project:
+
+```bash
+SUPABASE_URL=http://127.0.0.1:3300 SUPABASE_PUBLISHABLE_KEY=test-public-key npm start -- -p 3100
+# In another terminal, with CHROME_PATH set if needed:
+npm run auth-check
+```
 
 ## Architecture
 

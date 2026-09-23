@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { KOLKATA_LOCATIONS } from '@/lib/location/kolkata'
 import { DEMO_SUMMARIES } from '@/lib/property/demo-data'
 import { parsePropertyHandle, propertyPath } from '@/lib/property/public-id'
+import { authConfig, authRequest, validSession, type AuthSession, type AuthUser } from '@/lib/auth/provider'
+import { safeReturnPath } from '@/lib/auth/validation'
 
 /**
  * Validates the shape of a results URL before the route renders.
@@ -28,7 +30,7 @@ const CITY_SLUGS = new Set(KOLKATA_LOCATIONS.filter((l) => l.type === 'CITY').ma
  * literal segments, so Next 404s it without help.
  */
 export const config = {
-  matcher: ['/buy/:path+', '/rent/:path+', '/property/:handle'],
+  matcher: ['/buy/:path+', '/rent/:path+', '/property/:handle', '/account/:path*', '/login', '/api/auth/state'],
 }
 
 /**
@@ -70,8 +72,41 @@ function handleProperty(request: NextRequest): NextResponse | undefined {
   return undefined
 }
 
-export function middleware(request: NextRequest) {
+async function accountGuard(request: NextRequest) {
+  const isAccount = request.nextUrl.pathname.startsWith('/account')
+  const access = request.cookies.get('gb-access')?.value
+  const refresh = request.cookies.get('gb-refresh')?.value
+  let verified = false
+  let nextSession: AuthSession | null = null
+  if (authConfig() && access) {
+    const user = await authRequest<AuthUser>('/user', 'GET', undefined, access)
+    verified = user.ok && typeof user.data?.id === 'string'
+  }
+  if (!verified && authConfig() && refresh) {
+    const result = await authRequest<AuthSession>('/token?grant_type=refresh_token', 'POST', { refresh_token: refresh })
+    if (result.ok && validSession(result.data)) {
+      nextSession = result.data
+      verified = true
+      request.cookies.set('gb-access', nextSession.access_token)
+      request.cookies.set('gb-refresh', nextSession.refresh_token)
+    }
+  }
+  const response = isAccount && !verified
+    ? NextResponse.redirect(new URL(`/login?next=${encodeURIComponent(safeReturnPath(request.nextUrl.pathname + request.nextUrl.search))}`, request.url))
+    : NextResponse.next({ request })
+  if (nextSession) {
+    const options = { httpOnly: true, secure: request.nextUrl.protocol === 'https:', sameSite: 'lax' as const, path: '/' }
+    response.cookies.set('gb-access', nextSession.access_token, { ...options, maxAge: Math.min(nextSession.expires_in, 3600) })
+    response.cookies.set('gb-refresh', nextSession.refresh_token, { ...options, maxAge: 60 * 60 * 24 * 30 })
+    response.headers.set('Cache-Control', 'private, no-store')
+  }
+  return response
+}
+
+export async function proxy(request: NextRequest) {
   const [, first, second] = request.nextUrl.pathname.split('/')
+
+  if (first === 'account' || first === 'login' || request.nextUrl.pathname === '/api/auth/state') return accountGuard(request)
 
   if (first === 'property') {
     return handleProperty(request) ?? NextResponse.next()
