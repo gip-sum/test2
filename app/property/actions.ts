@@ -28,8 +28,6 @@ export type EnquiryFormState = {
   values?: { name: string; phone: string; message: string }
 }
 
-export const EMPTY_ENQUIRY_STATE: EnquiryFormState = { status: 'idle' }
-
 export async function submitEnquiry(
   _previous: EnquiryFormState,
   formData: FormData,

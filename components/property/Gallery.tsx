@@ -45,10 +45,7 @@ export function Gallery({ photos, title }: { photos: PropertyMedia[]; title: str
   const go = (next: number) => setIndex((next + count) % count)
 
   return (
-    <section aria-labelledby="gallery-heading" className="min-w-0">
-      <h2 id="gallery-heading" className="sr-only">
-        Photos
-      </h2>
+    <section aria-label="Property photos" className="min-w-0">
 
       <div
         ref={frameRef}

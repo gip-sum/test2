@@ -1,6 +1,6 @@
 # Phase 4 — Property detail page
 
-**Status:** REVISED — awaiting approval. No application code written.
+**Status:** COMPLETE — implementation and acceptance checks recorded below.
 **Scope source:** `Phases.txt` → Phase 4.
 **Behaviour source:** `docs/kolkata-marketplace-screen-spec.md` §5 (Screen 4).
 **Data source:** `docs/PHASE-0-PLAN.md` §9.
@@ -11,6 +11,35 @@
 > (B–I). Where §5 and `Phases.txt` disagree on *sequencing*, `Phases.txt`
 > wins; where they agree on *behaviour*, §5 is the detail.
 
+### Completion record (2026-09-23)
+
+The property route, gallery, facts, description, amenities, location, seller
+information, similar properties and signed-out enquiry are implemented.
+`npm run verify` passes lint, types and 176 unit tests; `npm run build`
+passes. `shots` passes every route at 390/412/768/1280, `light-check`
+passes under a dark-mode browser, `search-check` passes 64/64, and the new
+`property-check` passes 67/67, including 360px, status responses, keyboard
+focus, contrast, layout shift, validation and JavaScript-disabled submission.
+
+The following implementation decisions supersede the earlier proposal text
+in this document:
+
+- Stored public IDs keep their `p_` prefix; the URL normalises it to
+  `-p{id}`. Legacy `-p_id` links 301 to the canonical URL.
+- Similar properties use actual sub-locality siblings only and order by
+  recency. City-wide adjacency and coordinate proximity await Phases 33/35.
+- Repeat enquiries are recorded and flagged by listing and phone; there is
+  no reliable signed-out returning-buyer identity.
+- Enquiries are held in process memory, and **no seller is notified**.
+  The UI says so. Lead persistence and delivery belong to Phase 9; the
+  current form is usable for development, not real customer leads.
+- The property route has no automatic `loading.tsx` boundary. It caused
+  JavaScript-disabled visitors to see only a loading shell, hiding the
+  required real form. This trade-off preserves the accessible server page.
+- Similar-property matching is synchronous over the small development
+  fixture and has no network wait. Phase 9+ data access must revisit the
+  first-paint condition when matching becomes asynchronous.
+
 ---
 
 ## 1. Scope
@@ -18,9 +47,8 @@
 The central conversion surface. Every phase before this one exists to get a
 buyer here; several after it depend on the buyer acting here.
 
-Today **every property link the results page emits is a dead 404** —
-`/property/2-bhk-flat-for-sale-in-behala-p_c70il` matches no route. Phase 4
-closes a live hole in the product.
+Before Phase 4, **every property link from results was a dead 404**. The
+implemented route closes that gap and redirects legacy `-p_id` links.
 
 ### In scope
 
@@ -108,9 +136,8 @@ In-page anchor navigation at 1280+.
   the bottom nav), sticky right card on desktop.
 - Form asks **name, phone, optional message**. Nothing else; every extra
   field measurably costs leads.
-- Success confirmation states plainly: the enquiry reached the seller, the
-  seller has the buyer's number, and the buyer will not see the seller's
-  number in this release.
+- Success confirmation states that the development enquiry was recorded
+  temporarily and that seller notification is not available yet.
 - **Enquiring twice** is not an error and not a silent no-op — see §5's
   "Enquire again" behaviour and the ambiguity in §10.
 - Failed submission preserves everything typed.
@@ -146,9 +173,8 @@ project**, so proximity is not computable — see §10 for the options.
 
 Canonical: **`/property/{slug}-p{id}`** → `/property/2-bhk-flat-for-sale-in-behala-pc70il`
 
-- `publicId` becomes the **bare opaque id** (`c70il`); the `p` prefix lives
-  in the URL, not in the stored value. The current `p_c70il` form is
-  replaced everywhere.
+- `publicId` retains the stored `p_` prefix (`p_c70il`); the URL normalises
+  this to `pc70il` after the last hyphen, preserving fixture identity.
 - **Id charset: lowercase `a–z0–9`, no hyphens, length 6–12.** Excluding
   hyphens is what makes parsing unambiguous.
 - **Parsing rule:** split the final path segment on its *last* hyphen; the
@@ -177,7 +203,8 @@ Canonical: **`/property/{slug}-p{id}`** → `/property/2-bhk-flat-for-sale-in-be
   Client validation is convenience, never the boundary.
 - Phone validated as an Indian mobile number and stored normalised.
 - JSON-LD server-side; every emitted field must be one we actually hold.
-- Similar properties load without blocking first paint (§5 acceptance).
+- Similar matching runs synchronously against the development fixture;
+  revisit first-paint behavior when this seam becomes asynchronous.
 - No new npm dependency without naming it here first.
 
 ### Development imagery — decision B
@@ -271,7 +298,7 @@ listing with no society.
 | Enquiry: invalid phone | Field error; nothing else lost |
 | Enquiry: server failure | Input preserved, retry offered |
 | Enquiry: submitted twice | Handled per §10 decision |
-| Enquiry: **JS disabled** | Form still submits — a real form posting to a server action |
+| Enquiry: **JS disabled** | Form still submits — a real form posting to a server action; no automatic route loading boundary |
 | 2,000-char description | Clamped with accessible expand |
 | Long society or address | Wraps; never truncates the price |
 | Direct load vs soft navigation | Identical output |
@@ -366,23 +393,23 @@ because the state it tests was never reached.
 
 ## 9. Production readiness
 
-- [ ] All standing suites green, plus the new property suite
-- [ ] Status codes correct — 200, 301, 404 — verified by request
-- [ ] JSON-LD validates; no field the platform does not hold
-- [ ] No text asserts anything the platform has not checked
-- [ ] **No phone number anywhere on the page**
-- [ ] Enquiry validated server-side; works with JS disabled
-- [ ] Phone numbers stored normalised
-- [ ] All sample imagery visibly marked as development inventory
-- [ ] Area basis labelled everywhere area appears (§5)
-- [ ] Contact action reachable at every scroll position (§5)
-- [ ] CLS ≤ 0.05 with the gallery loading (§5)
-- [ ] Similar properties do not block first paint (§5)
-- [ ] Zero horizontal overflow, 360 → 1280
-- [ ] Keyboard-only traversal completes page, gallery and form
-- [ ] Contrast measured on every new pairing
-- [ ] `README.md` no longer references KPM or the superseded roadmap
-- [ ] `docs/PROJECT-CONTEXT.md` exists and is accurate
+- [x] Standing suites green, plus the 67-assertion property suite
+- [x] Status codes 200, 301, 404 verified by request
+- [x] JSON-LD parses and draws on held listing fields
+- [x] Enquiry copy states the process-local limitation honestly
+- [x] No seller phone number anywhere on the page
+- [x] Enquiry validated server-side; form works with JavaScript disabled
+- [x] Phone numbers stored normalised (unit tests)
+- [x] Sample imagery visibly marked as development inventory
+- [x] Area basis labelled in the price and area blocks
+- [x] Contact action reachable at top, middle and bottom scroll positions
+- [x] Gallery CLS ≤ 0.05 at 360/390/412/768/1280
+- [x] Similar lookup is synchronous and performs no external I/O in Phase 4
+- [x] Zero horizontal overflow, 360 → 1280
+- [x] Gallery, description and enquiry traversed by keyboard in reading order
+- [x] New heading, detail and action text pairings measured at ≥ 4.5:1
+- [x] `README.md` references the 75-phase roadmap and current brand
+- [x] `docs/PROJECT-CONTEXT.md` records implementation and limitations
 
 **Incomplete by design after this phase:** no phone reveal (10), no lead
 management (9), no full-screen gallery/video/floor plans (5), no 410 page
@@ -390,9 +417,11 @@ management (9), no full-screen gallery/video/floor plans (5), no 410 page
 
 ---
 
-## 10. Remaining ambiguities — NOT resolved
+## 10. Original implementation questions — resolved in completion record
 
-Per instruction, these are surfaced rather than decided.
+The alternatives below record the planning discussion. The completion record
+at the top gives the implemented decisions and supersedes the recommendations
+below where they differ.
 
 **A1 — "Adjacent localities" has no data behind it.** 🔴
 

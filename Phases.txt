@@ -14,7 +14,8 @@ Current status:
 Phase 1 — Complete
 Phase 2 — Complete
 Phase 3 — Complete
-Phase 4 — Next
+Phase 4 — Complete
+Phase 5 — Next
 
 Temporary brand:
 GharBazaar
@@ -77,6 +78,7 @@ Key focus:
 
 
 PHASE 4 — PROPERTY DETAIL PAGE
+Status: COMPLETE (development-fixture scope; seller lead delivery is Phase 9)
 
 Build the complete property detail page and make it the central conversion surface of the marketplace.
 

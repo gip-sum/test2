@@ -4,7 +4,7 @@
 import { chromium } from 'playwright-core'
 import { mkdirSync } from 'node:fs'
 
-const EXECUTABLE = '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
+const EXECUTABLE = process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
 const BASE = process.env.BASE ?? 'http://127.0.0.1:3100'
 const OUT = process.env.OUT ?? '/tmp/shots'
 const WIDTHS = [390, 412, 768, 1280]
@@ -18,6 +18,8 @@ const DEFAULT_ROUTES = [
   '/buy/kolkata?loc=uttarpara-kotrung,ballygunge&bhk=2,3,4&type=APARTMENT&sort=price_desc',
   // Zero results, whose recovery panel has its own layout.
   '/buy/kolkata?loc=howrah&type=VILLA&bhk=5&pmax=1600000',
+  '/property/4-bhk-flat-for-sale-in-ballygunge-p5d40ab',
+  '/property/2-bhk-builder-floor-for-sale-in-behala-p9c17f4',
 ]
 const routes = process.argv.slice(2).length ? process.argv.slice(2) : DEFAULT_ROUTES
 

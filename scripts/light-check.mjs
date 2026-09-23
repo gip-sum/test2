@@ -22,6 +22,8 @@ const ROUTES = [
   '/',
   '/buy/kolkata',
   '/buy/kolkata?loc=howrah&type=VILLA&bhk=5&pmax=1600000',
+  '/property/4-bhk-flat-for-sale-in-ballygunge-p5d40ab',
+  '/property/2-bhk-builder-floor-for-sale-in-behala-p9c17f4',
 ]
 
 /** Relative luminance, WCAG 2.x. */
@@ -59,7 +61,22 @@ for (const route of ROUTES) {
         }
         return null
       }
-      const bg = (el) => (el ? painted(el) : null)
+      // Computed colors can be oklab() when Tailwind applies an opacity.
+      // Convert through the browser's canvas parser before measuring WCAG
+      // luminance; parsing the first three numbers as RGB would read white
+      // as almost black and produce a false failure.
+      const bg = (el) => {
+        const css = el ? painted(el) : null
+        if (!css) return null
+        const canvas = document.createElement('canvas')
+        const context = canvas.getContext('2d')
+        context.fillStyle = '#fff'
+        context.fillRect(0, 0, 1, 1)
+        context.fillStyle = css
+        context.fillRect(0, 0, 1, 1)
+        const [r, g, b] = context.getImageData(0, 0, 1, 1).data
+        return `rgb(${r}, ${g}, ${b})`
+      }
       const q = (s) => document.querySelector(s)
       const byText = (s, re) =>
         [...document.querySelectorAll(s)].find((e) => re.test(e.textContent || ''))
@@ -100,6 +117,10 @@ for (const route of ROUTES) {
           // The outlined suggestion chips only; the blue "Clear all" button
           // below them is a filled action and is asserted as one.
           'recovery option': bg(q('section[aria-labelledby="zero-results"] ul button')),
+          'gallery frame': bg(q('section[aria-label="Property photos"] > div')),
+          'detail grid': bg(q('section[aria-labelledby="details-heading"] dl')),
+          'contact card': bg(q('aside form')),
+          'sticky contact bar': bg(q('div.fixed:has(button[aria-haspopup="dialog"])')),
         },
         // Filled actions are deliberately saturated; they are asserted the
         // other way, as proof the accent survived rather than went pale.
@@ -112,6 +133,8 @@ for (const route of ROUTES) {
             [...document.querySelectorAll('section[aria-labelledby="zero-results"] button')]
               .find((b) => /Clear all filters/.test(b.textContent)),
           ),
+          'contact submit': bg(q('aside form button[type="submit"]')),
+          'mobile contact action': bg(q('div.fixed button[aria-haspopup="dialog"]')),
         },
         text: {
           'h1': getComputedStyle(q('h1')).color,

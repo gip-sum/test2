@@ -19,7 +19,7 @@ import { chromium } from 'playwright-core'
 const OUT = process.env.SHOT_DIR ?? '.shots'
 await (await import('node:fs/promises')).mkdir(OUT, { recursive: true })
 const B = process.env.BASE_URL ?? 'http://127.0.0.1:3100'
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
+const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
 
 let pass = 0, fail = 0
 const check = (name, ok, detail = '') => {

@@ -35,11 +35,11 @@ import { PROPERTY_TYPE_LABEL, type PropertyDetail } from '@/lib/property/types'
  * there. Everything on it is information the platform actually holds; no
  * section is rendered from an inference.
  *
- * STATUS CODES LIVE IN MIDDLEWARE. This route has a loading.tsx, so a
- * Suspense boundary flushes the shell and its 200 before this component
- * runs — the 404 and the canonical 301 are therefore decided ahead of
- * rendering. The `notFound()` below is the backstop for a direct render
- * that bypassed middleware, not the mechanism.
+ * STATUS CODES LIVE IN MIDDLEWARE. It decides the canonical 301 and 404
+ * before rendering. The notFound() below is the backstop for a direct
+ * render that bypassed middleware. An automatic loading.tsx boundary was
+ * removed because it left the entire detail and enquiry form hidden when
+ * JavaScript was disabled; a usable server-rendered form takes priority.
  *
  * Relative dates go stale in a cached render, so the page regenerates
  * hourly, matching the results route.

@@ -1,26 +1,24 @@
-# Kolkata Property Marketplace
+# GharBazaar — Kolkata property marketplace
 
 An original property marketplace for Kolkata, built around one loop:
 
 **Buy/Rent → Search → Property → Contact → Lead.**
 
-> **The brand is a placeholder.** `KPM` / "Kolkata Property Marketplace" is a
-> working label. Everything brand-dependent resolves from `lib/brand.ts`, so
-> the real name and domain drop in without restructuring the app.
+> **GharBazaar is a temporary working name.** The client will approve the final
+> name later. Brand-dependent values live in `lib/brand.ts`.
 
 ## Status
 
 | Phase | Scope | State |
 |---|---|---|
-| 0 | Plan, contradictions, V0 architecture | done — `docs/PHASE-0-PLAN.md` |
-| **1** | **Design tokens, fonts, application shell** | **done** |
-| 2 | Homepage | next |
-| 3 | Search, filters, results | |
-| 4 | Property detail page | |
-| 5 | Auth + seller posting wizard | |
-| 6 | Seller dashboard + enquiries | |
-| 7 | Admin + moderation | |
-| 8 | SEO, performance, accessibility | |
+| 0 | Plan and architecture | complete |
+| 1 | Design system and application foundation | complete |
+| 2 | Homepage and discovery | complete |
+| 3 | Search, filters and results | complete |
+| 4 | Property detail page | complete for development-fixture scope |
+
+The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Phase 4's
+acceptance criteria are in [docs/phases/PHASE-04-property-detail.md](docs/phases/PHASE-04-property-detail.md).
 
 ## Getting started
 
@@ -37,8 +35,13 @@ npm run dev          # http://localhost:3000
 | `npm run build` | Production build |
 | `npm run verify` | **lint + typecheck + test** — run before every commit |
 | `npm run shots -- /` | Render routes at 390/412/768/1280, fail on horizontal overflow |
+| `npm run light-check` | Check theme surfaces under a dark-mode browser |
+| `npm run search-check` | Browser assertions for search |
+| `npm run property-check` | Browser assertions for the property page, including a 360px stress width |
 
-`npm run shots` needs a server running (`npm start -- -p 3100`, or set `BASE`).
+The browser checks need a server running (`npm run build && npm start -- -p 3100`).
+Set `CHROME_PATH` if Chromium is installed elsewhere. `shots` uses `BASE`;
+the other browser checks use `BASE_URL`.
 It is the responsive check the plan requires at the end of every phase, and it
 measures `scrollWidth` rather than relying on eyeballing a screenshot — an
 earlier headless run *looked* broken at 390px when nothing was actually wrong.
@@ -51,7 +54,7 @@ One Next.js application, modular inside, single deployable.
 app/          routes, layouts, server actions
 components/
   ui/         no domain knowledge — Button, Badge, StatusPill, Skeleton
-  property/   PriceDisplay, AreaDisplay, (cards, gallery in later phases)
+  property/   cards, gallery, price, area and property details
   navigation/ AppHeader, BottomNav, Wordmark
   layout/     PageShell
 lib/
@@ -93,7 +96,9 @@ unearned trust badge is the one thing here that could do real harm.
 
 ## Documentation
 
-- `docs/PHASE-0-PLAN.md` — architecture, scope, screen map, data model, build order
+- `docs/PROJECT-CONTEXT.md` — current implementation and boundaries
+- `docs/PHASE-0-PLAN.md` — initial architecture and screen map
+- `Phases.txt` — authoritative 75-phase roadmap
 - `docs/kolkata-marketplace-screen-spec.md` — screen-by-screen behaviour
 - `docs/design-system/` — tokens, brand book, component guidelines
 - `docs/99acres-reverse-engineering-and-marketplace-spec.md` — the research

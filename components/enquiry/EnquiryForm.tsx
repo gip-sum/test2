@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
 import {
   submitEnquiry,
-  EMPTY_ENQUIRY_STATE,
   type EnquiryFormState,
 } from '@/app/property/actions'
+
+const EMPTY_ENQUIRY_STATE: EnquiryFormState = { status: 'idle' }
 
 /**
  * Three fields, because every extra one costs leads.
@@ -21,10 +22,9 @@ import {
  * client adds — pending state, focus management, inline errors — is on top
  * of something already functional.
  *
- * NO PHONE NUMBER IS SHOWN IN RETURN. The buyer gives theirs; the seller
- * gets it. Revealing the seller's number is Phase 10, behind OTP and an
- * audit trail, and the confirmation says so plainly rather than letting the
- * buyer wait for something that is not coming.
+ * NO PHONE NUMBER IS SHOWN IN RETURN. Enquiries are process-local until
+ * a real lead system exists, so the confirmation must not claim the seller
+ * received the buyer's details. Seller phone reveal belongs to Phase 10.
  */
 export function EnquiryForm({
   listingPublicId,
@@ -114,8 +114,8 @@ export function EnquiryForm({
       </Button>
 
       <p className="text-caption text-ink-500">
-        Your name and number go to the {sellerLabel.toLowerCase()} who posted this listing. We do
-        not show you their number in this release.
+        This development build records your enquiry temporarily. Seller notification is not
+        available yet, and we do not show their number in this release.
       </p>
     </form>
   )
@@ -177,9 +177,8 @@ function Field({
 /**
  * The confirmation.
  *
- * States exactly what happened and exactly what will not: the seller has
- * the number, and no number is coming back. A vague "we'll be in touch"
- * leaves a buyer waiting for a reveal that this release does not perform.
+ * States exactly what happened: a temporary development enquiry was
+ * recorded, and the seller has not been notified.
  */
 function EnquirySent({ duplicate, sellerLabel }: { duplicate: boolean; sellerLabel: string }) {
   return (
@@ -192,11 +191,12 @@ function EnquirySent({ duplicate, sellerLabel }: { duplicate: boolean; sellerLab
       </p>
       <p className="mt-2 text-body-sm text-ink-700">
         {duplicate
-          ? `You have already enquired about this property from this device. We have passed the message on again — the ${sellerLabel.toLowerCase()} now has your number twice.`
-          : `The ${sellerLabel.toLowerCase()} who posted this listing now has your name and number and can call you back.`}
+          ? 'Another enquiry was recorded for this property and number.'
+          : 'Your enquiry was recorded in this development build.'}
       </p>
       <p className="mt-2 text-caption text-ink-500">
-        We do not show you their number in this release.
+        The {sellerLabel.toLowerCase()} has not been notified. Enquiries are temporary until
+        seller delivery is added; we do not show their number in this release.
       </p>
     </div>
   )

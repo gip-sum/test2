@@ -44,12 +44,9 @@ const CANONICAL_SLUG = new Map(DEMO_SUMMARIES.map((p) => [p.publicId, p.slug]))
  * two can disagree: the slug changes when a listing is edited, and links
  * shared before that keep the old one.
  *
- * Deciding here rather than in the page is not a preference. The route has
- * a loading.tsx, so a Suspense boundary sits at the segment and Next
- * flushes the shell — with its 200 — before the page component runs. A
- * redirect() or notFound() after that point can change the UI but not the
- * status line, which is how a moved listing ends up answering "200 OK" to
- * a crawler and a missing one looks alive to uptime monitoring.
+ * Deciding here keeps route identity separate from streamed rendering.
+ * A future loading boundary must not turn a moved or missing listing into
+ * a shell with a 200 status line.
  *
  * 301 rather than 308 because §5 asks for 301, and because a permanent
  * redirect that is allowed to become a GET is exactly what is wanted for a
