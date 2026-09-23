@@ -97,7 +97,9 @@ session credentials in secure, HTTP-only cookies.
   against the intended Supabase project and real deployment origin.
 - [ ] Live Google consent, callback, account linking and cancellation checked
   on the intended deployment origin.
-- [ ] SQL migration applied and its row-level policies reviewed.
+- [x] SQL migration applied to Supabase project `zploxccfgehtqesdwueg` on
+  2026-09-23; both tables have RLS enabled, owner-scoped read policies were
+  verified, and the security advisor reported no findings.
 
 Local verification: `npm run verify` (178 unit tests), `npm run build`,
 `auth-check` (26/26 against a simulated Auth API), `property-check`
