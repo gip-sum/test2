@@ -20,13 +20,15 @@ import { AccountLink } from './AccountLink'
 export function AppHeader() {
   return (
     <header
-      className="sticky z-50 border-b border-border-subtle bg-surface-000"
+      className="glass-nav sticky z-50 border-b border-border-subtle"
       style={{ top: 'env(safe-area-inset-top, 0px)' }}
     >
       <div className="mx-auto flex h-15 max-w-[1320px] items-center gap-4 px-4 lg:px-8">
         <Wordmark />
 
+        <Link href="/" className="inline-flex min-h-11 items-center rounded-md px-2 text-label text-brand-600 hover:bg-brand-100 lg:hidden">Home</Link>
         <nav aria-label="Primary" className="hidden flex-1 items-center gap-1 lg:flex">
+          <HeaderLink href="/">Home</HeaderLink>
           <HeaderLink href={`/buy/${LAUNCH_CITY.slug}`}>Buy</HeaderLink>
           <HeaderLink href={`/rent/${LAUNCH_CITY.slug}`}>Rent</HeaderLink>
           <HeaderLink href={`/in/${LAUNCH_CITY.slug}`}>Localities</HeaderLink>

@@ -18,6 +18,10 @@ const base = {
   focusable: false,
 }
 
+export function HomeIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><path d="m3 10 9-7 9 7M5 9v12h5v-7h4v7h5V9" /></svg>
+}
+
 export function SearchIcon({ className }: IconProps) {
   return (
     <svg {...base} className={className}>

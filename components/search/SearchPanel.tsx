@@ -70,7 +70,7 @@ export function SearchPanel() {
         e.preventDefault()
         router.push(url)
       }}
-      className="rounded-lg border border-border-subtle bg-surface-000 p-3 shadow-e2 sm:p-4"
+      className="glass-panel relative rounded-[24px] border border-border-subtle p-4 shadow-e2 sm:p-6"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <IntentTabs value={intent} onChange={handleIntentChange} />

@@ -8,6 +8,13 @@ client approval. `lib/brand.ts` is the current source of brand values.
 
 ## Current state
 
+- Design follow-up before Phase 7: green is the primary colour. Shared tokens
+  use warm white, mint and accessible dark-green actions. The homepage has
+  a larger green hero, rounded neighbourhood cards and a glass search panel.
+  Header and mobile navigation use translucent glass with opaque fallbacks;
+  Home is visible in both headers, the mobile bottom navigation and footer.
+  No roadmap phase advances as part of this visual update.
+
 - Phases 1–3 provide the responsive shell, discovery homepage and URL-driven
   buy/rent search. Filters, sorting, facets and pagination are encoded in the
   URL, so links and browser history reproduce the same state.

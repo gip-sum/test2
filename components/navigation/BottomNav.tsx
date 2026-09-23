@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/cn'
-import { SearchIcon, HeartIcon, PlusIcon, MailIcon, UserIcon } from '@/components/ui/icons'
+import { HomeIcon, SearchIcon, HeartIcon, PlusIcon, MailIcon, UserIcon } from '@/components/ui/icons'
 import { LAUNCH_CITY } from '@/lib/brand'
 
 /**
@@ -25,6 +25,7 @@ export function BottomNav() {
   if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null
 
   const items = [
+    { href: '/', label: 'Home', Icon: HomeIcon, match: ['/'] },
     { href: `/buy/${LAUNCH_CITY.slug}`, label: 'Search', Icon: SearchIcon, match: ['/buy', '/rent', '/search'] },
     { href: '/account/saved', label: 'Saved', Icon: HeartIcon, match: ['/account/saved'] },
     { href: '/post', label: 'Post', Icon: PlusIcon, match: ['/post'], supply: true },
@@ -35,12 +36,12 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border-subtle bg-surface-000 lg:hidden"
+      className="glass-nav fixed inset-x-0 bottom-0 z-50 border-t border-border-subtle lg:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <ul className="flex">
         {items.map(({ href, label, Icon, match, supply }) => {
-          const active = match.some((m) => pathname.startsWith(m))
+          const active = href === '/' ? pathname === '/' : href === '/account' ? pathname === '/account' : match.some((m) => pathname.startsWith(m))
           return (
             <li key={label} className="flex-1">
               <Link
