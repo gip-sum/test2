@@ -1,5 +1,6 @@
 /** Browser-level Phase 6 checks with a deterministic local Auth API. */
 import http from 'node:http'
+import { createHash } from 'node:crypto'
 import { chromium } from 'playwright-core'
 
 const BASE = process.env.BASE_URL ?? 'http://127.0.0.1:3100'
@@ -9,6 +10,12 @@ let requests = 0
 let lastOtp = null
 let refreshes = 0
 let logouts = 0
+let googleMode = 'success'
+let googleAuthorizations = 0
+let pkceExchanges = 0
+let expectedChallenge = null
+let callbackUrl = null
+let pkceMatched = false
 const sessions = new Set()
 const mock = http.createServer(async (request, response) => {
   const chunks = []
@@ -26,8 +33,25 @@ const mock = http.createServer(async (request, response) => {
     sessions.add('a'.repeat(48))
     return send(200, { access_token: 'a'.repeat(48), refresh_token: 'r'.repeat(48), expires_in: 3600, user: USER })
   }
+  if (url.pathname === '/auth/v1/authorize') {
+    googleAuthorizations++
+    expectedChallenge = url.searchParams.get('code_challenge')
+    callbackUrl = url.searchParams.get('redirect_to')
+    const destination = new URL(callbackUrl)
+    destination.searchParams.set(googleMode === 'cancel' ? 'error' : 'code', googleMode === 'cancel' ? 'access_denied' : 'google-code')
+    response.writeHead(302, { Location: destination.toString() })
+    return response.end()
+  }
   if (url.pathname === '/auth/v1/user') return sessions.has(request.headers.authorization?.slice(7)) ? send(200, USER) : send(401, {})
   if (url.pathname === '/auth/v1/token') {
+    if (url.searchParams.get('grant_type') === 'pkce') {
+      pkceExchanges++
+      const challenge = createHash('sha256').update(body.code_verifier || '').digest('base64url')
+      pkceMatched = body.auth_code === 'google-code' && challenge === expectedChallenge
+      if (!pkceMatched) return send(403, {})
+      sessions.add('c'.repeat(48))
+      return send(200, { access_token: 'c'.repeat(48), refresh_token: 't'.repeat(48), expires_in: 3600, user: USER })
+    }
     refreshes++
     if (!['r'.repeat(48), 's'.repeat(48)].includes(body.refresh_token)) return send(401, {})
     sessions.add('b'.repeat(48))
@@ -98,6 +122,29 @@ try {
     check(`auth view fits ${width}px`, size[0] <= size[1])
   }
   await context.close()
+
+  const googleContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const googlePage = await googleContext.newPage()
+  const unsolicited = await googlePage.request.get(BASE + '/api/auth/google/callback?code=google-code', { maxRedirects: 0 })
+  check('Google callback without verifier cannot sign in', unsolicited.status() === 307 && unsolicited.headers().location?.includes('/login?error=google'))
+  googleMode = 'cancel'
+  await googlePage.goto(BASE + '/login?next=%2Faccount')
+  check('Google login choice is visible', await googlePage.getByRole('link', { name: 'Continue with Google' }).isVisible())
+  await googlePage.getByRole('link', { name: 'Continue with Google' }).click()
+  await googlePage.getByRole('alert').getByText(/Google sign-in was cancelled/).waitFor()
+  check('cancelled Google login returns to accessible error', new URL(googlePage.url()).pathname === '/login' &&
+    !(await googleContext.cookies()).some((cookie) => cookie.name === 'gb-google-verifier'))
+  googleMode = 'success'
+  await googlePage.getByRole('link', { name: 'Continue with Google' }).click()
+  const googleCompleted = await googlePage.waitForURL('**/account', { timeout: 8000 }).then(() => true).catch(() => false)
+  if (!googleCompleted) console.log(`  Google diagnostic: path=${new URL(googlePage.url()).pathname}, exchanges=${pkceExchanges}, verifierMatched=${pkceMatched}, authorizations=${googleAuthorizations}`)
+  check('Google PKCE code exchanges for account session', pkceExchanges === 1 && googleAuthorizations === 2 &&
+    googleCompleted && callbackUrl === BASE + '/api/auth/google/callback' && Boolean(expectedChallenge) && await googlePage.getByText(USER.email).isVisible())
+  check('Google verifier consumed and token held HTTP-only', (await googleContext.cookies()).some((cookie) => cookie.name === 'gb-access' && cookie.httpOnly) &&
+    !(await googleContext.cookies()).some((cookie) => cookie.name === 'gb-google-verifier'))
+  const replay = await googlePage.request.get(BASE + '/api/auth/google/callback?code=google-code', { maxRedirects: 0 })
+  check('callback replay cannot exchange code', replay.status() === 307 && replay.headers().location?.includes('/login?error=google') && pkceExchanges === 1)
+  await googleContext.close()
 } finally {
   await browser.close()
   await new Promise((resolve) => mock.close(resolve))

@@ -8,14 +8,25 @@ import { Button } from '@/components/ui/Button'
 const initialCode: CodeState = { status: 'idle', message: '', email: '' }
 const initialVerify: VerifyState = { status: 'idle', message: '' }
 
-export function LoginForm({ mode, next, configured }: { mode: 'login' | 'register'; next: string; configured: boolean }) {
+export function LoginForm({ mode, next, configured, googleConfigured, googleError }: {
+  mode: 'login' | 'register'; next: string; configured: boolean; googleConfigured: boolean; googleError: boolean
+}) {
   const [request, requestAction, requestPending] = useActionState(requestCode, initialCode)
   const [verify, verifyAction, verifyPending] = useActionState(verifyCode, initialVerify)
   return (
     <div className="rounded-lg border border-border-subtle bg-surface-000 p-5 shadow-e1 sm:p-8">
       <h1 className="font-display text-heading-1 text-ink-900">{mode === 'register' ? 'Create your account' : 'Log in'}</h1>
-      {!configured && <p role="alert" className="mt-5 rounded-md border border-border-strong bg-surface-100 p-4 text-body text-ink-700">Account sign-in is unavailable while email authentication is being set up.</p>}
+      {!configured && <p role="alert" className="mt-5 rounded-md border border-border-strong bg-surface-100 p-4 text-body text-ink-700">Account sign-in is unavailable while authentication is being set up.</p>}
       {configured && <>
+      {googleError && <p role="alert" className="mt-5 rounded-md border border-border-strong bg-surface-100 p-4 text-body text-ink-700">Google sign-in was cancelled or could not be completed. You can try again or use email.</p>}
+      {googleConfigured && <>
+        <a href={`/api/auth/google/start?next=${encodeURIComponent(next)}`}
+          className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-md border border-border-strong bg-surface-000 px-4 text-label font-semibold text-ink-900 hover:border-brand-600 focus-visible:outline-2 focus-visible:outline-focus-ring">
+          <span aria-hidden className="font-display text-lg font-bold">G</span>
+          Continue with Google
+        </a>
+        <p className="mt-5 text-center text-label text-ink-500">or use your email</p>
+      </>}
       <p className="mt-2 text-body text-ink-700">Enter your email and we’ll send a six-digit sign-in code.</p>
       {request.status !== 'sent' ? (
         <form action={requestAction} className="mt-6 space-y-4">

@@ -20,9 +20,11 @@ client approval. `lib/brand.ts` is the current source of brand values.
   viewer, keyboard and touch navigation, image counters, lazy thumbnails and
   explicit missing/broken-image fallbacks. Development images carry visible
   sample markers in the gallery and listing cards.
-- Phase 6 implements email OTP registration and login through Supabase Auth,
+- Phase 6 implements email OTP and Google registration/login through Supabase Auth,
   HTTP-only token cookies, session refresh, logout and an account guard.
-  It requires a live Supabase project URL, publishable key, SMTP OTP template
+  Google uses a server-side PKCE exchange; phone OTP is not a login option.
+  It requires a live Supabase project URL, publishable key, Google OAuth
+  configuration, SMTP OTP template
   and migration application before it is production ready. The local
   browser suite uses a simulated provider; it does not test real email.
 - Listing, location and media data are deterministic development fixtures.

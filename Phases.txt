@@ -113,6 +113,8 @@ Key focus:
 PHASE 6 — USER AUTHENTICATION
 Status: IN PROGRESS (live Supabase configuration and delivery verification pending)
 
+Client decision: email OTP and Google sign-in. Phone OTP is not required for login.
+
 Build the user identity foundation.
 
 Key focus:

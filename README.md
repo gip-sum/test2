@@ -17,7 +17,7 @@ An original property marketplace for Kolkata, built around one loop:
 | 3 | Search, filters and results | complete |
 | 4 | Property detail page | complete for development-fixture scope |
 | 5 | Property gallery and media system | complete |
-| 6 | Email OTP authentication | implemented; live provider setup pending |
+| 6 | Email OTP and Google authentication | implemented; live provider setup pending |
 
 The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
 criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)
@@ -53,7 +53,7 @@ It is the responsive check the plan requires at the end of every phase, and it
 measures `scrollWidth` rather than relying on eyeballing a screenshot — an
 earlier headless run *looked* broken at 390px when nothing was actually wrong.
 
-## Phase 6 email authentication setup
+## Phase 6 authentication setup
 
 Copy `.env.example` to `.env.local` and supply your **project URL** and
 **publishable key** for the intended Supabase Auth project. Never use a
@@ -62,13 +62,25 @@ service-role key. Enable email sign-in and configure the email template with
 production SMTP, your deployment domain, and appropriate provider rate
 limits. Apply `docs/migrations/006-auth-identities.sql` in that project.
 
+To enable **Continue with Google**, also set `AUTH_SITE_URL` to the exact
+origin of the deployed app (for example `https://homes.example`), enable
+Google in Supabase Auth, and create a Google OAuth web client. Add your
+Supabase project's callback URL (shown on its Google provider page) to
+Google Cloud's authorized redirect URIs; put the Google client ID and secret
+in Supabase's provider settings, never in this app. Allowlist
+`https://homes.example/api/auth/google/callback` in Supabase's redirect URLs.
+For local development also allowlist
+`http://localhost:3000/api/auth/google/callback` and set `AUTH_SITE_URL`
+to `http://localhost:3000`.
+
 On the deployed site, verify real email delivery, invalid and expired codes,
-return to `/account`, refresh and logout before considering Phase 6 complete.
+return to `/account`, refresh and logout, plus Google consent and account
+return, before considering Phase 6 complete.
 Until configured, `/login` explains that sign-in is unavailable and creates
 no local test account. To exercise the browser flow without a live project:
 
 ```bash
-SUPABASE_URL=http://127.0.0.1:3300 SUPABASE_PUBLISHABLE_KEY=test-public-key npm start -- -p 3100
+SUPABASE_URL=http://127.0.0.1:3300 SUPABASE_PUBLISHABLE_KEY=test-public-key AUTH_SITE_URL=http://localhost:3100 npm start -- -p 3100
 # In another terminal, with CHROME_PATH set if needed:
 npm run auth-check
 ```

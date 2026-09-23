@@ -5,10 +5,11 @@
 
 ## 1. Scope
 
-Implement email OTP registration and sign-in, persistent provider-backed
-sessions, sign-out, and a guarded account entry. The account dashboard,
+Implement email OTP and Google registration and sign-in, persistent
+provider-backed sessions, sign-out, and a guarded account entry. The account dashboard,
 profile editing, saved properties and enquiries belong to later phases.
-Phone reveal and phone OTP belong to Phase 10. There is no fake local user or
+Phone OTP is excluded from login by the client's decision. Phase 10's
+contact reveal will be specified separately. There is no fake local user or
 development bypass. Supabase Auth stores identities; the app holds only
 session credentials in secure, HTTP-only cookies.
 
@@ -16,6 +17,9 @@ session credentials in secure, HTTP-only cookies.
 
 - Separate sign-in and registration choices. Request a six-digit code, enter
   it without switching devices, and recover from a wrong or expired code.
+- A Google choice redirects through the configured identity provider and
+  returns to the requested in-app page. A cancelled or failed Google flow
+  returns to the login form with a generic, accessible error.
 - Explain that the code is delivered by email. Never claim it was sent if
   the provider is unavailable; avoid exposing whether an address exists.
 - A signed-in visitor sees their verified email and can sign out. A signed-out
@@ -27,10 +31,12 @@ session credentials in secure, HTTP-only cookies.
 
 - `lib/auth` owns provider requests, session cookies, validation and safe
   return paths. Server Actions handle code requests, verification and logout.
+  Route handlers start and complete Google's OAuth PKCE code flow, keeping
+  a short-lived verifier in a secure HTTP-only cookie.
 - Supabase Auth REST API handles one-time code creation, user persistence,
   expiry, verification and refresh token rotation. No service-role key in
   the application and no access token in localStorage or HTML.
-- The existing middleware refreshes expired sessions, forwards rotated
+- The existing proxy refreshes expired sessions, forwards rotated
   cookies to the current request and browser, and guards account paths.
   Server rendering verifies the account against the provider as well.
 - Signed-out pages can still be server rendered. Auth failures fail closed;
@@ -43,8 +49,9 @@ session credentials in secure, HTTP-only cookies.
 - A migration defines `public.organisations` and `public.memberships` keyed
   by auth user IDs for future seller ownership; it creates no sample users
   and gives no client permission to self-assign an organisation role.
-- Cookie data: access token, refresh token and short-lived pending email
-  state. Cookies are HTTP-only, SameSite=Lax and Secure on HTTPS.
+- Cookie data: access token, refresh token and short-lived Google PKCE
+  verifier and return path. Cookies are HTTP-only, SameSite=Lax and Secure
+  on HTTPS. Google provider tokens are not stored by this application.
 
 ## 5. Edge cases
 
@@ -54,6 +61,8 @@ session credentials in secure, HTTP-only cookies.
 - `next` cannot point off-site, to an auth action, or to protocol-relative
   URLs. Sign out clears cookies even if upstream revocation fails.
 - Avoid leaking addresses through sign-in response wording or timing claims.
+- Google redirect denial, missing/expired verifier, tampered callback code,
+  callback replay and an unsafe return URL all fail without creating a session.
 
 ## 6. Accessibility requirements
 
@@ -73,19 +82,25 @@ session credentials in secure, HTTP-only cookies.
   `property-check`, `media-check` and `auth-check` browser assertions.
 - Test validation, open-redirect protection, cookie expiry, provider error
   mapping and account guard with a deterministic fake provider. Exercise
-  refresh and sign-out without real credentials; inspect mobile auth UI.
+  refresh, Google PKCE exchange and sign-out without real credentials;
+  inspect mobile auth UI.
 
 ## 9. Production readiness
 
 - [x] Tests and build pass; protected state cannot be forged in browser checks.
 - [ ] Supabase URL and publishable key set in deployment.
 - [ ] Email template contains `{{ .Token }}` and SMTP delivery is configured.
+- [ ] Google sign-in is enabled in Supabase, with a Google OAuth client and
+  the Supabase callback URL in Google Cloud, and the app callback URL
+  allowlisted in Supabase. `AUTH_SITE_URL` matches the live site origin.
 - [ ] Live code delivery, verification, expiry, refresh and logout checked
   against the intended Supabase project and real deployment origin.
+- [ ] Live Google consent, callback, account linking and cancellation checked
+  on the intended deployment origin.
 - [ ] SQL migration applied and its row-level policies reviewed.
 
 Local verification: `npm run verify` (178 unit tests), `npm run build`,
-`auth-check` (20/20 against a simulated Auth API), `property-check`
+`auth-check` (26/26 against a simulated Auth API), `property-check`
 (67/67), `media-check` (26/26), `search-check` (64/64), `light-check`,
 and responsive screenshots at 390/412/768/1280 passed. The unconfigured
 login page displays its unavailable state and `/account` redirects (307).
