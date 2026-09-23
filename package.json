@@ -13,7 +13,8 @@
     "shots": "node scripts/shot.mjs",
     "light-check": "node scripts/light-check.mjs",
     "search-check": "node scripts/search-check.mjs",
-    "property-check": "node scripts/property-check.mjs"
+    "property-check": "node scripts/property-check.mjs",
+    "media-check": "node scripts/media-check.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

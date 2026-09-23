@@ -100,6 +100,7 @@ export function PropertyCard({
         <PropertyImage
           src={cover?.url}
           alt={cover?.alt ?? title}
+          isSample={cover?.isSample}
           priority={priority}
           mode={horizontal ? 'fill' : 'ratio'}
           sizes={horizontal ? '190px' : '(min-width: 1280px) 400px, (min-width: 768px) 45vw, 100vw'}

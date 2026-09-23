@@ -16,6 +16,10 @@ client approval. `lib/brand.ts` is the current source of brand values.
   gallery, listing facts, distinct area bases, description, amenities,
   location, seller identity, contact form and similar listings. It emits
   listing and breadcrumb structured data.
+- Phase 5 adds a responsive gallery with desktop photo mosaic, full-screen
+  viewer, keyboard and touch navigation, image counters, lazy thumbnails and
+  explicit missing/broken-image fallbacks. Development images carry visible
+  sample markers in the gallery and listing cards.
 - Listing, location and media data are deterministic development fixtures.
   Generated illustrations in `public/dev-media/` are explicitly labelled
   as samples. They do not represent real properties.
@@ -27,7 +31,7 @@ client approval. `lib/brand.ts` is the current source of brand values.
 
 ## Boundaries
 
-Phase 5 owns full-screen and swipe media. Phase 6 owns identity. Phase 8 owns
+Phase 6 owns identity. Phase 8 owns
 persistent shortlists. Phase 9 owns lead delivery and history. Phase 10 owns
 phone reveal and OTP. Phase 18 owns listing lifecycle and unavailable-page
 semantics. Do not imply that a seller was notified merely because a
@@ -42,7 +46,8 @@ separate. Missing values are omitted rather than invented.
 
 `npm ci`, then `npm run verify` and `npm run build`. Start the production
 server with `npm start -- -p 3100`, then run `npm run shots`,
-`npm run light-check`, `npm run search-check` and `npm run property-check`.
+`npm run light-check`, `npm run search-check`, `npm run property-check` and
+`npm run media-check`.
 Browser checks require Chromium. Set `CHROME_PATH` to its executable when
 the default path is unavailable. See the Phase 4 spec for manual checks
 and explicit acceptance thresholds.

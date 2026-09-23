@@ -73,7 +73,7 @@ describe('media', () => {
   it('gives every photo a meaningful alt that marks it as a sample', () => {
     const bad = properties
       .flatMap((p) => p.photos)
-      .filter((m) => !m.alt || !m.alt.includes('sample image'))
+      .filter((m) => !m.alt || !m.alt.includes('sample image') || !m.isSample)
     expect(bad).toEqual([])
   })
 

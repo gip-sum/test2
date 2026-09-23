@@ -16,9 +16,11 @@ An original property marketplace for Kolkata, built around one loop:
 | 2 | Homepage and discovery | complete |
 | 3 | Search, filters and results | complete |
 | 4 | Property detail page | complete for development-fixture scope |
+| 5 | Property gallery and media system | complete |
 
-The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Phase 4's
-acceptance criteria are in [docs/phases/PHASE-04-property-detail.md](docs/phases/PHASE-04-property-detail.md).
+The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
+criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)
+and [the Phase 5 spec](docs/phases/PHASE-05-media-gallery.md).
 
 ## Getting started
 
@@ -38,6 +40,7 @@ npm run dev          # http://localhost:3000
 | `npm run light-check` | Check theme surfaces under a dark-mode browser |
 | `npm run search-check` | Browser assertions for search |
 | `npm run property-check` | Browser assertions for the property page, including a 360px stress width |
+| `npm run media-check` | Browser assertions for gallery navigation, touch, image loading and fallbacks |
 
 The browser checks need a server running (`npm run build && npm start -- -p 3100`).
 Set `CHROME_PATH` if Chromium is installed elsewhere. `shots` uses `BASE`;

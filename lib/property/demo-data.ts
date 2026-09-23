@@ -299,6 +299,7 @@ function generate(count: number, now: Date, seed = 20260921): PropertyDetail[] {
           id: `m-${i}-${k}`,
           url: `/dev-media/${scene}-${tone}.png`,
           alt: `${SCENE_LABEL[scene]} — ${bhk} in ${loc.name}, Kolkata (sample image)`,
+          isSample: true,
         }))
       })(),
       isPriceReduced: intent === 'buy' && rand() < 0.12,
@@ -332,6 +333,7 @@ function handWritten(now: Date): PropertyDetail[] {
     id: `m-${scene}-${tone}`,
     url: `/dev-media/${scene}-${tone}.png`,
     alt: `${SCENE_LABEL[scene]} — ${what} (sample image)`,
+    isSample: true,
   })
   /** Twelve shots, which needs two tones: there are only eight scenes. */
   const many = (what: string) => [

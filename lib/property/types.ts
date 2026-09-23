@@ -52,6 +52,8 @@ export type PropertyMedia = {
   /** Null while a listing has no photo — a real and common state. */
   url: string | null
   alt: string
+  /** Explicitly mark generated development imagery, never real seller media. */
+  isSample?: boolean
 }
 
 export type PropertySummary = {

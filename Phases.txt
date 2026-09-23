@@ -15,7 +15,8 @@ Phase 1 — Complete
 Phase 2 — Complete
 Phase 3 — Complete
 Phase 4 — Complete
-Phase 5 — Next
+Phase 5 — Complete
+Phase 6 — Next
 
 Temporary brand:
 GharBazaar
@@ -95,6 +96,7 @@ Key focus:
 
 
 PHASE 5 — PROPERTY GALLERY & MEDIA SYSTEM
+Status: COMPLETE
 
 Build a proper property-media experience rather than simple image rendering.
 

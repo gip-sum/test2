@@ -1,4 +1,7 @@
+'use client'
+
 import Image from 'next/image'
+import { useState } from 'react'
 import { cn } from '@/lib/cn'
 
 /**
@@ -24,6 +27,7 @@ export function PropertyImage({
   sizes,
   mode = 'ratio',
   className,
+  isSample,
 }: {
   src: string | null | undefined
   alt: string
@@ -31,7 +35,9 @@ export function PropertyImage({
   sizes: string
   mode?: 'ratio' | 'fill'
   className?: string
+  isSample?: boolean
 }) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
   return (
     <div
       className={cn(
@@ -40,8 +46,13 @@ export function PropertyImage({
         className,
       )}
     >
-      {src ? (
-        <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className="object-cover" />
+      {src && failedSrc !== src ? (
+        <>
+          <Image src={src} alt={alt} fill sizes={sizes} priority={priority} onError={() => setFailedSrc(src)} className="object-cover" />
+          {isSample && <span className="absolute bottom-2 left-2 rounded-sm bg-ink-900/85 px-1.5 py-0.5 text-caption font-semibold text-ink-inverse">Sample</span>}
+        </>
+      ) : src ? (
+        <div role="img" aria-label={`${alt} — image could not load`} className="absolute inset-0 grid place-items-center px-2 text-center text-caption text-ink-700">Image could not load</div>
       ) : (
         <Placeholder alt={alt} />
       )}
