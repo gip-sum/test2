@@ -11,7 +11,9 @@ client approval. `lib/brand.ts` is the current source of brand values.
 - Design follow-up before Phase 7: green is the primary colour. Shared tokens
   use warm white, mint and accessible dark-green actions. The homepage has
   a larger green hero, rounded neighbourhood cards and a glass search panel.
-  Header and mobile navigation use translucent glass with opaque fallbacks;
+  Header and mobile navigation use translucent glass with opaque fallbacks.
+  Stronger mint lighting sits behind frosted search, listing, locality and
+  information cards; reduced-transparency preferences restore solid surfaces.
   Home is visible in both headers, the mobile bottom navigation and footer.
   No roadmap phase advances as part of this visual update.
 

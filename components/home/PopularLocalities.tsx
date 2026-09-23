@@ -36,7 +36,7 @@ export function PopularLocalities({ intent = 'buy' }: { intent?: 'buy' | 'rent' 
             <li key={l.slug}>
               <Link
                 href={`/${intent}/${LAUNCH_CITY.slug}/${l.slug}`}
-                className="flex min-h-20 items-center justify-between gap-2 rounded-lg border border-border-subtle bg-surface-000 px-4 py-4 text-body font-semibold text-ink-900 shadow-e1 transition-colors hover:border-brand-600 hover:bg-brand-100 hover:text-brand-600"
+                className="glass-card flex min-h-20 items-center justify-between gap-2 rounded-lg border border-border-subtle px-4 py-4 text-body font-semibold text-ink-900 shadow-e1 transition-colors hover:border-brand-600 hover:text-brand-600"
               >
                 <span className="max-w-[14rem] truncate">{l.name}</span>
                 {count ? (
