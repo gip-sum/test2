@@ -127,7 +127,8 @@ cannot be attached to a later buyer account. Apply both Phase 9 migrations
 in `supabase/migrations/` in order. Existing fixture listings have no seller
 account assignment, so their enquiries are retained but nobody is notified
 until a trusted operator links an actual seller to a listing. Email and
-phone delivery are not enabled. The browser suite uses a simulated provider.
+phone delivery are not enabled. The simulated browser suite passed 15/15
+lead checks; the project suite passed 180/180 tests.
 
 ## Architecture
 
