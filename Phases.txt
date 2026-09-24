@@ -128,7 +128,7 @@ Key focus:
 
 
 PHASE 7 — USER ACCOUNT
-Status: IMPLEMENTED (live deployment and real-account verification pending)
+Status: DEPLOYED (real-account profile verification pending)
 
 Build the buyer's account area.
 

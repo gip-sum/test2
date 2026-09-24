@@ -1,6 +1,6 @@
 # Phase 7 — Buyer account
 
-**Status:** Implemented; deployment and live sign-in verification pending.
+**Status:** Deployed; real-account save and live sign-in verification pending.
 **Source:** `Phases.txt`, Phase 7.
 
 ## 1. Scope
@@ -40,5 +40,6 @@ Run `npm run verify`, `npm run build`, and the authenticated browser flow in `np
 - [x] Profile validation, UI, server action and migration implemented.
 - [x] Simulated authentication and profile persistence/browser checks pass.
 - [x] Table migrated with owner RLS and explicit authenticated grants; security advisors checked.
-- [ ] Vercel deployment and live sign-in/profile save verified with a real account.
+- [x] Production deployment on Vercel is ready; signed-out account access returns to login.
+- [ ] Live sign-in and profile save verified with a real account.
 - [ ] Phase 6 live email and Google provider checks completed.

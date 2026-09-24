@@ -25,7 +25,7 @@ but its eight-phase build order is superseded.
 | 4 | Property detail page | **Complete** (development fixtures) |
 | 5 | Property gallery and media system | **Complete** |
 | 6 | User authentication | Implemented; live provider setup pending |
-| 7 | Buyer account | Implemented; live profile verification pending |
+| 7 | Buyer account | Deployed; real-account profile verification pending |
 
 Phase 0 (planning) and the GharBazaar rebrand plus light-first conversion
 sit outside the numbering; both are complete and are recorded in the git

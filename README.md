@@ -18,7 +18,7 @@ An original property marketplace for Kolkata, built around one loop:
 | 4 | Property detail page | complete for development-fixture scope |
 | 5 | Property gallery and media system | complete |
 | 6 | Email OTP and Google authentication | implemented; live provider setup pending |
-| 7 | Buyer profile and account area | implemented; live account verification pending |
+| 7 | Buyer profile and account area | deployed; real-account verification pending |
 
 The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
 criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)
