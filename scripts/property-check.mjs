@@ -86,7 +86,7 @@ try {
     }
     return {
       heading: ratio(document.querySelector('article h1'), '#fff'),
-      action: ratio(document.querySelector('aside form button[type="submit"]'), '#0b57d0'),
+      action: ratio(document.querySelector('aside form button[type="submit"]'), getComputedStyle(document.querySelector('aside form button[type="submit"]')).backgroundColor),
       details: ratio(document.querySelector('#details-heading'), '#fff'),
     }
   })

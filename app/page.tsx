@@ -25,9 +25,8 @@ export const metadata: Metadata = {
  * Homepage.
  *
  * Its only job is to turn an ambiguous visitor into a typed intent plus a
- * place. So the search panel sits immediately below a single line of
- * orientation — there is no decorative hero, and nothing competes with it
- * above the fold.
+ * place. The green hero introduces the city and the glass search panel
+ * keeps the discovery controls together on desktop and mobile.
  *
  * Everything after the search is secondary discovery, ordered by how
  * directly it leads back into a search: localities, then browse entry
@@ -39,22 +38,24 @@ export default function HomePage() {
       <DevDataNotice />
 
       {/* Search block — the dominant interaction. */}
-      <section className="border-b border-border-subtle bg-surface-000">
-        <div className="mx-auto max-w-[1320px] px-4 pb-6 pt-5 lg:px-8 lg:pb-8 lg:pt-7">
+      <section className="home-hero border-b border-border-subtle">
+        <div className="relative mx-auto max-w-[1320px] px-4 pb-8 pt-8 lg:px-8 lg:pb-12 lg:pt-14">
           {/* Echoes the brand line in lib/brand.ts, with the city that
               makes it a searchable heading rather than a slogan. Page copy,
               so it lives here and not in the brand config. */}
-          <h1 className="font-display text-heading-1 text-ink-900 lg:text-display-1">
-            Find your place in {LAUNCH_CITY.name}
+          <p className="mb-5 inline-flex rounded-full border border-brand-600/20 bg-surface-000/80 px-4 py-2 text-overline uppercase tracking-[0.16em] text-brand-700">A better tomorrow at home</p>
+          <h1 className="max-w-3xl font-display text-[36px] leading-[1.1] font-bold tracking-[-0.04em] text-ink-900 sm:text-[48px] lg:text-[64px]">
+            Find your place.<br /><span className="text-brand-600">Feel at home in {LAUNCH_CITY.name}.</span>
           </h1>
-          <p className="mt-1.5 max-w-2xl text-body text-ink-700">
+          <p className="mt-5 max-w-xl text-body-lg text-ink-700">
             Flats, houses and builder floors for sale and rent across {LAUNCH_CITY.name}. Search
             several localities at once.
           </p>
 
-          <div className="mt-4 lg:mt-5">
+          <div className="mt-7 lg:mt-9">
             <SearchPanel />
           </div>
+          <p className="mt-5 text-body-sm text-brand-700">Your neighbourhood. Your budget. Your next chapter.</p>
         </div>
       </section>
 

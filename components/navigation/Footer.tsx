@@ -70,6 +70,7 @@ export function Footer() {
           </FooterGroup>
 
           <FooterGroup title={BRAND.shortName}>
+            <FooterLink href="/">Home</FooterLink>
             <FooterLink href="/post">Post a property</FooterLink>
             <FooterLink href={`/in/${city}`}>Localities in {LAUNCH_CITY.name}</FooterLink>
             <FooterLink href="/terms">Terms of use</FooterLink>

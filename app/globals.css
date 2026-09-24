@@ -42,28 +42,29 @@
 
   /* ---- Surfaces: white product, cool neutral ground ---- */
   --color-surface-000: #ffffff;      /* cards, sheets, header, inputs */
-  --color-surface-100: #f7f9fc;      /* page background */
-  --color-surface-200: #eef2f7;      /* sunken: skeletons, tab tracks */
+  --color-surface-100: #f8faf7;      /* warm page background */
+  --color-surface-200: #ecf5ef;      /* sunken: skeletons, tab tracks */
   --color-surface-raised: #ffffff;   /* dropdowns, sheets, toasts */
-  --color-media-ground: #e7edf5;     /* behind a photo before it loads */
+  --color-media-ground: #e5eee7;     /* behind a photo before it loads */
 
   /* ---- Ink: deep navy through medium grey ----
      Every step is measured against BOTH white and the page ground; the
      meta step is the tight one, so it is darker than it looks it needs
      to be (4.86:1 on the sunken surface, where captions also sit).    */
-  --color-ink-900: #0f1b2d;          /* headings, prices, titles */
-  --color-ink-700: #44526b;          /* body copy, card attributes */
-  --color-ink-500: #5f6a7d;          /* meta, helper text, timestamps */
+  --color-ink-900: #111827;          /* headings, prices, titles */
+  --color-ink-700: #4b5563;          /* body copy, card attributes */
+  --color-ink-500: #5c6b63;          /* meta, helper text, timestamps */
   --color-ink-inverse: #ffffff;
 
   /* ---- Borders: light grey. They carry the layout, not shadows. ---- */
-  --color-border-subtle: #e3e8ef;    /* default separator */
-  --color-border-strong: #cdd5e0;    /* hover, selected, emphasis */
+  --color-border-subtle: #dfe9e2;    /* default separator */
+  --color-border-strong: #b9cebf;    /* hover, selected, emphasis */
 
-  /* ---- Brand: the BUYER's action. Strong blue. ---- */
-  --color-brand-600: #0b57d0;        /* filled buttons, links, selected */
-  --color-brand-700: #0a49ae;        /* hover on a filled brand surface */
-  --color-brand-100: #e8f0fe;        /* selected chips, tinted rows */
+  /* Green identity. Dark green keeps white button text accessible. */
+  --color-brand-500: #16a34a;        /* decorative brand accents */
+  --color-brand-600: #15803d;        /* filled buttons, links, selected */
+  --color-brand-700: #0f6a38;        /* hover and emphasis */
+  --color-brand-100: #d1fae5;        /* selected chips, tinted rows */
   --color-on-brand: #ffffff;
 
   /* ---- Supply: the SELLER's action. Orange, a different hue on purpose.
@@ -89,13 +90,13 @@
   --color-neutral-600: #5f6a7d;      /* inactive states, deliberately flat */
   --color-neutral-100: #eef2f7;
 
-  --color-focus-ring: #0b57d0;
+  --color-focus-ring: #15803d;
   --color-overlay: #0f1b2da6;
 
   /* ---- Radius: four steps, by role ---- */
   --radius-sm: 4px;                  /* badges, small tags */
-  --radius-md: 8px;                  /* buttons, inputs, cards */
-  --radius-lg: 12px;                 /* property cards, images, sheets */
+  --radius-md: 12px;                 /* buttons, inputs, cards */
+  --radius-lg: 20px;                 /* property cards, images, sheets */
   --radius-full: 9999px;             /* pills, avatars, counters */
 
   /* ---- Elevation: borders beat shadows in long lists ---- */
@@ -184,10 +185,10 @@
   --color-ink-inverse: #0d1520;
   --color-border-subtle: #25303f;
   --color-border-strong: #35414f;
-  --color-brand-600: #8ab4f8;
-  --color-brand-700: #a6c7fa;
-  --color-brand-100: #17304f;
-  --color-on-brand: #0a2647;
+  --color-brand-600: #86efac;
+  --color-brand-700: #bbf7d0;
+  --color-brand-100: #123522;
+  --color-on-brand: #064e3b;
   --color-supply-600: #f59b55;
   --color-supply-700: #f9b782;
   --color-supply-100: #3a2210;
@@ -203,11 +204,51 @@
   --color-on-danger: #3b0d09;
   --color-neutral-600: #94a1b4;
   --color-neutral-100: #1a2534;
-  --color-focus-ring: #8ab4f8;
+  --color-focus-ring: #86efac;
   --color-overlay: #000000cc;
   --shadow-e1: 0 1px 2px #00000066;
   --shadow-e2: 0 2px 4px #0000004d, 0 8px 20px #00000080;
   --shadow-e3: 0 -2px 16px #00000099;
+}
+
+/* Opaque fallback keeps controls legible without backdrop-filter support.
+   Strong glass on navigation/search, lighter frost on discovery cards. */
+.glass-nav, .glass-panel, .glass-card { background: var(--color-surface-000); }
+.glass-card {
+  border-color: var(--color-border-strong);
+  box-shadow: 0 8px 24px #064e3b0b, inset 0 1px 0 #ffffff;
+}
+.marketplace-shell {
+  background: radial-gradient(ellipse at 0% 25%, #16a34a14, transparent 45%),
+    radial-gradient(ellipse at 100% 65%, #34d3991a, transparent 50%), var(--color-surface-100);
+}
+.home-hero {
+  background: radial-gradient(circle at 85% 20%, #16a34a4d, transparent 32%),
+    radial-gradient(circle at 10% 90%, #34d39940, transparent 38%), #ecfdf5;
+}
+@supports (backdrop-filter: blur(16px)) {
+  .glass-nav {
+    background: color-mix(in srgb, var(--color-surface-000) 78%, transparent);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    box-shadow: 0 4px 24px #064e3b0b, inset 0 1px 0 #ffffff80;
+  }
+  .glass-panel {
+    background: linear-gradient(135deg, #ffffff66, #ffffff00), color-mix(in srgb, var(--color-surface-000) 70%, transparent);
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border-color: color-mix(in srgb, var(--color-surface-000) 85%, var(--color-border-strong));
+    box-shadow: 0 24px 64px #064e3b1c, inset 0 1px 0 #ffffff;
+  }
+  .glass-card {
+    background: color-mix(in srgb, var(--color-surface-000) 80%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+}
+:root[data-theme="dark"] .home-hero { background: #123522; }
+@media (prefers-reduced-transparency: reduce) {
+  .glass-nav, .glass-panel, .glass-card { background: var(--color-surface-000); backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
 @layer base {

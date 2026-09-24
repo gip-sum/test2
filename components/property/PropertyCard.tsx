@@ -84,7 +84,7 @@ export function PropertyCard({
   return (
     <article
       className={cn(
-        'group relative overflow-hidden rounded-lg border border-border-subtle bg-surface-000 shadow-e1',
+        'glass-card group relative overflow-hidden rounded-lg border border-border-subtle shadow-e1',
         'focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus-ring',
         horizontal ? 'flex' : 'flex flex-col',
       )}

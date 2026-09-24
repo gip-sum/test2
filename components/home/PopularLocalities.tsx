@@ -29,14 +29,14 @@ export function PopularLocalities({ intent = 'buy' }: { intent?: 'buy' | 'rent' 
         </Link>
       </div>
 
-      <ul className="mt-3 flex flex-wrap gap-2">
+      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {localities.map((l) => {
           const count = counts.get(l.slug)
           return (
             <li key={l.slug}>
               <Link
                 href={`/${intent}/${LAUNCH_CITY.slug}/${l.slug}`}
-                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border-subtle bg-surface-000 px-4 text-body-sm text-ink-900 hover:border-brand-600 hover:text-brand-600"
+                className="glass-card flex min-h-20 items-center justify-between gap-2 rounded-lg border border-border-subtle px-4 py-4 text-body font-semibold text-ink-900 shadow-e1 transition-colors hover:border-brand-600 hover:text-brand-600"
               >
                 <span className="max-w-[14rem] truncate">{l.name}</span>
                 {count ? (

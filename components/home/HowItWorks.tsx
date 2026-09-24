@@ -36,7 +36,7 @@ export function HowItWorks() {
         {POINTS.map((p) => (
           <li
             key={p.title}
-            className="rounded-md border border-border-subtle bg-surface-000 p-4"
+            className="glass-card rounded-lg border border-border-subtle p-5"
           >
             <h3 className="text-body font-semibold text-ink-900">{p.title}</h3>
             <p className="mt-1.5 text-body-sm text-ink-700">{p.body}</p>

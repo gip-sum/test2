@@ -13,7 +13,7 @@ import { BottomNav } from '@/components/navigation/BottomNav'
  */
 export function PageShell({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
   return (
-    <div className="flex min-h-dvh flex-col bg-surface-100">
+    <div className="marketplace-shell flex min-h-dvh flex-col bg-surface-100">
       <AppHeader />
       <main className="flex-1">{children}</main>
       {footer}
