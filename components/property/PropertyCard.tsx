@@ -114,13 +114,13 @@ export function PropertyCard({
             ))}
           </div>
         )}
-        {!horizontal && <SaveButton title={title} className="absolute right-2 top-2 shadow-e1" />}
+        {!horizontal && <SaveButton publicId={publicId} title={title} className="absolute right-2 top-2 shadow-e1" />}
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-1 p-3">
         <div className="flex items-start justify-between gap-2">
           <PriceDisplay amount={price} intent={intent} areaForRate={intent === 'buy' ? carpetArea : undefined} />
-          {horizontal && <SaveButton title={title} className="-mr-1 -mt-1 size-9 shrink-0 border-0 bg-transparent" />}
+          {horizontal && <SaveButton publicId={publicId} title={title} className="-mr-1 -mt-1 size-9 shrink-0 border-0 bg-transparent" />}
         </div>
 
         <p className="text-body-sm text-ink-700">

@@ -52,3 +52,8 @@ export function getListingCount(intent?: Intent): number {
 export function getPropertyDetail(publicId: string): PropertyDetail | undefined {
   return DEMO_PROPERTIES.find((p) => p.publicId === publicId)
 }
+
+/** Resolve a saved listing without exposing the current inventory source to account pages. */
+export function getPropertySummary(publicId: string): PropertySummary | undefined {
+  return DEMO_SUMMARIES.find((p) => p.publicId === publicId)
+}

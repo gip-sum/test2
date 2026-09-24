@@ -17,6 +17,8 @@ Phase 3 — Complete
 Phase 4 — Complete
 Phase 5 — Complete
 Phase 6 — In progress (implementation built; live provider setup pending)
+Phase 7 — Deployed (real-account profile verification pending)
+Phase 8 — Implemented (real-account save verification pending)
 
 Temporary brand:
 GharBazaar
@@ -142,6 +144,7 @@ Key focus:
 
 
 PHASE 8 — SAVE / SHORTLIST
+Status: IMPLEMENTED (real-account save verification pending)
 
 Build property saving and shortlist functionality.
 

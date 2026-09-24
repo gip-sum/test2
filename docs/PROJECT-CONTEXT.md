@@ -41,6 +41,11 @@ client approval. `lib/brand.ts` is the current source of brand values.
   unverified contact number, buying/renting preference, locality and
   optional product email choice. Email and account activity come directly
   from Supabase Auth; missing activity timestamps are shown as unavailable.
+- Phase 8 adds buyer-owned `public.saved_properties` with RLS and explicit
+  authenticated grants. Cards and property details share a client shortlist
+  state backed by verified server endpoints; `/account/saved` displays the
+  buyer's list, empty state and unavailable listing removal. Simulated browser
+  checks pass; a live real-account save still needs verification.
 - Listing, location and media data are deterministic development fixtures.
   Generated illustrations in `public/dev-media/` are explicitly labelled
   as samples. They do not represent real properties.
@@ -52,7 +57,7 @@ client approval. `lib/brand.ts` is the current source of brand values.
 
 ## Boundaries
 
-Phase 8 owns persistent shortlists.
+Phase 8 implements persistent shortlists; live real-account verification remains.
 Phase 9 owns lead delivery and history. Phase 10 owns
 phone reveal and OTP. Phase 18 owns listing lifecycle and unavailable-page
 semantics. Do not imply that a seller was notified merely because a

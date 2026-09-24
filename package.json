@@ -15,7 +15,8 @@
     "search-check": "node scripts/search-check.mjs",
     "property-check": "node scripts/property-check.mjs",
     "media-check": "node scripts/media-check.mjs",
-    "auth-check": "node scripts/auth-check.mjs"
+    "auth-check": "node scripts/auth-check.mjs",
+    "saved-check": "node scripts/saved-check.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

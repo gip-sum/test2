@@ -19,6 +19,7 @@ An original property marketplace for Kolkata, built around one loop:
 | 5 | Property gallery and media system | complete |
 | 6 | Email OTP and Google authentication | implemented; live provider setup pending |
 | 7 | Buyer profile and account area | deployed; real-account verification pending |
+| 8 | Save and shortlist | implemented; real-account verification pending |
 
 The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
 criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)
@@ -27,6 +28,8 @@ requirements and live-readiness checklist are in
 [the auth spec](docs/phases/PHASE-06-authentication.md).
 The [Phase 7 account spec](docs/phases/PHASE-07-user-account.md) covers the
 profile and its live-readiness checks.
+The [Phase 8 shortlist spec](docs/phases/PHASE-08-save-shortlist.md) records
+save behavior, ownership and verification.
 
 ## Getting started
 
@@ -46,6 +49,7 @@ npm run dev          # http://localhost:3000
 | `npm run light-check` | Check theme surfaces under a dark-mode browser |
 | `npm run search-check` | Browser assertions for search |
 | `npm run property-check` | Browser assertions for the property page, including a 360px stress width |
+| `npm run saved-check` | Browser assertions for save, reload, removal and buyer isolation with a simulated provider |
 | `npm run media-check` | Browser assertions for gallery navigation, touch, image loading and fallbacks |
 | `npm run auth-check` | Browser assertions using a local Auth API simulator (requires the environment below) |
 
@@ -98,6 +102,17 @@ to their own row through RLS; anonymous users cannot read profiles. The
 contact number is optional and unverified. Once deployed, sign in with a
 real account, save details, reload, and confirm persistence before marking
 the live account flow complete.
+
+## Phase 8 saved properties
+
+Signed-in buyers save listings from the property page and cards and find them
+at `/account/saved`. Apply
+`supabase/migrations/20260924083858_phase_08_saved_properties.sql` to the
+same Supabase project as Auth. Row policies and table grants limit saved
+properties to their owner. Search still uses development listings; saved
+IDs remain available for removal if a listing disappears. Browser checks use
+a simulated provider; confirm a real-account save, reload and remove before
+marking the live flow complete.
 
 ## Architecture
 

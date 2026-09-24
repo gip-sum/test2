@@ -35,6 +35,11 @@ export default async function AccountPage() {
         <ProfileForm profile={result.ok ? result.profile : null} localities={localities} disabled={!result.ok} />
       </section>
       <aside className="space-y-6">
+        <section className="glass-card rounded-lg border border-border-subtle p-5 shadow-e1">
+          <h2 className="font-display text-heading-3 text-ink-900">Your shortlist</h2>
+          <p className="mt-2 text-body-sm text-ink-700">Revisit the homes you saved while browsing.</p>
+          <Link href="/account/saved" className="mt-3 inline-flex min-h-11 items-center text-label font-semibold text-brand-700 underline underline-offset-4">View saved properties</Link>
+        </section>
         <section className="glass-card rounded-lg border border-border-subtle p-5 shadow-e1" aria-labelledby="signin-title">
           <h2 id="signin-title" className="font-display text-heading-3 text-ink-900">Sign-in & settings</h2>
           <p className="mt-4 text-label text-ink-500">Email address</p>
