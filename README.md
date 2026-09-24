@@ -18,12 +18,15 @@ An original property marketplace for Kolkata, built around one loop:
 | 4 | Property detail page | complete for development-fixture scope |
 | 5 | Property gallery and media system | complete |
 | 6 | Email OTP and Google authentication | implemented; live provider setup pending |
+| 7 | Buyer profile and account area | implemented; live account verification pending |
 
 The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
 criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)
 and [the Phase 5 spec](docs/phases/PHASE-05-media-gallery.md). Phase 6's
 requirements and live-readiness checklist are in
 [the auth spec](docs/phases/PHASE-06-authentication.md).
+The [Phase 7 account spec](docs/phases/PHASE-07-user-account.md) covers the
+profile and its live-readiness checks.
 
 ## Getting started
 
@@ -84,6 +87,17 @@ SUPABASE_URL=http://127.0.0.1:3300 SUPABASE_PUBLISHABLE_KEY=test-public-key AUTH
 # In another terminal, with CHROME_PATH set if needed:
 npm run auth-check
 ```
+
+## Phase 7 buyer profiles
+
+The account editor stores buyer details and preferences in
+`public.buyer_profiles`, keyed to the Supabase Auth user. Apply
+`supabase/migrations/20260924032910_phase_07_buyer_profiles.sql` to the
+same project as Phase 6. The migration grants authenticated users access
+to their own row through RLS; anonymous users cannot read profiles. The
+contact number is optional and unverified. Once deployed, sign in with a
+real account, save details, reload, and confirm persistence before marking
+the live account flow complete.
 
 ## Architecture
 

@@ -25,6 +25,7 @@ but its eight-phase build order is superseded.
 | 4 | Property detail page | **Complete** (development fixtures) |
 | 5 | Property gallery and media system | **Complete** |
 | 6 | User authentication | Implemented; live provider setup pending |
+| 7 | Buyer account | Implemented; live profile verification pending |
 
 Phase 0 (planning) and the GharBazaar rebrand plus light-first conversion
 sit outside the numbering; both are complete and are recorded in the git
@@ -46,6 +47,7 @@ widening an existing table.
 | `enquiry` / `lead` | 9 | A buyer can contact a seller |
 | `contact_reveal` | 10 | A phone number can be released |
 | `user`, `organisation` | 6 | Anyone can sign in |
+| `buyer_profile` | 7 | A signed-in buyer saves contact details and preferences |
 | `media_asset` | 15 | Photos are uploaded rather than fixtures |
 | `listing_draft` | 16 | A posting can be resumed |
 | `listing_status_history` | 18 | A listing can change state |

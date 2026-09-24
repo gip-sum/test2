@@ -12,7 +12,10 @@ export async function GET(request: NextRequest) {
   // Consume the verifier even on failure. An intercepted callback or replay
   // cannot complete a later login attempt in this browser.
   let session: AuthSession | null = null
-  if (origin === request.nextUrl.origin && code && code.length <= 2048 && verifier && /^[\w-]{40,128}$/.test(verifier)) {
+  // Next can normalize request.nextUrl to localhost behind the server even
+  // when the browser used the configured hostname. Compare the received Host
+  // only to our fixed configured origin; never construct a redirect from it.
+  if (request.headers.get('host') === new URL(origin).host && code && code.length <= 2048 && verifier && /^[\w-]{40,128}$/.test(verifier)) {
     const result = await authRequest<AuthSession>('/token?grant_type=pkce', 'POST', { auth_code: code, code_verifier: verifier })
     if (result.ok && validSession(result.data)) session = result.data
   }
