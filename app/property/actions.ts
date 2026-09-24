@@ -1,7 +1,8 @@
 'use server'
 
 import { createEnquiry } from '@/lib/enquiry/commands'
-import type { EnquiryFieldError } from '@/lib/enquiry/types'
+import { getVerifiedUser } from '@/lib/auth/session'
+import type { EnquiryFieldError, NotificationStatus } from '@/lib/enquiry/types'
 
 /**
  * The enquiry submission.
@@ -24,6 +25,8 @@ export type EnquiryFormState = {
   errors?: Partial<Record<EnquiryFieldError, string>>
   /** True when this number has already enquired about this listing. */
   duplicate?: boolean
+  notificationStatus?: NotificationStatus
+  hasHistory?: boolean
   /** Echoed back so a failed submit does not clear the form. */
   values?: { name: string; phone: string; message: string }
 }
@@ -39,15 +42,21 @@ export async function submitEnquiry(
   }
   const listingPublicId = String(formData.get('listingPublicId') ?? '')
 
-  const result = createEnquiry({
+  const buyer = await getVerifiedUser()
+  const result = await createEnquiry({
     listingPublicId,
     name: values.name,
     phone: values.phone,
     message: values.message,
-  })
+  }, buyer)
 
   if (!result.ok) {
     return { status: 'error', errors: result.errors, values }
   }
-  return { status: 'success', duplicate: result.duplicate }
+  return {
+    status: 'success',
+    duplicate: result.duplicate,
+    notificationStatus: result.enquiry.notificationStatus,
+    hasHistory: result.hasHistory,
+  }
 }

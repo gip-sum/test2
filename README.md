@@ -114,6 +114,20 @@ IDs remain available for removal if a listing disappears. Browser checks use
 a simulated provider; confirm a real-account save, reload and remove before
 marking the live flow complete.
 
+## Phase 9 enquiries and leads
+
+Guest and signed-in enquiries persist in `public.enquiries`; signed-in buyers
+see only their own history at `/account/enquiries`. Apply
+`supabase/migrations/20260924090123_phase_09_enquiry_leads.sql`, create a
+dedicated server-side Supabase secret, and set `SUPABASE_SECRET_KEY` in the
+deployment secret store. Never expose it to browser code. Configure
+`SELLER_NOTIFICATION_WEBHOOK_URL` and `SELLER_NOTIFICATION_WEBHOOK_SECRET`
+for the service that delivers leads to sellers. The app signs webhook bodies
+with HMAC-SHA256 in `X-GharBazaar-Signature` and separately records delivery
+success, failure, or missing configuration. Run `npm run enquiry-check` against
+the isolated provider, then verify a real guest lead, signed-in history, repeat
+lead and failed-delivery recovery before treating the live loop as ready.
+
 ## Architecture
 
 One Next.js application, modular inside, single deployable.

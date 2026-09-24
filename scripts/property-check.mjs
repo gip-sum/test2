@@ -144,11 +144,10 @@ try {
     await form.getByLabel('Message').inputValue() === 'Please share viewing details')
   await form.getByLabel('Mobile number').fill('9876543210')
   await form.getByRole('button', { name: 'Send enquiry' }).click()
-  const succeeded = await page.locator('aside [role="status"]').waitFor({ timeout: 10000 })
+  const unavailable = await page.locator('aside [role="alert"]').getByText(/temporarily unavailable/).waitFor({ timeout: 10000 })
     .then(() => true).catch(() => false)
-  check('valid enquiry reports success', succeeded &&
-    /Enquiry sent/i.test(await page.locator('aside [role="status"]').innerText()),
-    succeeded ? '' : (await page.locator('aside').innerText()).slice(0, 300))
+  check('valid enquiry does not claim success when durable storage is unavailable', unavailable,
+    unavailable ? '' : (await page.locator('aside').innerText()).slice(0, 300))
   await ready(page, '/buy/kolkata?bhk=3')
   const resultLink = page.locator('article h3 a[href^="/property/"]:visible').first()
   await resultLink.waitFor({ state: 'visible' })
@@ -190,7 +189,7 @@ try {
     await noJsForm.getByLabel('Your name').fill('No JS Browser Check')
     await noJsForm.getByLabel('Mobile number').fill('9876543211')
     await noJsForm.getByRole('button', { name: 'Send enquiry' }).click()
-    check('form submits without JavaScript', await noJsPage.locator('aside [role="status"]')
+    check('form submits without JavaScript', await noJsPage.locator('aside [role="alert"]').getByText(/temporarily unavailable/)
       .waitFor({ timeout: 10000 }).then(() => true).catch(() => false))
   } else {
     check('form submits without JavaScript', false, 'property content is hidden')

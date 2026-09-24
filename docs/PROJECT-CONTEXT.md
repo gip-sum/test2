@@ -46,19 +46,25 @@ client approval. `lib/brand.ts` is the current source of brand values.
   state backed by verified server endpoints; `/account/saved` displays the
   buyer's list, empty state and unavailable listing removal. Simulated browser
   checks pass; a live real-account save still needs verification.
+- Phase 9 replaces process-local enquiries with durable `public.enquiries`.
+  Guests and signed-in buyers can submit; signed-in buyers privately view
+  `/account/enquiries`. Repeat attempts are retained and linked, lead and
+  delivery status are separate, and an authenticated webhook adapter records
+  delivered, failed or unconfigured notification outcomes. Isolated provider
+  checks pass; the live migration, server secret and seller-delivery webhook
+  still need configuration.
 - Listing, location and media data are deterministic development fixtures.
   Generated illustrations in `public/dev-media/` are explicitly labelled
   as samples. They do not represent real properties.
-- The enquiry form accepts signed-out submissions via a server action.
-  `lib/enquiry/commands.ts` validates inputs and stores enquiries in a
-  **process-local, non-durable array**. There is no seller inbox or
-  notification delivery. Restarting a server loses enquiries. This is not
-  suitable for real customer leads; Phase 9 introduces the lead system.
+- The enquiry form accepts signed-out submissions via a server action. Writes
+  use a server-only Supabase secret because guest leads cannot use buyer-owned
+  RLS. The secret must never be exposed to a browser or prefixed `NEXT_PUBLIC_`.
 
 ## Boundaries
 
 Phase 8 implements persistent shortlists; live real-account verification remains.
-Phase 9 owns lead delivery and history. Phase 10 owns
+Phase 9 implements lead delivery state and buyer history; live configuration
+is still pending. Phase 10 owns
 phone reveal and OTP. Phase 18 owns listing lifecycle and unavailable-page
 semantics. Do not imply that a seller was notified merely because a
 development enquiry reached the process-local store.

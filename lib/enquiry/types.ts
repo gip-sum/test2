@@ -12,6 +12,8 @@
  * be a field nobody writes and everybody has to reason about.
  */
 export type EnquirySource = 'property_page'
+export type LeadStatus = 'NEW' | 'CONTACTED' | 'CLOSED'
+export type NotificationStatus = 'PENDING' | 'DELIVERED' | 'FAILED' | 'UNCONFIGURED'
 
 export type Enquiry = {
   id: string
@@ -24,6 +26,9 @@ export type Enquiry = {
   message?: string
   createdAt: string
   source: EnquirySource
+  status: LeadStatus
+  notificationStatus: NotificationStatus
+  duplicateOf?: string
 }
 
 export type EnquiryInput = {
@@ -37,5 +42,12 @@ export type EnquiryInput = {
 export type EnquiryFieldError = 'name' | 'phone' | 'message' | 'listing'
 
 export type EnquiryResult =
-  | { ok: true; enquiry: Enquiry; duplicate: boolean }
-  | { ok: false; errors: Partial<Record<EnquiryFieldError, string>> }
+  | { ok: true; enquiry: Enquiry; duplicate: boolean; hasHistory: boolean }
+  | { ok: false; errors: Partial<Record<EnquiryFieldError, string>>; unavailable?: boolean }
+
+export type EnquiryHistoryItem = Enquiry & {
+  listingTitle: string
+  listingLocality: string
+  sellerType: 'OWNER' | 'AGENT' | 'BUILDER'
+  sellerName?: string
+}

@@ -3,10 +3,12 @@
 // eyeballing a screenshot.
 import { chromium } from 'playwright-core'
 import { mkdirSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 
 const EXECUTABLE = process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
 const BASE = process.env.BASE ?? 'http://127.0.0.1:3100'
-const OUT = process.env.OUT ?? '/tmp/shots'
+const OUT = process.env.OUT ?? join(tmpdir(), 'gharbazaar-shots')
 const WIDTHS = [390, 412, 768, 1280]
 const DEFAULT_ROUTES = [
   '/',
@@ -48,8 +50,8 @@ for (const route of routes) {
         .slice(0, 5)
         .map((el) => `${el.tagName.toLowerCase()}.${(el.className || '').toString().split(' ')[0]} → ${Math.round(el.getBoundingClientRect().right)}px`),
     }))
-    const slug = route === '/' ? 'home' : route.replace(/\//g, '_').replace(/^_/, '')
-    await page.screenshot({ path: `${OUT}/${slug}-${width}.png`, fullPage: true })
+    const slug = route === '/' ? 'home' : route.replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '')
+    await page.screenshot({ path: join(OUT, `${slug}-${width}.png`), fullPage: true })
     const overflow = m.scrollWidth > m.clientWidth + 1
     if (overflow) failures++
     console.log(

@@ -40,6 +40,11 @@ export default async function AccountPage() {
           <p className="mt-2 text-body-sm text-ink-700">Revisit the homes you saved while browsing.</p>
           <Link href="/account/saved" className="mt-3 inline-flex min-h-11 items-center text-label font-semibold text-brand-700 underline underline-offset-4">View saved properties</Link>
         </section>
+        <section className="glass-card rounded-lg border border-border-subtle p-5 shadow-e1">
+          <h2 className="font-display text-heading-3 text-ink-900">Your enquiries</h2>
+          <p className="mt-2 text-body-sm text-ink-700">Track the properties you contacted and their current lead status.</p>
+          <Link href="/account/enquiries" className="mt-3 inline-flex min-h-11 items-center text-label font-semibold text-brand-700 underline underline-offset-4">View enquiry history</Link>
+        </section>
         <section className="glass-card rounded-lg border border-border-subtle p-5 shadow-e1" aria-labelledby="signin-title">
           <h2 id="signin-title" className="font-display text-heading-3 text-ink-900">Sign-in & settings</h2>
           <p className="mt-4 text-label text-ink-500">Email address</p>
