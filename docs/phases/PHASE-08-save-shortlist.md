@@ -38,6 +38,6 @@ Run project verification and production build. Test browser save, persistence ac
 ## 9. Production readiness
 
 - [x] Database migration and owner RLS applied; security advisors clear.
-- [x] UI, server endpoints and responsive shortlist verified with simulated buyers.
+- [x] UI, server endpoints and responsive shortlist verified with simulated buyers (12 browser checks and 180 project tests).
 - [x] Production build passes.
 - [ ] Live save with a real buyer account verified.
