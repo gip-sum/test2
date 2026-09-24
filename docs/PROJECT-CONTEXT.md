@@ -36,6 +36,11 @@ client approval. `lib/brand.ts` is the current source of brand values.
   configuration, SMTP OTP template
   and migration application before it is production ready. The local
   browser suite uses a simulated provider; it does not test real email.
+- Phase 7 adds the guarded buyer account editor. Profiles persist in
+  `public.buyer_profiles` with owner-only RLS, storing a name, optional
+  unverified contact number, buying/renting preference, locality and
+  optional product email choice. Email and account activity come directly
+  from Supabase Auth; missing activity timestamps are shown as unavailable.
 - Listing, location and media data are deterministic development fixtures.
   Generated illustrations in `public/dev-media/` are explicitly labelled
   as samples. They do not represent real properties.
@@ -47,7 +52,7 @@ client approval. `lib/brand.ts` is the current source of brand values.
 
 ## Boundaries
 
-Phase 7 owns account management. Phase 8 owns persistent shortlists.
+Phase 8 owns persistent shortlists.
 Phase 9 owns lead delivery and history. Phase 10 owns
 phone reveal and OTP. Phase 18 owns listing lifecycle and unavailable-page
 semantics. Do not imply that a seller was notified merely because a

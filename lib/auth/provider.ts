@@ -1,7 +1,13 @@
 /** Server-only adapter for the Supabase Auth HTTP API. Never expose tokens to client components. */
 import 'server-only'
 
-export type AuthUser = { id: string; email: string; email_confirmed_at?: string | null }
+export type AuthUser = {
+  id: string
+  email: string
+  email_confirmed_at?: string | null
+  created_at?: string | null
+  last_sign_in_at?: string | null
+}
 export type AuthSession = { access_token: string; refresh_token: string; expires_in: number; user?: AuthUser }
 
 export function authConfig() {

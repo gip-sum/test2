@@ -17,6 +17,7 @@ let expectedChallenge = null
 let callbackUrl = null
 let pkceMatched = false
 const sessions = new Set()
+let savedProfile = null
 const mock = http.createServer(async (request, response) => {
   const chunks = []
   for await (const chunk of request) chunks.push(chunk)
@@ -43,6 +44,15 @@ const mock = http.createServer(async (request, response) => {
     return response.end()
   }
   if (url.pathname === '/auth/v1/user') return sessions.has(request.headers.authorization?.slice(7)) ? send(200, USER) : send(401, {})
+  if (url.pathname === '/rest/v1/buyer_profiles') {
+    if (!sessions.has(request.headers.authorization?.slice(7))) return send(401, {})
+    if (request.method === 'GET') return send(200, savedProfile ? [savedProfile] : [])
+    if (request.method === 'POST' && body.id === USER.id && url.searchParams.get('on_conflict') === 'id') {
+      savedProfile = body
+      return send(201, [savedProfile])
+    }
+    return send(403, {})
+  }
   if (url.pathname === '/auth/v1/token') {
     if (url.searchParams.get('grant_type') === 'pkce') {
       pkceExchanges++
@@ -89,6 +99,26 @@ try {
   await page.getByRole('button', { name: 'Verify and continue' }).click()
   await page.waitForURL('**/account')
   check('valid code creates signed-in account state', await page.getByText(USER.email).isVisible())
+  check('new buyer has editable profile and no invented activity', await page.getByRole('textbox', { name: 'Full name' }).isVisible() &&
+    await page.getByText('Not available yet').count() === 2)
+  await page.getByRole('textbox', { name: 'Full name' }).fill('Ananya Roy')
+  await page.getByRole('textbox', { name: /Contact number/ }).fill('+919876543210')
+  await page.getByLabel('I am interested in').selectOption('buy')
+  await page.getByLabel('Preferred locality').selectOption('new-town')
+  await page.getByRole('checkbox', { name: /Email me occasional/ }).check()
+  await page.getByRole('button', { name: 'Save changes' }).click()
+  await page.getByRole('status').getByText(/details have been saved/).waitFor()
+  check('profile saved for verified user only', savedProfile?.id === USER.id && savedProfile?.contact_phone === '+919876543210' &&
+    savedProfile?.email_updates === true)
+  await page.reload()
+  check('profile and preferences persist after reload', await page.getByRole('textbox', { name: 'Full name' }).inputValue() === 'Ananya Roy' &&
+    await page.getByLabel('I am interested in').inputValue() === 'buy' &&
+    await page.getByLabel('Preferred locality').inputValue() === 'new-town')
+  for (const width of [390, 412, 768, 1280]) {
+    await page.setViewportSize({ width, height: 844 })
+    const size = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth])
+    check(`account view fits ${width}px`, size[0] <= size[1])
+  }
   const c = await context.cookies()
   check('tokens stored in HTTP-only cookies', c.some((cookie) => cookie.name === 'gb-access' && cookie.httpOnly && cookie.sameSite === 'Lax') &&
     c.some((cookie) => cookie.name === 'gb-refresh' && cookie.httpOnly))
