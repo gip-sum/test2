@@ -17,31 +17,44 @@ export function PopularLocalities({ intent = 'buy' }: { intent?: 'buy' | 'rent' 
 
   return (
     <section aria-labelledby="popular-localities">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="popular-localities" className="font-display text-heading-3 text-ink-900">
-          Popular localities in {LAUNCH_CITY.name}
-        </h2>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-overline uppercase tracking-[0.14em] text-brand-600">Explore the city</p>
+          <h2 id="popular-localities" className="mt-1 font-display text-heading-2 text-ink-900">
+            Popular localities in {LAUNCH_CITY.name}
+          </h2>
+          <p className="mt-2 max-w-xl text-body-sm text-ink-500">
+            Start with neighbourhoods buyers and renters are already exploring.
+          </p>
+        </div>
         <Link
           href={`/in/${LAUNCH_CITY.slug}`}
-          className="rounded-md text-label text-brand-600 hover:underline"
+          className="inline-flex min-h-11 items-center rounded-md text-label text-brand-600 hover:underline"
         >
           All localities
         </Link>
       </div>
 
-      <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {localities.map((l) => {
           const count = counts.get(l.slug)
           return (
             <li key={l.slug}>
               <Link
                 href={`/${intent}/${LAUNCH_CITY.slug}/${l.slug}`}
-                className="glass-card flex min-h-20 items-center justify-between gap-2 rounded-lg border border-border-subtle px-4 py-4 text-body font-semibold text-ink-900 shadow-e1 transition-colors hover:border-brand-600 hover:text-brand-600"
+                className="home-locality-card group flex min-h-24 items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface-000 px-4 py-4 text-ink-900 shadow-e1 transition-all hover:-translate-y-0.5 hover:border-brand-600 hover:shadow-e2"
               >
-                <span className="max-w-[14rem] truncate">{l.name}</span>
-                {count ? (
-                  <span className="tabular text-caption text-ink-500">{count}</span>
-                ) : null}
+                <span className="min-w-0">
+                  <span className="block truncate text-body font-semibold group-hover:text-brand-600">{l.name}</span>
+                  <span className="mt-1 block text-caption text-ink-500">
+                    {count ? `${count} ${count === 1 ? 'listing' : 'listings'}` : 'Explore locality'}
+                  </span>
+                </span>
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700 transition-transform group-hover:translate-x-0.5" aria-hidden>
+                  <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </span>
               </Link>
             </li>
           )

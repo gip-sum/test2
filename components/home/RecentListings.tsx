@@ -37,13 +37,17 @@ export function RecentListings() {
 
   return (
     <section aria-labelledby="recent">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="recent" className="font-display text-heading-3 text-ink-900">
-          Recently added in {LAUNCH_CITY.name}
-        </h2>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-overline uppercase tracking-[0.14em] text-brand-600">Fresh on GharBazaar</p>
+          <h2 id="recent" className="mt-1 font-display text-heading-2 text-ink-900">
+            Recently added in {LAUNCH_CITY.name}
+          </h2>
+          <p className="mt-2 text-body-sm text-ink-500">A first look at homes newly added across the city.</p>
+        </div>
         <Link
           href={`/buy/${LAUNCH_CITY.slug}`}
-          className="rounded-md text-label text-brand-600 hover:underline"
+          className="inline-flex min-h-11 items-center rounded-md text-label text-brand-600 hover:underline"
         >
           See all properties
         </Link>
@@ -51,7 +55,7 @@ export function RecentListings() {
 
       {/* Horizontal on phones, vertical grid from md up — one component,
           two layouts, rather than two component trees. */}
-      <ul className="mt-4 grid gap-3 md:hidden">
+      <ul className="mt-6 grid gap-3 md:hidden">
         {listings.map((p) => (
           <li key={p.id}>
             <PropertyCard property={p} layout="horizontal" />
@@ -59,7 +63,7 @@ export function RecentListings() {
         ))}
       </ul>
 
-      <ul className="mt-4 hidden gap-4 md:grid md:grid-cols-2 xl:grid-cols-3">
+      <ul className="mt-6 hidden gap-5 md:grid md:grid-cols-2 xl:grid-cols-3">
         {listings.map((p, i) => (
           <li key={p.id}>
             <PropertyCard property={p} priority={i < 3} />

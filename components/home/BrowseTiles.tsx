@@ -19,17 +19,26 @@ export function BrowseTiles() {
   const base = { intent: 'buy' as const, city: LAUNCH_CITY.slug, localities: [], propertyTypes: [], bedrooms: [] }
 
   return (
-    <section aria-labelledby="browse-by" className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <section aria-labelledby="browse-by">
       <div>
-        <h2 id="browse-by" className="font-display text-heading-3 text-ink-900">
-          Browse by budget
+        <p className="text-overline uppercase tracking-[0.14em] text-brand-600">Make it yours</p>
+        <h2 id="browse-by" className="mt-1 font-display text-heading-2 text-ink-900">
+          Find a home your way
         </h2>
+        <p className="mt-2 max-w-xl text-body-sm text-ink-500">
+          Jump into a search by the detail that matters most to you.
+        </p>
+      </div>
+
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="rounded-lg border border-border-subtle bg-surface-000 p-4 shadow-e1 sm:p-5">
+        <h3 className="font-display text-heading-3 text-ink-900">Browse by budget</h3>
         <ul className="mt-3 flex flex-col gap-2">
           {BUY_BUDGET_BANDS.map((b) => (
             <li key={b.label}>
               <Link
                 href={url({ ...base, priceMin: b.min, priceMax: b.max })}
-                className="flex min-h-11 items-center justify-between gap-3 rounded-md border border-border-subtle bg-surface-000 px-4 text-body-sm text-ink-900 hover:border-brand-600"
+                className="premium-browse-link flex min-h-11 items-center justify-between gap-3 rounded-md px-3 text-body-sm text-ink-900 transition-colors hover:bg-brand-100 hover:text-brand-700"
               >
                 <span className="tabular">{b.label}</span>
                 <Chevron />
@@ -39,14 +48,14 @@ export function BrowseTiles() {
         </ul>
       </div>
 
-      <div>
-        <h2 className="font-display text-heading-3 text-ink-900">Browse by configuration</h2>
+      <div className="rounded-lg border border-border-subtle bg-surface-000 p-4 shadow-e1 sm:p-5">
+        <h3 className="font-display text-heading-3 text-ink-900">Browse by configuration</h3>
         <ul className="mt-3 flex flex-col gap-2">
           {BHK.map((n) => (
             <li key={n}>
               <Link
                 href={url({ ...base, bedrooms: [n] })}
-                className="flex min-h-11 items-center justify-between gap-3 rounded-md border border-border-subtle bg-surface-000 px-4 text-body-sm text-ink-900 hover:border-brand-600"
+                className="premium-browse-link flex min-h-11 items-center justify-between gap-3 rounded-md px-3 text-body-sm text-ink-900 transition-colors hover:bg-brand-100 hover:text-brand-700"
               >
                 <span>{n} BHK flats in {LAUNCH_CITY.name}</span>
                 <Chevron />
@@ -56,14 +65,14 @@ export function BrowseTiles() {
         </ul>
       </div>
 
-      <div className="sm:col-span-2 lg:col-span-1">
-        <h2 className="font-display text-heading-3 text-ink-900">Browse by property type</h2>
+      <div className="rounded-lg border border-border-subtle bg-surface-000 p-4 shadow-e1 sm:col-span-2 sm:p-5 lg:col-span-1">
+        <h3 className="font-display text-heading-3 text-ink-900">Browse by property type</h3>
         <ul className="mt-3 flex flex-col gap-2">
           {TYPES.map((t) => (
             <li key={t}>
               <Link
                 href={url({ ...base, propertyTypes: [t] })}
-                className="flex min-h-11 items-center justify-between gap-3 rounded-md border border-border-subtle bg-surface-000 px-4 text-body-sm text-ink-900 hover:border-brand-600"
+                className="premium-browse-link flex min-h-11 items-center justify-between gap-3 rounded-md px-3 text-body-sm text-ink-900 transition-colors hover:bg-brand-100 hover:text-brand-700"
               >
                 <span className="truncate">{PROPERTY_TYPE_LABEL[t]}</span>
                 <Chevron />
@@ -71,6 +80,7 @@ export function BrowseTiles() {
             </li>
           ))}
         </ul>
+      </div>
       </div>
     </section>
   )

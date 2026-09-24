@@ -70,17 +70,17 @@ export function SearchPanel() {
         e.preventDefault()
         router.push(url)
       }}
-      className="glass-panel relative rounded-[24px] border border-border-subtle p-4 shadow-e2 sm:p-6"
+      className="premium-search-panel relative rounded-[22px] border border-white/80 bg-surface-000 p-4 shadow-e2 sm:p-5 lg:p-6"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <IntentTabs value={intent} onChange={handleIntentChange} />
-        <p className="text-body-sm text-ink-500">
+        <p className="hidden text-body-sm text-ink-500 sm:block">
           {intent === 'buy' ? 'Properties for sale in ' : 'Properties for rent in '}
           {LAUNCH_CITY.name}
         </p>
       </div>
 
-      <div className="mt-3 lg:flex lg:items-end lg:gap-2">
+      <div className="mt-4 lg:flex lg:items-end lg:gap-2">
         <div className="lg:flex-1">
           <span className="mb-1 block text-overline uppercase text-ink-500 lg:sr-only">Location</span>
           <LocationField selected={localities} onChange={setLocalities} />
@@ -115,9 +115,16 @@ export function SearchPanel() {
             ))}
           </Select>
         </div>
+
+        <button
+          type="submit"
+          className="hidden h-12 shrink-0 items-center justify-center rounded-md bg-brand-600 px-7 text-label text-on-brand shadow-e1 transition-colors hover:bg-brand-700 lg:inline-flex"
+        >
+          Search properties
+        </button>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border-subtle pt-4 lg:mt-3 lg:border-0 lg:pt-0">
         <span className="text-overline uppercase text-ink-500">Bedrooms</span>
         <div className="flex flex-wrap gap-2">
           {BHK_OPTIONS.map((n) => {
@@ -153,7 +160,7 @@ export function SearchPanel() {
 
       <button
         type="submit"
-        className="mt-4 h-12 w-full rounded-md bg-brand-600 text-label text-on-brand hover:bg-brand-700 lg:h-12"
+        className="mt-4 h-12 w-full rounded-md bg-brand-600 text-label text-on-brand shadow-e1 transition-colors hover:bg-brand-700 lg:hidden"
       >
         Search {intent === 'buy' ? 'properties for sale' : 'properties for rent'}
       </button>

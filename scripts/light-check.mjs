@@ -65,8 +65,7 @@ for (const route of ROUTES) {
       // Convert through the browser's canvas parser before measuring WCAG
       // luminance; parsing the first three numbers as RGB would read white
       // as almost black and produce a false failure.
-      const bg = (el) => {
-        const css = el ? painted(el) : null
+      const resolvedColor = (css) => {
         if (!css) return null
         const canvas = document.createElement('canvas')
         const context = canvas.getContext('2d')
@@ -77,6 +76,7 @@ for (const route of ROUTES) {
         const [r, g, b] = context.getImageData(0, 0, 1, 1).data
         return `rgb(${r}, ${g}, ${b})`
       }
+      const bg = (el) => resolvedColor(el ? painted(el) : null)
       const q = (s) => document.querySelector(s)
       const byText = (s, re) =>
         [...document.querySelectorAll(s)].find((e) => re.test(e.textContent || ''))
@@ -137,9 +137,10 @@ for (const route of ROUTES) {
           'mobile contact action': bg(q('div.fixed button[aria-haspopup="dialog"]')),
         },
         text: {
-          'h1': getComputedStyle(q('h1')).color,
-          'lede': getComputedStyle(q('h1').nextElementSibling).color,
+          'h1': resolvedColor(getComputedStyle(q('h1')).color),
+          'lede': resolvedColor(getComputedStyle(q('h1').nextElementSibling).color),
         },
+        heroText: Boolean(q('.home-hero')?.contains(q('h1'))),
         colorScheme: getComputedStyle(document.documentElement).colorScheme,
       }
     })
@@ -167,7 +168,8 @@ for (const route of ROUTES) {
     }
     for (const [name, css] of Object.entries(probes.text)) {
       if (css === null) continue
-      report(name, css, luminance(css) < 0.25, 'must be dark ink')
+      const ok = probes.heroText ? luminance(css) > 0.6 : luminance(css) < 0.25
+      report(name, css, ok, probes.heroText ? 'must stay light on hero' : 'must be dark ink')
     }
     if (probes.colorScheme !== 'light') {
       failures++
