@@ -5,15 +5,10 @@
  * produce one of these, and everything on the seller side exists to act on
  * one.
  *
- * Deliberately NOT here: lead status, assignment, follow-ups, read state,
- * seller notes, contact-reveal history. Those are Phase 9 (lead system),
- * Phase 10 (phone reveal) and Phase 68 (advanced lead management). Adding a
- * status column now, before anything can move a lead between states, would
- * be a field nobody writes and everybody has to reason about.
+ * The original Phase 4 development fixture type. Persistent lead state and
+ * its history live in `queries.ts` and the Phase 9 database schema.
  */
 export type EnquirySource = 'property_page'
-export type LeadStatus = 'NEW' | 'CONTACTED' | 'CLOSED'
-export type NotificationStatus = 'PENDING' | 'DELIVERED' | 'FAILED' | 'UNCONFIGURED'
 
 export type Enquiry = {
   id: string
@@ -26,9 +21,6 @@ export type Enquiry = {
   message?: string
   createdAt: string
   source: EnquirySource
-  status: LeadStatus
-  notificationStatus: NotificationStatus
-  duplicateOf?: string
 }
 
 export type EnquiryInput = {
@@ -42,12 +34,5 @@ export type EnquiryInput = {
 export type EnquiryFieldError = 'name' | 'phone' | 'message' | 'listing'
 
 export type EnquiryResult =
-  | { ok: true; enquiry: Enquiry; duplicate: boolean; hasHistory: boolean }
-  | { ok: false; errors: Partial<Record<EnquiryFieldError, string>>; unavailable?: boolean }
-
-export type EnquiryHistoryItem = Enquiry & {
-  listingTitle: string
-  listingLocality: string
-  sellerType: 'OWNER' | 'AGENT' | 'BUILDER'
-  sellerName?: string
-}
+  | { ok: true; enquiry: Enquiry; duplicate: boolean }
+  | { ok: false; errors: Partial<Record<EnquiryFieldError, string>> }

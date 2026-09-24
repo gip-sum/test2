@@ -1,46 +1,43 @@
 # Phase 9 — Enquiry and lead system
 
-**Status:** Implemented and verified with isolated providers; live migration and delivery configuration pending.
+**Status:** Implemented with simulated provider; real seller assignment pending.
 **Source:** `Phases.txt`, Phase 9.
 
 ## 1. Scope
 
-Replace the process-local enquiry store with durable Supabase leads. Keep both guest and signed-in enquiry submission, retain every repeat attempt, notify the configured seller-delivery webhook, and give signed-in buyers a private enquiry history. A seller inbox, seller account ownership, follow-up notes, assignment, phone reveal and contact-reveal auditing remain Phases 10, 19 and 68.
+Persist buyer enquiries, track repeats, provide buyer history and a seller inbox with lead status and an in-app notification. Phone reveal and OTP are deferred at the client's request. Seller listing creation begins in Phase 11.
 
 ## 2. UX requirements
 
-The existing short form remains usable without JavaScript. Its result says whether seller notification was accepted, failed, or is not configured; it never equates database persistence with delivery. Repeat submissions are accepted and identified. Signed-in buyers can open `/account/enquiries` to see the property snapshot, submission date, lead status, delivery status and whether an attempt repeated an earlier enquiry.
+The current signed-out contact form remains usable. Success means the enquiry was stored. If a seller account is assigned to the listing, say that the seller can see the enquiry; otherwise clearly explain that notification is pending assignment. Buyers with accounts see their own enquiry history, and assigned sellers see new enquiries and can mark them contacted or closed.
 
 ## 3. Technical requirements
 
-All database access stays in `lib/enquiry/queries.ts`. Server actions validate identity through Supabase Auth and use a server-only Supabase secret for guest-capable writes; the secret never enters rendered output or client modules. Notification delivery is an adapter with an HTTPS-only production URL, bounded timeout and authenticated request. The property page remains cacheable and does not load account data while rendering.
+Use a server action and one server-only REST adapter. Validate a real listing on the server. Database insertion is a narrow RPC that validates input again, associates the verified Auth user when available, flags repeat phone/listing pairs and queues a seller inbox notification atomically. Never expose a service key to a browser. Seller ownership is set by trusted provisioning, never by an arbitrary buyer or seller request.
 
 ## 4. Data requirements
 
-`public.enquiries` stores a UUID, optional buyer UUID, stable property public ID, immutable listing/seller display snapshots, normalised buyer name and Indian mobile number, optional message, source, lead status, notification status/timestamps, optional link to the previous matching enquiry, and creation time. Authenticated buyers may select only their own rows. Browsers receive no direct insert/update/delete grants; server writes use `SUPABASE_SECRET_KEY`.
+`public.enquiries` holds buyer details, property ID/title snapshot, optional buyer and seller IDs, repeat reference, status and timestamp. `public.listing_sellers` maps a listing to one verified Auth seller. `public.lead_events` records creation/repeat/status changes. `public.seller_notifications` holds the seller's inbox events. RLS grants each buyer their rows and each seller their assigned leads; guest enquiries have no public read permission. Existing fixture listings have no real seller assignment.
 
 ## 5. Edge cases
 
-Reject invalid or unavailable listings before writing. Preserve valid leads when notification is absent or fails. Reject malformed provider rows rather than rendering invented history. Keep both simultaneous/repeated attempts; a repeat links to the latest matching property-and-phone row. Treat provider, timeout and malformed-response failures as unavailable states. Guests can submit but cannot later claim unaffiliated history.
+Handle invalid/missing property, phone normalisation, empty or oversized input, duplicate enquiries, concurrent repeats, unauthenticated submissions, provider outages and unassigned sellers. Protect direct Data API access and limit excessive repeated submissions. Never claim email or phone delivery without it.
 
 ## 6. Accessibility requirements
 
-Field errors remain attached to controls and an error summary receives focus. Submission has a pending label. Success and delivery outcomes use live status text, not colour alone. History is structured with headings and definition lists; errors use `role="alert"`; all links and actions retain 44px minimum targets and visible keyboard focus.
+The existing accessible form preserves errors and entered values. History and inbox have headings, clear text status and keyboard controls; update feedback uses status/alert semantics.
 
 ## 7. Responsive requirements
 
-Verify the form and history at 390, 412, 768 and 1280 CSS pixels with no horizontal overflow. History cards stack at phone widths and may use two columns only when labels and long titles remain readable.
+Buyer history and seller inbox stack on 390/412px phones and remain readable at 768/1280px, without horizontal overflow.
 
 ## 8. Verification
 
-Run `npm run verify`, `npm run build`, the existing browser suites and `npm run enquiry-check` against the isolated Auth/REST/notification provider. Assert guest persistence, signed-in ownership, duplicate retention, notification success/failure truthfulness, history isolation, database outage handling and responsive fit. Apply the migration, test an insert/read policy matrix and run Supabase security/performance advisors when connected credentials are available.
+Run `npm run verify`, `npm run build`, the browser regression checks and simulated provider tests for persistence, owner isolation, repeat submissions, status transitions and failure states. Apply migration and inspect security advisors.
 
 ## 9. Production readiness
 
-- [ ] Migration applied and RLS/advisors verified on the connected project.
-- [ ] `SUPABASE_SECRET_KEY`, seller notification webhook URL and webhook secret configured in the deployment secret store.
-- [x] Durable guest/signed-in persistence, repeats, buyer isolation, notification success/failure and responsive history verified with isolated providers (15 browser assertions).
-- [x] Project verification, production build and existing browser regressions pass.
-- [ ] Notification endpoint contract and retry/alert ownership accepted by operations.
-- [ ] Real guest and signed-in leads verified end to end without exposing secrets or another buyer's history.
-- [ ] Seller identities and destinations attached to real listings when the supply platform introduces seller-owned inventory.
+- [x] Persistent rows, RLS and RPC verified with a rolled-back guest submission.
+- [x] Buyer history and seller inbox verified with simulated buyer and seller accounts (15 browser checks).
+- [x] Production build passes.
+- [ ] Real seller account linked to a real listing and lead delivery verified.

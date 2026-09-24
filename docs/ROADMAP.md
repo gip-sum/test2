@@ -27,7 +27,7 @@ but its eight-phase build order is superseded.
 | 6 | User authentication | Implemented; live provider setup pending |
 | 7 | Buyer account | Deployed; real-account profile verification pending |
 | 8 | Save and shortlist | Implemented; real-account save verification pending |
-| 9 | Enquiry and lead system | Implemented; live migration and seller delivery pending |
+| 9 | Enquiry and lead system | Implemented; live seller assignment pending |
 
 Phase 0 (planning) and the GharBazaar rebrand plus light-first conversion
 sit outside the numbering; both are complete and are recorded in the git

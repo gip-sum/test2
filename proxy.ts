@@ -30,7 +30,7 @@ const CITY_SLUGS = new Set(KOLKATA_LOCATIONS.filter((l) => l.type === 'CITY').ma
  * literal segments, so Next 404s it without help.
  */
 export const config = {
-  matcher: ['/buy/:path+', '/rent/:path+', '/property/:handle', '/account/:path*', '/login', '/api/auth/state'],
+  matcher: ['/buy/:path+', '/rent/:path+', '/property/:handle', '/account/:path*', '/dashboard/:path*', '/login', '/api/auth/state'],
 }
 
 /**
@@ -73,7 +73,7 @@ function handleProperty(request: NextRequest): NextResponse | undefined {
 }
 
 async function accountGuard(request: NextRequest) {
-  const isAccount = request.nextUrl.pathname.startsWith('/account')
+  const isAccount = request.nextUrl.pathname.startsWith('/account') || request.nextUrl.pathname.startsWith('/dashboard')
   const access = request.cookies.get('gb-access')?.value
   const refresh = request.cookies.get('gb-refresh')?.value
   let verified = false
@@ -106,7 +106,7 @@ async function accountGuard(request: NextRequest) {
 export async function proxy(request: NextRequest) {
   const [, first, second] = request.nextUrl.pathname.split('/')
 
-  if (first === 'account' || first === 'login' || request.nextUrl.pathname === '/api/auth/state') return accountGuard(request)
+  if (first === 'account' || first === 'dashboard' || first === 'login' || request.nextUrl.pathname === '/api/auth/state') return accountGuard(request)
 
   if (first === 'property') {
     return handleProperty(request) ?? NextResponse.next()

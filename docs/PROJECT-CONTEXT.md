@@ -46,31 +46,28 @@ client approval. `lib/brand.ts` is the current source of brand values.
   state backed by verified server endpoints; `/account/saved` displays the
   buyer's list, empty state and unavailable listing removal. Simulated browser
   checks pass; a live real-account save still needs verification.
-- Phase 9 replaces process-local enquiries with durable `public.enquiries`.
-  Guests and signed-in buyers can submit; signed-in buyers privately view
-  `/account/enquiries`. Repeat attempts are retained and linked, lead and
-  delivery status are separate, and an authenticated webhook adapter records
-  delivered, failed or unconfigured notification outcomes. Isolated provider
-  checks pass; the live migration, server secret and seller-delivery webhook
-  still need configuration.
+- Phase 9 persists enquiries in Supabase, flags repeats, records lead events,
+  shows buyer history and provides an in-app seller inbox and notifications
+  scoped by owner RLS. Listing ownership requires trusted assignment. No
+  fixture listing currently has a real seller account attached, so real
+  seller notification cannot yet be verified.
 - Listing, location and media data are deterministic development fixtures.
   Generated illustrations in `public/dev-media/` are explicitly labelled
   as samples. They do not represent real properties.
-- The enquiry form accepts signed-out submissions via a server action. Writes
-  use a server-only Supabase secret because guest leads cannot use buyer-owned
-  RLS. The secret must never be exposed to a browser or prefixed `NEXT_PUBLIC_`.
+- The enquiry form accepts signed-out submissions via a server action.
+  `lib/enquiry/queries.ts` validates inputs and records enquiries durably in
+  Supabase. Unassigned fixture listings hold the lead without seller delivery.
 
 ## Boundaries
 
 Phase 8 implements persistent shortlists; live real-account verification remains.
-Phase 9 implements lead delivery state and buyer history; live configuration
-is still pending. Phase 10 owns
-phone reveal and OTP. Phase 18 owns listing lifecycle and unavailable-page
-semantics. Do not imply that a seller was notified merely because a
-development enquiry reached the process-local store.
+Phase 9 implements lead history and assigned seller inbox delivery. Phase 10's
+phone OTP was postponed by the client. Phase 18 owns listing lifecycle and
+unavailable-page semantics. Do not imply a seller was notified for an
+unassigned fixture listing.
 
 Data access stays in `lib/*/queries.ts`, `lib/property/search.ts` and
-`lib/enquiry/commands.ts`; routes and components do not import fixtures.
+`lib/enquiry/queries.ts`; routes and components do not import fixtures.
 Prices are integer rupees. Carpet, built-up and super built-up area remain
 separate. Missing values are omitted rather than invented.
 

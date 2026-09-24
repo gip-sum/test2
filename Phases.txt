@@ -19,7 +19,7 @@ Phase 5 — Complete
 Phase 6 — In progress (implementation built; live provider setup pending)
 Phase 7 — Deployed (real-account profile verification pending)
 Phase 8 — Implemented (real-account save verification pending)
-Phase 9 — Implemented (live migration and seller-delivery configuration pending)
+Phase 9 — Implemented (real seller assignment and notification verification pending)
 
 Temporary brand:
 GharBazaar
@@ -159,6 +159,7 @@ Key focus:
 
 
 PHASE 9 — ENQUIRY / LEAD SYSTEM
+Status: IMPLEMENTED (real seller assignment and delivery verification pending)
 
 Build the core marketplace lead loop.
 
@@ -172,6 +173,7 @@ Key focus:
 
 
 PHASE 10 — PHONE CONTACT & OTP REVEAL
+Status: POSTPONED (phone OTP is not required for now by client decision)
 
 Build controlled phone-number access.
 

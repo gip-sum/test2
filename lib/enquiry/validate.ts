@@ -19,9 +19,8 @@ export const MESSAGE_MAX = 1000
  * type numbers the way they read them and rejecting "98765 43210" for its
  * space is a self-inflicted lost lead.
  *
- * Landlines are deliberately not accepted: the seller is contacted by
- * phone and increasingly by SMS, and Phase 10's OTP reveal will require a
- * mobile anyway.
+ * Landlines are deliberately not accepted: sellers need a mobile number
+ * to call the buyer back about an enquiry.
  */
 export function normalisePhone(raw: string): string | null {
   const digits = raw.replace(/[\s\-()./]/g, '')

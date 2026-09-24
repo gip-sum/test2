@@ -1,7 +1,6 @@
 'use client'
 
 import { useActionState, useEffect, useId, useRef } from 'react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
 import {
@@ -23,9 +22,8 @@ const EMPTY_ENQUIRY_STATE: EnquiryFormState = { status: 'idle' }
  * client adds — pending state, focus management, inline errors — is on top
  * of something already functional.
  *
- * NO PHONE NUMBER IS SHOWN IN RETURN. Persistence and seller delivery are
- * separate outcomes, so the confirmation reports each truthfully. Seller
- * phone reveal belongs to Phase 10.
+ * No seller phone number is returned. The confirmation reports whether an
+ * assigned seller actually has an in-app notification for this enquiry.
  */
 export function EnquiryForm({
   listingPublicId,
@@ -51,12 +49,7 @@ export function EnquiryForm({
   }, [state])
 
   if (state.status === 'success') {
-    return <EnquirySent
-      duplicate={state.duplicate === true}
-      sellerLabel={sellerLabel}
-      notificationStatus={state.notificationStatus ?? 'UNCONFIGURED'}
-      hasHistory={state.hasHistory === true}
-    />
+    return <EnquirySent duplicate={state.duplicate === true} sellerNotified={state.sellerNotified === true} sellerLabel={sellerLabel} />
   }
 
   const errors = state.errors ?? {}
@@ -120,8 +113,8 @@ export function EnquiryForm({
       </Button>
 
       <p className="text-caption text-ink-500">
-        Your details are stored securely for this enquiry. We do not show the seller&rsquo;s
-        number in this release.
+        Your enquiry is stored securely. If this listing has an assigned seller,
+        they receive it in their inbox. Your number is shared only with that seller.
       </p>
     </form>
   )
@@ -183,25 +176,9 @@ function Field({
 /**
  * The confirmation.
  *
- * States exactly what happened: persistence succeeded, while delivery may
- * have succeeded, failed or remained unconfigured for a sample listing.
+ * States exactly what happened based on the database response.
  */
-function EnquirySent({
-  duplicate,
-  sellerLabel,
-  notificationStatus,
-  hasHistory,
-}: {
-  duplicate: boolean
-  sellerLabel: string
-  notificationStatus: 'PENDING' | 'DELIVERED' | 'FAILED' | 'UNCONFIGURED'
-  hasHistory: boolean
-}) {
-  const delivery = notificationStatus === 'DELIVERED'
-    ? `The ${sellerLabel.toLowerCase()} notification was accepted for delivery.`
-    : notificationStatus === 'FAILED'
-      ? `Your enquiry is saved, but we could not notify the ${sellerLabel.toLowerCase()} yet.`
-      : `Your enquiry is saved. Seller notification is not configured for this sample listing.`
+function EnquirySent({ duplicate, sellerNotified, sellerLabel }: { duplicate: boolean; sellerNotified: boolean; sellerLabel: string }) {
   return (
     <div role="status" className="rounded-lg border border-trust-600/30 bg-trust-100 p-4">
       <p className="flex items-center gap-2 text-body font-semibold text-trust-600">
@@ -212,11 +189,14 @@ function EnquirySent({
       </p>
       <p className="mt-2 text-body-sm text-ink-700">
         {duplicate
-          ? 'We kept this repeat enquiry instead of replacing your earlier request.'
+          ? 'Another enquiry was recorded for this property and number.'
           : 'Your enquiry has been saved.'}
       </p>
-      <p className="mt-2 text-caption text-ink-500">{delivery}</p>
-      {hasHistory && <Link href="/account/enquiries" className="mt-3 inline-flex min-h-11 items-center text-label font-semibold text-brand-700 underline underline-offset-4">View your enquiry history</Link>}
+      <p className="mt-2 text-caption text-ink-500">
+        {sellerNotified
+          ? `The assigned ${sellerLabel.toLowerCase()} can see it in their inbox.`
+          : 'This listing has no connected seller account yet, so seller notification is pending.'}
+      </p>
     </div>
   )
 }

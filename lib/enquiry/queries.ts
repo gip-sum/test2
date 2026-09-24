@@ -1,133 +1,106 @@
 import 'server-only'
 import { cookies } from 'next/headers'
-import { ACCESS_COOKIE } from '@/lib/auth/session'
 import { authConfig, type AuthUser } from '@/lib/auth/provider'
-import type { EnquiryHistoryItem, LeadStatus, NotificationStatus } from './types'
+import { ACCESS_COOKIE } from '@/lib/auth/session'
+import { getPropertyDetail } from '@/lib/property/queries'
+import { validateEnquiry } from './validate'
+import type { EnquiryInput, EnquiryFieldError } from './types'
 
-type Row = {
+export type Lead = {
   id: string
-  buyer_id: string | null
-  property_public_id: string
+  listing_public_id: string
   listing_title: string
-  listing_locality: string
-  seller_type: 'OWNER' | 'AGENT' | 'BUILDER'
-  seller_name: string | null
   buyer_name: string
   buyer_phone: string
   message: string | null
-  source: 'property_page'
-  status: LeadStatus
-  notification_status: NotificationStatus
   duplicate_of: string | null
+  status: 'new' | 'contacted' | 'closed'
   created_at: string
 }
+export type LeadEvent = { enquiry_id: string; event_type: 'created' | 'repeated' | 'status_changed'; status: Lead['status']; created_at: string }
+export type LeadList = { ok: true; rows: Lead[] } | { ok: false }
 
-export type NewEnquiryRow = Omit<Row, 'id' | 'status' | 'created_at' | 'duplicate_of'>
-export type HistoryResult = { ok: true; rows: EnquiryHistoryItem[] } | { ok: false }
-
-function restBase() {
+async function request(path: string, init: { method?: 'GET' | 'POST' | 'PATCH'; body?: object }, user?: AuthUser | null) {
   const config = authConfig()
-  return config?.base.replace(/\/auth\/v1$/, '/rest/v1') ?? null
-}
-
-function secretHeaders() {
-  const key = process.env.SUPABASE_SECRET_KEY
-  if (!key) return null
-  return {
-    apikey: key,
-    'Content-Type': 'application/json',
-    ...(key.startsWith('eyJ') ? { Authorization: `Bearer ${key}` } : {}),
-  }
-}
-
-async function adminRequest(path: string, init?: RequestInit): Promise<Response | null> {
-  const base = restBase()
-  const headers = secretHeaders()
-  if (!base || !headers) return null
+  if (!config) return null
+  const token = user ? (await cookies()).get(ACCESS_COOKIE)?.value : null
+  if (user && !token) return null
   try {
-    return await fetch(base + path, {
-      ...init,
-      headers: { ...headers, ...init?.headers },
-      cache: 'no-store',
-      signal: AbortSignal.timeout(8000),
+    return await fetch(`${config.base.replace(/\/auth\/v1$/, '/rest/v1')}/${path}`, {
+      method: init.method ?? 'GET',
+      headers: { apikey: config.key, Authorization: `Bearer ${token ?? config.key}`, 'Content-Type': 'application/json' },
+      ...(init.body ? { body: JSON.stringify(init.body) } : {}),
+      cache: 'no-store', signal: AbortSignal.timeout(8000),
     })
   } catch { return null }
 }
 
-function isRow(value: unknown): value is Row {
-  if (!value || typeof value !== 'object') return false
-  const row = value as Partial<Row>
-  return typeof row.id === 'string' && typeof row.property_public_id === 'string' &&
-    typeof row.listing_title === 'string' && typeof row.listing_locality === 'string' &&
-    ['OWNER', 'AGENT', 'BUILDER'].includes(row.seller_type ?? '') &&
-    typeof row.buyer_name === 'string' && /^\+91[6-9]\d{9}$/.test(row.buyer_phone ?? '') &&
-    ['NEW', 'CONTACTED', 'CLOSED'].includes(row.status ?? '') &&
-    ['PENDING', 'DELIVERED', 'FAILED', 'UNCONFIGURED'].includes(row.notification_status ?? '') &&
-    typeof row.created_at === 'string'
+export async function recordLead(input: EnquiryInput, user: AuthUser | null): Promise<
+  { ok: true; duplicate: boolean; sellerNotified: boolean } |
+  { ok: false; errors: Partial<Record<EnquiryFieldError, string>> }
+> {
+  const { errors, name, phone, message } = validateEnquiry(input)
+  if (Object.keys(errors).length) return { ok: false, errors }
+  const listing = getPropertyDetail(input.listingPublicId)
+  if (!listing) return { ok: false, errors: { listing: 'This property is no longer available.' } }
+  const response = await request('rpc/submit_enquiry', {
+    method: 'POST', body: {
+      p_listing_public_id: listing.publicId,
+      p_listing_title: listing.society ?? listing.title,
+      p_name: name, p_phone: phone, p_message: message ?? null,
+    },
+  }, user)
+  if (!response?.ok) return { ok: false, errors: { listing: response?.status === 400 ? 'Too many recent enquiries for this number. Please try again later.' : 'Your enquiry could not be saved. Please try again.' } }
+  try {
+    const rows: unknown = await response.json()
+    if (!Array.isArray(rows) || rows.length !== 1 || typeof rows[0]?.repeated !== 'boolean' || typeof rows[0]?.seller_notified !== 'boolean') throw new Error('Invalid response')
+    return { ok: true, duplicate: rows[0].repeated, sellerNotified: rows[0].seller_notified }
+  } catch { return { ok: false, errors: { listing: 'Your enquiry could not be confirmed. Please try again.' } } }
 }
 
-function toEnquiry(row: Row): EnquiryHistoryItem {
-  return {
-    id: row.id,
-    listingId: row.property_public_id,
-    listingPublicId: row.property_public_id,
-    listingTitle: row.listing_title,
-    listingLocality: row.listing_locality,
-    sellerType: row.seller_type,
-    ...(row.seller_name ? { sellerName: row.seller_name } : {}),
-    name: row.buyer_name,
-    phone: row.buyer_phone,
-    ...(row.message ? { message: row.message } : {}),
-    createdAt: row.created_at,
-    source: row.source,
-    status: row.status,
-    notificationStatus: row.notification_status,
-    ...(row.duplicate_of ? { duplicateOf: row.duplicate_of } : {}),
-  }
+function validLead(row: unknown): row is Lead {
+  if (!row || typeof row !== 'object') return false
+  const lead = row as Partial<Lead>
+  return typeof lead.id === 'string' && typeof lead.listing_public_id === 'string' &&
+    typeof lead.listing_title === 'string' && typeof lead.buyer_name === 'string' &&
+    typeof lead.buyer_phone === 'string' && ['new', 'contacted', 'closed'].includes(lead.status ?? '') &&
+    typeof lead.created_at === 'string'
 }
 
-export async function insertEnquiry(row: NewEnquiryRow): Promise<EnquiryHistoryItem | null> {
-  const response = await adminRequest('/enquiries?select=*', {
-    method: 'POST',
-    headers: { Prefer: 'return=representation' },
-    body: JSON.stringify(row),
-  })
+export async function listLeads(user: AuthUser, view: 'buyer' | 'seller'): Promise<LeadList> {
+  const field = view === 'buyer' ? 'buyer_id' : 'seller_id'
+  const response = await request(`enquiries?select=id,listing_public_id,listing_title,buyer_name,buyer_phone,message,duplicate_of,status,created_at&${field}=eq.${encodeURIComponent(user.id)}&order=created_at.desc&limit=100`, {}, user)
+  if (!response?.ok) return { ok: false }
+  try { const rows: unknown = await response.json(); return Array.isArray(rows) && rows.every(validLead) ? { ok: true, rows } : { ok: false } }
+  catch { return { ok: false } }
+}
+
+export async function listLeadEvents(user: AuthUser, ids: string[]): Promise<LeadEvent[] | null> {
+  if (!ids.length) return []
+  const response = await request(`lead_events?select=enquiry_id,event_type,status,created_at&enquiry_id=in.(${ids.map(encodeURIComponent).join(',')})&order=created_at.asc`, {}, user)
   if (!response?.ok) return null
   try {
     const rows: unknown = await response.json()
-    return Array.isArray(rows) && rows.length === 1 && isRow(rows[0]) ? toEnquiry(rows[0]) : null
+    return Array.isArray(rows) && rows.every((r) => typeof r.enquiry_id === 'string' && typeof r.event_type === 'string' && typeof r.created_at === 'string') ? rows as LeadEvent[] : null
   } catch { return null }
 }
 
-export async function setNotificationStatus(id: string, status: Exclude<NotificationStatus, 'PENDING'>): Promise<boolean> {
-  const now = new Date().toISOString()
-  const response = await adminRequest(`/enquiries?id=eq.${encodeURIComponent(id)}`, {
-    method: 'PATCH',
-    headers: { Prefer: 'return=minimal' },
-    body: JSON.stringify({
-      notification_status: status,
-      notification_attempted_at: status === 'UNCONFIGURED' ? null : now,
-      notified_at: status === 'DELIVERED' ? now : null,
-    }),
-  })
+export async function countUnreadNotifications(user: AuthUser): Promise<number | null> {
+  const response = await request(`seller_notifications?select=id&seller_id=eq.${encodeURIComponent(user.id)}&read_at=is.null&limit=100`, {}, user)
+  if (!response?.ok) return null
+  try { const rows: unknown = await response.json(); return Array.isArray(rows) ? rows.length : null } catch { return null }
+}
+
+export async function markNotificationsRead(user: AuthUser): Promise<boolean> {
+  const response = await request(`seller_notifications?seller_id=eq.${encodeURIComponent(user.id)}&read_at=is.null`, {
+    method: 'PATCH', body: { read_at: new Date().toISOString() },
+  }, user)
   return response?.ok === true
 }
 
-export async function listBuyerEnquiries(user: AuthUser): Promise<HistoryResult> {
-  const base = restBase()
-  const config = authConfig()
-  const token = (await cookies()).get(ACCESS_COOKIE)?.value
-  if (!base || !config || !token) return { ok: false }
-  const fields = 'id,buyer_id,property_public_id,listing_title,listing_locality,seller_type,seller_name,buyer_name,buyer_phone,message,source,status,notification_status,duplicate_of,created_at'
-  try {
-    const response = await fetch(`${base}/enquiries?select=${fields}&buyer_id=eq.${encodeURIComponent(user.id)}&order=created_at.desc`, {
-      headers: { apikey: config.key, Authorization: `Bearer ${token}` },
-      cache: 'no-store',
-      signal: AbortSignal.timeout(8000),
-    })
-    if (!response.ok) return { ok: false }
-    const rows: unknown = await response.json()
-    if (!Array.isArray(rows) || !rows.every(isRow)) return { ok: false }
-    return { ok: true, rows: rows.map(toEnquiry) }
-  } catch { return { ok: false } }
+export async function changeLeadStatus(user: AuthUser, id: string, status: Lead['status']): Promise<boolean> {
+  if (!/^[0-9a-f-]{36}$/i.test(id) || !['new', 'contacted', 'closed'].includes(status)) return false
+  const response = await request('rpc/update_lead_status', { method: 'POST', body: { p_enquiry_id: id, p_status: status } }, user)
+  if (!response?.ok) return false
+  try { return await response.json() === true } catch { return false }
 }

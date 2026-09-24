@@ -20,6 +20,7 @@ An original property marketplace for Kolkata, built around one loop:
 | 6 | Email OTP and Google authentication | implemented; live provider setup pending |
 | 7 | Buyer profile and account area | deployed; real-account verification pending |
 | 8 | Save and shortlist | implemented; real-account verification pending |
+| 9 | Enquiry and lead system | implemented; real seller assignment pending |
 
 The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
 criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)
@@ -30,6 +31,8 @@ The [Phase 7 account spec](docs/phases/PHASE-07-user-account.md) covers the
 profile and its live-readiness checks.
 The [Phase 8 shortlist spec](docs/phases/PHASE-08-save-shortlist.md) records
 save behavior, ownership and verification.
+The [Phase 9 lead spec](docs/phases/PHASE-09-enquiry-leads.md) records enquiry
+persistence, buyer history and seller inbox readiness.
 
 ## Getting started
 
@@ -50,6 +53,7 @@ npm run dev          # http://localhost:3000
 | `npm run search-check` | Browser assertions for search |
 | `npm run property-check` | Browser assertions for the property page, including a 360px stress width |
 | `npm run saved-check` | Browser assertions for save, reload, removal and buyer isolation with a simulated provider |
+| `npm run lead-check` | Browser assertions for guest enquiries, repeat leads, buyer history and seller notifications |
 | `npm run media-check` | Browser assertions for gallery navigation, touch, image loading and fallbacks |
 | `npm run auth-check` | Browser assertions using a local Auth API simulator (requires the environment below) |
 
@@ -116,17 +120,14 @@ marking the live flow complete.
 
 ## Phase 9 enquiries and leads
 
-Guest and signed-in enquiries persist in `public.enquiries`; signed-in buyers
-see only their own history at `/account/enquiries`. Apply
-`supabase/migrations/20260924090123_phase_09_enquiry_leads.sql`, create a
-dedicated server-side Supabase secret, and set `SUPABASE_SECRET_KEY` in the
-deployment secret store. Never expose it to browser code. Configure
-`SELLER_NOTIFICATION_WEBHOOK_URL` and `SELLER_NOTIFICATION_WEBHOOK_SECRET`
-for the service that delivers leads to sellers. The app signs webhook bodies
-with HMAC-SHA256 in `X-GharBazaar-Signature` and separately records delivery
-success, failure, or missing configuration. Run `npm run enquiry-check` against
-the isolated provider, then verify a real guest lead, signed-in history, repeat
-lead and failed-delivery recovery before treating the live loop as ready.
+`/account/enquiries` shows enquiries sent while signed in.
+`/dashboard/enquiries` provides an inbox for sellers assigned to listings,
+with notifications and lead status. Guest enquiries are stored securely but
+cannot be attached to a later buyer account. Apply both Phase 9 migrations
+in `supabase/migrations/` in order. Existing fixture listings have no seller
+account assignment, so their enquiries are retained but nobody is notified
+until a trusted operator links an actual seller to a listing. Email and
+phone delivery are not enabled. The browser suite uses a simulated provider.
 
 ## Architecture
 
