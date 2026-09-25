@@ -244,7 +244,9 @@ function generate(count: number, now: Date, seed = 20260921): PropertyDetail[] {
 
     const totalFloors = type === 'INDEPENDENT_HOUSE' || type === 'VILLA' ? between(1, 3) : between(4, 22)
     const hasFloor = rand() > 0.12
-    const floor = hasFloor ? between(0, totalFloors) : undefined
+    // totalFloors counts every storey, ground included, so the top floor of a
+    // five-storey building is floor 4. The posting form enforces the same rule.
+    const floor = hasFloor ? between(0, totalFloors - 1) : undefined
 
     const sellerType = pick(SELLERS)
     const sellerName =

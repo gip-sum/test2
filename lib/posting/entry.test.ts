@@ -7,7 +7,7 @@ describe('seller entry URL state', () => {
     expect(parsePostingEntry({ role: 'AGENT' }).stage).toBe('intent')
     expect(parsePostingEntry({ role: 'AGENT', intent: 'rent' }).stage).toBe('type')
     const review = parsePostingEntry({ role: 'AGENT', intent: 'rent', type: 'VILLA' })
-    expect(review.stage).toBe('review')
+    expect(review.stage).toBe('details')
     expect(postingUrl(review)).toBe('/post?role=AGENT&intent=rent&type=VILLA')
   })
 

@@ -30,6 +30,7 @@ but its eight-phase build order is superseded.
 | 9 | Enquiry and lead system | Implemented; live seller assignment pending |
 | 10 | Phone contact and OTP reveal | Postponed by client decision |
 | 11 | Post property entry flow | **Complete** and deployed |
+| 12 | Property information form | Implemented; CI on `main` and deployment pending |
 
 Phase 0 (planning) and the GharBazaar rebrand plus light-first conversion
 sit outside the numbering; both are complete and are recorded in the git

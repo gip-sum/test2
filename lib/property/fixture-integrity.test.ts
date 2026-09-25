@@ -18,6 +18,13 @@ import { getLocationById, getLocationBySlug } from '@/lib/location/queries'
 describe('fixture integrity', () => {
   const properties = buildDemoProperties(new Date('2026-09-22T00:00:00Z'))
 
+  it('uses the posting floor convention: totalFloors counts the ground floor', () => {
+    // The posting form (Phase 12) rejects floor === totalFloors, so seeded
+    // data must not show buyers a floor a seller could never enter.
+    const impossible = properties.filter((p) => p.floor != null && p.totalFloors != null && p.floor > p.totalFloors - 1)
+    expect(impossible.map((p) => p.publicId)).toEqual([])
+  })
+
   it('gives every listing a locality that exists in the gazetteer', () => {
     const orphans = properties
       .filter((p) => !getLocationBySlug(p.localitySlug))
