@@ -1,0 +1,34 @@
+name: Verify marketplace
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PORT: '3100'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
+      - run: npm run build
+      - name: Install browser for layout checks
+        run: |
+          npx playwright-core install chromium --with-deps
+          echo "CHROME_PATH=$(node -e 'process.stdout.write(require("playwright-core").chromium.executablePath())')" >> "$GITHUB_ENV"
+      - name: Start production app
+        run: |
+          npm run start > /tmp/gharbazaar-server.log 2>&1 &
+          curl --fail --silent --show-error --output /dev/null --retry 30 --retry-connrefused --retry-delay 2 http://127.0.0.1:3100/post
+      - run: npm run shots
+      - run: npm run light-check
+      - run: npm run search-check
+      - run: npm run post-check
