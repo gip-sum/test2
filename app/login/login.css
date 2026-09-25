@@ -1,0 +1,125 @@
+/* Login page layout (app/login/page.tsx). Loaded only on /login.
+
+   Phones: the scene is a short banner above the form, cropped to the
+   story's bottom band, so the email field and its button sit in the first
+   screen. Its height is fixed up front — clamp() on width, capped by the
+   small viewport height for landscape phones — so nothing moves when the
+   SVG paints and the form never shifts under a thumb.
+
+   Desktop (≥1024px): the scene gets its own column beside the form, tall
+   enough to show the sky, the bridge and the kite, and the form centres
+   against it. */
+
+.login-stage {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 16px 16px 40px;
+}
+.login-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 10% 12%, color-mix(in srgb, var(--home-mint) 65%, transparent), transparent 40%),
+    radial-gradient(circle at 92% 82%, color-mix(in srgb, var(--color-brand-100) 75%, transparent), transparent 44%);
+}
+.login-layout {
+  display: grid;
+  gap: 14px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.login-art {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  contain: paint;
+  height: clamp(132px, 40vw, 236px);
+  max-height: max(120px, 26svh);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 22px;
+  /* The scene's own sky, so the panel reads as sky before the SVG paints. */
+  background: linear-gradient(180deg, var(--wh-sky-top), var(--wh-sky-mid) 55%, var(--wh-sky-low));
+  box-shadow: var(--shadow-e1);
+}
+.login-scene { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
+.login-art-copy { display: none; }
+
+@media (min-width: 1024px) {
+  .login-stage { padding: 32px 32px 56px; }
+  /* Capped so the scene is never so wide that its slice crop eats the sky. */
+  .login-layout {
+    max-width: 1180px;
+    grid-template-columns: minmax(0, 1fr) minmax(400px, 468px);
+    gap: 40px;
+    align-items: stretch;
+  }
+  .login-art {
+    height: auto;
+    max-height: none;
+    min-height: 660px;
+    border-radius: 28px;
+    box-shadow: var(--shadow-e2);
+  }
+  .login-art-copy {
+    display: block;
+    position: absolute;
+    top: 36px;
+    left: 40px;
+    right: 40px;
+    z-index: 1;
+    max-width: 390px;
+    animation: login-copy 0.9s ease-out 0.25s both;
+  }
+  .login-form-col { display: flex; flex-direction: column; justify-content: center; }
+}
+@keyframes login-copy { from { opacity: 0; transform: translateY(8px); } }
+
+.login-art-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 1px solid color-mix(in srgb, var(--color-brand-600) 15%, transparent);
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-surface-000) 75%, transparent);
+  color: var(--color-brand-700);
+  font-size: var(--text-overline);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.login-art-title {
+  margin-top: 18px;
+  font-family: var(--font-display);
+  font-size: clamp(40px, 3.6vw, 52px);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  color: var(--home-forest);
+}
+.login-art-title em {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  color: var(--color-brand-600);
+}
+.login-art-text { margin-top: 12px; max-width: 300px; font-size: var(--text-body); line-height: 1.55; color: var(--color-ink-700); }
+
+/* The divider between Google and email: a label on a rule. */
+.login-divider { display: flex; align-items: center; gap: 12px; color: var(--color-ink-500); }
+.login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--color-border-subtle); }
+
+/* Google's mark, in Google's colours (tokens in app/globals.css). */
+.google-blue { fill: var(--google-blue); }
+.google-red { fill: var(--google-red); }
+.google-yellow { fill: var(--google-yellow); }
+.google-green { fill: var(--google-green); }
+
+@media (prefers-reduced-motion: reduce) {
+  .login-art-copy { animation: none; }
+}

@@ -56,6 +56,9 @@ npm run dev          # http://localhost:3000
 | `npm run lead-check` | Browser assertions for guest enquiries, repeat leads, buyer history and seller notifications |
 | `npm run media-check` | Browser assertions for gallery navigation, touch, image loading and fallbacks |
 | `npm run auth-check` | Browser assertions using a local Auth API simulator (requires the environment below) |
+| `npm run login-check` | Login screen: layout at four widths, controls reachable on phones, layout stability, the scene's story beats and reduced-motion picture; with the Auth API simulator environment below, every real sign-in state |
+| `npm run post-check` | Browser assertions for the seller posting flow |
+| `npm run notfound-check` | The animated 404: status codes, both actions, keyboard focus, motion and reduced motion |
 
 The browser checks need a server running (`npm run build && npm start -- -p 3100`).
 Set `CHROME_PATH` if Chromium is installed elsewhere. `shots` uses `BASE`;
@@ -94,6 +97,7 @@ no local test account. To exercise the browser flow without a live project:
 SUPABASE_URL=http://127.0.0.1:3300 SUPABASE_PUBLISHABLE_KEY=test-public-key AUTH_SITE_URL=http://localhost:3100 npm start -- -p 3100
 # In another terminal, with CHROME_PATH set if needed:
 npm run auth-check
+BASE_URL=http://localhost:3100 npm run login-check
 ```
 
 ## Phase 7 buyer profiles

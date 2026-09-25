@@ -36,3 +36,18 @@ jobs:
       - run: npm run search-check
       - run: npm run post-check
       - run: npm run notfound-check
+      # Without auth configured: the honest "unavailable" state, plus the
+      # scene's layout, motion and reduced-motion picture.
+      - run: npm run login-check
+      # The real sign-in states, against a local Auth API simulator the
+      # checks start themselves. Test values only; no credentials exist here.
+      - name: Start a second app against the Auth API simulator
+        run: |
+          SUPABASE_URL=http://127.0.0.1:3300 SUPABASE_PUBLISHABLE_KEY=test-public-key AUTH_SITE_URL=http://localhost:3101 PORT=3101 npm run start > /tmp/gharbazaar-auth-server.log 2>&1 &
+          curl --fail --silent --show-error --output /dev/null --retry 30 --retry-connrefused --retry-delay 2 http://127.0.0.1:3101/post
+      - run: npm run auth-check
+        env:
+          BASE_URL: http://localhost:3101
+      - run: npm run login-check
+        env:
+          BASE_URL: http://localhost:3101

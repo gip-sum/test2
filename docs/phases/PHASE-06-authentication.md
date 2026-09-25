@@ -108,3 +108,20 @@ and responsive screenshots at 390/412/768/1280 passed. The unconfigured
 login page displays its unavailable state and `/account` redirects (307).
 The provider integration cannot be marked complete until the unchecked
 live-project items are verified.
+
+### Login screen redesign (2026-09-25, outside the phase numbering)
+
+The login page gained an illustrated scene (`components/auth/WayHomeScene.tsx`)
+beside the form on desktop and above it on phones. The auth flow itself is
+unchanged: email code and Google only, the same server actions, routes,
+cookies and provider calls. The redesign also completes §6's "error focus is
+returned to the relevant input": a rejected email returns focus to the
+email field, a requested code moves it to the code field, and a wrong code
+returns it there with the text selected.
+
+`npm run login-check` covers the page at 390/412/768/1280, controls reachable
+on a phone's first screen, zero layout shift through the animation, the
+scene's reduced-motion picture, and — against the Auth API simulator —
+malformed, throttled and failed requests, both pending states, code sent,
+wrong code, success redirect, registration and the Google error. CI now
+runs it with and without auth configured, alongside `auth-check`.

@@ -1,0 +1,349 @@
+/* "Finding your way home" — the login scene (WayHomeScene.tsx).
+
+   Loaded only where the scene renders. Colours are tokens from the --wh-*
+   block in app/globals.css; nothing here hardcodes one.
+
+   THE RULE THAT MAKES REDUCED MOTION FREE: an element's own style is its
+   final, resting state. Intro keyframes describe where it STARTS (usually a
+   lone `from`/0% keyframe) and run with `both`, so they hold that start
+   through their delay and land exactly on the element's style. Turn the
+   animations off and every element is already where the story ends: lights
+   on, door open, pin landed, the hunter home.
+
+   Timeline (seconds from load)
+     0.0  houses settle                  4.8  pin pops into the sky
+     0.8  the route plots itself         5.3    …winds up
+     1.6  the hunter looks up, blinks    5.6    …drops, squashes, lands once
+     1.9  gathers themselves (squash)    5.8  windows light, house by house
+     2.2  walks the route (2.6s)         6.1  the double door swings open
+     4.8  stops; scarf follows through   6.5  alpana; the cat comes out
+                                         6.9  a hop and a wave
+     7.6+ resting loop: breathing, blinks, halo, cat's tail, a window or two
+
+   Motion is transform and opacity, on SVG parts only; nothing here can
+   move layout. Origins are in the part's own user units (the SVG default
+   transform-box, view-box), so a hip is a hip at every rendered size. */
+
+.wh-scene * { transform-box: view-box; }
+
+/* ── Paint ───────────────────────────────────────────────────────────── */
+.wh-stop-sky-top { stop-color: var(--wh-sky-top); }
+.wh-stop-sky-mid { stop-color: var(--wh-sky-mid); }
+.wh-stop-sky-low { stop-color: var(--wh-sky-low); }
+.wh-stop-dusk-clear { stop-color: var(--wh-dusk); stop-opacity: 0; }
+.wh-stop-dusk { stop-color: var(--wh-dusk); stop-opacity: 0.55; }
+.wh-stop-light-core { stop-color: var(--wh-light-core); }
+.wh-stop-light { stop-color: var(--wh-light); }
+.wh-stop-light-clear { stop-color: var(--wh-light); stop-opacity: 0; }
+
+.wh-sun { fill: var(--wh-sun); opacity: 0.75; }
+.wh-cloud { fill: var(--color-surface-000); opacity: 0.9; }
+.wh-string { fill: none; stroke: var(--wh-wire); stroke-width: 0.8; opacity: 0.55; }
+.wh-kite-body { fill: var(--wh-kite); }
+.wh-kite-spar { fill: none; stroke: var(--wh-oxide-deep); stroke-width: 0.8; }
+.wh-kite-bow { fill: var(--wh-marigold); }
+.wh-far { fill: var(--wh-far); }
+.wh-far-line { fill: none; stroke: var(--wh-far); stroke-width: 3.5; stroke-linejoin: round; }
+.wh-far-lattice { fill: none; stroke: var(--wh-far); stroke-width: 1.3; }
+
+.wh-wall-ochre { fill: var(--wh-wall-ochre); }
+.wh-wall-cream { fill: var(--wh-wall-cream); }
+.wh-wall-mint { fill: var(--wh-wall-mint); }
+.wh-wall-rose { fill: var(--wh-wall-rose); }
+.wh-trim { fill: var(--wh-trim); }
+.wh-oxide { fill: var(--wh-oxide); }
+.wh-oxide-deep { fill: var(--wh-oxide-deep); }
+.wh-sign { fill: var(--color-brand-600); }
+.wh-rolling { fill: var(--wh-steel); }
+.wh-rolling-lines { fill: none; stroke: var(--wh-wire); stroke-width: 0.6; opacity: 0.35; }
+.wh-tank { fill: var(--color-ink-900); opacity: 0.85; }
+.wh-tank-ribs { fill: none; stroke: var(--wh-steel); stroke-width: 0.8; opacity: 0.5; }
+.wh-wood { fill: var(--wh-wood); }
+.wh-wood-deep { fill: var(--wh-wood-deep); }
+.wh-wood-line { fill: none; stroke: var(--wh-wood-deep); stroke-width: 1; }
+.wh-baluster { fill: none; stroke: var(--wh-trim); stroke-width: 2.4; }
+.wh-clay { fill: var(--wh-clay); }
+.wh-clay-deep { fill: var(--wh-oxide-deep); }
+.wh-leaves { fill: var(--color-brand-500); }
+
+.wh-shutter { fill: url(#wh-louvre); }
+.wh-louvre-a { fill: var(--color-brand-600); }
+.wh-louvre-b { fill: var(--color-brand-700); }
+.wh-frame { fill: var(--home-forest); }
+.wh-glass { fill: var(--wh-glass); }
+.wh-lit { fill: var(--wh-light); }
+.wh-bars { fill: none; stroke: var(--home-forest); stroke-width: 1.1; }
+.wh-sill { fill: var(--wh-trim); }
+.wh-iron { fill: none; stroke: var(--home-forest); stroke-width: 0.9; }
+.wh-iron-rail { fill: var(--home-forest); }
+
+.wh-door-frame { fill: var(--home-forest); }
+.wh-leaf { fill: var(--wh-door); }
+.wh-leaf-panel { fill: none; stroke: var(--color-brand-500); stroke-width: 1; opacity: 0.7; }
+.wh-brass { fill: var(--wh-brass); }
+.wh-toran-thread { fill: none; stroke: var(--wh-marigold-deep); stroke-width: 0.8; }
+.wh-toran-drop { fill: none; stroke: var(--wh-marigold-deep); stroke-width: 0.7; }
+.wh-marigold { fill: var(--wh-marigold); }
+.wh-marigold-deep { fill: var(--wh-marigold-deep); }
+.wh-sari-cloth { fill: var(--wh-sari); }
+.wh-sari-border { fill: none; stroke: var(--wh-marigold); stroke-width: 1.6; }
+
+.wh-wire { fill: none; stroke: var(--wh-wire); stroke-width: 0.9; opacity: 0.5; }
+.wh-crow-body, .wh-crow-beak { fill: var(--color-ink-900); }
+.wh-crow-leg { fill: none; stroke: var(--color-ink-900); stroke-width: 0.8; }
+.wh-crow-nape { fill: var(--wh-crow-nape); }
+.wh-crow-eye { fill: var(--color-surface-000); }
+
+.wh-pavement { fill: var(--wh-pavement); }
+.wh-joint { fill: none; stroke: var(--wh-kerb); stroke-width: 1; }
+.wh-kerb { fill: var(--wh-kerb); }
+.wh-road { fill: var(--wh-road); }
+.wh-track { fill: none; stroke: var(--color-border-strong); stroke-width: 1.6; }
+.wh-alpana-line { fill: none; stroke: var(--wh-alpana); stroke-width: 1.1; }
+.wh-alpana-petal { fill: var(--wh-alpana); }
+
+.wh-post { fill: var(--home-forest); }
+.wh-lamp-glass { fill: var(--wh-light); }
+.wh-lamp-halo { fill: var(--wh-light); fill-opacity: 0.35; }
+.wh-lamp-pool { fill: var(--wh-light); fill-opacity: 0.5; }
+
+.wh-stripe-a { fill: var(--wh-trim); }
+.wh-stripe-b { fill: var(--color-brand-500); }
+.wh-bulb-cord { fill: none; stroke: var(--home-forest); stroke-width: 0.8; }
+.wh-steel { fill: var(--wh-steel); }
+.wh-steel-line { fill: none; stroke: var(--wh-steel); stroke-width: 1.5; }
+.wh-steam { fill: none; stroke: var(--color-surface-000); stroke-width: 1.6; stroke-linecap: round; opacity: 0.5; }
+
+.wh-taxi-body { fill: var(--wh-taxi); }
+.wh-taxi-glass { fill: var(--wh-glass); }
+.wh-taxi-sign, .wh-tyre { fill: var(--color-ink-900); }
+
+.wh-dot { fill: var(--color-brand-600); }
+.wh-pin-body { fill: var(--color-brand-600); }
+.wh-pin-glyph { fill: var(--color-surface-000); }
+.wh-pin-door { fill: var(--color-brand-600); }
+.wh-pin-shine { fill: none; stroke: var(--color-surface-000); stroke-width: 2; stroke-linecap: round; opacity: 0.45; }
+.wh-halo { fill: none; stroke: var(--color-brand-500); stroke-width: 1.6; opacity: 0; }
+.wh-ripple { fill: none; stroke: var(--color-brand-500); stroke-width: 2; opacity: 0; }
+.wh-rays { fill: none; stroke: var(--wh-marigold); stroke-width: 2; stroke-linecap: round; opacity: 0; }
+
+.wh-cat-fur { fill: var(--color-ink-900); }
+.wh-tail { fill: none; stroke: var(--color-ink-900); stroke-width: 2.2; stroke-linecap: round; }
+.wh-cat-eye { fill: var(--wh-light); }
+
+.wh-shadow { fill: var(--home-forest); opacity: 0.16; }
+.wh-trouser { fill: var(--color-ink-700); }
+.wh-trouser-b { fill: var(--color-ink-900); }
+.wh-shoe { fill: var(--color-ink-900); }
+.wh-sleeve { fill: none; stroke: var(--color-brand-600); stroke-width: 4.2; stroke-linecap: round; stroke-linejoin: round; }
+.wh-skin { fill: var(--wh-skin); }
+.wh-skin-deep { fill: var(--wh-skin-deep); }
+.wh-strap { fill: none; stroke: var(--home-sand); stroke-width: 1.3; }
+.wh-bag { fill: var(--home-sand); stroke: var(--color-border-strong); stroke-width: 0.8; }
+.wh-tunic { fill: var(--color-brand-600); }
+.wh-hem { fill: none; stroke: var(--color-brand-500); stroke-width: 1.2; }
+.wh-scarf-fill { fill: var(--wh-scarf); }
+.wh-hair { fill: var(--wh-hair); }
+.wh-brow { fill: none; stroke: var(--wh-hair); stroke-width: 0.8; stroke-linecap: round; }
+.wh-eye { fill: var(--color-ink-900); }
+.wh-smile { fill: none; stroke: var(--color-ink-900); stroke-width: 0.85; stroke-linecap: round; }
+.wh-phone { fill: var(--color-ink-900); }
+.wh-screen { fill: var(--home-mint); }
+
+/* ── Resting geometry (origins, and poses that differ from the drawing) ── */
+.wh-hunter, .wh-squash { transform-origin: 0px 0px; }
+.wh-shadow { transform-origin: 0px 0.5px; }
+.wh-leg-f, .wh-leg-b { transform-origin: 0px -29px; }
+.wh-arm-b { transform-origin: -1px -51px; }
+/* Drawn reading the phone; at rest the phone hangs at the hip. */
+.wh-arm-f { transform-origin: 3.5px -52px; transform: rotate(34deg); }
+.wh-head { transform-origin: 1px -57px; }
+.wh-scarf { transform-origin: 5px -54px; }
+.wh-eye { transform-origin: 4.6px -64px; }
+.wh-pin, .wh-halo, .wh-ripple, .wh-rays { transform-origin: 375px 442px; }
+/* Drawn closed; at rest the leaves stand open, foreshortened on their hinges. */
+.wh-leaf-l { transform-origin: 353px 484px; transform: scaleX(0.16); }
+.wh-leaf-r { transform-origin: 397px 484px; transform: scaleX(0.16); }
+.wh-toran { transform-origin: 375px 451px; }
+.wh-cat { transform-origin: 416px 534px; }
+.wh-cat-tail { transform-origin: 423px 532px; }
+.wh-kite { transform-origin: 462px 216px; }
+.wh-sari { transform-origin: 531px 311px; }
+.wh-crow-head { transform-origin: 212px 311px; }
+.wh-dot, .wh-alpana-line, .wh-alpana-petal { transform-box: fill-box; transform-origin: center; }
+.wh-alpana-petal { transform: rotate(var(--r)); }
+.wh-steam { transform-box: fill-box; transform-origin: 50% 100%; }
+
+/* ── Intro: the street, the route, the look up ───────────────────────── */
+/* The whole scene fades up as one — so the stall and the taxi never stand
+   in an empty street — while each house front settles a beat apart. */
+.wh-scene { animation: wh-scene-in 0.6s ease-out both; }
+@keyframes wh-scene-in { from { opacity: 0; } }
+.wh-rise { animation: wh-rise 1s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d) both; }
+@keyframes wh-rise { from { transform: translateY(12px); } }
+
+.wh-dot { animation: wh-dot 0.34s cubic-bezier(0.3, 1.6, 0.5, 1) var(--d) both; }
+@keyframes wh-dot { from { opacity: 0; transform: scale(0.2); } }
+
+.wh-screen { animation: wh-screen 0.5s ease-in-out 0.75s 3 alternate both; }
+@keyframes wh-screen { from { opacity: 0.55; } }
+
+.wh-head { animation: wh-look 6.4s ease-in-out both; }
+@keyframes wh-look {
+  0%, 25% { transform: rotate(12deg); }      /* reading the map */
+  30% { transform: rotate(-9deg); }          /* looks up — that way */
+  35%, 73% { transform: rotate(0deg); }      /* walking */
+  79%, 88% { transform: rotate(-17deg); }    /* a pin, in the sky */
+  93% { transform: rotate(-3deg); }          /* follows it down */
+  100% { transform: rotate(0deg); }
+}
+
+.wh-eye { animation: wh-blink-once 0.26s linear 1.8s, wh-blink 5.4s linear 8.2s infinite; }
+@keyframes wh-blink-once { 50% { transform: scaleY(0.1); } }
+@keyframes wh-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+
+/* Anticipation: a small gathering squash before the first step. */
+.wh-squash { animation: wh-crouch 0.34s ease-in-out 1.92s both, wh-breathe 4.2s ease-in-out 8s infinite alternate; }
+@keyframes wh-crouch { 50% { transform: scale(1.05, 0.92); } }
+@keyframes wh-breathe { from { transform: scale(1, 1); } to { transform: scale(1.008, 1.016); } }
+
+/* ── The walk: path, stride, bob — five strides in 2.6s ─────────────── */
+/* Keyframes sample the route curve (the same cubic the dots sit on) under
+   a trapezoidal speed profile: ease away from the tea stall, cruise, ease
+   in to the doorstep. Scale gives a little depth as they come up the lane. */
+.wh-hunter { animation: wh-walk 2.6s linear 2.2s both; }
+@keyframes wh-walk {
+  0% { transform: translate(-283.1px, 55.7px) scale(1.134); }
+  5% { transform: translate(-280.6px, 55.4px) scale(1.134); }
+  10% { transform: translate(-273.4px, 54.6px) scale(1.132); }
+  15% { transform: translate(-261.2px, 52.8px) scale(1.128); }
+  20% { transform: translate(-244.7px, 50.1px) scale(1.121); }
+  25% { transform: translate(-227.4px, 46.8px) scale(1.113); }
+  30% { transform: translate(-210.2px, 43.2px) scale(1.104); }
+  35% { transform: translate(-193px, 39.3px) scale(1.095); }
+  40% { transform: translate(-175.8px, 35.2px) scale(1.085); }
+  45% { transform: translate(-158.7px, 31px) scale(1.075); }
+  50% { transform: translate(-141.6px, 26.7px) scale(1.064); }
+  55% { transform: translate(-124.6px, 22.5px) scale(1.054); }
+  60% { transform: translate(-107.4px, 18.4px) scale(1.044); }
+  65% { transform: translate(-90.3px, 14.4px) scale(1.035); }
+  70% { transform: translate(-73.1px, 10.7px) scale(1.026); }
+  75% { transform: translate(-55.8px, 7.4px) scale(1.018); }
+  80% { transform: translate(-38.4px, 4.5px) scale(1.011); }
+  85% { transform: translate(-21.9px, 2.2px) scale(1.005); }
+  90% { transform: translate(-9.7px, 0.8px) scale(1.002); }
+  95% { transform: translate(-2.4px, 0.2px) scale(1); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+.wh-leg-f { animation: wh-stride-f 0.52s ease-in-out 2.2s 5; }
+.wh-leg-b { animation: wh-stride-b 0.52s ease-in-out 2.2s 5; }
+@keyframes wh-stride-f { 25% { transform: rotate(-24deg); } 75% { transform: rotate(22deg); } }
+@keyframes wh-stride-b { 25% { transform: rotate(22deg); } 75% { transform: rotate(-24deg); } }
+.wh-arm-b { animation: wh-swing 0.52s ease-in-out 2.2s 5, wh-wave 1.25s ease-in-out 6.95s; }
+@keyframes wh-swing { 25% { transform: rotate(-20deg); } 75% { transform: rotate(18deg); } }
+.wh-bob { animation: wh-bob 0.26s ease-in-out 2.2s 10, wh-hop 0.44s cubic-bezier(0.3, 0, 0.3, 1) 6.95s 2; }
+@keyframes wh-bob { 50% { transform: translateY(1.3px); } }
+.wh-arm-f { animation: wh-phone 5.3s ease-in-out both; }
+@keyframes wh-phone {
+  0%, 31% { transform: rotate(0deg); }       /* reading */
+  40%, 90% { transform: rotate(12deg); }     /* carried while walking */
+  100% { transform: rotate(34deg); }         /* lowered at the door */
+}
+/* Follow-through: the scarf keeps swinging after the feet have stopped. */
+.wh-scarf { animation: wh-flutter 0.52s ease-in-out 2.2s 5, wh-settle 1.3s ease-out 4.8s, wh-drift 3.6s ease-in-out 8s infinite alternate; }
+@keyframes wh-flutter { 50% { transform: rotate(8deg); } }
+@keyframes wh-settle { 15% { transform: rotate(9deg); } 40% { transform: rotate(-5deg); } 60% { transform: rotate(3deg); } 80% { transform: rotate(-1.2deg); } }
+@keyframes wh-drift { from { transform: rotate(0deg); } to { transform: rotate(3deg); } }
+
+/* ── The reveal: pin, lights, door ───────────────────────────────────── */
+/* Pops, winds up (squash), stretches as it falls, squashes on impact,
+   rebounds once and lands. It never bounces again. */
+.wh-pin { animation: wh-pin 1.3s linear 4.8s both; }
+@keyframes wh-pin {
+  0% { opacity: 0; transform: translateY(-190px) scale(0.2, 0.2); animation-timing-function: cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+  18% { opacity: 1; transform: translateY(-190px) scale(1.08, 1.08); animation-timing-function: ease-out; }
+  26% { transform: translateY(-190px) scale(1, 1); animation-timing-function: ease-in-out; }
+  38% { transform: translateY(-198px) scale(1.12, 0.84); animation-timing-function: ease-in; }
+  46% { transform: translateY(-184px) scale(0.9, 1.14); animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+  62% { transform: translateY(0) scale(0.88, 1.16); animation-timing-function: ease-out; }
+  67% { transform: translateY(0) scale(1.28, 0.7); animation-timing-function: ease-out; }
+  77% { transform: translateY(-12px) scale(0.95, 1.06); animation-timing-function: ease-in; }
+  87% { transform: translateY(0) scale(1.06, 0.95); animation-timing-function: ease-out; }
+  100% { opacity: 1; transform: translateY(0) scale(1, 1); }
+}
+.wh-ripple { animation: wh-ripple 0.9s cubic-bezier(0.2, 0.7, 0.3, 1) var(--d) both; }
+@keyframes wh-ripple { 0% { opacity: 0; transform: scale(0.25); } 10% { opacity: 0.9; } 100% { opacity: 0; transform: scale(2.1); } }
+.wh-rays { animation: wh-burst 0.5s ease-out 5.67s both; }
+@keyframes wh-burst { 0% { opacity: 0; transform: scale(0.5); } 25% { opacity: 1; } 100% { opacity: 0; transform: scale(1.3); } }
+
+/* Evening arrives with the reveal: the sky warms and the sun settles. */
+.wh-dusk { animation: wh-fade-in 1.4s ease-out 5.5s both; }
+.wh-sun { transform-box: fill-box; animation: wh-sunset 2.6s ease-in-out 5.2s both; }
+@keyframes wh-sunset { from { transform: translateY(-14px); } }
+@keyframes wh-fade-in { from { opacity: 0; } }
+
+/* Each light flickers on like a real bulb, in order of distance from the pin. */
+.wh-lit { animation: wh-light-on 0.5s ease-out var(--d, 6s) both; }
+@keyframes wh-light-on { 0% { opacity: 0; } 30% { opacity: 0.95; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+.wh-lamp-glass { animation: wh-light-on 0.5s ease-out 5.98s both; }
+.wh-lamp-halo, .wh-lamp-pool { animation: wh-fade-in 0.9s ease-out 6.05s both; }
+
+.wh-leaf-l, .wh-leaf-r { animation: wh-door 0.85s cubic-bezier(0.3, 0.05, 0.3, 1) 6.1s both; }
+@keyframes wh-door {
+  0% { transform: scaleX(1); }
+  12% { transform: scaleX(0.97); }            /* the latch gives */
+  22% { transform: scaleX(0.98); }
+  68% { transform: scaleX(0.1); }             /* swings past… */
+  84% { transform: scaleX(0.2); }             /* …and back */
+  100% { transform: scaleX(0.16); }
+}
+.wh-interior { animation: wh-glow-up 1s ease-out 6.1s both; }
+@keyframes wh-glow-up { from { opacity: 0.3; } }
+.wh-spill { animation: wh-fade-in 1s ease-out 6.3s both; }
+.wh-toran { animation: wh-swing-toran 1.4s ease-out 6.15s both; }
+@keyframes wh-swing-toran { 18% { transform: rotate(5deg); } 42% { transform: rotate(-3.5deg); } 64% { transform: rotate(1.8deg); } 84% { transform: rotate(-0.6deg); } }
+
+.wh-alpana-line { animation: wh-pop-in 0.45s ease-out var(--d) both; }
+@keyframes wh-pop-in { from { opacity: 0; transform: scale(0.3); } }
+.wh-alpana-petal { animation: wh-petal 0.4s ease-out var(--d) both; }
+@keyframes wh-petal { from { opacity: 0; transform: rotate(var(--r)) scale(0.2); } }
+
+.wh-cat { animation: wh-cat 0.9s cubic-bezier(0.3, 0.7, 0.4, 1) 6.75s both; }
+@keyframes wh-cat { 0% { opacity: 0; transform: translate(-36px, -2px) scale(0.82); } 35% { opacity: 1; } 100% { opacity: 1; transform: translate(0, 0) scale(1); } }
+
+/* Home: a smile, a hop, a wave. */
+.wh-smile { animation: wh-fade-in 0.4s ease-out 6.55s both; }
+@keyframes wh-hop { 45% { transform: translateY(-7px); } }
+.wh-shadow { animation: wh-shadow-hop 0.44s cubic-bezier(0.3, 0, 0.3, 1) 6.95s 2; }
+@keyframes wh-shadow-hop { 45% { transform: scale(0.72); opacity: 0.09; } }
+@keyframes wh-wave {
+  22% { transform: rotate(-158deg); }
+  38% { transform: rotate(-138deg); }
+  54% { transform: rotate(-162deg); }
+  70% { transform: rotate(-140deg); }
+}
+
+/* ── Resting loop and the life of the street ─────────────────────────── */
+.wh-halo { animation: wh-halo 3.6s ease-out 7.6s infinite; }
+@keyframes wh-halo { 0% { opacity: 0.55; transform: scale(0.7); } 70%, 100% { opacity: 0; transform: scale(2.4); } }
+.wh-lit.wh-twinkle { animation: wh-light-on 0.5s ease-out var(--d) both, wh-twinkle 7.5s ease-in-out var(--t) infinite; }
+@keyframes wh-twinkle { 0%, 100% { opacity: 1; } 45%, 60% { opacity: 0.55; } }
+.wh-cat-tail { animation: wh-tail 2.8s ease-in-out 7.8s infinite alternate; }
+@keyframes wh-tail { from { transform: rotate(0deg); } to { transform: rotate(-16deg); } }
+.wh-cloud { animation: wh-cloud 30s ease-in-out var(--d) infinite alternate; }
+@keyframes wh-cloud { to { transform: translateX(26px); } }
+.wh-kite { animation: wh-kite 4.8s ease-in-out infinite alternate; }
+@keyframes wh-kite { from { transform: rotate(-5deg); } to { transform: rotate(6deg); } }
+.wh-steam { animation: wh-steam 3.2s ease-out var(--d) infinite; }
+@keyframes wh-steam { 0% { opacity: 0; transform: translateY(4px) scaleY(0.6); } 35% { opacity: 0.75; } 100% { opacity: 0; transform: translateY(-15px) scaleY(1.15); } }
+.wh-sari { animation: wh-sari 3.6s ease-in-out infinite alternate; }
+@keyframes wh-sari { from { transform: rotate(-2.5deg); } to { transform: rotate(2.5deg); } }
+.wh-crow-head { animation: wh-crow 6.5s ease-in-out 2.5s infinite; }
+@keyframes wh-crow { 0%, 62%, 100% { transform: rotate(0deg); } 68%, 76% { transform: rotate(-16deg); } 84% { transform: rotate(8deg); } 90% { transform: rotate(0deg); } }
+
+/* The resting state is the finished picture (see the top of this file),
+   so this is all reduced motion needs. Stated outright rather than left to
+   the global 0.01ms rule, which would still run every animation once. */
+@media (prefers-reduced-motion: reduce) {
+  .wh-scene, .wh-scene * { animation: none !important; }
+}

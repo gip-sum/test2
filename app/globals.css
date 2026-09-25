@@ -233,6 +233,59 @@
   --home-blue: #e3ece9;
   --home-cream: #f0eee3;
 }
+/* Login scene illustration (components/auth/WayHomeScene.tsx).
+   An evening lane in North Kolkata: pastel house fronts, green shutters,
+   red-oxide steps, a yellow taxi, marigolds and window light. These are
+   illustration colours, not product colours; they live here so the whole
+   palette is still one file. The scene's structure and motion are in
+   components/auth/way-home.css, loaded only on /login. */
+:root {
+  --wh-sky-top: #e3f1e8;
+  --wh-sky-mid: #f3f1e4;
+  --wh-sky-low: #fbe6cc;
+  --wh-sun: #fcd9a6;
+  --wh-dusk: #f7c996;
+  --wh-far: #cddfd5;
+  --wh-wall-ochre: #e9c89b;
+  --wh-wall-cream: #f2e7cd;
+  --wh-wall-mint: #d3e9da;
+  --wh-wall-rose: #ecc0ae;
+  --wh-trim: #fbf6ea;
+  --wh-oxide: #b75a3f;
+  --wh-oxide-deep: #9a4631;
+  --wh-door: #1d5a43;
+  --wh-wood: #a8744f;
+  --wh-wood-deep: #8a5c3c;
+  --wh-steel: #b8c2bf;
+  --wh-clay: #c7714f;
+  --wh-glass: #dde7e0;
+  --wh-light: #ffd78a;
+  --wh-light-core: #fff1cc;
+  --wh-brass: #c9a24a;
+  --wh-marigold: #f3a31b;
+  --wh-marigold-deep: #e27612;
+  --wh-pavement: #eee8da;
+  --wh-kerb: #d7cfbd;
+  --wh-road: #e2e5dc;
+  --wh-wire: #56605b;
+  --wh-taxi: #f1c232;
+  --wh-sari: #cf3f63;
+  --wh-kite: #e4572e;
+  --wh-skin: #b87a52;
+  --wh-skin-deep: #a2683f;
+  --wh-hair: #2a211d;
+  --wh-scarf: #e39a2d;
+  --wh-alpana: #fffaf0;
+  --wh-crow-nape: #7b817e;
+}
+/* Third-party marks. Google's sign-in button must use Google's own "G"
+   in Google's own colours; they are tokens for the same reason as ours. */
+:root {
+  --google-blue: #4285f4;
+  --google-red: #ea4335;
+  --google-yellow: #fbbc05;
+  --google-green: #34a853;
+}
 .marketplace-shell { background: var(--color-surface-100); }
 .home-stage { max-width: 1440px; margin: 18px auto 0; padding: 0 24px; }
 .home-hero {
