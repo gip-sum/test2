@@ -18,7 +18,8 @@
     "auth-check": "node scripts/auth-check.mjs",
     "saved-check": "node scripts/saved-check.mjs",
     "lead-check": "node scripts/lead-check.mjs",
-    "post-check": "node scripts/post-check.mjs"
+    "post-check": "node scripts/post-check.mjs",
+    "notfound-check": "node scripts/notfound-check.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

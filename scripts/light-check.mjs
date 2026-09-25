@@ -25,6 +25,9 @@ const ROUTES = [
   // Phase 12: a failed submission (error summary, every field marked) and a review.
   '/post?role=OWNER&intent=buy&type=APARTMENT&carpet=',
   '/post?role=OWNER&intent=buy&type=APARTMENT&bhk=3&baths=2&unit=sqft&carpet=1240&super=1650&furnishing=SEMI_FURNISHED&floor=4&floors=12&status=READY&age=6',
+  // The animated 404, reached by an unmatched path and by a dead listing.
+  '/this-page-does-not-exist',
+  '/property/missing-pabcdef',
   '/buy/kolkata',
   '/buy/kolkata?loc=howrah&type=VILLA&bhk=5&pmax=1600000',
   '/property/4-bhk-flat-for-sale-in-ballygunge-p5d40ab',

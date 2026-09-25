@@ -35,3 +35,4 @@ jobs:
       - run: npm run light-check
       - run: npm run search-check
       - run: npm run post-check
+      - run: npm run notfound-check

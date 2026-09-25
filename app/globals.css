@@ -353,6 +353,246 @@
   .glass-nav, .glass-panel, .glass-card, .premium-search-panel { background: var(--color-surface-000); backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
+/* 404 scene (app/not-found.tsx, components/not-found/LostScene.tsx).
+   Illustration-only tokens live here with the rest of the palette so the
+   scene, like every component, hardcodes no colour. Motion is transform and
+   opacity only, on one ten-second clock, so every part stays in step and
+   nothing triggers layout. */
+:root {
+  --nf-skin: #c98b62;
+  --nf-hair: #2b2320;
+}
+.nf-stage {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 24px 16px 56px;
+}
+.nf-stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--home-mint) 70%, transparent), transparent 42%),
+    radial-gradient(circle at 88% 78%, color-mix(in srgb, var(--color-brand-100) 80%, transparent), transparent 46%);
+}
+.nf-card {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 28px 18px 32px;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 28px;
+  text-align: center;
+  box-shadow: var(--shadow-e2);
+}
+.nf-code {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 0.03em;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(84px, 24vw, 168px);
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  color: var(--home-forest);
+}
+.nf-zero { width: 0.6em; height: 0.79em; overflow: visible; animation: nf-float 3.2s ease-in-out infinite alternate; }
+.nf-zero path { fill: var(--color-brand-100); stroke: var(--color-brand-600); stroke-width: 11; stroke-linejoin: round; }
+.nf-zero circle { fill: var(--color-brand-600); }
+.nf-scene-size { display: block; width: calc(100% + 24px); max-width: 640px; height: auto; margin: 20px -12px 0; overflow: visible; }
+@media (min-width: 640px) { .nf-scene-size { width: 100%; margin: 28px auto 0; } }
+.nf-copy { max-width: 580px; margin: 12px auto 0; }
+.nf-eyebrow {
+  display: inline-flex;
+  padding: 8px 16px;
+  border: 1px solid color-mix(in srgb, var(--color-brand-600) 15%, transparent);
+  border-radius: var(--radius-full);
+  background: var(--color-brand-100);
+  color: var(--color-brand-700);
+  font-size: var(--text-overline);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.nf-title {
+  margin-top: 18px;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 6.4vw, 46px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--color-ink-900);
+  text-wrap: balance;
+}
+.nf-lede { margin-top: 14px; font-size: var(--text-body-lg); line-height: var(--text-body-lg--line-height); color: var(--color-ink-700); text-wrap: pretty; }
+.nf-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 28px; }
+.nf-action { width: 100%; }
+.nf-secondary { background: var(--color-surface-000); }
+@media (min-width: 520px) {
+  .nf-actions { flex-direction: row; justify-content: center; }
+  .nf-action { width: auto; }
+}
+@media (min-width: 640px) {
+  .nf-stage { padding: 40px 32px 72px; }
+  .nf-card { padding: 44px 48px 52px; }
+}
+
+.nf-scene * { transform-box: fill-box; }
+.nf-fill-forest { fill: var(--home-forest); }
+.nf-fill-brand { fill: var(--color-brand-600); }
+.nf-fill-mint { fill: var(--home-mint); }
+.nf-fill-leaf { fill: var(--color-brand-500); }
+.nf-fill-leaf-dark { fill: var(--color-brand-600); }
+.nf-fill-rock { fill: var(--color-border-strong); fill-opacity: 0.7; }
+.nf-fill-sunken { fill: var(--color-surface-200); }
+.nf-fill-surface { fill: var(--color-surface-000); }
+.nf-fill-ink { fill: var(--color-ink-900); }
+.nf-fill-skin { fill: var(--nf-skin); }
+.nf-fill-hair { fill: var(--nf-hair); }
+.nf-fill-supply { fill: var(--color-supply-600); }
+.nf-board { fill: var(--home-sand); stroke: var(--home-forest); stroke-width: 2; stroke-linejoin: round; }
+.nf-board-text { fill: var(--home-forest); font-family: var(--font-display); font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em; }
+.nf-house { fill: var(--color-surface-000); stroke: var(--home-forest); stroke-width: 2.5; }
+.nf-window { fill: var(--home-mint); stroke: var(--home-forest); stroke-width: 1.5; }
+.nf-window-light { fill: var(--color-supply-600); opacity: 0; }
+.nf-pulse { fill: none; stroke: var(--color-brand-500); stroke-width: 2.5; opacity: 0; transform-origin: center; }
+.nf-grass path { fill: none; stroke: var(--color-brand-500); stroke-width: 2.5; stroke-linecap: round; }
+.nf-ground { fill: none; stroke: var(--color-border-strong); stroke-width: 2.5; stroke-linecap: round; }
+.nf-shadow { fill: var(--color-border-subtle); transform-origin: center; }
+.nf-glow { opacity: 0; }
+.nf-glow-stop-in { stop-color: var(--home-mint); stop-opacity: 1; }
+.nf-glow-stop-out { stop-color: var(--home-mint); stop-opacity: 0; }
+.nf-spark { fill: var(--color-brand-500); opacity: 0; transform-origin: center; }
+.nf-mouth { fill: none; stroke: var(--color-ink-900); stroke-width: 1.8; stroke-linecap: round; }
+.nf-arm { fill: none; stroke: var(--color-brand-600); stroke-width: 11; stroke-linecap: round; }
+.nf-paper { fill: var(--home-sand); stroke: var(--color-border-strong); stroke-width: 1.2; stroke-linejoin: round; }
+.nf-fold { fill: none; stroke: var(--color-border-strong); stroke-width: 1; }
+.nf-route { fill: none; stroke: var(--color-brand-600); stroke-width: 1.6; stroke-dasharray: 2.5 2.5; stroke-linecap: round; }
+.nf-question { fill: var(--color-brand-700); font-family: var(--font-display); font-size: 28px; font-weight: 700; }
+
+.nf-walk { animation: nf-walk 10s ease-in-out infinite; }
+.nf-hop { animation: nf-hop 10s ease-in-out infinite; }
+.nf-shadow { animation: nf-shadow 10s ease-in-out infinite; }
+.nf-head { transform-origin: 50% 88%; animation: nf-head 10s ease-in-out infinite; }
+.nf-eyes { animation: nf-eyes 10s ease-in-out infinite; }
+.nf-map { transform-origin: 50% 0%; animation: nf-map 10s ease-in-out infinite; }
+.nf-question { transform-origin: center; animation: nf-question 10s ease-in-out infinite; }
+.nf-pin { transform-origin: 50% 100%; animation: nf-pin 10s ease-out infinite; }
+.nf-pulse { animation: nf-pulse 10s ease-out infinite; }
+.nf-window-light { animation: nf-window 10s linear infinite; }
+.nf-glow { transform-origin: center; animation: nf-glow 10s ease-in-out infinite; }
+.nf-spark { animation: nf-spark 10s ease-out infinite; }
+.nf-grass { transform-origin: 50% 100%; animation: nf-sway 3.6s ease-in-out infinite alternate; }
+.nf-sign-top { transform-origin: 40% 50%; animation: nf-sign 5s ease-in-out infinite alternate; }
+.nf-sign-bottom { transform-origin: 55% 50%; animation: nf-sign 5s ease-in-out -2.5s infinite alternate; }
+
+@keyframes nf-walk {
+  0%, 38% { transform: translateX(0); }
+  54%, 76% { transform: translateX(36px); }
+  94%, 100% { transform: translateX(0); }
+}
+@keyframes nf-hop {
+  0%, 38% { transform: translateY(0); }
+  42% { transform: translateY(-3px); }
+  46% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+  54%, 60% { transform: translateY(0); }
+  62.5% { transform: translateY(-16px); }
+  65% { transform: translateY(0); }
+  67% { transform: translateY(-4px); }
+  69%, 76% { transform: translateY(0); }
+  80% { transform: translateY(-3px); }
+  84% { transform: translateY(0); }
+  88% { transform: translateY(-3px); }
+  92%, 100% { transform: translateY(0); }
+}
+@keyframes nf-shadow {
+  0%, 60% { transform: scaleX(1); }
+  62.5% { transform: scaleX(0.7); }
+  65%, 100% { transform: scaleX(1); }
+}
+@keyframes nf-head {
+  0%, 5% { transform: rotate(0); }
+  10%, 18% { transform: rotate(-8deg); }
+  23%, 31% { transform: rotate(8deg); }
+  36%, 70% { transform: rotate(0); }
+  74%, 84% { transform: rotate(6deg); }
+  90%, 100% { transform: rotate(0); }
+}
+@keyframes nf-eyes {
+  0%, 5% { transform: translate(0, 0); }
+  10%, 18% { transform: translate(-3px, 0); }
+  23%, 31% { transform: translate(3px, 0); }
+  36%, 52% { transform: translate(0, 0); }
+  55%, 66% { transform: translate(3px, -2.5px); }
+  70%, 100% { transform: translate(0, 0); }
+}
+@keyframes nf-map {
+  0%, 4% { transform: translateY(0) rotate(0); }
+  9%, 33% { transform: translateY(-5px) rotate(0); }
+  38%, 60% { transform: translateY(0) rotate(0); }
+  62.5% { transform: translateY(-9px) rotate(-6deg); }
+  66%, 100% { transform: translateY(0) rotate(0); }
+}
+@keyframes nf-question {
+  0%, 6% { opacity: 0; transform: translateY(6px); }
+  11%, 32% { opacity: 1; transform: translateY(0); }
+  37%, 70% { opacity: 0; transform: translateY(-8px); }
+  74%, 88% { opacity: 1; transform: translateY(0); }
+  93%, 100% { opacity: 0; transform: translateY(-8px); }
+}
+@keyframes nf-pin {
+  0%, 50% { opacity: 0; transform: translateY(-72px); }
+  51% { opacity: 1; transform: translateY(-72px); animation-timing-function: cubic-bezier(0.55, 0, 1, 0.45); }
+  55% { transform: translateY(0); }
+  57% { transform: translateY(-9px); }
+  59% { transform: translateY(0); }
+  64% { opacity: 1; }
+  65.5% { opacity: 0.15; }
+  67% { opacity: 1; }
+  68.5% { opacity: 0.15; }
+  70% { opacity: 0.9; }
+  73%, 100% { opacity: 0; transform: translateY(0); }
+}
+@keyframes nf-pulse {
+  0%, 55% { opacity: 0; transform: scale(0.3); }
+  56% { opacity: 0.9; transform: scale(0.4); }
+  64%, 100% { opacity: 0; transform: scale(2.4); }
+}
+@keyframes nf-window {
+  0%, 55% { opacity: 0; }
+  57%, 64% { opacity: 0.55; }
+  65.5% { opacity: 0.1; }
+  67% { opacity: 0.55; }
+  68.5% { opacity: 0.1; }
+  71%, 100% { opacity: 0; }
+}
+@keyframes nf-glow {
+  0%, 60% { opacity: 0; }
+  62.5% { opacity: 0.9; }
+  67%, 100% { opacity: 0; }
+}
+@keyframes nf-spark {
+  0%, 60% { opacity: 0; transform: scale(0.3); }
+  63% { opacity: 1; transform: scale(1); }
+  68%, 100% { opacity: 0; transform: scale(1.3); }
+}
+@keyframes nf-sway { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+@keyframes nf-sign { from { transform: rotate(-1.5deg); } to { transform: rotate(1.5deg); } }
+@keyframes nf-float { from { transform: translateY(0); } to { transform: translateY(-6%); } }
+
+/* The resting pose is a finished picture, so reduced motion loses nothing
+   but the motion. Stated here rather than relying on the global 0.01ms
+   rule, which would still run each animation once. */
+@media (prefers-reduced-motion: reduce) {
+  .nf-scene *, .nf-zero { animation: none !important; }
+}
+
 /* Posting form (Phase 12).
    Radio chips are real radios, visually hidden inside a styled label, so
    arrow keys, form submission and screen readers behave natively. The

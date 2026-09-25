@@ -20,9 +20,12 @@ import { LAUNCH_CITY } from '@/lib/brand'
  */
 const HIDDEN_PREFIXES = ['/post', '/login', '/admin', '/property']
 
-export function BottomNav() {
+export function BottomNav({ alwaysShow = false }: { alwaysShow?: boolean }) {
   const pathname = usePathname()
-  if (HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null
+  // A page can overrule the path: the 404 for a dead /property link has no
+  // contact bar to stand in for the nav, and a dead end with no way out
+  // is exactly what a 404 must not be.
+  if (!alwaysShow && HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null
 
   const items = [
     { href: '/', label: 'Home', Icon: HomeIcon, match: ['/'] },

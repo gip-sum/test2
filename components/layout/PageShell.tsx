@@ -12,14 +12,19 @@ import { SavedProvider } from '@/components/property/SavedProvider'
  * Bottom padding on phones clears the fixed bottom bar so the last
  * element of a page is never trapped underneath it.
  */
-export function PageShell({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
+export function PageShell({ children, footer, alwaysShowBottomNav = false }: {
+  children: ReactNode
+  footer?: ReactNode
+  /** Overrides the bottom nav's own path rules; see BottomNav. */
+  alwaysShowBottomNav?: boolean
+}) {
   return (
     <SavedProvider><div className="marketplace-shell flex min-h-dvh flex-col bg-surface-100">
       <AppHeader />
       <main className="flex-1">{children}</main>
       {footer}
       <div className="pb-20 lg:pb-0" aria-hidden />
-      <BottomNav />
+      <BottomNav alwaysShow={alwaysShowBottomNav} />
     </div></SavedProvider>
   )
 }

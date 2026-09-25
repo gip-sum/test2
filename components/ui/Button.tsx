@@ -40,6 +40,30 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: ReactNode
 }
 
+/**
+ * The button's classes, for a link that must look like one.
+ *
+ * Navigation is a link, never a <button> inside a link: nesting two
+ * interactive elements is invalid HTML, puts two tab stops on one control
+ * and announces it twice. A link styled here stays one element with the
+ * right role and still looks like every other button.
+ */
+export function buttonClassName({
+  variant = 'primary',
+  size = 'md',
+  fullWidth,
+  className,
+}: { variant?: Variant; size?: Size; fullWidth?: boolean; className?: string } = {}) {
+  return cn(
+    'inline-flex items-center justify-center gap-2 rounded-md border font-semibold',
+    'transition-colors disabled:cursor-not-allowed disabled:opacity-45',
+    VARIANT[variant],
+    SIZE[size],
+    fullWidth && 'w-full',
+    className,
+  )
+}
+
 export function Button({
   variant = 'primary',
   size = 'md',
@@ -55,14 +79,7 @@ export function Button({
       {...rest}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
-      className={cn(
-        'inline-flex items-center justify-center gap-2 rounded-md border font-semibold',
-        'transition-colors disabled:cursor-not-allowed disabled:opacity-45',
-        VARIANT[variant],
-        SIZE[size],
-        fullWidth && 'w-full',
-        className,
-      )}
+      className={buttonClassName({ variant, size, fullWidth, className })}
     >
       {/* The button keeps its width while loading — a shrinking button
           moves everything beside it. */}
