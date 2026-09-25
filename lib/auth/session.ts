@@ -1,10 +1,9 @@
 import 'server-only'
 import { cookies } from 'next/headers'
+import { ACCESS_COOKIE, REFRESH_COOKIE, cookieOptions } from './cookies'
 import { authRequest, validUser, type AuthUser, type AuthSession } from './provider'
 
-export const ACCESS_COOKIE = 'gb-access'
-export const REFRESH_COOKIE = 'gb-refresh'
-export const cookieOptions = { httpOnly: true, sameSite: 'lax' as const, secure: process.env.NODE_ENV === 'production', path: '/' }
+export { ACCESS_COOKIE, REFRESH_COOKIE, cookieOptions }
 
 export async function setSession(session: AuthSession) {
   const jar = await cookies()
@@ -14,8 +13,10 @@ export async function setSession(session: AuthSession) {
 
 export async function clearSession() {
   const jar = await cookies()
-  jar.delete(ACCESS_COOKIE)
-  jar.delete(REFRESH_COOKIE)
+  // Expire them with the attributes they were set with. A bare delete is a
+  // non-Secure write, which cannot clear a Secure cookie (see ./cookies).
+  jar.set(ACCESS_COOKIE, '', { ...cookieOptions, maxAge: 0 })
+  jar.set(REFRESH_COOKIE, '', { ...cookieOptions, maxAge: 0 })
 }
 
 /** Always ask the provider: client-controlled cookies alone never confer identity. */

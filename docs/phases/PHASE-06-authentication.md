@@ -125,3 +125,19 @@ scene's reduced-motion picture, and — against the Auth API simulator —
 malformed, throttled and failed requests, both pending states, code sent,
 wrong code, success redirect, registration and the Google error. CI now
 runs it with and without auth configured, alongside `auth-check`.
+
+**Logout cookie fix (same day).** Adding `auth-check` to CI exposed a latent
+bug under CI's newer Chromium, which binds each cookie to the scheme that
+set it. Sign-in marked the session cookies Secure from `NODE_ENV`. The
+proxy's refresh marked them Secure only on https. Logout deleted them with
+no attributes at all. On a production build served over plain http (local
+`next start`, CI), the refresh added second copies and logout could not
+clear the Secure ones, so the visitor stayed signed in. On https every path
+agreed, so the deployed site was not affected.
+
+All three writers now share `lib/auth/cookies.ts`, and logout expires the
+cookies with the attributes they were set with. `auth-check`'s simulator
+now revokes refresh tokens at logout, as Supabase does, so a refresh racing
+the sign-out cannot revive the session. It also expires the app's own access
+cookie instead of planting a lookalike beside it. Verified: `auth-check`
+33/33 and `login-check` 57/57, with and without scheme-bound cookies.

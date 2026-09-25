@@ -4,6 +4,7 @@ import { DEMO_SUMMARIES } from '@/lib/property/demo-data'
 import { parsePropertyHandle, propertyPath } from '@/lib/property/public-id'
 import { authConfig, authRequest, validSession, type AuthSession, type AuthUser } from '@/lib/auth/provider'
 import { safeReturnPath } from '@/lib/auth/validation'
+import { cookieOptions } from '@/lib/auth/cookies'
 
 /**
  * Validates the shape of a results URL before the route renders.
@@ -95,9 +96,10 @@ async function accountGuard(request: NextRequest) {
     ? NextResponse.redirect(new URL(`/login?next=${encodeURIComponent(safeReturnPath(request.nextUrl.pathname + request.nextUrl.search))}`, request.url))
     : NextResponse.next({ request })
   if (nextSession) {
-    const options = { httpOnly: true, secure: request.nextUrl.protocol === 'https:', sameSite: 'lax' as const, path: '/' }
-    response.cookies.set('gb-access', nextSession.access_token, { ...options, maxAge: Math.min(nextSession.expires_in, 3600) })
-    response.cookies.set('gb-refresh', nextSession.refresh_token, { ...options, maxAge: 60 * 60 * 24 * 30 })
+    // The same attributes sign-in uses, so a refresh replaces the session
+    // cookies rather than adding second copies logout cannot clear.
+    response.cookies.set('gb-access', nextSession.access_token, { ...cookieOptions, maxAge: Math.min(nextSession.expires_in, 3600) })
+    response.cookies.set('gb-refresh', nextSession.refresh_token, { ...cookieOptions, maxAge: 60 * 60 * 24 * 30 })
     response.headers.set('Cache-Control', 'private, no-store')
   }
   return response

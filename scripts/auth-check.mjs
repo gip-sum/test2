@@ -17,6 +17,10 @@ let expectedChallenge = null
 let callbackUrl = null
 let pkceMatched = false
 const sessions = new Set()
+// Like Supabase, signing out revokes the session's refresh tokens as well,
+// so a refresh racing the logout (a prefetch still in flight) cannot bring
+// the session back. Without this the simulator is laxer than the provider.
+const revokedRefreshTokens = new Set()
 let savedProfile = null
 const mock = http.createServer(async (request, response) => {
   const chunks = []
@@ -63,11 +67,17 @@ const mock = http.createServer(async (request, response) => {
       return send(200, { access_token: 'c'.repeat(48), refresh_token: 't'.repeat(48), expires_in: 3600, user: USER })
     }
     refreshes++
-    if (!['r'.repeat(48), 's'.repeat(48)].includes(body.refresh_token)) return send(401, {})
+    if (revokedRefreshTokens.has(body.refresh_token) || !['r'.repeat(48), 's'.repeat(48)].includes(body.refresh_token)) return send(401, {})
     sessions.add('b'.repeat(48))
     return send(200, { access_token: 'b'.repeat(48), refresh_token: 's'.repeat(48), expires_in: 3600, user: USER })
   }
-  if (url.pathname === '/auth/v1/logout') { logouts++; sessions.delete(request.headers.authorization?.slice(7)); return send(204, {}) }
+  if (url.pathname === '/auth/v1/logout') {
+    logouts++
+    sessions.delete(request.headers.authorization?.slice(7))
+    revokedRefreshTokens.add('r'.repeat(48))
+    revokedRefreshTokens.add('s'.repeat(48))
+    return send(204, {})
+  }
   send(404, {})
 })
 await new Promise((resolve) => mock.listen(3300, '127.0.0.1', resolve))
@@ -125,10 +135,17 @@ try {
   check('token is absent from rendered HTML', !(await page.content()).includes('a'.repeat(48)))
   check('signed-in navigation opens account', await page.getByRole('link', { name: 'Account' }).first()
     .waitFor({ timeout: 5000 }).then(() => true).catch(() => false))
-  await context.addCookies([{ name: 'gb-access', value: 'invalid', url: BASE, httpOnly: true }])
+  // Expire the app's own access cookie by rewriting it with its own
+  // attributes. A lookalike with different attributes would not replace it:
+  // current Chromium binds cookies to the scheme that set them and keeps both.
+  const expireAccessToken = async () => {
+    const current = (await context.cookies()).find((cookie) => cookie.name === 'gb-access')
+    await context.addCookies([current ? { ...current, value: 'invalid' } : { name: 'gb-access', value: 'invalid', url: BASE, httpOnly: true }])
+  }
+  await expireAccessToken()
   await page.reload()
   check('expired token refreshes session', refreshes >= 1 && await page.getByText(USER.email).isVisible())
-  await context.addCookies([{ name: 'gb-access', value: 'invalid', url: BASE, httpOnly: true }])
+  await expireAccessToken()
   await page.goto(BASE + '/login')
   check('login entry refreshes and redirects an existing session', new URL(page.url()).pathname === '/account' && refreshes >= 2)
   await page.getByRole('button', { name: 'Log out' }).click()
