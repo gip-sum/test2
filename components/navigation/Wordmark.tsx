@@ -18,7 +18,7 @@ import { BRAND } from '@/lib/brand'
  * alt is empty — an alt here would have a screen reader read the brand
  * twice.
  */
-const HEIGHT = 34
+const HEIGHT = 42
 const WIDTH = Math.round((BRAND.logo.width / BRAND.logo.height) * HEIGHT)
 
 export function Wordmark() {
@@ -34,7 +34,7 @@ export function Wordmark() {
         width={WIDTH}
         height={HEIGHT}
         loading="eager"
-        className="h-[34px] w-auto dark:hidden"
+        className="h-[42px] w-auto dark:hidden"
       />
       <Image
         src={BRAND.logo.dark}
@@ -42,7 +42,7 @@ export function Wordmark() {
         width={WIDTH}
         height={HEIGHT}
         loading="eager"
-        className="hidden h-[34px] w-auto dark:block"
+        className="hidden h-[42px] w-auto dark:block"
       />
     </Link>
   )

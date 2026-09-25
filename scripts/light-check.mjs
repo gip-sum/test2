@@ -101,7 +101,6 @@ for (const route of ROUTES) {
           'property card': bg(q('article')),
           'save button': bg(q('article button[aria-pressed]')),
           'browse tile': bg(q('section[aria-labelledby="browse-by"] ul a')),
-          'seller CTA band': bg(q('section[aria-labelledby="post-cta"]')),
           'commitment card': bg(q('section[aria-labelledby="how-it-works"] li')),
           'footer': bg(q('footer')),
           'bottom nav': bg(q('nav.fixed')),
@@ -128,7 +127,6 @@ for (const route of ROUTES) {
           'current page': bg(q('nav[aria-label="Pagination"] a[aria-current="page"]')),
           'search button': bg(form?.querySelector('button[type="submit"]')),
           'active tab': bg(q('[role="tab"][aria-selected="true"]')),
-          'post property': bg(q('section[aria-labelledby="post-cta"] a')),
           'clear all filters': bg(
             [...document.querySelectorAll('section[aria-labelledby="zero-results"] button')]
               .find((b) => /Clear all filters/.test(b.textContent)),
@@ -140,6 +138,14 @@ for (const route of ROUTES) {
           'h1': resolvedColor(getComputedStyle(q('h1')).color),
           'lede': resolvedColor(getComputedStyle(q('h1').nextElementSibling).color),
         },
+        // The editorial seller band intentionally inverts the light page.
+        // Check contrast instead of incorrectly requiring a white surface.
+        seller: q('.seller-invitation') ? {
+          background: bg(q('.seller-invitation')),
+          text: resolvedColor(getComputedStyle(q('.seller-invitation p')).color),
+          button: bg(q('.seller-invitation a')),
+          buttonText: resolvedColor(getComputedStyle(q('.seller-invitation a')).color),
+        } : null,
         heroText: Boolean(q('.home-hero')?.contains(q('h1'))),
         colorScheme: getComputedStyle(document.documentElement).colorScheme,
       }
@@ -170,6 +176,12 @@ for (const route of ROUTES) {
       if (css === null) continue
       const ok = probes.heroText ? luminance(css) > 0.6 : luminance(css) < 0.25
       report(name, css, ok, probes.heroText ? 'must stay light on hero' : 'must be dark ink')
+    }
+    if (probes.seller) {
+      const contrast = (a, b) => (Math.max(luminance(a), luminance(b)) + 0.05) / (Math.min(luminance(a), luminance(b)) + 0.05)
+      const seller = probes.seller
+      report('seller text contrast', seller.text, contrast(seller.background, seller.text) >= 4.5, 'must meet 4.5:1')
+      report('seller button contrast', seller.buttonText, contrast(seller.button, seller.buttonText) >= 4.5, 'must meet 4.5:1')
     }
     if (probes.colorScheme !== 'light') {
       failures++

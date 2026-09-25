@@ -42,7 +42,7 @@
 
   /* ---- Surfaces: white product, cool neutral ground ---- */
   --color-surface-000: #ffffff;      /* cards, sheets, header, inputs */
-  --color-surface-100: #f8faf7;      /* warm page background */
+  --color-surface-100: #f8f9f5;      /* warm page background */
   --color-surface-200: #ecf5ef;      /* sunken: skeletons, tab tracks */
   --color-surface-raised: #ffffff;   /* dropdowns, sheets, toasts */
   --color-media-ground: #e5eee7;     /* behind a photo before it loads */
@@ -51,7 +51,7 @@
      Every step is measured against BOTH white and the page ground; the
      meta step is the tight one, so it is darker than it looks it needs
      to be (4.86:1 on the sunken surface, where captions also sit).    */
-  --color-ink-900: #111827;          /* headings, prices, titles */
+  --color-ink-900: #172c24;          /* headings, prices, titles */
   --color-ink-700: #4b5563;          /* body copy, card attributes */
   --color-ink-500: #5c6b63;          /* meta, helper text, timestamps */
   --color-ink-inverse: #ffffff;
@@ -62,7 +62,7 @@
 
   /* Green identity. Dark green keeps white button text accessible. */
   --color-brand-500: #16a34a;        /* decorative brand accents */
-  --color-brand-600: #15803d;        /* filled buttons, links, selected */
+  --color-brand-600: #117744;        /* filled buttons, links, selected */
   --color-brand-700: #0f6a38;        /* hover and emphasis */
   --color-brand-100: #d1fae5;        /* selected chips, tinted rows */
   --color-on-brand: #ffffff;
@@ -218,25 +218,116 @@
   border-color: var(--color-border-strong);
   box-shadow: 0 8px 24px #064e3b0b, inset 0 1px 0 #ffffff;
 }
-.marketplace-shell {
-  background: radial-gradient(ellipse at 0% 25%, #16a34a14, transparent 45%),
-    radial-gradient(ellipse at 100% 65%, #34d3991a, transparent 50%), var(--color-surface-100);
+/* Editorial surfaces use one shared palette; opaque defaults remain usable
+   when a browser cannot render backdrop filters. */
+:root {
+  --home-forest: #103f32;
+  --home-mint: #d8eec9;
+  --home-white: #ffffff;
+  --home-glass: #ffffffed;
+  --home-line: #ffffff40;
+  --home-shadow: #123b261c;
+  --home-overlay: #082b20b8;
+  --home-sage: #e6eddd;
+  --home-sand: #eee9da;
+  --home-blue: #e3ece9;
+  --home-cream: #f0eee3;
 }
+.marketplace-shell { background: var(--color-surface-100); }
+.home-stage { max-width: 1440px; margin: 18px auto 0; padding: 0 24px; }
 .home-hero {
-  background-color: #0d2a20;
-  background-image:
-    linear-gradient(90deg, #071c16f2 0%, #0a271dcc 42%, #0d2a2066 68%, #0d2a2026 100%),
-    linear-gradient(0deg, #071c1673 0%, transparent 45%),
-    url('/brand/kolkata-hero-v2.webp');
-  background-position: center;
-  background-size: cover;
-  min-height: 540px;
+  position: relative;
+  isolation: isolate;
+  min-height: 660px;
+  padding: 64px 48px 0;
+  border-radius: 28px;
+  background: var(--home-forest) url('/brand/kolkata-hero-v2.webp') center / cover;
+  color: var(--home-white);
 }
-.premium-search-panel {
-  box-shadow: 0 28px 70px #071c1633, 0 4px 12px #071c1614;
+.home-hero::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+  background: linear-gradient(90deg, var(--home-overlay), transparent 95%), linear-gradient(0deg, var(--home-overlay), transparent 70%);
 }
-.home-locality-card {
-  background-image: linear-gradient(145deg, #ffffff 58%, #eefaf2 100%);
+.hero-copy { max-width: 760px; }
+.hero-eyebrow { display: flex; align-items: center; gap: 10px; font-size: 10px; letter-spacing: .19em; font-weight: 600; }
+.hero-eyebrow > span { width: 7px; height: 7px; background: var(--home-mint); border-radius: 50%; box-shadow: 0 0 0 5px var(--home-line); }
+.hero-copy h1 { margin-top: 24px; font-family: var(--font-display); font-size: clamp(44px, 5.2vw, 76px); line-height: 1.07; font-weight: 600; letter-spacing: -.052em; }
+.hero-copy h1 em { font-family: Georgia, 'Times New Roman', serif; color: var(--home-mint); font-weight: 400; letter-spacing: -.045em; }
+.hero-description { margin-top: 24px; font-size: 17px; line-height: 1.7; color: var(--home-white); max-width: 490px; }
+.hero-city-note { display: inline-flex; gap: 12px; align-items: center; margin-top: 28px; font-size: 12px; }
+.hero-city-note > span { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--home-line); border-radius: 50%; }
+.hero-caption { position: absolute; right: 40px; top: 320px; border: 1px solid var(--home-line); border-radius: 14px; padding: 18px 22px; background: var(--home-overlay); backdrop-filter: blur(16px); }
+.hero-caption span { display: block; font-size: 9px; letter-spacing: .14em; }
+.hero-caption strong { display: block; margin-top: 7px; font-size: 14px; font-weight: 500; }
+.hero-search { position: relative; margin-top: 40px; transform: translateY(32px); }
+.premium-search-panel { background: var(--color-surface-000); color: var(--color-ink-900); box-shadow: 0 24px 64px var(--home-shadow); border-radius: 20px; }
+@supports (backdrop-filter: blur(16px)) {
+  .premium-search-panel { background: var(--home-glass); backdrop-filter: blur(28px) saturate(140%); -webkit-backdrop-filter: blur(28px) saturate(140%); box-shadow: 0 24px 64px var(--home-shadow), inset 0 1px var(--home-white); }
+}
+.home-content { padding-top: 66px; }
+.home-content > section { margin-top: 80px; }
+.home-content h2 { letter-spacing: -.035em; font-size: 32px; line-height: 1.2; font-weight: 600; }
+.discovery-promises { display: flex; justify-content: space-between; gap: 24px; padding: 18px 0 28px; border-bottom: 1px solid var(--color-border-subtle); }
+.discovery-promises p { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--color-ink-700); }
+.discovery-promises span { font-size: 11px; color: var(--color-brand-600); }
+.sample-notice { border-radius: 10px; margin-top: 20px; }
+.sample-notice p { padding: 10px 14px; color: var(--color-ink-500); font-size: 11px; }
+.home-locality-card { display: block; border: 1px solid var(--color-border-subtle); border-radius: 18px; background: var(--color-surface-000); overflow: hidden; transition: transform .25s, box-shadow .25s; }
+.home-locality-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px var(--home-shadow); }
+.locality-art { height: 112px; position: relative; overflow: hidden; color: var(--color-brand-700); background: var(--home-sage); }
+.locality-art-1 { background: var(--home-sand); }
+.locality-art-2 { background: var(--home-blue); }
+.locality-art-3 { background: var(--home-cream); }
+.locality-art svg { position: absolute; bottom: -6px; width: 100%; height: 100px; opacity: .4; }
+.locality-index { position: absolute; top: 14px; left: 18px; font-family: Georgia, serif; font-size: 16px; }
+.locality-info { display: flex; justify-content: space-between; gap: 8px; padding: 18px; align-items: center; }
+.locality-arrow { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--color-border-subtle); border-radius: 50%; color: var(--color-brand-600); transition: background .2s; }
+.home-locality-card:hover .locality-arrow { background: var(--color-brand-100); }
+.property-card { transition: box-shadow .25s, transform .25s; }
+.property-card:hover { box-shadow: 0 12px 32px var(--home-shadow); transform: translateY(-3px); }
+.property-card img { transition: transform .5s; }
+.property-card:hover img { transform: scale(1.035); }
+.property-card .aspect-\[4\/3\] { aspect-ratio: 1.55; }
+.premium-browse-link { border-bottom: 1px solid var(--color-border-subtle); border-radius: 0; padding-left: 0; padding-right: 0; }
+.seller-invitation { position: relative; overflow: hidden; border-radius: 26px; background: var(--home-forest); color: var(--home-white); padding: 58px; }
+.seller-invitation h2 { font-size: 42px; letter-spacing: -.03em; }
+.seller-invitation h2 em { font-family: Georgia, serif; font-weight: 400; color: var(--home-mint); }
+.seller-invitation p { color: var(--home-mint); }
+.seller-link { background: var(--home-mint); color: var(--home-forest); transition: transform .2s; }
+.seller-link:hover { transform: translateY(-2px); }
+.seller-orbit { position: absolute; right: -40px; top: -40px; width: 440px; height: 440px; border: 1px solid var(--home-line); border-radius: 50%; display: grid; place-items: center; }
+.seller-orbit::before, .seller-orbit::after { content: ''; position: absolute; inset: 40px; border: 1px solid var(--home-line); border-radius: 50%; }
+.seller-orbit::after { inset: 90px; }
+.seller-orbit span { font-size: 140px; color: var(--home-mint); font-family: Georgia, serif; }
+.home-how { padding-bottom: 24px; }
+.how-step { border-top: 1px solid var(--color-border-strong); padding-top: 24px; }
+.how-number { font-family: Georgia, serif; font-size: 34px; color: var(--color-brand-600); }
+.footer-intro { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 40px; margin-bottom: 35px; border-bottom: 1px solid var(--color-border-subtle); }
+.footer-intro p { font-size: 28px; line-height: 1.2; letter-spacing: -.035em; color: var(--color-ink-900); }
+.footer-intro em { font-family: Georgia, serif; color: var(--color-brand-700); }
+@media (max-width: 1100px) { .hero-caption { display: none; } .seller-orbit { opacity: .35; right: -180px; } }
+@media (max-width: 767px) {
+  .home-stage { padding: 0 12px; margin-top: 10px; }
+  .home-hero { border-radius: 22px; padding: 36px 20px 24px; min-height: auto; background-position: 64% top; }
+  .hero-copy h1 { font-size: clamp(37px, 7vw, 54px); letter-spacing: -.055em; margin-top: 23px; }
+  .hero-eyebrow { font-size: 8px; letter-spacing: .14em; }
+  .hero-description { font-size: 14px; margin-top: 20px; }
+  .hero-city-note { font-size: 10px; margin-top: 20px; }
+  .hero-search { margin-top: 24px; transform: none; }
+  .premium-search-panel { padding: 16px; border-radius: 16px; }
+  .home-content { padding-top: 12px; }
+  .home-content > section { margin-top: 48px; }
+  .home-content h2 { font-size: 27px; }
+  .discovery-promises { flex-direction: column; gap: 14px; padding: 20px 4px; }
+  .locality-art { height: 92px; }
+  .locality-info { padding: 14px 12px; }
+  .locality-info .text-body { font-size: 14px; }
+  .locality-arrow { width: 26px; height: 26px; flex-shrink: 0; }
+  .seller-invitation { padding: 32px 24px; }
+  .seller-invitation h2 { font-size: 30px; }
+  .seller-orbit { right: -320px; opacity: .3; }
+  .footer-intro { align-items: flex-start; gap: 20px; }
+  .footer-intro p { font-size: 23px; }
 }
 @supports (backdrop-filter: blur(16px)) {
   .glass-nav {
@@ -258,20 +349,8 @@
     -webkit-backdrop-filter: blur(10px);
   }
 }
-:root[data-theme="dark"] .home-hero {
-  background-color: #071c16;
-  background-image:
-    linear-gradient(90deg, #071c16f5 0%, #071c16d1 48%, #071c1659 100%),
-    url('/brand/kolkata-hero-v2.webp');
-}
-@media (max-width: 1023px) {
-  .home-hero {
-    background-position: 62% center;
-    min-height: auto;
-  }
-}
 @media (prefers-reduced-transparency: reduce) {
-  .glass-nav, .glass-panel, .glass-card { background: var(--color-surface-000); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .glass-nav, .glass-panel, .glass-card, .premium-search-panel { background: var(--color-surface-000); backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
 @layer base {

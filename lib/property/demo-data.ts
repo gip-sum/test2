@@ -297,7 +297,7 @@ function generate(count: number, now: Date, seed = 20260921): PropertyDetail[] {
         const n = 1 + Math.floor(rand() * 8)
         return SCENES.slice(0, n).map((scene, k) => ({
           id: `m-${i}-${k}`,
-          url: `/dev-media/${scene}-${tone}.png`,
+          url: `/dev-media/${scene}-${tone}.${scene === 'living' ? 'webp' : 'png'}`,
           alt: `${SCENE_LABEL[scene]} — ${bhk} in ${loc.name}, Kolkata (sample image)`,
           isSample: true,
         }))
@@ -331,7 +331,7 @@ function generate(count: number, now: Date, seed = 20260921): PropertyDetail[] {
 function handWritten(now: Date): PropertyDetail[] {
   const shot = (scene: (typeof SCENES)[number], tone: (typeof TONES)[number], what: string) => ({
     id: `m-${scene}-${tone}`,
-    url: `/dev-media/${scene}-${tone}.png`,
+    url: `/dev-media/${scene}-${tone}.${scene === 'living' ? 'webp' : 'png'}`,
     alt: `${SCENE_LABEL[scene]} — ${what} (sample image)`,
     isSample: true,
   })

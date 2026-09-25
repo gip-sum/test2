@@ -10,10 +10,10 @@ import { LAUNCH_CITY } from '@/lib/brand'
  * before the visitor commits to a search. Sale and rent are mixed, ordered
  * by recency, because that is genuinely what "just added" means.
  *
- * Horizontal cards on phones, a grid from tablet up.
+ * Full photograph cards on phones, a grid from tablet up.
  */
 export function RecentListings() {
-  const listings = getRecentListings({ limit: 6 })
+  const listings = getRecentListings({ limit: 3, withPhotos: true, distinctPhotos: true })
 
   if (listings.length === 0) {
     return (
@@ -39,11 +39,11 @@ export function RecentListings() {
     <section aria-labelledby="recent">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-overline uppercase tracking-[0.14em] text-brand-600">Fresh on GharBazaar</p>
+          <p className="text-overline uppercase tracking-[0.14em] text-brand-600">Discover your next address</p>
           <h2 id="recent" className="mt-1 font-display text-heading-2 text-ink-900">
-            Recently added in {LAUNCH_CITY.name}
+            Homes worth a closer look
           </h2>
-          <p className="mt-2 text-body-sm text-ink-500">A first look at homes newly added across the city.</p>
+          <p className="mt-2 text-body-sm text-ink-500">Explore the latest additions, then save the ones that feel right.</p>
         </div>
         <Link
           href={`/buy/${LAUNCH_CITY.slug}`}
@@ -53,20 +53,10 @@ export function RecentListings() {
         </Link>
       </div>
 
-      {/* Horizontal on phones, vertical grid from md up — one component,
-          two layouts, rather than two component trees. */}
-      <ul className="mt-6 grid gap-3 md:hidden">
-        {listings.map((p) => (
-          <li key={p.id}>
-            <PropertyCard property={p} layout="horizontal" />
-          </li>
-        ))}
-      </ul>
-
-      <ul className="mt-6 hidden gap-5 md:grid md:grid-cols-2 xl:grid-cols-3">
-        {listings.map((p, i) => (
-          <li key={p.id}>
-            <PropertyCard property={p} priority={i < 3} />
+      <ul className="mt-7 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        {listings.map((property) => (
+          <li key={property.id}>
+            <PropertyCard property={property} />
           </li>
         ))}
       </ul>

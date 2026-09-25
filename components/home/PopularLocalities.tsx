@@ -21,10 +21,10 @@ export function PopularLocalities({ intent = 'buy' }: { intent?: 'buy' | 'rent' 
         <div>
           <p className="text-overline uppercase tracking-[0.14em] text-brand-600">Explore the city</p>
           <h2 id="popular-localities" className="mt-1 font-display text-heading-2 text-ink-900">
-            Popular localities in {LAUNCH_CITY.name}
+            Where in {LAUNCH_CITY.name} feels like home?
           </h2>
           <p className="mt-2 max-w-xl text-body-sm text-ink-500">
-            Start with neighbourhoods buyers and renters are already exploring.
+            A different rhythm in every neighbourhood. Find the one that feels like you.
           </p>
         </div>
         <Link
@@ -35,26 +35,29 @@ export function PopularLocalities({ intent = 'buy' }: { intent?: 'buy' | 'rent' 
         </Link>
       </div>
 
-      <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {localities.map((l) => {
+      <ul className="locality-grid mt-7 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {localities.slice(0, 8).map((l, index) => {
           const count = counts.get(l.slug)
           return (
             <li key={l.slug}>
               <Link
                 href={`/${intent}/${LAUNCH_CITY.slug}/${l.slug}`}
-                className="home-locality-card group flex min-h-24 items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface-000 px-4 py-4 text-ink-900 shadow-e1 transition-all hover:-translate-y-0.5 hover:border-brand-600 hover:shadow-e2"
+                className="home-locality-card group"
               >
-                <span className="min-w-0">
-                  <span className="block truncate text-body font-semibold group-hover:text-brand-600">{l.name}</span>
-                  <span className="mt-1 block text-caption text-ink-500">
-                    {count ? `${count} ${count === 1 ? 'listing' : 'listings'}` : 'Explore locality'}
-                  </span>
-                </span>
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700 transition-transform group-hover:translate-x-0.5" aria-hidden>
-                  <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14M13 6l6 6-6 6" />
+                <div className={`locality-art locality-art-${index % 4}`} aria-hidden="true">
+                  <span className="locality-index">{String(index + 1).padStart(2, '0')}</span>
+                  <svg viewBox="0 0 240 100" fill="none" stroke="currentColor" strokeWidth="1">
+                    <path d="M0 93H240M22 93V45H55V93M27 45V37H49V45M64 93V22H105V93M70 32H99M70 43H99M70 54H99M70 65H99M70 76H99M117 93V51L144 30L171 51V93M125 59H162M135 93V73H151V93M184 93V36H219V93M190 45H213M190 56H213M190 67H213M190 78H213" />
+                    <circle cx="190" cy="18" r="10" /><path d="M0 93Q24 69 39 93M208 93Q230 63 240 93" />
                   </svg>
-                </span>
+                </div>
+                <div className="locality-info">
+                  <span className="min-w-0">
+                    <span className="block text-body font-semibold">{l.name}</span>
+                    <span className="mt-1 block text-caption text-ink-500">{count ? `${count} ${count === 1 ? 'listing' : 'listings'}` : 'Explore locality'}</span>
+                  </span>
+                  <span className="locality-arrow" aria-hidden>↗</span>
+                </div>
               </Link>
             </li>
           )

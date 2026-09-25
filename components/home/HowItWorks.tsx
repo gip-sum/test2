@@ -1,48 +1,23 @@
-/**
- * How the marketplace works.
- *
- * Deliberately framed as product commitments rather than trust badges or
- * statistics. Every line below describes behaviour the system actually
- * implements — no counts, no ratings, no "verified" claims, nothing the
- * platform cannot stand behind. Overstating trust is the one thing on this
- * page that could cause real harm.
- */
 const POINTS = [
-  {
-    title: 'Listings are reviewed before they go live',
-    body: 'Every property is checked against our listing rules first. Photos carrying phone numbers or watermarks are sent back for correction.',
-  },
-  {
-    title: 'You choose when to share your number',
-    body: 'Your phone number is never shown on a listing page. It is released only when you ask to see a seller’s details, or when someone contacts you.',
-  },
-  {
-    title: 'You always know who is advertising',
-    body: 'Every listing states whether it was posted by an owner, an agent or a builder. You can filter by that before you contact anyone.',
-  },
-  {
-    title: 'Carpet area is stated separately',
-    body: 'Carpet, built-up and super built-up are different measurements. We show them apart so the price per square foot you compare is the real one.',
-  },
+  { title: 'Find your corner of the city', body: 'Choose your neighbourhoods, budget and bedrooms. Shape the search around the life you want.' },
+  { title: 'Get a feel for the details', body: 'Explore photos, compare clearly labelled areas and see whether an owner, agent or builder is advertising.' },
+  { title: 'Keep your favourites close', body: 'Save homes to your account and return when you are ready to take a closer look.' },
 ]
 
 export function HowItWorks() {
   return (
-    <section aria-labelledby="how-it-works">
-      <h2 id="how-it-works" className="font-display text-heading-3 text-ink-900">
-        How this marketplace works
-      </h2>
-      <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-        {POINTS.map((p) => (
-          <li
-            key={p.title}
-            className="glass-card rounded-lg border border-border-subtle p-5"
-          >
-            <h3 className="text-body font-semibold text-ink-900">{p.title}</h3>
-            <p className="mt-1.5 text-body-sm text-ink-700">{p.body}</p>
+    <section aria-labelledby="how-it-works" className="home-how">
+      <p className="text-overline uppercase tracking-[0.16em] text-brand-600">A little clarity. A big decision.</p>
+      <h2 id="how-it-works" className="mt-2 font-display text-heading-2 text-ink-900">A simpler way to find home.</h2>
+      <ol className="mt-8 grid gap-8 md:grid-cols-3">
+        {POINTS.map((point, index) => (
+          <li key={point.title} className="how-step">
+            <span className="how-number" aria-hidden>{String(index + 1).padStart(2, '0')}</span>
+            <h3 className="mt-5 text-body-lg font-semibold text-ink-900">{point.title}</h3>
+            <p className="mt-2 text-body text-ink-700">{point.body}</p>
           </li>
         ))}
-      </ul>
+      </ol>
     </section>
   )
 }

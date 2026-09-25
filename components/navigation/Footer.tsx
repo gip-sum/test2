@@ -19,8 +19,9 @@ export function Footer() {
   const city = LAUNCH_CITY.slug
 
   return (
-    <footer className="mt-12 border-t border-border-subtle bg-surface-000">
+    <footer className="site-footer mt-12 border-t border-border-subtle bg-surface-000">
       <div className="mx-auto max-w-[1320px] px-4 py-10 lg:px-8">
+        <div className="footer-intro"><Link href="/" className="font-display text-heading-1 text-brand-700">{BRAND.name}</Link><p>A better tomorrow.<br /><em>At home.</em></p></div>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <FooterGroup title={`Buy in ${LAUNCH_CITY.name}`}>
             {localities.slice(0, 6).map((l) => (
@@ -84,8 +85,7 @@ export function Footer() {
             {LAUNCH_CITY.state}.
           </p>
           <p className="mt-1.5 max-w-3xl text-caption text-ink-500">
-            Listings are posted by owners, agents and builders. We review listings against our
-            content rules but do not verify ownership, documents, measurements or prices.
+            Listings are posted by owners, agents and builders. The current catalogue contains sample data. Independently verify ownership, documents, measurements and prices.
             Confirm these independently before any payment.
           </p>
           {BRAND.isPlaceholder ? (

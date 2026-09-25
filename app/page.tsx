@@ -35,33 +35,25 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <PageShell footer={<Footer />}>
-      <DevDataNotice />
-
-      {/* Search block — the dominant interaction. */}
-      <section className="home-hero border-b border-border-subtle">
-        <div className="relative mx-auto max-w-[1320px] px-4 pb-8 pt-12 sm:pt-16 lg:px-8 lg:pb-0 lg:pt-20">
-          {/* Echoes the brand line in lib/brand.ts, with the city that
-              makes it a searchable heading rather than a slogan. Page copy,
-              so it lives here and not in the brand config. */}
-          <p className="mb-5 inline-flex rounded-full border border-white/20 bg-black/15 px-4 py-2 text-overline uppercase tracking-[0.16em] text-white/90 backdrop-blur-sm">
-            A better tomorrow at home
-          </p>
-          <h1 className="max-w-3xl font-display text-[38px] font-bold leading-[1.06] tracking-[-0.045em] text-white sm:text-[50px] lg:text-[66px]">
-            Find your place.<br />
-            <span className="text-[#d6f5df]">Feel at home in {LAUNCH_CITY.name}.</span>
-          </h1>
-          <p className="mt-5 max-w-xl text-body-lg text-white/80">
-            Flats, houses and builder floors for sale and rent across {LAUNCH_CITY.name}. Search
-            several localities at once.
-          </p>
-
-          <div className="mt-9 lg:mb-[-72px] lg:mt-12">
-            <SearchPanel />
+      <div className="home-stage">
+        <section className="home-hero" aria-labelledby="home-title">
+          <div className="hero-copy">
+            <p className="hero-eyebrow"><span aria-hidden /> YOUR NEXT CHAPTER, IN KOLKATA</p>
+            <h1 id="home-title">A place to live.<br /><em>A place to belong.</em></h1>
+            <p className="hero-description">From your first apartment to your forever home.<br className="hidden sm:block" /> Discover a little more possibility in {LAUNCH_CITY.name}.</p>
+            <div className="hero-city-note"><span aria-hidden>↗</span> Rooted in Kolkata. Made for your next move.</div>
           </div>
+          <div className="hero-caption" aria-hidden="true"><span>THE CITY OF NEW BEGINNINGS</span><strong>Kolkata, West Bengal</strong></div>
+          <div className="hero-search"><SearchPanel /></div>
+        </section>
+      </div>
+      <div className="home-content mx-auto max-w-[1320px] px-4 lg:px-8">
+        <div className="discovery-promises" aria-label="Explore with confidence">
+          <p><span aria-hidden>01</span> Your budget. Your neighbourhood.</p>
+          <p><span aria-hidden>02</span> Buy a home or find your next rental.</p>
+          <p><span aria-hidden>03</span> Save favourites. Compare at your pace.</p>
         </div>
-      </section>
-
-      <div className="mx-auto flex max-w-[1320px] flex-col gap-12 px-4 py-10 sm:py-12 lg:gap-16 lg:px-8 lg:pb-16 lg:pt-28">
+        <DevDataNotice />
         <PopularLocalities />
         <RecentListings />
         <BrowseTiles />

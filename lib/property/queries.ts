@@ -13,11 +13,19 @@ import type { Intent, PropertyDetail, PropertySummary } from './types'
 export const USING_DEMO_DATA = true
 
 /** Newest listings first. `intent` narrows to buy or rent when supplied. */
-export function getRecentListings(options?: { intent?: Intent; limit?: number }): PropertySummary[] {
-  const { intent, limit = 6 } = options ?? {}
-  return DEMO_SUMMARIES.filter((p) => !intent || p.intent === intent)
+export function getRecentListings(options?: { intent?: Intent; limit?: number; withPhotos?: boolean; distinctPhotos?: boolean }): PropertySummary[] {
+  const { intent, limit = 6, withPhotos = false, distinctPhotos = false } = options ?? {}
+  const seenPhotos = new Set<string>()
+  return DEMO_SUMMARIES.filter((p) => (!intent || p.intent === intent) && (!withPhotos || p.photos.length > 0))
     .slice()
     .sort((a, b) => b.postedAt.localeCompare(a.postedAt))
+    .filter((property) => {
+      if (!distinctPhotos) return true
+      const cover = property.photos[0]?.url
+      if (!cover || seenPhotos.has(cover)) return false
+      seenPhotos.add(cover)
+      return true
+    })
     .slice(0, limit)
 }
 
