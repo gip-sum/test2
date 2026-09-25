@@ -12,6 +12,8 @@ const OUT = process.env.OUT ?? join(tmpdir(), 'gharbazaar-shots')
 const WIDTHS = [390, 412, 768, 1280]
 const DEFAULT_ROUTES = [
   '/',
+  '/post',
+  '/post?role=OWNER&intent=buy&type=APARTMENT',
   '/buy/kolkata',
   '/rent/kolkata',
   '/buy/kolkata/new-town',

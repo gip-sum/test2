@@ -20,6 +20,8 @@ const CHROME =
 const WIDTHS = [390, 412, 768, 1280]
 const ROUTES = [
   '/',
+  '/post',
+  '/post?role=OWNER&intent=buy&type=APARTMENT',
   '/buy/kolkata',
   '/buy/kolkata?loc=howrah&type=VILLA&bhk=5&pmax=1600000',
   '/property/4-bhk-flat-for-sale-in-ballygunge-p5d40ab',
