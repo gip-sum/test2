@@ -1,68 +1,75 @@
 import Link from 'next/link'
-import { getPopularLocalities } from '@/lib/location/queries'
+import { SectionHeading } from './SectionHeading'
+import { MapPinIcon } from '@/components/ui/icons'
+import { getCityLocalities, getPopularLocalities } from '@/lib/location/queries'
 import { getListingCountsByLocality } from '@/lib/property/queries'
 import { LAUNCH_CITY } from '@/lib/brand'
 
 /**
- * One-tap entry into the most-searched parts of the city.
+ * One-tap entry into the most-searched parts of the city, and the index of
+ * all the rest.
+ *
+ * Compact tinted tiles in two scrolling rows on phones (a grid from 1024px)
+ * replace the old column of identical line drawings, which cost a screen
+ * per four places. Every place is a link into its real results page.
  *
  * Counts come from real inventory — never invented. With seeded data they
  * are small, which is honest: that is what a marketplace looks like before
- * sellers arrive. A locality with nothing in it shows no count rather than
- * a zero, because "0" reads as broken where blank reads as new.
+ * sellers arrive. A place with nothing in it says "Explore" rather than a
+ * zero, because "0" reads as broken where blank reads as new.
+ *
+ * This section is also what the Localities route opens (`/#localities`)
+ * until the city hub and locality pages arrive (Phases 29 and 30).
  */
-export function PopularLocalities({ intent = 'buy' }: { intent?: 'buy' | 'rent' }) {
-  const localities = getPopularLocalities()
-  const counts = getListingCountsByLocality(intent)
+export function PopularLocalities() {
+  const popular = getPopularLocalities()
+  const all = getCityLocalities()
+  const counts = getListingCountsByLocality('buy')
+  const city = LAUNCH_CITY.slug
 
   return (
-    <section aria-labelledby="popular-localities">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-overline uppercase tracking-[0.14em] text-brand-600">Explore the city</p>
-          <h2 id="popular-localities" className="mt-1 font-display text-heading-2 text-ink-900">
-            Where in {LAUNCH_CITY.name} feels like home?
-          </h2>
-          <p className="mt-2 max-w-xl text-body-sm text-ink-500">
-            A different rhythm in every neighbourhood. Find the one that feels like you.
-          </p>
-        </div>
-        <Link
-          href={`/in/${LAUNCH_CITY.slug}`}
-          className="inline-flex min-h-11 items-center rounded-md text-label text-brand-600 hover:underline"
-        >
-          All localities
-        </Link>
-      </div>
+    <section id="localities" aria-labelledby="popular-localities" className="home-section home-anchor">
+      <SectionHeading
+        id="popular-localities"
+        eyebrow="Explore the city"
+        title={`Where in ${LAUNCH_CITY.name} feels like home?`}
+        description="A different rhythm in every neighbourhood. Find the one that feels like you."
+      />
 
-      <ul className="locality-grid mt-7 grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {localities.slice(0, 8).map((l, index) => {
+      <ul className="locality-tiles" aria-label={`Popular localities in ${LAUNCH_CITY.name}`}>
+        {popular.map((l, index) => {
           const count = counts.get(l.slug)
           return (
             <li key={l.slug}>
-              <Link
-                href={`/${intent}/${LAUNCH_CITY.slug}/${l.slug}`}
-                className="home-locality-card group"
-              >
-                <div className={`locality-art locality-art-${index % 4}`} aria-hidden="true">
-                  <span className="locality-index">{String(index + 1).padStart(2, '0')}</span>
-                  <svg viewBox="0 0 240 100" fill="none" stroke="currentColor" strokeWidth="1">
-                    <path d="M0 93H240M22 93V45H55V93M27 45V37H49V45M64 93V22H105V93M70 32H99M70 43H99M70 54H99M70 65H99M70 76H99M117 93V51L144 30L171 51V93M125 59H162M135 93V73H151V93M184 93V36H219V93M190 45H213M190 56H213M190 67H213M190 78H213" />
-                    <circle cx="190" cy="18" r="10" /><path d="M0 93Q24 69 39 93M208 93Q230 63 240 93" />
-                  </svg>
-                </div>
-                <div className="locality-info">
-                  <span className="min-w-0">
-                    <span className="block text-body font-semibold">{l.name}</span>
-                    <span className="mt-1 block text-caption text-ink-500">{count ? `${count} ${count === 1 ? 'listing' : 'listings'}` : 'Explore locality'}</span>
+              <Link href={`/buy/${city}/${l.slug}`} className={`locality-tile locality-tone-${index % 4}`}>
+                <MapPinIcon className="size-4.5 shrink-0" />
+                <span className="min-w-0">
+                  <span className="block truncate text-body-sm font-semibold text-ink-900">{l.name}</span>
+                  <span className="block text-caption text-ink-700">
+                    {count ? `${count} for sale` : 'Explore'}
                   </span>
-                  <span className="locality-arrow" aria-hidden>↗</span>
-                </div>
+                </span>
               </Link>
             </li>
           )
         })}
       </ul>
+
+      <details className="all-localities">
+        <summary>
+          <span>All {all.length} localities in {LAUNCH_CITY.name}</span>
+          <svg viewBox="0 0 24 24" className="all-localities-chevron size-4" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </summary>
+        <ul>
+          {all.map((l) => (
+            <li key={l.slug}>
+              <Link href={`/buy/${city}/${l.slug}`}>{l.name}</Link>
+            </li>
+          ))}
+        </ul>
+      </details>
     </section>
   )
 }

@@ -15,7 +15,7 @@ export function AccountLink() {
     return () => controller.abort()
   }, [])
   return <Link href={signedIn ? '/account' : '/login'}
-    className="inline-flex h-11 items-center justify-center rounded-md border border-border-strong px-3 text-label font-semibold text-ink-900 hover:border-ink-500 focus-visible:outline-2 focus-visible:outline-focus-ring">
+    className="inline-flex h-11 items-center justify-center whitespace-nowrap rounded-md border border-border-strong px-3 text-label font-semibold text-ink-900 hover:border-ink-500 focus-visible:outline-2 focus-visible:outline-focus-ring">
     {signedIn ? 'Account' : 'Log in'}
   </Link>
 }

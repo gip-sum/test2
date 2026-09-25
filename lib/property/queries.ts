@@ -1,5 +1,5 @@
 import { DEMO_PROPERTIES, DEMO_SUMMARIES } from './demo-data'
-import type { Intent, PropertyDetail, PropertySummary } from './types'
+import type { Intent, PropertyDetail, PropertySummary, PropertyTypeCode } from './types'
 
 /**
  * Property reads.
@@ -41,6 +41,21 @@ export function getListingCountsByLocality(intent?: Intent): Map<string, number>
   for (const p of DEMO_SUMMARIES) {
     if (intent && p.intent !== intent) continue
     counts.set(p.localitySlug, (counts.get(p.localitySlug) ?? 0) + 1)
+  }
+  return counts
+}
+
+/**
+ * How many active listings of each property type there are.
+ *
+ * Same rule as the locality counts: counted from inventory, never rounded
+ * up or invented. A type with none is simply absent from the map.
+ */
+export function getListingCountsByType(intent?: Intent): Map<PropertyTypeCode, number> {
+  const counts = new Map<PropertyTypeCode, number>()
+  for (const p of DEMO_SUMMARIES) {
+    if (intent && p.intent !== intent) continue
+    counts.set(p.propertyType, (counts.get(p.propertyType) ?? 0) + 1)
   }
   return counts
 }

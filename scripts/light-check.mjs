@@ -61,6 +61,13 @@ for (const route of ROUTES) {
     const page = await ctx.newPage()
     await page.goto(BASE + route, { waitUntil: 'load' })
     await page.evaluate(() => document.fonts.ready)
+    // The homepage keeps property type, budget and bedrooms in the More
+    // filters sheet; open it so those surfaces are measured too, instead of
+    // their probes finding nothing and being skipped.
+    if (route === '/') {
+      await page.getByRole('button', { name: /^More filters/ }).click()
+      await page.getByRole('dialog', { name: 'More filters' }).waitFor()
+    }
 
     const probes = await page.evaluate(() => {
       // An element painted `transparent` shows whatever is behind it, so the
@@ -104,14 +111,20 @@ for (const route of ROUTES) {
           'dev banner': bg(byText('main p', /Development build/)),
           'search card': bg(form),
           'location field': bg(locationField),
-          'property type': bg(form?.querySelector('select')),
-          'budget select': bg(form?.querySelectorAll('select')[1]),
-          'bedroom chip': bg(byText('form button[type="button"]', /^1 BHK$/)),
+          'more filters': bg(byText('form button[type="button"]', /^More filters/)),
+          'filter sheet': bg(q('[role="dialog"]')),
+          'filter option': bg(q('[role="dialog"] button[aria-pressed="false"]')),
           'inactive tab': bg(q('[role="tab"][aria-selected="false"]')),
+          'quick route': bg(q('nav[aria-label="Quick routes"] .quick-icon')),
+          'sample notice': bg(q('.sample-notice')),
           'locality chip': bg(q('section[aria-labelledby="popular-localities"] ul a')),
+          'locality index': bg(q('details.all-localities')),
           'property card': bg(q('article')),
-          'save button': bg(q('article button[aria-pressed]')),
+          // Signed out, the heart has no aria-pressed; find it by its name.
+          'save button': bg(q('article button[aria-label^="Save"], article button[aria-pressed]')),
+          'see-all card': bg(q('.rail-end-card')),
           'browse tile': bg(q('section[aria-labelledby="browse-by"] ul a')),
+          'budget chip': bg(q('.link-chip')),
           'commitment card': bg(q('section[aria-labelledby="how-it-works"] li')),
           'footer': bg(q('footer')),
           'bottom nav': bg(q('nav.fixed')),
@@ -137,6 +150,7 @@ for (const route of ROUTES) {
         actions: {
           'current page': bg(q('nav[aria-label="Pagination"] a[aria-current="page"]')),
           'search button': bg(form?.querySelector('button[type="submit"]')),
+          'show properties': bg(byText('[role="dialog"] button', /^Show properties/)),
           'active tab': bg(q('[role="tab"][aria-selected="true"]')),
           'clear all filters': bg(
             [...document.querySelectorAll('section[aria-labelledby="zero-results"] button')]

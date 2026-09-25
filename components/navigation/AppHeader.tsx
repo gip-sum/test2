@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Wordmark } from './Wordmark'
-import { Button } from '@/components/ui/Button'
+import { buttonClassName } from '@/components/ui/Button'
 import { LAUNCH_CITY } from '@/lib/brand'
 import { AccountLink } from './AccountLink'
 
@@ -20,10 +20,10 @@ import { AccountLink } from './AccountLink'
 export function AppHeader() {
   return (
     <header
-      className="glass-nav sticky z-50 border-b border-border-subtle"
+      className="app-bar app-bar-top sticky z-50 border-b border-border-subtle"
       style={{ top: 'env(safe-area-inset-top, 0px)' }}
     >
-      <div className="mx-auto flex h-20 max-w-[1320px] items-center gap-5 px-4 lg:px-8">
+      <div className="mx-auto flex h-16 max-w-[1320px] items-center gap-5 px-4 lg:h-20 lg:px-8">
         <Wordmark />
 
         <Link href="/" className="inline-flex min-h-11 items-center rounded-md px-2 text-label text-brand-600 hover:bg-brand-100 lg:hidden">Home</Link>
@@ -31,14 +31,19 @@ export function AppHeader() {
           <HeaderLink href="/">Home</HeaderLink>
           <HeaderLink href={`/buy/${LAUNCH_CITY.slug}`}>Buy</HeaderLink>
           <HeaderLink href={`/rent/${LAUNCH_CITY.slug}`}>Rent</HeaderLink>
-          <HeaderLink href={`/in/${LAUNCH_CITY.slug}`}>Localities</HeaderLink>
+          {/* The localities index lives on the homepage until the city hub
+              and locality pages arrive (Phases 29 and 30). */}
+          <HeaderLink href="/#localities">Localities</HeaderLink>
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <Link href="/post" className="hidden sm:block">
-            <Button variant="supply" size="sm">
-              Post property
-            </Button>
+          {/* Phones reach posting from the bottom bar's centre action. The
+              variant is max-sm:hidden, not hidden + sm:inline-flex: cn() does
+              not merge classes, and the button's own inline-flex would beat a
+              plain `hidden`. A button nested in the link, as this once was,
+              is invalid — two focus stops for one action. */}
+          <Link href="/post" className={buttonClassName({ variant: 'supply', size: 'sm', className: 'whitespace-nowrap max-sm:hidden' })}>
+            Post property
           </Link>
           <AccountLink />
         </div>

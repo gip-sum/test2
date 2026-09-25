@@ -33,6 +33,15 @@ export function getLocationsBySlugs(slugs: string[]): Location[] {
   return slugs.map(getLocationBySlug).filter((l): l is Location => Boolean(l))
 }
 
+/**
+ * Every top-level locality in the city, A to Z — the "all localities"
+ * index. Sub-localities stay under their parent's page rather than
+ * crowding the list; they remain searchable by name.
+ */
+export function getCityLocalities(): Location[] {
+  return KOLKATA_LOCATIONS.filter((l) => l.type === 'LOCALITY').sort((a, b) => a.name.localeCompare(b.name))
+}
+
 export function getPopularLocalities(): Location[] {
   return POPULAR_LOCALITY_SLUGS.map(getLocationBySlug).filter((l): l is Location => Boolean(l))
 }

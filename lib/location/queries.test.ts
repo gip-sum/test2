@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { searchLocations, getLocationBySlug, getPopularLocalities, getAllLocalitySlugs, getLocationById } from './queries'
+import { searchLocations, getLocationBySlug, getPopularLocalities, getAllLocalitySlugs, getLocationById, getCityLocalities } from './queries'
 import { KOLKATA_LOCATIONS } from './kolkata'
 
 const names = (q: string) => searchLocations(q, 20).map((l) => l.name)
@@ -54,6 +54,17 @@ describe('lookup helpers', () => {
     const popular = getPopularLocalities()
     expect(popular.length).toBeGreaterThan(6)
     expect(popular.every((l) => Boolean(l.slug))).toBe(true)
+  })
+
+  it('indexes every locality in the city once, alphabetically, and nothing else', () => {
+    const all = getCityLocalities()
+    expect(all.every((l) => l.type === 'LOCALITY')).toBe(true)
+    expect(new Set(all.map((l) => l.slug)).size).toBe(all.length)
+    expect(all.map((l) => l.name)).toEqual([...all.map((l) => l.name)].sort((a, b) => a.localeCompare(b)))
+    expect(all.length).toBe(KOLKATA_LOCATIONS.filter((l) => l.type === 'LOCALITY').length)
+    // The popular tiles are a subset of the full index beneath them.
+    const slugs = new Set(all.map((l) => l.slug))
+    expect(getPopularLocalities().every((l) => slugs.has(l.slug))).toBe(true)
   })
 })
 

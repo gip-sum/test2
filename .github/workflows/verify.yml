@@ -34,6 +34,10 @@ jobs:
       - run: npm run shots
       - run: npm run light-check
       - run: npm run search-check
+      # The homepage on phones: the whole search on the first screen, the
+      # filter sheet and locality picker, swipeable rails, opaque header and
+      # bottom bar, and tile counts that match their results pages.
+      - run: npm run home-check
       - run: npm run post-check
       - run: npm run notfound-check
       # Without auth configured: the honest "unavailable" state, plus the

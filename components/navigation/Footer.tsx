@@ -22,7 +22,9 @@ export function Footer() {
     <footer className="site-footer mt-12 border-t border-border-subtle bg-surface-000">
       <div className="mx-auto max-w-[1320px] px-4 py-10 lg:px-8">
         <div className="footer-intro"><Link href="/" className="font-display text-heading-1 text-brand-700">{BRAND.name}</Link><p>A better tomorrow.<br /><em>At home.</em></p></div>
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Two columns even on phones: four single-column link lists made
+            the footer longer than a screen and a half. */}
+        <div className="grid grid-cols-2 gap-x-5 gap-y-8 lg:grid-cols-4">
           <FooterGroup title={`Buy in ${LAUNCH_CITY.name}`}>
             {localities.slice(0, 6).map((l) => (
               <FooterLink key={l.slug} href={`/buy/${city}/${l.slug}`}>
@@ -73,9 +75,10 @@ export function Footer() {
           <FooterGroup title={BRAND.shortName}>
             <FooterLink href="/">Home</FooterLink>
             <FooterLink href="/post">Post a property</FooterLink>
-            <FooterLink href={`/in/${city}`}>Localities in {LAUNCH_CITY.name}</FooterLink>
-            <FooterLink href="/terms">Terms of use</FooterLink>
-            <FooterLink href="/privacy">Privacy policy</FooterLink>
+            <FooterLink href="/#localities">Localities in {LAUNCH_CITY.name}</FooterLink>
+            {/* No terms or privacy links until those pages exist: their text
+                has to come from the client, and a link to a 404 is worse
+                than no link. */}
           </FooterGroup>
         </div>
 

@@ -1,95 +1,95 @@
 import Link from 'next/link'
-import { BUY_BUDGET_BANDS, buildSearchUrl } from '@/lib/search/query'
-import { PROPERTY_TYPE_LABEL, type PropertyTypeCode } from '@/lib/property/types'
+import { PropertyTypeArt } from './PropertyTypeArt'
+import { SectionHeading } from './SectionHeading'
+import { getListingCountsByType } from '@/lib/property/queries'
+import { BUY_BUDGET_BANDS, RENT_BUDGET_BANDS, buildLandingUrl, buildSearchUrl } from '@/lib/search/query'
+import { PROPERTY_TYPE_ORDER, PROPERTY_TYPE_PLURAL, type Intent, type PropertyTypeCode } from '@/lib/property/types'
 import { LAUNCH_CITY } from '@/lib/brand'
 
 /**
  * Converts vague intent into a specific filtered URL.
  *
- * Two jobs: it removes a decision for someone who knows only their budget
- * or their configuration, and it is the main internal-linking surface into
- * the landing matrix — which is what makes the site navigable in depth
- * rather than flat.
+ * Two jobs: it removes a decision for someone who knows only their budget,
+ * their configuration or the kind of home they want, and it is the main
+ * internal-linking surface into the landing matrix — which is what makes
+ * the site navigable in depth rather than flat.
+ *
+ * Property types are illustrated tiles with real inventory counts; budget
+ * and configuration are chips a thumb can scan in one pass, for buying and
+ * renting both, instead of three tall lists of rows.
  */
+const TYPE_SLUG: Record<PropertyTypeCode, string> = {
+  APARTMENT: 'flats',
+  INDEPENDENT_HOUSE: 'independent-houses',
+  BUILDER_FLOOR: 'builder-floors',
+  VILLA: 'villas',
+  STUDIO: 'studio-apartments',
+}
 const BHK = [1, 2, 3, 4] as const
-const TYPES: PropertyTypeCode[] = ['APARTMENT', 'INDEPENDENT_HOUSE', 'BUILDER_FLOOR', 'VILLA']
 
 export function BrowseTiles() {
-  const url = (o: Parameters<typeof buildSearchUrl>[0]) => buildSearchUrl(o)
-  const base = { intent: 'buy' as const, city: LAUNCH_CITY.slug, localities: [], propertyTypes: [], bedrooms: [] }
+  const city = LAUNCH_CITY.slug
+  const typeCounts = getListingCountsByType('buy')
+  const budget = (intent: Intent, min?: number, max?: number) => buildSearchUrl({ intent, city, priceMin: min, priceMax: max })
 
   return (
-    <section aria-labelledby="browse-by">
-      <div>
-        <p className="text-overline uppercase tracking-[0.14em] text-brand-600">Make it yours</p>
-        <h2 id="browse-by" className="mt-1 font-display text-heading-2 text-ink-900">
-          Find a home your way
-        </h2>
-        <p className="mt-2 max-w-xl text-body-sm text-ink-500">
-          Jump into a search by the detail that matters most to you.
-        </p>
-      </div>
+    <section aria-labelledby="browse-by" className="home-section">
+      <SectionHeading
+        id="browse-by"
+        eyebrow="Make it yours"
+        title="Find a home your way"
+        description="Jump into a search by the detail that matters most to you."
+      />
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <div className="rounded-lg border border-border-subtle bg-surface-000 p-4 shadow-e1 sm:p-5">
-        <h3 className="font-display text-heading-3 text-ink-900">Browse by budget</h3>
-        <ul className="mt-3 flex flex-col gap-2">
-          {BUY_BUDGET_BANDS.map((b) => (
-            <li key={b.label}>
-              <Link
-                href={url({ ...base, priceMin: b.min, priceMax: b.max })}
-                className="premium-browse-link flex min-h-11 items-center justify-between gap-3 rounded-md px-3 text-body-sm text-ink-900 transition-colors hover:bg-brand-100 hover:text-brand-700"
-              >
-                <span className="tabular">{b.label}</span>
-                <Chevron />
+      <h3 className="browse-subhead">Browse by property type</h3>
+      <ul className="type-tiles">
+        {PROPERTY_TYPE_ORDER.map((type, index) => {
+          const count = typeCounts.get(type)
+          return (
+            <li key={type}>
+              <Link href={buildLandingUrl({ intent: 'buy', city, slug: TYPE_SLUG[type] })} className={`type-tile type-tone-${index % 5}`}>
+                <PropertyTypeArt type={type} />
+                <span className="block text-body-sm font-semibold text-ink-900">{PROPERTY_TYPE_PLURAL[type]}</span>
+                <span className="block text-caption text-ink-700">{count ? `${count} for sale` : 'Explore'}</span>
               </Link>
             </li>
-          ))}
-        </ul>
-      </div>
+          )
+        })}
+      </ul>
 
-      <div className="rounded-lg border border-border-subtle bg-surface-000 p-4 shadow-e1 sm:p-5">
-        <h3 className="font-display text-heading-3 text-ink-900">Browse by configuration</h3>
-        <ul className="mt-3 flex flex-col gap-2">
-          {BHK.map((n) => (
-            <li key={n}>
-              <Link
-                href={url({ ...base, bedrooms: [n] })}
-                className="premium-browse-link flex min-h-11 items-center justify-between gap-3 rounded-md px-3 text-body-sm text-ink-900 transition-colors hover:bg-brand-100 hover:text-brand-700"
-              >
-                <span>{n} BHK flats in {LAUNCH_CITY.name}</span>
-                <Chevron />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <div className="browse-grid">
+        <div className="browse-card">
+          <h3 className="browse-card-title">Browse by budget</h3>
+          <p className="browse-caption">To buy</p>
+          <ul className="link-chips">
+            {BUY_BUDGET_BANDS.map((b) => (
+              <li key={b.label}><Link href={budget('buy', b.min, b.max)} className="link-chip tabular">{b.label}</Link></li>
+            ))}
+          </ul>
+          <p className="browse-caption">To rent, per month</p>
+          <ul className="link-chips">
+            {RENT_BUDGET_BANDS.map((b) => (
+              <li key={b.label}><Link href={budget('rent', b.min, b.max)} className="link-chip tabular">{b.label}</Link></li>
+            ))}
+          </ul>
+        </div>
 
-      <div className="rounded-lg border border-border-subtle bg-surface-000 p-4 shadow-e1 sm:col-span-2 sm:p-5 lg:col-span-1">
-        <h3 className="font-display text-heading-3 text-ink-900">Browse by property type</h3>
-        <ul className="mt-3 flex flex-col gap-2">
-          {TYPES.map((t) => (
-            <li key={t}>
-              <Link
-                href={url({ ...base, propertyTypes: [t] })}
-                className="premium-browse-link flex min-h-11 items-center justify-between gap-3 rounded-md px-3 text-body-sm text-ink-900 transition-colors hover:bg-brand-100 hover:text-brand-700"
-              >
-                <span className="truncate">{PROPERTY_TYPE_LABEL[t]}</span>
-                <Chevron />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
+        <div className="browse-card">
+          <h3 className="browse-card-title">Browse by configuration</h3>
+          <p className="browse-caption">To buy</p>
+          <ul className="link-chips">
+            {BHK.map((n) => (
+              <li key={n}><Link href={buildLandingUrl({ intent: 'buy', city, slug: `${n}-bhk` })} className="link-chip">{n} BHK</Link></li>
+            ))}
+          </ul>
+          <p className="browse-caption">To rent</p>
+          <ul className="link-chips">
+            {BHK.map((n) => (
+              <li key={n}><Link href={buildLandingUrl({ intent: 'rent', city, slug: `${n}-bhk` })} className="link-chip">{n} BHK</Link></li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
-  )
-}
-
-function Chevron() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-ink-500" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M9 6l6 6-6 6" />
-    </svg>
   )
 }

@@ -34,10 +34,33 @@ but its eight-phase build order is superseded.
 
 Phase 0 (planning) and the GharBazaar rebrand plus light-first conversion
 sit outside the numbering; both are complete and are recorded in the git
-history.
+history. So is the mobile-first homepage redesign that followed Phase 12,
+which reworked Phase 2's homepage without starting a new phase; the
+sections it deliberately left out are listed below.
 
 Each phase is specified in `docs/phases/` with the nine sections required
 by `CLAUDE.md` before any code is written for it.
+
+---
+
+## Homepage sections waiting on their phase
+
+Larger portals open with sections this homepage does not have yet. Each is
+absent because the data or the feature behind it does not exist, and a
+placeholder would claim what the platform cannot show. The homepage gains
+each one in the phase that makes it real, not before.
+
+| Section on larger portals | Why it is absent today | Phase that makes it real |
+|---|---|---|
+| New and upcoming projects, with RERA numbers | There is no project entity | 44–47, with RERA claims verified in 65–66 |
+| "Recommended for you" | No recommendation logic; the rails show the newest listings and are titled that way | 39 |
+| Demand by locality ("n% of buyers…") | Nothing measures demand yet | 69 measures it, 50 presents it |
+| Price trends and locality insights | No price history | 50–51 |
+| Offers | No project commercial terms, no paid placement | 47 (builder terms), 61 (featured listings) |
+| "Post property FREE" | No seller plan defines what is free | 59 |
+| A localities page | The homepage section at `/#localities` stands in, and the header, footer and quick routes point there | 29 (city hub), 30 (locality pages) |
+| Budget and EMI calculators, short videos | Not in `Phases.txt` | Needs a roadmap decision |
+| Terms of use and privacy policy | The pages do not exist; their links, which returned 404, were removed | Client-supplied text; not yet in `Phases.txt` |
 
 ---
 

@@ -77,6 +77,20 @@ try {
   await page.getByRole('button', { name: /Remove .* from saved/ }).first().click()
   await page.getByText('Your shortlist is empty').waitFor()
   check('remove persists and renders empty state', !records.get(users['a'.repeat(48)].id)?.has('p_8f3c2a'))
+  // The homepage rail carries the same heart: saving there writes the same
+  // shortlist, the card shows it, and unsaving takes it out again.
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto(BASE + '/')
+  const card = page.locator('.listing-rail article').first()
+  const href = await card.locator('a[href^="/property/"]').getAttribute('href')
+  const railId = `p_${href.slice(href.lastIndexOf('-p') + 2)}`
+  await card.getByRole('button', { name: /^Save / }).click()
+  await card.getByRole('button', { name: /Remove .* from saved/ }).waitFor()
+  check('saving from the homepage rail writes the shortlist', records.get(users['a'.repeat(48)].id)?.has(railId))
+  await card.getByRole('button', { name: /Remove .* from saved/ }).click()
+  await card.getByRole('button', { name: /^Save / }).waitFor()
+  check('unsaving from the homepage rail removes it', !records.get(users['a'.repeat(48)].id)?.has(railId))
+  await page.goto(BASE + '/account/saved')
   failing = true
   await page.reload()
   check('storage outage is not presented as empty shortlist', await page.getByRole('alert').getByText(/temporarily unavailable/).isVisible())

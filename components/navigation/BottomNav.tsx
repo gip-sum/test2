@@ -39,7 +39,7 @@ export function BottomNav({ alwaysShow = false }: { alwaysShow?: boolean }) {
   return (
     <nav
       aria-label="Primary"
-      className="glass-nav fixed inset-x-0 bottom-0 z-50 border-t border-border-subtle lg:hidden"
+      className="app-bar app-bar-bottom fixed inset-x-0 bottom-0 z-50 border-t border-border-subtle lg:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <ul className="flex">

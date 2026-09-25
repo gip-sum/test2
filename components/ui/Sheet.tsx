@@ -32,9 +32,13 @@ export function Sheet({
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-overlay" />
         <Dialog.Content
+          // From 640px the sheet is a centred dialog sized by its content.
+          // sm:bottom-auto matters: with the phone's bottom-0 still applied,
+          // top 50% and bottom 0 fixed the dialog at half the viewport and
+          // hid whatever did not fit behind an inner scroll.
           className={cn(
             'fixed inset-x-0 bottom-0 top-0 z-50 flex flex-col bg-surface-000',
-            'sm:inset-x-auto sm:left-1/2 sm:top-1/2 sm:h-auto sm:max-h-[85vh] sm:w-[min(32rem,calc(100vw-2rem))]',
+            'sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:h-auto sm:max-h-[85vh] sm:w-[min(32rem,calc(100vw-2rem))]',
             'sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-lg sm:shadow-e3',
           )}
         >

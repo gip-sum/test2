@@ -211,9 +211,19 @@
   --shadow-e3: 0 -2px 16px #00000099;
 }
 
-/* Opaque fallback keeps controls legible without backdrop-filter support.
-   Strong glass on navigation/search, lighter frost on discovery cards. */
-.glass-nav, .glass-panel, .glass-card { background: var(--color-surface-000); }
+/* App chrome — the sticky header and the phone's bottom bar — is opaque,
+   always. It used to be 78% white over a blur, and on a phone the page
+   scrolling underneath showed through as grey text behind the labels: the
+   two controls a visitor needs on every screen were the hardest to read.
+   A solid surface, the hairline border in the markup and a soft shadow
+   separate them from the page instead. Do not make these translucent.
+
+   Glass stays for panels and cards, which sit over a still background;
+   the solid colour here is also their fallback without backdrop-filter. */
+.app-bar { background: var(--color-surface-000); }
+.app-bar-top { box-shadow: var(--shadow-e1); }
+.app-bar-bottom { box-shadow: var(--shadow-e3); }
+.glass-panel, .glass-card { background: var(--color-surface-000); }
 .glass-card {
   border-color: var(--color-border-strong);
   box-shadow: 0 8px 24px #064e3b0b, inset 0 1px 0 #ffffff;
@@ -228,10 +238,20 @@
   --home-line: #ffffff40;
   --home-shadow: #123b261c;
   --home-overlay: #082b20b8;
-  --home-sage: #e6eddd;
   --home-sand: #eee9da;
-  --home-blue: #e3ece9;
-  --home-cream: #f0eee3;
+  /* Discovery tiles: neighbouring tiles take different tints so a row of
+     places or property types reads as separate things, and the type
+     drawings take their roofs, trim and lit windows from Kolkata's own
+     house colours. Text on every tint is ink, never the tint's hue. */
+  --home-tint-mint: #dcefe2;
+  --home-tint-sand: #f3ead6;
+  --home-tint-sky: #dfecf1;
+  --home-tint-rose: #f6e3da;
+  --home-tint-lime: #e8f0d6;
+  --home-art-roof: #b75a3f;
+  --home-art-ochre: #e2b477;
+  --home-art-wood: #8a5c3c;
+  --home-art-light: #fbe7b0;
 }
 /* Login scene illustration (components/auth/WayHomeScene.tsx).
    An evening lane in North Kolkata: pastel house fronts, green shutters,
@@ -287,14 +307,26 @@
   --google-green: #34a853;
 }
 .marketplace-shell { background: var(--color-surface-100); }
-.home-stage { max-width: 1440px; margin: 18px auto 0; padding: 0 24px; }
+
+/* ---- Homepage ---------------------------------------------------------
+   Mobile first. A phone's first screen holds the brand line, the whole
+   search (intent, place, More filters, Search) and the quick routes, and
+   the first listings begin one short scroll below. After the hero every
+   block is a swipeable row or a compact tile set, not a column of tall
+   cards: the old column of full-width cards cost a screen per listing.
+
+   The hero sits one layer above the content (z-index 1, with the content
+   isolated at 0) because the desktop locality dropdown hangs out of the
+   search card over the first rail. Without it the rail's save buttons,
+   which carry their own z-index, paint through the open list. */
+.home-stage { max-width: 1440px; margin: 8px auto 0; padding: 0 12px; }
 .home-hero {
   position: relative;
+  z-index: 1;
   isolation: isolate;
-  min-height: 660px;
-  padding: 64px 48px 0;
-  border-radius: 28px;
-  background: var(--home-forest) url('/brand/kolkata-hero-v2.webp') center / cover;
+  padding: 20px 14px 14px;
+  border-radius: 22px;
+  background: var(--home-forest) url('/brand/kolkata-hero-v2.webp') 64% top / cover;
   color: var(--home-white);
 }
 .home-hero::before {
@@ -302,93 +334,234 @@
   background: linear-gradient(90deg, var(--home-overlay), transparent 95%), linear-gradient(0deg, var(--home-overlay), transparent 70%);
 }
 .hero-copy { max-width: 760px; }
-.hero-eyebrow { display: flex; align-items: center; gap: 10px; font-size: 10px; letter-spacing: .19em; font-weight: 600; }
-.hero-eyebrow > span { width: 7px; height: 7px; background: var(--home-mint); border-radius: 50%; box-shadow: 0 0 0 5px var(--home-line); }
-.hero-copy h1 { margin-top: 24px; font-family: var(--font-display); font-size: clamp(44px, 5.2vw, 76px); line-height: 1.07; font-weight: 600; letter-spacing: -.052em; }
-.hero-copy h1 em { font-family: Georgia, 'Times New Roman', serif; color: var(--home-mint); font-weight: 400; letter-spacing: -.045em; }
-.hero-description { margin-top: 24px; font-size: 17px; line-height: 1.7; color: var(--home-white); max-width: 490px; }
-.hero-city-note { display: inline-flex; gap: 12px; align-items: center; margin-top: 28px; font-size: 12px; }
+.hero-eyebrow { display: flex; align-items: center; gap: 8px; font-size: 9px; letter-spacing: .14em; font-weight: 600; }
+.hero-eyebrow > span { width: 6px; height: 6px; background: var(--home-mint); border-radius: 50%; box-shadow: 0 0 0 4px var(--home-line); }
+.hero-copy h1 { margin-top: 12px; font-family: var(--font-display); font-size: 29px; line-height: 1.12; font-weight: 600; letter-spacing: -.045em; }
+.hero-copy h1 em { font-family: Georgia, 'Times New Roman', serif; color: var(--home-mint); font-weight: 400; letter-spacing: -.04em; }
+.hero-description { margin-top: 8px; max-width: 490px; font-size: 13px; line-height: 1.5; color: var(--home-white); }
+/* Phones keep the headline and its one supporting sentence; the city note
+   and the caption are texture, and on a phone texture costs the Search
+   button its place on the first screen. */
+.hero-city-note { display: none; gap: 12px; align-items: center; font-size: 12px; }
 .hero-city-note > span { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--home-line); border-radius: 50%; }
-.hero-caption { position: absolute; right: 40px; top: 320px; border: 1px solid var(--home-line); border-radius: 14px; padding: 18px 22px; background: var(--home-overlay); backdrop-filter: blur(16px); }
+.hero-caption { display: none; position: absolute; right: 48px; top: 48px; border: 1px solid var(--home-line); border-radius: 14px; padding: 16px 20px; background: var(--home-overlay); backdrop-filter: blur(16px); }
 .hero-caption span { display: block; font-size: 9px; letter-spacing: .14em; }
 .hero-caption strong { display: block; margin-top: 7px; font-size: 14px; font-weight: 500; }
-.hero-search { position: relative; margin-top: 40px; transform: translateY(32px); }
-.premium-search-panel { background: var(--color-surface-000); color: var(--color-ink-900); box-shadow: 0 24px 64px var(--home-shadow); border-radius: 20px; }
+.hero-search { position: relative; margin-top: 16px; }
+.premium-search-panel { background: var(--color-surface-000); color: var(--color-ink-900); box-shadow: 0 24px 64px var(--home-shadow); }
 @supports (backdrop-filter: blur(16px)) {
   .premium-search-panel { background: var(--home-glass); backdrop-filter: blur(28px) saturate(140%); -webkit-backdrop-filter: blur(28px) saturate(140%); box-shadow: 0 24px 64px var(--home-shadow), inset 0 1px var(--home-white); }
 }
-.home-content { padding-top: 66px; }
-.home-content > section { margin-top: 80px; }
-.home-content h2 { letter-spacing: -.035em; font-size: 32px; line-height: 1.2; font-weight: 600; }
-.discovery-promises { display: flex; justify-content: space-between; gap: 24px; padding: 18px 0 28px; border-bottom: 1px solid var(--color-border-subtle); }
-.discovery-promises p { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--color-ink-700); }
-.discovery-promises span { font-size: 11px; color: var(--color-brand-600); }
-.sample-notice { border-radius: 10px; margin-top: 20px; }
-.sample-notice p { padding: 10px 14px; color: var(--color-ink-500); font-size: 11px; }
-.home-locality-card { display: block; border: 1px solid var(--color-border-subtle); border-radius: 18px; background: var(--color-surface-000); overflow: hidden; transition: transform .25s, box-shadow .25s; }
-.home-locality-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px var(--home-shadow); }
-.locality-art { height: 112px; position: relative; overflow: hidden; color: var(--color-brand-700); background: var(--home-sage); }
-.locality-art-1 { background: var(--home-sand); }
-.locality-art-2 { background: var(--home-blue); }
-.locality-art-3 { background: var(--home-cream); }
-.locality-art svg { position: absolute; bottom: -6px; width: 100%; height: 100px; opacity: .4; }
-.locality-index { position: absolute; top: 14px; left: 18px; font-family: Georgia, serif; font-size: 16px; }
-.locality-info { display: flex; justify-content: space-between; gap: 8px; padding: 18px; align-items: center; }
-.locality-arrow { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--color-border-subtle); border-radius: 50%; color: var(--color-brand-600); transition: background .2s; }
-.home-locality-card:hover .locality-arrow { background: var(--color-brand-100); }
+@media (min-width: 768px) {
+  .home-stage { margin-top: 16px; padding: 0 20px; }
+  .home-hero { padding: 40px 36px 0; border-radius: 26px; background-position: center; }
+  .hero-eyebrow { gap: 10px; font-size: 10px; letter-spacing: .19em; }
+  .hero-eyebrow > span { width: 7px; height: 7px; box-shadow: 0 0 0 5px var(--home-line); }
+  .hero-copy h1 { margin-top: 18px; font-size: clamp(40px, 4.6vw, 64px); line-height: 1.07; letter-spacing: -.05em; }
+  .hero-description { margin-top: 14px; font-size: 16px; line-height: 1.65; }
+  .hero-city-note { display: inline-flex; margin-top: 18px; }
+  /* The card overlaps the photo's lower edge; .home-content pads for it. */
+  .hero-search { margin-top: 28px; transform: translateY(28px); }
+}
+@media (min-width: 1024px) {
+  .home-stage { margin-top: 18px; padding: 0 24px; }
+  .home-hero { padding: 48px 48px 0; border-radius: 28px; }
+  .hero-search { margin-top: 32px; transform: translateY(32px); }
+}
+@media (min-width: 1100px) { .hero-caption { display: block; } }
+
+.home-content { isolation: isolate; padding-top: 14px; }
+.home-content > section { margin-top: 36px; }
+.home-content h2 { font-size: 21px; line-height: 1.25; font-weight: 600; letter-spacing: -.025em; }
+@media (min-width: 640px) { .home-content h2 { font-size: 26px; } }
+@media (min-width: 768px) { .home-content { padding-top: 48px; } .home-content > section { margin-top: 56px; } }
+@media (min-width: 1024px) { .home-content { padding-top: 56px; } .home-content > section { margin-top: 64px; } .home-content h2 { font-size: 30px; letter-spacing: -.03em; } }
+/* In-page targets (the Localities route is /#localities) land below the
+   sticky header, not under it. */
+.home-anchor { scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 76px); }
+@media (min-width: 1024px) { .home-anchor { scroll-margin-top: 96px; } }
+.home-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+
+.sample-notice { margin-top: 12px; border-radius: 12px; }
+.sample-notice p { padding: 8px 12px; color: var(--color-ink-700); font-size: 12px; line-height: 17px; }
+@media (min-width: 1024px) { .sample-notice { margin-top: 0; } }
+
+/* Quick routes: four real destinations as a thumb row (phones and tablets;
+   the desktop header carries the same routes). The tints separate them at
+   a glance; the icon colour stays brand, or supply for posting. */
+.quick-routes ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.quick-route { display: flex; height: 100%; flex-direction: column; align-items: center; gap: 6px; padding: 8px 2px; border-radius: 16px; text-align: center; color: var(--color-ink-900); transition: background-color .2s; }
+.quick-route:hover { background: var(--color-surface-000); }
+.quick-icon { display: grid; place-items: center; width: 52px; height: 44px; border-radius: 14px; color: var(--color-brand-700); transition: transform .2s; }
+.quick-route:active .quick-icon { transform: scale(.94); }
+.quick-label { font-size: 12.5px; line-height: 15px; font-weight: 600; text-wrap: balance; }
+.quick-hint { display: none; font-size: 11.5px; line-height: 15px; color: var(--color-ink-500); }
+.quick-tone-buy { background: var(--home-tint-mint); }
+.quick-tone-rent { background: var(--home-tint-sky); }
+.quick-tone-places { background: var(--home-tint-sand); }
+.quick-tone-post { background: var(--color-supply-100); color: var(--color-supply-700); }
+@media (min-width: 560px) {
+  .quick-routes ul { gap: 10px; }
+  .quick-route { padding: 12px 8px; border: 1px solid var(--color-border-subtle); background: var(--color-surface-000); }
+  .quick-route:hover { border-color: var(--color-border-strong); }
+  .quick-hint { display: block; }
+}
+
+/* Swipeable rows (listings, localities, property types).
+   Phones and tablets scroll sideways, bleeding to the screen edge so the
+   next item is always visibly cut off — the peek says "swipe" without an
+   instruction — and snap so each swipe lands cleanly. Each row turns into
+   a plain grid on a wide screen, where a mouse cannot swipe. */
+.listing-rail, .locality-tiles, .type-tiles {
+  margin: 12px -16px 0;
+  padding: 4px 16px 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: 16px;
+  scrollbar-width: none;
+}
+.listing-rail::-webkit-scrollbar, .locality-tiles::-webkit-scrollbar, .type-tiles::-webkit-scrollbar { display: none; }
+/* A mouse or trackpad on a tablet-width window gets a thin scrollbar back. */
+@media (pointer: fine) {
+  .listing-rail, .locality-tiles, .type-tiles { scrollbar-width: thin; scrollbar-color: var(--color-border-strong) transparent; }
+}
+.listing-rail { display: flex; gap: 12px; scroll-snap-type: x mandatory; }
+/* min-width: 0 holds every card to the same width. Without it a flex item
+   is at least as wide as its longest unbreakable line, so one long title
+   widened its card, the taller photo stretched the row, and every other
+   card in it grew a gap above its last line. */
+.listing-rail-item { flex: 0 0 min(68%, 272px); min-width: 0; scroll-snap-align: start; }
+.listing-rail-end { flex-basis: 148px; }
+@media (min-width: 640px) { .listing-rail-item { flex-basis: 264px; } .listing-rail-end { flex-basis: 176px; } }
+.rail-end-card { display: flex; height: 100%; min-height: 160px; flex-direction: column; justify-content: center; gap: 4px; padding: 16px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-lg); background: var(--home-tint-mint); transition: border-color .2s, box-shadow .2s; }
+.rail-end-card:hover { border-color: var(--color-border-strong); box-shadow: var(--shadow-e2); }
+.rail-end-icon { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 8px; border-radius: 50%; background: var(--color-brand-600); color: var(--color-on-brand); transition: transform .2s; }
+.rail-end-card:hover .rail-end-icon { transform: translateX(3px); }
+@media (min-width: 1024px) {
+  .listing-rail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin: 20px 0 0; padding: 0; overflow: visible; }
+  /* The row is the first four items: four cards when there are four or
+     more listings — the rest, and the end card, are one "See all" away —
+     or fewer cards with the end card filling the space they leave. */
+  .listing-rail-item:nth-child(n + 5) { display: none; }
+  .rail-end-card { padding: 24px; }
+}
+.compact-card { transition: box-shadow .2s, transform .2s; }
+.compact-card img { transition: transform .45s; }
+@media (hover: hover) {
+  .compact-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-e2); }
+  .compact-card:hover img { transform: scale(1.03); }
+}
+
+/* Localities: two rows of tinted tiles that scroll together, then a grid. */
+.locality-tiles { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, auto); grid-auto-columns: min(45%, 176px); gap: 8px; scroll-snap-type: x proximity; }
+.locality-tiles > li { min-width: 0; scroll-snap-align: start; }
+.locality-tile { display: flex; height: 100%; min-height: 58px; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; color: var(--color-brand-700); transition: transform .2s, box-shadow .2s; }
+.locality-tone-0 { background: var(--home-tint-mint); }
+.locality-tone-1 { background: var(--home-tint-sand); }
+.locality-tone-2 { background: var(--home-tint-sky); }
+.locality-tone-3 { background: var(--home-tint-rose); }
+@media (min-width: 1024px) {
+  .locality-tiles { grid-auto-flow: row; grid-template-rows: none; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin: 20px 0 0; padding: 0; overflow: visible; }
+}
+.all-localities { margin-top: 4px; border: 1px solid var(--color-border-subtle); border-radius: 14px; background: var(--color-surface-000); }
+.all-localities summary { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px; border-radius: 13px; cursor: pointer; list-style: none; font-size: 14px; font-weight: 600; color: var(--color-brand-700); }
+.all-localities summary::-webkit-details-marker { display: none; }
+.all-localities-chevron { flex: none; transition: transform .2s; }
+.all-localities[open] .all-localities-chevron { transform: rotate(180deg); }
+.all-localities ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; padding: 4px 16px 10px; border-top: 1px solid var(--color-border-subtle); }
+.all-localities a { display: flex; min-height: 44px; align-items: center; font-size: 14px; color: var(--color-ink-900); }
+.all-localities a:hover { color: var(--color-brand-700); text-decoration: underline; }
+@media (min-width: 640px) { .all-localities ul { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .all-localities { margin-top: 16px; } .all-localities ul { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+
+/* Property types: a drawing per type, so five tiles read as five things. */
+.browse-subhead { margin-top: 16px; font-size: 15px; line-height: 20px; font-weight: 600; color: var(--color-ink-900); }
+.type-tiles { display: grid; grid-auto-flow: column; grid-auto-columns: min(38%, 152px); gap: 10px; margin-top: 8px; scroll-snap-type: x proximity; }
+.type-tiles > li { min-width: 0; scroll-snap-align: start; }
+.type-tile { display: flex; height: 100%; flex-direction: column; gap: 2px; padding: 12px; border-radius: 16px; transition: transform .2s, box-shadow .2s; }
+.type-tone-0 { background: var(--home-tint-mint); }
+.type-tone-1 { background: var(--home-tint-sand); }
+.type-tone-2 { background: var(--home-tint-sky); }
+.type-tone-3 { background: var(--home-tint-rose); }
+.type-tone-4 { background: var(--home-tint-lime); }
+.type-art { display: block; width: 72px; height: 54px; margin-bottom: 6px; }
+/* Wide tiles put the drawing in the corner, so a row of five stays short. */
+@media (min-width: 1024px) {
+  .type-tile { position: relative; min-height: 136px; padding: 16px 16px 14px; }
+  .type-tile > span:first-of-type { max-width: calc(100% - 20px); }
+  .type-art { position: absolute; right: 12px; bottom: 12px; width: 88px; height: 66px; margin: 0; }
+}
+.type-art-ground { fill: var(--color-border-strong); }
+.type-art-main { fill: var(--color-brand-600); }
+.type-art-accent { fill: var(--home-art-ochre); }
+.type-art-window { fill: var(--home-art-light); }
+.type-art-door, .type-art-trunk { fill: var(--home-art-wood); }
+.type-art-roof { fill: var(--home-art-roof); }
+.type-art-leaf { fill: var(--color-brand-500); }
+.type-art-wall { fill: var(--color-surface-000); }
+@media (min-width: 768px) {
+  .type-tiles { grid-auto-flow: row; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 12px 0 0; padding: 0; overflow: visible; }
+}
+@media (hover: hover) {
+  .locality-tile:hover, .type-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-e2); }
+}
+
+/* Budget and configuration: labelled chip rows, scannable in one pass. */
+.browse-grid { display: grid; gap: 12px; margin-top: 16px; }
+.browse-card { padding: 16px; border: 1px solid var(--color-border-subtle); border-radius: 18px; background: var(--color-surface-000); }
+.browse-card-title { font-size: 15px; line-height: 20px; font-weight: 600; color: var(--color-ink-900); }
+.browse-caption { margin-top: 12px; font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--color-ink-500); }
+.link-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.link-chip { display: inline-flex; min-height: 40px; align-items: center; padding: 0 14px; border: 1px solid var(--color-border-strong); border-radius: var(--radius-full); background: var(--color-surface-000); font-size: 13px; font-weight: 600; color: var(--color-ink-900); transition: background-color .2s, border-color .2s, color .2s; }
+.link-chip:hover { border-color: var(--color-brand-600); background: var(--color-brand-100); color: var(--color-brand-700); }
+@media (min-width: 768px) { .browse-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } .browse-card { padding: 20px; } }
+
 .property-card { transition: box-shadow .25s, transform .25s; }
 .property-card:hover { box-shadow: 0 12px 32px var(--home-shadow); transform: translateY(-3px); }
 .property-card img { transition: transform .5s; }
 .property-card:hover img { transform: scale(1.035); }
 .property-card .aspect-\[4\/3\] { aspect-ratio: 1.55; }
-.premium-browse-link { border-bottom: 1px solid var(--color-border-subtle); border-radius: 0; padding-left: 0; padding-right: 0; }
-.seller-invitation { position: relative; overflow: hidden; border-radius: 26px; background: var(--home-forest); color: var(--home-white); padding: 58px; }
-.seller-invitation h2 { font-size: 42px; letter-spacing: -.03em; }
+
+.seller-invitation { position: relative; overflow: hidden; border-radius: 22px; background: var(--home-forest); color: var(--home-white); padding: 26px 20px; }
+.seller-invitation h2 { font-size: 26px; line-height: 1.2; letter-spacing: -.03em; }
 .seller-invitation h2 em { font-family: Georgia, serif; font-weight: 400; color: var(--home-mint); }
 .seller-invitation p { color: var(--home-mint); }
 .seller-link { background: var(--home-mint); color: var(--home-forest); transition: transform .2s; }
 .seller-link:hover { transform: translateY(-2px); }
-.seller-orbit { position: absolute; right: -40px; top: -40px; width: 440px; height: 440px; border: 1px solid var(--home-line); border-radius: 50%; display: grid; place-items: center; }
+.seller-orbit { position: absolute; right: -320px; top: -40px; width: 440px; height: 440px; border: 1px solid var(--home-line); border-radius: 50%; display: grid; place-items: center; opacity: .3; }
 .seller-orbit::before, .seller-orbit::after { content: ''; position: absolute; inset: 40px; border: 1px solid var(--home-line); border-radius: 50%; }
 .seller-orbit::after { inset: 90px; }
 .seller-orbit span { font-size: 140px; color: var(--home-mint); font-family: Georgia, serif; }
+@media (min-width: 768px) {
+  .seller-invitation { border-radius: 26px; padding: 48px; }
+  .seller-invitation h2 { font-size: 36px; }
+  .seller-orbit { right: -180px; opacity: .35; }
+}
+@media (min-width: 1101px) { .seller-invitation { padding: 58px; } .seller-invitation h2 { font-size: 42px; } .seller-orbit { right: -40px; opacity: 1; } }
+
 .home-how { padding-bottom: 24px; }
-.how-step { border-top: 1px solid var(--color-border-strong); padding-top: 24px; }
-.how-number { font-family: Georgia, serif; font-size: 34px; color: var(--color-brand-600); }
+.how-steps { display: grid; margin-top: 12px; }
+.how-step { display: flex; gap: 14px; padding: 14px 0; border-top: 1px solid var(--color-border-subtle); }
+.how-number { flex: none; width: 30px; font-family: Georgia, serif; font-size: 22px; line-height: 24px; color: var(--color-brand-600); }
+@media (min-width: 768px) {
+  .how-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 24px; }
+  .how-step { flex-direction: column; gap: 12px; padding: 24px 0 0; border-top-color: var(--color-border-strong); }
+  .how-number { width: auto; font-size: 34px; line-height: 1; }
+}
+
 .footer-intro { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 40px; margin-bottom: 35px; border-bottom: 1px solid var(--color-border-subtle); }
 .footer-intro p { font-size: 28px; line-height: 1.2; letter-spacing: -.035em; color: var(--color-ink-900); }
 .footer-intro em { font-family: Georgia, serif; color: var(--color-brand-700); }
-@media (max-width: 1100px) { .hero-caption { display: none; } .seller-orbit { opacity: .35; right: -180px; } }
 @media (max-width: 767px) {
-  .home-stage { padding: 0 12px; margin-top: 10px; }
-  .home-hero { border-radius: 22px; padding: 36px 20px 24px; min-height: auto; background-position: 64% top; }
-  .hero-copy h1 { font-size: clamp(37px, 7vw, 54px); letter-spacing: -.055em; margin-top: 23px; }
-  .hero-eyebrow { font-size: 8px; letter-spacing: .14em; }
-  .hero-description { font-size: 14px; margin-top: 20px; }
-  .hero-city-note { font-size: 10px; margin-top: 20px; }
-  .hero-search { margin-top: 24px; transform: none; }
-  .premium-search-panel { padding: 16px; border-radius: 16px; }
-  .home-content { padding-top: 12px; }
-  .home-content > section { margin-top: 48px; }
-  .home-content h2 { font-size: 27px; }
-  .discovery-promises { flex-direction: column; gap: 14px; padding: 20px 4px; }
-  .locality-art { height: 92px; }
-  .locality-info { padding: 14px 12px; }
-  .locality-info .text-body { font-size: 14px; }
-  .locality-arrow { width: 26px; height: 26px; flex-shrink: 0; }
-  .seller-invitation { padding: 32px 24px; }
-  .seller-invitation h2 { font-size: 30px; }
-  .seller-orbit { right: -320px; opacity: .3; }
-  .footer-intro { align-items: flex-start; gap: 20px; }
+  .footer-intro { align-items: flex-start; gap: 20px; padding-bottom: 28px; margin-bottom: 28px; }
   .footer-intro p { font-size: 23px; }
 }
+@media (prefers-reduced-motion: reduce) {
+  .compact-card:hover, .locality-tile:hover, .type-tile:hover, .seller-link:hover, .property-card:hover { transform: none; }
+  .compact-card:hover img, .property-card:hover img { transform: none; }
+}
+
 @supports (backdrop-filter: blur(16px)) {
-  .glass-nav {
-    background: color-mix(in srgb, var(--color-surface-000) 78%, transparent);
-    backdrop-filter: blur(24px) saturate(160%);
-    -webkit-backdrop-filter: blur(24px) saturate(160%);
-    box-shadow: 0 4px 24px #064e3b0b, inset 0 1px 0 #ffffff80;
-  }
   .glass-panel {
     background: linear-gradient(135deg, #ffffff66, #ffffff00), color-mix(in srgb, var(--color-surface-000) 70%, transparent);
     backdrop-filter: blur(24px) saturate(150%);
@@ -403,7 +576,7 @@
   }
 }
 @media (prefers-reduced-transparency: reduce) {
-  .glass-nav, .glass-panel, .glass-card, .premium-search-panel { background: var(--color-surface-000); backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .glass-panel, .glass-card, .premium-search-panel { background: var(--color-surface-000); backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
 /* 404 scene (app/not-found.tsx, components/not-found/LostScene.tsx).
