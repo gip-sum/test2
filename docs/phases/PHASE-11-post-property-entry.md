@@ -1,6 +1,6 @@
 # Phase 11 — Post property entry flow
 
-**Status:** Implemented and deployed; local browser verification gate pending.
+**Status:** Complete and deployed.
 
 ## 1. Scope
 
@@ -44,4 +44,4 @@ The entry flow is honest about its current limits and functional without authent
 - `npm run build`: passed with `/post` rendered as a dynamic route.
 - HTTP route tests: all 4 entry states, a single `h1`, invalid-link canonicalisation and duplicate rejection pass.
 - Production deployment `dpl_3Jx1xFGXxhFmK8NgegcRPpeyCqs9` was READY at `https://gharbazaar-topaz.vercel.app`. Live browser navigation passed Owner → Sell → Flat/Apartment and Agent → Rent → Builder floor; the review showed the selected answers and the explicit unsaved/unposted message. A Builder → Rent → Villa review survived reload; its edit link and browser Back restored the correct stages. Invalid and duplicate parameters canonicalised to the correct earlier stage. Desktop entry view was inspected at 1363 px.
-- The local Chromium executable is truncated and crashes at launch; the standard Playwright download endpoint returned an invalid archive. Therefore `npm run shots`, `npm run light-check`, `npm run search-check` and `npm run post-check` did **not** pass, and 390/412/768 px overflow, dark-OS behavior, keyboard focus and JavaScript-disabled navigation have not been browser-verified. The server-rendered links and direct HTTP responses were checked, but these are not a substitute for the required browser gate. Do not mark this phase complete until these checks run successfully.
+- GitHub Actions run `36142747942` passed all required gates on `main`: `npm run verify`, `npm run build`, `npm run shots`, `npm run light-check`, `npm run search-check` (64 assertions), and the focused `npm run post-check` (23 assertions). This includes widths 390/412/768/1280, keyboard focus, no-JavaScript navigation, edit/back/reload, and malformed links. The workspace's browser binary remained damaged, so the browser checks ran in CI using an installed Chromium. `.github/workflows/verify.yml` now repeats these checks on future pushes to `main`.
