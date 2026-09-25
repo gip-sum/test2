@@ -20,6 +20,8 @@ Phase 6 — In progress (implementation built; live provider setup pending)
 Phase 7 — Deployed (real-account profile verification pending)
 Phase 8 — Implemented (real-account save verification pending)
 Phase 9 — Implemented (real seller assignment and notification verification pending)
+Phase 10 — Postponed (phone OTP is not required for now)
+Phase 11 — Implemented and deployed (local browser verification gate pending)
 
 Temporary brand:
 GharBazaar

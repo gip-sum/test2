@@ -1,6 +1,6 @@
 # Phase 11 — Post property entry flow
 
-**Status:** Implemented; production browser verification pending.
+**Status:** Implemented and deployed; local browser verification gate pending.
 
 ## 1. Scope
 
@@ -38,9 +38,10 @@ Run `npm run verify`, `npm run build`, `npm run shots`, `npm run light-check`, a
 
 The entry flow is honest about its current limits and functional without authentication or JavaScript. Phase 11 is complete when navigation and state behavior pass browser assertions, the production build succeeds, and the main deployment serves `/post`. Future stages remain separate phases under `Phases.txt`.
 
-### Verification in progress
+### Verification record
 
 - `npm run verify`: lint, typecheck, and 176 tests pass (12 suites).
 - `npm run build`: passed with `/post` rendered as a dynamic route.
 - HTTP route tests: all 4 entry states, a single `h1`, invalid-link canonicalisation and duplicate rejection pass.
-- Local browser checks temporarily unavailable: the workspace Chromium executable was truncated; the standard Playwright download endpoint returned an invalid archive. Production browser checks remain to be run against the deployment.
+- Production deployment `dpl_3Jx1xFGXxhFmK8NgegcRPpeyCqs9` was READY at `https://gharbazaar-topaz.vercel.app`. Live browser navigation passed Owner → Sell → Flat/Apartment and Agent → Rent → Builder floor; the review showed the selected answers and the explicit unsaved/unposted message. A Builder → Rent → Villa review survived reload; its edit link and browser Back restored the correct stages. Invalid and duplicate parameters canonicalised to the correct earlier stage. Desktop entry view was inspected at 1363 px.
+- The local Chromium executable is truncated and crashes at launch; the standard Playwright download endpoint returned an invalid archive. Therefore `npm run shots`, `npm run light-check`, `npm run search-check` and `npm run post-check` did **not** pass, and 390/412/768 px overflow, dark-OS behavior, keyboard focus and JavaScript-disabled navigation have not been browser-verified. The server-rendered links and direct HTTP responses were checked, but these are not a substitute for the required browser gate. Do not mark this phase complete until these checks run successfully.
