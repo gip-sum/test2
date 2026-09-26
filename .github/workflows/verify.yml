@@ -40,6 +40,9 @@ jobs:
       - run: npm run home-check
       # Phase 40A: the numbers, the URL, no-JS submission and the links in and out.
       - run: npm run calculator-check
+      # Phase A: the header tiers, panels and menu by keyboard, 44px targets,
+      # where-you-are beyond colour, and every navigation link resolving.
+      - run: npm run shell-check
       - run: npm run post-check
       - run: npm run notfound-check
       # Without auth configured: the honest "unavailable" state, plus the

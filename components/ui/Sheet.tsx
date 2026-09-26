@@ -1,7 +1,7 @@
 'use client'
 
 import * as Dialog from '@radix-ui/react-dialog'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
 /**
@@ -27,11 +27,43 @@ export function Sheet({
   children: ReactNode
   footer?: ReactNode
 }) {
+  // Radix hands focus back only to its own Dialog.Trigger, and every sheet
+  // here is opened by an ordinary button beside it (a controlled `open`).
+  // Without this, closing a sheet dropped focus on <body> and a keyboard
+  // user started again from the top of the page. So: remember what had
+  // focus as the sheet opened, and return there as it closes.
+  const returnTo = useRef<HTMLElement | null>(null)
+
+  // Radix hides the rest of the page from assistive technology with
+  // aria-hidden, but it deliberately never hides an aria-live region — or
+  // any ancestor of one. The page shell holds several (a calculator's
+  // result, the search count), so behind an open sheet the whole page
+  // stayed readable by a screen reader's virtual cursor. `inert` on the
+  // shell closes that: no focus, no pointer, no accessibility tree, while
+  // the sheet (portalled outside it) stays live. Lifted before focus is
+  // handed back, since an inert element cannot take focus.
+  const appRoot = () => document.querySelector<HTMLElement>('[data-app-root]')
+  useEffect(() => () => { const root = appRoot(); if (root) root.inert = false }, [])
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-overlay" />
         <Dialog.Content
+          onOpenAutoFocus={() => {
+            returnTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
+            const root = appRoot()
+            if (root) root.inert = true
+          }}
+          onCloseAutoFocus={(event) => {
+            const root = appRoot()
+            if (root) root.inert = false
+            const target = returnTo.current
+            if (target?.isConnected) {
+              event.preventDefault()
+              target.focus()
+            }
+          }}
           // From 640px the sheet is a centred dialog sized by its content.
           // sm:bottom-auto matters: with the phone's bottom-0 still applied,
           // top 50% and bottom 0 fixed the dialog at half the viewport and

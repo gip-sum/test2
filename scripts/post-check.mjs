@@ -32,7 +32,10 @@ try {
   // ── Phase 11 entry ───────────────────────────────────────────────────
   await page.goto(`${base}/post`)
   await check('starts with three seller roles', await page.getByRole('heading', { name: 'First, tell us about you.' }).isVisible() && await page.locator('main .post-choice').count() === 3)
-  await check('mobile Home link stays visible', await page.getByRole('link', { name: 'Home', exact: true }).first().isVisible())
+  // No bottom bar here, so the header is the way out: the logo goes home
+  // and the menu reaches everything else.
+  await check('mobile way out stays visible: the home logo and the menu',
+    await page.locator('header').getByRole('link', { name: /home$/ }).isVisible() && await page.locator('header').getByRole('button', { name: 'Menu' }).isVisible())
   await check('current progress is announced', await page.locator('nav[aria-label="Posting progress"] [aria-current="step"]').count() === 1)
   await check('progress shows five stages', await page.locator('nav[aria-label="Posting progress"] li').count() === 5)
 

@@ -19,7 +19,8 @@ export function PageShell({ children, footer, alwaysShowBottomNav = false }: {
   alwaysShowBottomNav?: boolean
 }) {
   return (
-    <SavedProvider><div className="marketplace-shell flex min-h-dvh flex-col bg-surface-100">
+    // data-app-root: what an open sheet makes inert (components/ui/Sheet).
+    <SavedProvider><div data-app-root className="marketplace-shell flex min-h-dvh flex-col bg-surface-100">
       <AppHeader />
       <main className="flex-1">{children}</main>
       {footer}

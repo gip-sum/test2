@@ -52,7 +52,7 @@ export function BottomNav({ alwaysShow = false }: { alwaysShow?: boolean }) {
                 aria-current={active ? 'page' : undefined}
                 // 44px minimum target, comfortably exceeded at 56px.
                 className={cn(
-                  'flex min-h-14 flex-col items-center justify-center gap-1 px-1 py-2 text-[10px] font-semibold',
+                  'flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-semibold',
                   supply ? 'text-supply-700' : active ? 'text-brand-600' : 'text-ink-500',
                 )}
               >
@@ -61,9 +61,15 @@ export function BottomNav({ alwaysShow = false }: { alwaysShow?: boolean }) {
                     <Icon className="size-5" />
                   </span>
                 ) : (
-                  <Icon className="size-5.5" />
+                  // Where you are is a shape and a weight as well as a colour
+                  // (the pill behind the icon, a bold label): colour alone
+                  // fails anyone who cannot tell brand green from grey. The
+                  // pill's box is always there, so nothing shifts when it fills.
+                  <span className={cn('grid h-7 w-12 place-items-center rounded-full', active && 'bg-brand-100')}>
+                    <Icon className="size-5.5" />
+                  </span>
                 )}
-                {label}
+                <span className={active ? 'font-bold' : undefined}>{label}</span>
               </Link>
             </li>
           )

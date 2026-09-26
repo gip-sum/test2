@@ -358,7 +358,7 @@ try {
   const desk = await open(1280, 900)
   await home(desk)
   await check('desktop: the quick routes give way to the header', !(await desk.getByRole('navigation', { name: 'Quick routes' }).isVisible()) &&
-    JSON.stringify(await desk.locator('header nav a').allInnerTexts()) === JSON.stringify(['Home', 'Buy', 'Rent', 'Localities']) &&
+    JSON.stringify(await desk.locator('header nav .nav-top').allInnerTexts()) === JSON.stringify(['Buy', 'Rent', 'Localities', 'Home loans']) &&
     await desk.locator('header').getByRole('link', { name: 'Post property' }).isVisible())
   const grid = await desk.locator('ul.listing-rail').evaluateAll((uls) => uls.map((ul) => ({
     display: getComputedStyle(ul).display,

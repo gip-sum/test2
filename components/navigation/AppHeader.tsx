@@ -1,64 +1,57 @@
 import Link from 'next/link'
 import { Wordmark } from './Wordmark'
 import { buttonClassName } from '@/components/ui/Button'
-import { LAUNCH_CITY } from '@/lib/brand'
+import { getMarketplaceNav } from '@/lib/navigation/marketplace'
 import { AccountLink } from './AccountLink'
+import { HeaderNav } from './HeaderNav'
+import { MarketplaceMenu } from './MarketplaceMenu'
 
 /**
- * Persistent top bar.
+ * Persistent top bar: the marketplace's front door (Phase A).
  *
- * Two deliberate choices:
- *  • Logo left, because people expect "home" there and breaking that
- *    convention measurably costs task success.
- *  • Post Property uses the SUPPLY accent, never the brand colour. In a
- *    two-sided marketplace the supply-side call to action must not be
- *    mistakable for the buyer's primary action.
+ *  • Phones (< 768px): logo, account, menu. The bottom bar is the phone's
+ *    navigation; a row of text links here would only crowd it. The old
+ *    "Home" link went — the logo and the bottom bar both go home — and the
+ *    menu button now reaches every destination, including on the pages
+ *    that hide the bottom bar (posting, sign-in, a property).
+ *  • Tablets (768–1023px): a condensed Buy · Rent · Localities nav, then
+ *    account and menu.
+ *  • Desktop (≥ 1024px): each section with a panel of real destinations,
+ *    Post property, account. No menu button — everything is on the bar.
  *
- * On phones the navigation itself lives in the bottom bar; the header
- * keeps only identity and account.
+ * Logo left, because people expect "home" there and breaking that
+ * convention measurably costs task success.
+ *
+ * Post property uses the SUPPLY accent, never the brand colour: in a
+ * two-sided marketplace the seller's action must not be mistakable for the
+ * buyer's. It appears once per screen — here only from 1024px, because
+ * below that the bottom bar's centre action is the same button.
  */
 export function AppHeader() {
+  // Built on the server from the data seams; the client components below
+  // receive plain data, never the corpus.
+  const nav = getMarketplaceNav()
   return (
     <header
       className="app-bar app-bar-top sticky z-50 border-b border-border-subtle"
       style={{ top: 'env(safe-area-inset-top, 0px)' }}
     >
-      <div className="mx-auto flex h-16 max-w-[1320px] items-center gap-5 px-4 lg:h-20 lg:px-8">
+      <div className="relative mx-auto flex h-16 max-w-[1320px] items-center gap-3 px-4 md:gap-5 lg:h-20 lg:px-8">
         <Wordmark />
+        <HeaderNav nav={nav} />
 
-        <Link href="/" className="inline-flex min-h-11 items-center rounded-md px-2 text-label text-brand-600 hover:bg-brand-100 lg:hidden">Home</Link>
-        <nav aria-label="Primary" className="hidden flex-1 items-center gap-2 lg:flex">
-          <HeaderLink href="/">Home</HeaderLink>
-          <HeaderLink href={`/buy/${LAUNCH_CITY.slug}`}>Buy</HeaderLink>
-          <HeaderLink href={`/rent/${LAUNCH_CITY.slug}`}>Rent</HeaderLink>
-          {/* The localities index lives on the homepage until the city hub
-              and locality pages arrive (Phases 29 and 30). */}
-          <HeaderLink href="/#localities">Localities</HeaderLink>
-        </nav>
-
-        <div className="ml-auto flex items-center gap-2">
-          {/* Phones reach posting from the bottom bar's centre action. The
-              variant is max-sm:hidden, not hidden + sm:inline-flex: cn() does
-              not merge classes, and the button's own inline-flex would beat a
-              plain `hidden`. A button nested in the link, as this once was,
-              is invalid — two focus stops for one action. */}
-          <Link href="/post" className={buttonClassName({ variant: 'supply', size: 'sm', className: 'whitespace-nowrap max-sm:hidden' })}>
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          {/* max-lg:hidden, not hidden + lg:inline-flex: cn() does not merge
+              classes, and the button's own inline-flex would beat a plain
+              `hidden`. A button nested in the link, as this once was, is
+              invalid — two focus stops for one action. */}
+          <Link href="/post" className={buttonClassName({ variant: 'supply', size: 'md', className: 'whitespace-nowrap max-lg:hidden' })}>
             Post property
           </Link>
           <AccountLink />
+          <MarketplaceMenu nav={nav} trigger="icon" className="lg:hidden" />
         </div>
       </div>
     </header>
-  )
-}
-
-function HeaderLink({ href, children }: { href: string; children: string }) {
-  return (
-    <Link
-      href={href}
-      className="rounded-md px-3 py-2 text-label text-ink-700 hover:bg-brand-100 hover:text-brand-600"
-    >
-      {children}
-    </Link>
   )
 }

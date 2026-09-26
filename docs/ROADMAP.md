@@ -65,6 +65,22 @@ each one in the phase that makes it real, not before.
 | Short videos | Not in `Phases.txt` | Needs a roadmap decision |
 | Terms of use and privacy policy | The pages do not exist; their links, which returned 404, were removed | Client-supplied text; not yet in `Phases.txt` |
 
+## Navigation destinations waiting on their phase
+
+The marketplace navigation (Phase A, `lib/navigation/marketplace.ts`) links
+only to routes that exist. Larger portals' headers also offer the entries
+below. Each one joins the navigation model — one entry, reaching the
+header, the menu and the quick routes' "View all" together — in the phase
+that builds its page, and not before.
+
+| Destination | Why it is absent today | Phase that makes it real |
+|---|---|---|
+| Projects | There is no project entity or project page | 44–45 |
+| Agents | No agent profiles | 41 |
+| Builders | No builder profiles | 43 |
+| Insights and price trends | No price history or locality insight pages | 49–51 |
+| A localities page | `/#localities` on the homepage stands in, as it does for the homepage section | 29 (city hub), 30 (locality pages) |
+
 ---
 
 ## Deferred model register

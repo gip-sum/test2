@@ -129,3 +129,20 @@ export function WalletIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/** Three bars: the menu of every destination. */
+export function MenuIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M4 7h16M4 12h16M4 17h16" />
+    </svg>
+  )
+}
+
+export function ChevronDownIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  )
+}

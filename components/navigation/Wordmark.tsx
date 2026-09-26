@@ -25,7 +25,8 @@ export function Wordmark() {
   return (
     <Link
       href="/"
-      className="flex shrink-0 items-center rounded-md"
+      // 44px tall although the lockup is 42: the logo is a control too.
+      className="flex min-h-11 shrink-0 items-center rounded-md"
       aria-label={`${BRAND.name} — home`}
     >
       <Image

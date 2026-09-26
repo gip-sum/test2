@@ -23,6 +23,7 @@ Phase 9 — Implemented (real seller assignment and notification verification pe
 Phase 10 — Postponed (phone OTP is not required for now)
 Phase 11 — Complete and deployed
 Phase 40A — Implemented (home loan calculators, built ahead of order)
+Phase A — Implemented (marketplace navigation and shell; docs/phases/PHASE-A-marketplace-shell.md)
 
 Temporary brand:
 GharBazaar
