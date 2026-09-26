@@ -535,46 +535,48 @@ export function WayHomeScene({ className }: { className?: string }) {
           bob with each step, gather (squash) before setting off. */}
       <g transform="translate(324 540)">
         <g className="wh-hunter">
-          <ellipse className="wh-shadow" cx="0" cy="0.5" rx="13" ry="2.8" />
-          <g className="wh-bob">
-            <g className="wh-squash">
-              <g className="wh-leg-b">
-                <rect className="wh-trouser-b" x="-3.2" y="-29" width="6.4" height="27" rx="3.2" />
-                <path className="wh-shoe" d="M-3.6 -3.4 H5.4 Q8 -3.4 8 -0.8 V0.6 H-3.6 Z" />
-              </g>
-              <g className="wh-arm-b">
-                <path className="wh-sleeve" d="M-1 -51 Q-3.5 -44 -3 -37.5" />
-                <circle className="wh-skin" cx="-3" cy="-35.8" r="2.2" />
-              </g>
-              <path className="wh-strap" d="M-1.5 -51 L-8 -38.5" />
-              <rect className="wh-bag" x="-12.5" y="-40" width="8.5" height="10.5" rx="1.8" />
-              <g className="wh-leg-f">
-                <rect className="wh-trouser" x="-3.2" y="-29" width="6.4" height="27" rx="3.2" />
-                <path className="wh-shoe" d="M-3.6 -3.4 H5.4 Q8 -3.4 8 -0.8 V0.6 H-3.6 Z" />
-              </g>
-              <path className="wh-tunic" d="M-6.5 -53 Q0.5 -56.5 7.5 -53 L10.5 -22.5 Q1 -19.8 -9.5 -22.5 Z" />
-              <path className="wh-hem" d="M-9.3 -24.4 Q1 -21.8 10.3 -24.4" />
-              <g className="wh-scarf">
-                <path className="wh-scarf-fill" d="M6 -55 C2 -55 -4 -53 -10 -48 C-13 -45.5 -15.5 -41 -16 -37 L-12.8 -36.6 C-12 -41 -9 -45 -5 -48.5 C-1.5 -51 2.5 -52 6.5 -52.2 Z" />
-                <path className="wh-scarf-fill" d="M5 -54 L8.6 -40.5 L5.8 -40 L3 -53 Z" />
-              </g>
-              <rect className="wh-skin" x="-0.8" y="-58.5" width="3.6" height="5" />
-              <g className="wh-head">
-                <circle className="wh-hair" cx="-6.2" cy="-66.5" r="3.4" />
-                <circle className="wh-skin" cx="1" cy="-63.5" r="7.2" />
-                <path className="wh-skin" d="M7.9 -64.2 Q10.3 -62.3 8 -60.9 Z" />
-                <path className="wh-hair" d="M-6 -61 C-8.6 -67.8 -3.4 -72.6 2.6 -71.4 C6.4 -70.8 8.7 -68.2 8.5 -65.8 C5.6 -67.6 2 -67.8 -0.4 -66.2 C-1.6 -64.4 -2.2 -62.4 -6 -61 Z" />
-                <circle className="wh-skin-deep" cx="-1.8" cy="-62.6" r="1.6" />
-                <circle className="wh-brass" cx="-1.8" cy="-60.4" r="0.8" />
-                <path className="wh-brow" d="M3.2 -66.9 Q4.8 -67.7 6.4 -66.9" />
-                <ellipse className="wh-eye" cx="4.6" cy="-64" rx="0.9" ry="1.15" />
-                <path className="wh-smile" d="M4 -60.2 Q5.8 -58.8 7.3 -60.4" />
-              </g>
-              <g className="wh-arm-f">
-                <path className="wh-sleeve" d="M3.5 -52 L6 -43 L11.2 -47.2" />
-                <rect className="wh-phone" x="10.8" y="-55.2" width="4.4" height="7.4" rx="1" />
-                <rect className="wh-screen" x="11.5" y="-54.4" width="3" height="5.8" rx="0.4" />
-                <circle className="wh-skin" cx="12" cy="-48" r="2.2" />
+          <g className="wh-figure">
+            <ellipse className="wh-shadow" cx="0" cy="0.5" rx="13" ry="2.8" />
+            <g className="wh-bob">
+              <g className="wh-squash">
+                <g className="wh-leg-b">
+                  <rect className="wh-trouser-b" x="-3.2" y="-29" width="6.4" height="27" rx="3.2" />
+                  <path className="wh-shoe" d="M-3.6 -3.4 H5.4 Q8 -3.4 8 -0.8 V0.6 H-3.6 Z" />
+                </g>
+                <g className="wh-arm-b">
+                  <path className="wh-sleeve" d="M-1 -51 Q-3.5 -44 -3 -37.5" />
+                  <circle className="wh-skin" cx="-3" cy="-35.8" r="2.2" />
+                </g>
+                <path className="wh-strap" d="M-1.5 -51 L-8 -38.5" />
+                <rect className="wh-bag" x="-12.5" y="-40" width="8.5" height="10.5" rx="1.8" />
+                <g className="wh-leg-f">
+                  <rect className="wh-trouser" x="-3.2" y="-29" width="6.4" height="27" rx="3.2" />
+                  <path className="wh-shoe" d="M-3.6 -3.4 H5.4 Q8 -3.4 8 -0.8 V0.6 H-3.6 Z" />
+                </g>
+                <path className="wh-tunic" d="M-6.5 -53 Q0.5 -56.5 7.5 -53 L10.5 -22.5 Q1 -19.8 -9.5 -22.5 Z" />
+                <path className="wh-hem" d="M-9.3 -24.4 Q1 -21.8 10.3 -24.4" />
+                <g className="wh-scarf">
+                  <path className="wh-scarf-fill" d="M6 -55 C2 -55 -4 -53 -10 -48 C-13 -45.5 -15.5 -41 -16 -37 L-12.8 -36.6 C-12 -41 -9 -45 -5 -48.5 C-1.5 -51 2.5 -52 6.5 -52.2 Z" />
+                  <path className="wh-scarf-fill" d="M5 -54 L8.6 -40.5 L5.8 -40 L3 -53 Z" />
+                </g>
+                <rect className="wh-skin" x="-0.8" y="-58.5" width="3.6" height="5" />
+                <g className="wh-head">
+                  <circle className="wh-hair" cx="-6.2" cy="-66.5" r="3.4" />
+                  <circle className="wh-skin" cx="1" cy="-63.5" r="7.2" />
+                  <path className="wh-skin" d="M7.9 -64.2 Q10.3 -62.3 8 -60.9 Z" />
+                  <path className="wh-hair" d="M-6 -61 C-8.6 -67.8 -3.4 -72.6 2.6 -71.4 C6.4 -70.8 8.7 -68.2 8.5 -65.8 C5.6 -67.6 2 -67.8 -0.4 -66.2 C-1.6 -64.4 -2.2 -62.4 -6 -61 Z" />
+                  <circle className="wh-skin-deep" cx="-1.8" cy="-62.6" r="1.6" />
+                  <circle className="wh-brass" cx="-1.8" cy="-60.4" r="0.8" />
+                  <path className="wh-brow" d="M3.2 -66.9 Q4.8 -67.7 6.4 -66.9" />
+                  <ellipse className="wh-eye" cx="4.6" cy="-64" rx="0.9" ry="1.15" />
+                  <path className="wh-smile" d="M4 -60.2 Q5.8 -58.8 7.3 -60.4" />
+                </g>
+                <g className="wh-arm-f">
+                  <path className="wh-sleeve" d="M3.5 -52 L6 -43 L11.2 -47.2" />
+                  <rect className="wh-phone" x="10.8" y="-55.2" width="4.4" height="7.4" rx="1" />
+                  <rect className="wh-screen" x="11.5" y="-54.4" width="3" height="5.8" rx="0.4" />
+                  <circle className="wh-skin" cx="12" cy="-48" r="2.2" />
+                </g>
               </g>
             </g>
           </g>

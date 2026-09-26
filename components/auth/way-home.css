@@ -44,7 +44,7 @@
                 walks off left
      36.4–48    the old gentleman walks up, stops to wave at the newcomer
                 (who waves back), turns and goes home
-     ≤599px     the phone's framing follows the story (end of this file)
+     phones     the whole street, framed still; people drawn a little larger
 
    Motion is transform and opacity, on SVG parts only; nothing here can
    move layout. Origins are in the part's own user units (the SVG default
@@ -716,48 +716,23 @@
 @keyframes wh-crow-face { 0% { transform: scaleX(1); } 10% { transform: scaleX(-1); } 30%, 100% { transform: scaleX(1); } }
 @keyframes wh-flap { from { transform: scaleY(1); } to { transform: scaleY(-0.7); } }
 
-/* ── The phone's framing ──────────────────────────────────────────────
-   On a phone the whole street at the banner's width draws a person about
-   six pixels high in the face: a wave is a smudge. So when the scene's
-   frame (a size container named wh-frame, opted into by the page) is
-   phone-narrow, the scene is drawn about 1:1 instead — scaled so its
-   bottom 212 units, from the pin above the door down to the kerb, fill
-   the banner's height — and a camera slides across the street to keep
-   each moment in frame. It moves only between beats, never during one:
+/* ── On a phone ───────────────────────────────────────────────────────
+   The frame never moves: a phone sees the whole street, edge to edge,
+   from the rooftops to the kerb, at the banner's width (about 0.64 of
+   the scene's size at 390px), so nobody walks out of shot and back.
+   (A camera that slid in close was tried and removed: it hid the tree,
+   the lamp, the cat and the pin half the time, and felt cramped.)
 
-     intro      starts on the kerb with the hunter and the taxi, follows
-                them to the door (3.4–4.8) and holds on door, pin and cat;
-                comes back left as the intro ends (8.2–9.4)
-     c 0–25.9   left: the stall, the neighbours' door, the new home
-     c 25.9–27.4  across to the right once the taxi has gone
-     c 27.4–38.4  right: the old gentleman and the newcomer's wave
-     c 38.4–40  back to the left, before she comes along again
-
-   --pan is how far the scene can slide (negative), so every camera
-   position is a fraction of the street, correct at any phone width. The
-   slide is a transform of the whole drawing, which the browser moves
-   without repainting it. The still picture, for reduced motion, is the
-   shot of the door, the pin and the cat. */
-@container wh-frame (max-width: 520px) {
-  svg.wh-scene {
-    --u: max(100cqh / 212, 100cqw / 560);
-    --pan: calc(100cqw - 560 * var(--u));
-    inset: auto auto 0 0;
-    width: calc(560 * var(--u));
-    height: calc(600 * var(--u));
-    transform: translateX(calc(var(--pan) * 0.4));
-    animation: wh-camera 40s ease-in-out 9.4s infinite backwards, wh-camera-in 9.4s ease-in-out;
-  }
-}
-@keyframes wh-camera {
-  0%, 64.75% { transform: translateX(0); }
-  68.5%, 96% { transform: translateX(var(--pan)); }
-  99.75%, 100% { transform: translateX(0); }
-}
-@keyframes wh-camera-in {
-  0%, 36.2% { transform: translateX(0); }
-  51.1%, 87.2% { transform: translateX(calc(var(--pan) * 0.4)); }
-  100% { transform: translateX(0); }
+   What that scale costs is the people: a face six pixels high, a wave a
+   smudge. So when the scene's frame (a container named wh-banner, opted
+   into by the page) is phone-narrow, everyone is drawn a little larger,
+   about their own feet (the chai-wallah about his seat), and nothing
+   else changes: not their paths, not the street. They stay clear of each
+   other, the stall, the lamp and the cat at this size too. */
+.wh-figure { transform-origin: 0px 0px; }
+.wh-figure-seated { transform-origin: 99px 495px; }
+@container wh-banner (max-width: 520px) {
+  .wh-figure { transform: scale(1.15); }
 }
 
 /* Out of view, nothing moves: the scene's frame marks itself paused (see

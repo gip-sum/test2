@@ -102,7 +102,7 @@ try {
     const art = await page.locator('.login-art').boundingBox()
     const card = await page.locator('.login-card').boundingBox()
     if (w < 1024) {
-      await check(`${w}px scene is a compact banner above the form`, art.y + art.height <= card.y + 1 && art.height <= (w < 500 ? 225 : 240), `art ${Math.round(art.height)}px`)
+      await check(`${w}px scene is a compact banner above the form, as wide as it`, art.y + art.height <= card.y + 1 && art.height <= (w < 500 ? 215 : 240) && Math.abs(art.width - card.width) < 1, `art ${Math.round(art.width)}×${Math.round(art.height)}px, card ${Math.round(card.width)}px`)
       await check(`${w}px scene tagline is left out on small screens`, !(await page.locator('.login-art-copy').isVisible()))
     } else {
       await check(`${w}px scene has its own column beside the form`, art.x + art.width <= card.x && art.height >= 600 && art.width >= card.width * 0.9, `art ${Math.round(art.width)}×${Math.round(art.height)}, card ${Math.round(card.width)}`)
@@ -325,35 +325,50 @@ try {
     await page.close()
   }
 
-  // ── On a phone, the camera keeps each moment in frame ──────────────
-  // The scene is drawn about 1:1 in the banner and slides between beats.
-  // At each exchange both people are inside the banner; the camera never
-  // moves while someone is greeting someone, or while the taxi drives
-  // through; and the whole street, camera included, is in exactly the
-  // same state a cycle later, so the loop has no seam.
+  // ── On a phone: the whole street, in a frame that never moves ──────
+  // At each phone width the banner shows the street edge to edge, from
+  // the rooftops to the kerb, and the drawing sits still in it for the
+  // whole cycle (no camera). The people are drawn a little larger than on
+  // desktop so a greeting still reads. "Send sign-in code" is on the first
+  // screen, and nothing scrolls sideways. And the whole street — people,
+  // door, crow, traffic — is in exactly the same state a cycle later, so
+  // the loop has no seam.
+  for (const viewport of [{ width: 360, height: 780 }, { width: 390, height: 844 }, { width: 412, height: 915 }, { width: 360, height: 640 }]) {
+    const w = `${viewport.width}×${viewport.height}`
+    const page = await browser.newPage({ viewport })
+    await page.goto(`${BASE}/login`)
+    const frame = (ms) => page.evaluate((ms) => {
+      document.getAnimations().forEach((a) => { a.pause(); a.currentTime = ms })
+      const svg = document.querySelector('.wh-scene')
+      const inv = svg.getScreenCTM().inverse()
+      const art = document.querySelector('.login-art').getBoundingClientRect()
+      const tl = new DOMPoint(art.left, art.top).matrixTransform(inv), br = new DOMPoint(art.right, art.bottom).matrixTransform(inv)
+      return { left: tl.x, top: tl.y, right: br.x, bottom: br.y, svg: getComputedStyle(svg).transform }
+    }, ms)
+    const frames = []
+    for (const ms of [1400, 6800, 12600, 20000, 29100, 36000, 42200, 48300]) frames.push(await frame(ms))
+    const f = frames[0]
+    await check(`${w} the whole street is in frame: edge to edge (${f.left.toFixed(1)}–${f.right.toFixed(1)}), rooftops to kerb (${f.top.toFixed(0)}–${f.bottom.toFixed(0)})`,
+      f.left <= 0.5 && f.right >= 559.5 && f.top <= (viewport.height < 700 ? 340 : 300) && f.bottom >= 599.5, JSON.stringify(f))
+    await check(`${w} the frame never moves through the cycle — no camera`,
+      frames.every((x) => x.svg === 'none' && Math.abs(x.left - f.left) < 0.01 && Math.abs(x.top - f.top) < 0.01), JSON.stringify(frames.map((x) => [x.left.toFixed(2), x.top.toFixed(2), x.svg])))
+    const figure = await matrix(page, '.wh-p1 .wh-figure')
+    await check(`${w} the people are drawn a little larger (${figure.a.toFixed(2)}×) so a greeting reads`, figure.a > 1.1 && figure.a < 1.2)
+    const reach = await page.evaluate(() => {
+      document.getAnimations().forEach((a) => { a.pause(); a.currentTime = 12600 })
+      const b = [...document.querySelectorAll('button, [role="alert"]')].find((x) => /Send sign-in code|sign-in is unavailable/.test(x.textContent)).getBoundingClientRect()
+      return { bottom: b.bottom, overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth }
+    })
+    const widths = await page.evaluate(() => [document.querySelector('.login-art').getBoundingClientRect().width, document.querySelector('.login-card').getBoundingClientRect().width])
+    await check(`${w} the banner is as wide as the form (${widths.map(Math.round).join(' / ')}px)`, Math.abs(widths[0] - widths[1]) < 1)
+    await check(`${w} ${configured ? '"Send sign-in code"' : 'the unavailable notice'} is on the first screen (bottom ${Math.round(reach.bottom)}px), no sideways scroll`,
+      reach.bottom <= viewport.height && !reach.overflow)
+    await page.close()
+  }
   {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
     await page.goto(`${BASE}/login`)
-    const framed = (ms, sels) => page.evaluate(({ ms, sels }) => {
-      document.getAnimations().forEach((a) => { a.pause(); a.currentTime = ms })
-      const art = document.querySelector('.login-art').getBoundingClientRect()
-      return sels.map((s) => { const r = document.querySelector(s).getBoundingClientRect(); return r.left >= art.left - 0.5 && r.right <= art.right + 0.5 && r.top >= art.top - 0.5 && r.bottom <= art.bottom + 0.5 })
-    }, { ms, sels })
-    const camera = async (ms) => { await seek(page, ms); return (await matrix(page, '.wh-scene')).e }
-    const scale = await page.evaluate(() => document.querySelector('.wh-scene').getScreenCTM().a)
-    await check(`390px the street is drawn at about full size (${scale.toFixed(2)}), not shrunk to fit its width`, scale > 0.95)
-    await check('390px 7s: the new home in frame — the hunter at the door, the pin above it, the cat beside it',
-      (await framed(7000, ['.wh-hunter', '.wh-pin', '.wh-cat', '.wh-leaf-l'])).every(Boolean))
-    await check('390px 12.6s: the neighbour and the chai-wallah both in frame as they greet', (await framed(12600, ['.wh-p1', '.wh-vendor'])).every(Boolean))
-    await check('390px 29.1s: her son and the chai-wallah both in frame as they wave', (await framed(29100, ['.wh-p2', '.wh-vendor'])).every(Boolean))
-    await check('390px 42.2s: the old gentleman and the newcomer both in frame as they wave', (await framed(42200, ['.wh-p3 .wh-p3-face', '.wh-hunter'])).every(Boolean))
-    const still = [[11900, 13400], [28600, 29600], [31000, 35200], [41400, 43200]]
-    const moves = []
-    for (const [from, to] of still) moves.push(Math.abs((await camera(from)) - (await camera(to))))
-    await check('390px the camera holds still through every greeting and the taxi\'s pass', moves.every((d) => d < 0.01), JSON.stringify(moves))
-    await check('390px it does move between them: left for the neighbours, right for the old gentleman',
-      Math.abs(await camera(20000)) < 0.01 && (await camera(40000)) < -150)
-    const sels = ['.wh-scene', '.wh-p1', '.wh-p2', '.wh-p3', '.wh-p3-face', '.wh-p1-wave', '.wh-p3-standing', '.wh-door-b', '.wh-vendor-wave', '.wh-vendor-wiping', '.wh-crow', '.wh-crow-face', '.wh-taxi', '.wh-rickshaw', '.wh-arm-b']
+    const sels = ['.wh-p1', '.wh-p2', '.wh-p3', '.wh-p3-face', '.wh-p1-wave', '.wh-p3-standing', '.wh-door-b', '.wh-vendor-wave', '.wh-vendor-wiping', '.wh-crow', '.wh-crow-face', '.wh-taxi', '.wh-rickshaw', '.wh-arm-b']
     const state = (ms) => page.evaluate(({ ms, sels }) => {
       document.getAnimations().forEach((a) => { a.pause(); a.currentTime = ms })
       return sels.map((s) => { const c = getComputedStyle(document.querySelector(s)); return `${c.transform} ${Number(c.opacity).toFixed(3)}` })
@@ -365,22 +380,22 @@ try {
       const a = await state(ms), b = await state(ms + 40000)
       a.forEach((v, i) => { if (v !== b[i]) seams.push(`${ms / 1000}s ${sels[i]}: ${v} ≠ ${b[i]}`) })
     }
-    await check('390px the loop is seamless: camera, people, door, crow and traffic are exactly as they were a cycle before', seams.length === 0, seams.slice(0, 4).join('; '))
+    await check('390px the loop is seamless: people, door, crow and traffic are exactly as they were a cycle before', seams.length === 0, seams.slice(0, 4).join('; '))
     await page.close()
   }
 
   // ── Nobody walks through anyone ─────────────────────────────────────
-  // Every 100ms across two whole cycles, at desktop width, where the whole
-  // street is always in view (a phone frames part of it at a time, so a
-  // meeting out of shot would go unaudited): the on-screen boxes (in the
-  // scene's own units) of every pair that must never share space. Two kinds of meeting are
+  // Every 100ms across two whole cycles, at desktop width and at a phone's
+  // (where the people are drawn larger, so the clearances are tighter):
+  // the on-screen boxes (in the scene's own units) of every pair that must
+  // never share space. Two kinds of meeting are
   // depth, not collision, and are held to what makes them so: the taxi
   // passes behind the house-hunter only while they stand waiting at the
   // kerb; and at their door the taxi and the rickshaw pass in front of
   // them only on the road, wheels well below their feet. Walkers passing
   // the tea stall pass the chai-wallah behind his counter: not listed.
-  {
-    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
+  for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
+    const page = await browser.newPage({ viewport })
     await page.goto(`${BASE}/login`)
     const audit = await page.evaluate(() => {
       const parts = { neighbour: '.wh-p1', son: '.wh-p2', babu: '.wh-p3 .wh-p3-face', hunter: '.wh-hunter', taxi: '.wh-taxi-ride', rickshaw: '.wh-rickshaw', cat: '.wh-cat', lamp: '.wh-post' }
@@ -421,9 +436,9 @@ try {
       }
       return { bad, onStage }
     })
-    await check(`across two cycles nobody walks through a vehicle, a person, the cat or the lamp post`, audit.bad.length === 0, audit.bad.slice(0, 8).join('; '))
+    await check(`${viewport.width}px across two cycles nobody walks through a vehicle, a person, the cat or the lamp post`, audit.bad.length === 0, audit.bad.slice(0, 8).join('; '))
     // The audit is only worth its silence if everyone it watches was there to be caught.
-    await check('the audit saw every walker and both vehicles on stage', ['neighbour', 'son', 'babu', 'taxi', 'rickshaw'].every((k) => (audit.onStage[k] ?? 0) > 50), JSON.stringify(audit.onStage))
+    await check(`${viewport.width}px the audit saw every walker and both vehicles on stage`, ['neighbour', 'son', 'babu', 'taxi', 'rickshaw'].every((k) => (audit.onStage[k] ?? 0) > 50), JSON.stringify(audit.onStage))
     await page.close()
   }
 
