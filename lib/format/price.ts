@@ -66,3 +66,13 @@ export function formatPricePerArea(rupees: number, area: number, unit = 'sqft'):
   if (!Number.isFinite(rupees) || !Number.isFinite(area) || rupees <= 0 || area <= 0) return null
   return `₹${groupIndian(rupees / area)} per ${unit}`
 }
+
+/**
+ * A computed amount, compact like a price but honest about zero: ₹0,
+ * ₹43,391, ₹62.5 L. formatPrice reads zero as "Price on request", which
+ * is right for a listing and wrong for a calculator's interest at 0%.
+ */
+export function formatAmount(rupees: number): string {
+  if (!Number.isFinite(rupees) || rupees <= 0) return '₹0'
+  return formatPrice(rupees)
+}

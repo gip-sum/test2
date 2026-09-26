@@ -1,3 +1,4 @@
+import { parseWholeNumber } from '@/lib/format/number'
 import type { AreaUnit } from '@/lib/format/area'
 import type { ConstructionStatus, Furnishing, Intent, PropertyTypeCode } from '@/lib/property/types'
 import { FURNISHING_ORDER } from '@/lib/property/types'
@@ -146,19 +147,9 @@ export function kolkataToday(now = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now)
 }
 
-// Plain digits, or digits grouped the Indian way (1,24,000) or the
-// international way (124,000). Anything else — "12,34,5", "1.5", "-3",
-// "1e3" — is a typing mistake we should point out, not guess at.
-const PLAIN = /^\d+$/
-const INDIAN = /^\d{1,2}(,\d{2})*,\d{3}$/
-const INTERNATIONAL = /^\d{1,3}(,\d{3})+$/
-
-export function parseWholeNumber(value: string): number | undefined {
-  const trimmed = value.trim()
-  if (!PLAIN.test(trimmed) && !INDIAN.test(trimmed) && !INTERNATIONAL.test(trimmed)) return undefined
-  const parsed = Number(trimmed.replaceAll(',', ''))
-  return Number.isSafeInteger(parsed) ? parsed : undefined
-}
+// Whole numbers as people type them live in lib/format/number.ts, shared
+// with the finance calculators; re-exported so existing imports keep working.
+export { parseWholeNumber } from '@/lib/format/number'
 
 function isRealDate(iso: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false

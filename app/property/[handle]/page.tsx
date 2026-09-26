@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PageShell } from '@/components/layout/PageShell'
 import { Footer } from '@/components/navigation/Footer'
@@ -16,6 +17,8 @@ import { PropertyDisclaimer } from '@/components/property/PropertyDisclaimer'
 import { PriceDisplay } from '@/components/property/PriceDisplay'
 import { SaveButton } from '@/components/property/SaveButton'
 import { Badge } from '@/components/ui/Badge'
+import { CalculatorIcon } from '@/components/ui/icons'
+import { emiCalculatorHref } from '@/lib/finance/params'
 import { ContactCard, StickyContactBar } from '@/components/enquiry/ContactPanel'
 import { getPropertyDetail } from '@/lib/property/queries'
 import { getSimilarProperties } from '@/lib/property/similar'
@@ -143,6 +146,15 @@ export default async function PropertyPage(props: Props) {
                       )}
                       {property.isNegotiable && <span>Negotiable</span>}
                     </p>
+                  )}
+                  {/* A link to the calculator, not an EMI figure: a figure here
+                      would need a rate, and no rate on this page would be the
+                      buyer's own. */}
+                  {property.intent === 'buy' && property.price > 0 && (
+                    <Link href={emiCalculatorHref(property.price)} className="mt-1 inline-flex min-h-11 items-center gap-1.5 rounded-md text-label text-brand-600 hover:underline">
+                      <CalculatorIcon className="size-4.5" />
+                      Estimate the monthly EMI
+                    </Link>
                   )}
                 </div>
                 <SaveButton publicId={property.publicId} title={title} className="shrink-0" />

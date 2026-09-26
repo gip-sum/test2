@@ -579,6 +579,68 @@
   .glass-panel, .glass-card, .premium-search-panel { background: var(--color-surface-000); backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 
+/* ---- Calculators (Phase 40A) -----------------------------------------
+   Form beside result on a wide screen, the result sticky so it stays in
+   view while the inputs change; stacked on a phone, result after the form.
+   The principal/interest bar uses two palette-validated fills: brand
+   green and an ochre (checked with the dataviz validator: CVD ΔE 12.4,
+   normal ΔE 24.3; the ochre is below 3:1 on white, so both parts are
+   labelled in text and the yearly table is the table view). */
+:root { --chart-interest: #c98a3a; }
+/* minmax(0, 1fr), and min-width 0 on the panels: otherwise the widest
+   schedule row sets the column's width and the whole page scrolls
+   sideways instead of the table inside its own container. */
+.calc-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
+.calc-layout > * { min-width: 0; }
+.calc-form, .calc-result { border: 1px solid var(--color-border-subtle); border-radius: 18px; background: var(--color-surface-000); padding: 16px; }
+.calc-form { display: grid; gap: 20px; }
+.calc-slider { height: 28px; accent-color: var(--color-brand-600); cursor: pointer; }
+.calc-hero { margin-top: 6px; font-family: var(--font-display); font-size: 34px; line-height: 1.1; font-weight: 700; letter-spacing: -.02em; color: var(--color-ink-900); }
+.calc-hero-unit { font-family: var(--font-sans); font-size: 16px; font-weight: 500; letter-spacing: 0; color: var(--color-ink-700); }
+.calc-figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; padding: 12px 0; border-block: 1px solid var(--color-border-subtle); }
+.calc-figures dt { font-size: 12px; line-height: 16px; color: var(--color-ink-500); }
+.calc-figures dd { margin-top: 2px; font-size: 14px; font-weight: 600; color: var(--color-ink-900); overflow-wrap: anywhere; }
+.calc-warning { margin-top: 14px; padding: 10px 12px; border-radius: 12px; background: var(--color-warn-100); color: var(--color-ink-900); font-size: 13px; line-height: 20px; border-left: 4px solid var(--color-warn-600); }
+.calc-warning strong { color: var(--color-warn-600); }
+.split-bar { display: flex; gap: 2px; height: 14px; }
+.split-bar > span { min-width: 4px; border-radius: 4px; }
+.split-principal { background: var(--color-brand-600); }
+.split-interest { background: var(--chart-interest); }
+.split-key { display: inline-block; width: 10px; height: 10px; border-radius: 3px; }
+.calc-schedule { margin-top: 16px; border: 1px solid var(--color-border-subtle); border-radius: 12px; }
+.calc-schedule summary { display: flex; min-height: 44px; align-items: center; padding: 0 12px; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--color-brand-700); }
+.calc-schedule table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.calc-schedule th, .calc-schedule td { padding: 6px 12px; text-align: right; white-space: nowrap; border-top: 1px solid var(--color-border-subtle); }
+.calc-schedule th:first-child { text-align: left; }
+.calc-schedule thead th { font-size: 12px; font-weight: 600; color: var(--color-ink-500); }
+.calc-schedule tbody th { font-weight: 600; color: var(--color-ink-900); }
+.calc-reason { margin-top: 16px; font-size: 14px; line-height: 21px; color: var(--color-ink-700); }
+.calc-reason p { margin-top: 4px; }
+.calc-reason strong { color: var(--color-ink-900); }
+.calc-cta { display: flex; min-height: 48px; align-items: center; justify-content: center; margin-top: 16px; padding: 0 16px; border-radius: var(--radius-md); background: var(--color-brand-600); color: var(--color-on-brand); font-size: 14px; font-weight: 600; text-align: center; }
+.calc-cta:hover { background: var(--color-brand-700); }
+.calc-sibling { display: flex; align-items: center; gap: 12px; margin-top: 20px; padding: 14px 16px; border: 1px solid var(--color-border-subtle); border-radius: 16px; background: var(--home-tint-mint); }
+.calc-sibling:hover { border-color: var(--color-border-strong); }
+.calc-peek { position: fixed; inset-inline: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 76px); z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; border: 1px solid var(--color-border-strong); border-radius: 16px; background: var(--color-surface-000); box-shadow: var(--shadow-e3); transition: opacity .2s, transform .2s; }
+/* 76px: the bottom bar is 68px tall (its raised Post button included) plus an 8px gap. */
+.calc-peek[data-hidden] { opacity: 0; transform: translateY(8px); pointer-events: none; }
+/* Room below the page for the pinned answer, so it never covers the last link. */
+@media (max-width: 1023px) { .calc-frame { padding-bottom: 88px; } }
+@media (min-width: 1024px) { .calc-peek { display: none; } }
+.calc-index { display: grid; gap: 12px; }
+.calc-index-card { display: flex; align-items: center; gap: 14px; height: 100%; padding: 16px; border: 1px solid var(--color-border-subtle); border-radius: 18px; background: var(--color-surface-000); }
+.calc-index-card:hover { border-color: var(--color-border-strong); box-shadow: var(--shadow-e2); }
+.calc-index-icon { display: grid; flex: none; place-items: center; width: 48px; height: 48px; border-radius: 14px; background: var(--home-tint-mint); color: var(--color-brand-700); }
+.calc-index > li:nth-child(2) .calc-index-icon { background: var(--home-tint-sand); }
+@media (min-width: 640px) { .calc-index { grid-template-columns: repeat(2, minmax(0, 1fr)); } .calc-form, .calc-result { padding: 20px; } }
+@media (min-width: 1024px) {
+  .calc-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); align-items: start; gap: 28px; }
+  .calc-form { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; padding: 24px; }
+  .calc-form noscript { grid-column: 1 / -1; }
+  .calc-result { position: sticky; top: 96px; padding: 24px; }
+  .calc-hero { font-size: 40px; }
+}
+
 /* 404 scene (app/not-found.tsx, components/not-found/LostScene.tsx).
    Illustration-only tokens live here with the rest of the palette so the
    scene, like every component, hardcodes no colour. Motion is transform and

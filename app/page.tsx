@@ -7,6 +7,7 @@ import { QuickRoutes } from '@/components/home/QuickRoutes'
 import { ListingRail } from '@/components/home/ListingRail'
 import { PopularLocalities } from '@/components/home/PopularLocalities'
 import { BrowseTiles } from '@/components/home/BrowseTiles'
+import { PlanTiles } from '@/components/home/PlanTiles'
 import { SupplyCta } from '@/components/home/SupplyCta'
 import { HowItWorks } from '@/components/home/HowItWorks'
 import { LAUNCH_CITY } from '@/lib/brand'
@@ -33,7 +34,8 @@ export const metadata: Metadata = {
  *
  * Order after the search is by how directly each block leads back into a
  * search: quick routes, homes for sale, places, homes to rent, then browse
- * by type, budget and size, and finally the owner invitation.
+ * by type, budget and size, the budget and EMI calculators, and finally
+ * the owner invitation.
  *
  * Only blocks backed by real data and working routes appear. Projects, RERA
  * details, demand statistics, price trends and offers — common on larger
@@ -74,6 +76,7 @@ export default function HomePage() {
           description="The newest homes to rent, from studios to family flats."
         />
         <BrowseTiles />
+        <PlanTiles />
         <SupplyCta />
         <HowItWorks />
       </div>

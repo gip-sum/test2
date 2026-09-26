@@ -76,6 +76,8 @@ export function Footer() {
             <FooterLink href="/">Home</FooterLink>
             <FooterLink href="/post">Post a property</FooterLink>
             <FooterLink href="/#localities">Localities in {LAUNCH_CITY.name}</FooterLink>
+            <FooterLink href="/calculators/budget">Home budget calculator</FooterLink>
+            <FooterLink href="/calculators/emi">Home loan EMI calculator</FooterLink>
             {/* No terms or privacy links until those pages exist: their text
                 has to come from the client, and a link to a 404 is worse
                 than no link. */}

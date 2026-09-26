@@ -347,8 +347,11 @@ try {
   // ── Honesty: sample data is labelled; nothing is invented ────────────
   await check('the sample-data notice is on the page', await page.getByText('Listings shown are sample data.').isVisible())
   const body = await page.locator('main').innerText()
-  const invented = ['RERA', 'Recommended', 'Offer', 'EMI', 'Calculator', 'Demand', 'FREE', 'Verified', 'Trending'].filter((word) => new RegExp(`\\b${word}`, 'i').test(body))
-  await check('no projects, RERA badges, offers, calculators or demand figures the product cannot back', invented.length === 0, invented.join(', '))
+  const invented = ['RERA', 'Recommended', 'Offer', 'Demand', 'FREE', 'Verified', 'Trending'].filter((word) => new RegExp(`\\b${word}`, 'i').test(body))
+  await check('no projects, RERA badges, offers or demand figures the product cannot back', invented.length === 0, invented.join(', '))
+  // The calculators are real (Phase 40A), so the homepage may point at them.
+  const plan = await page.locator('section[aria-labelledby="plan-purchase"] a').evaluateAll((links) => links.map((l) => l.getAttribute('href')))
+  await check('the plan-your-purchase section links to both working calculators', JSON.stringify(plan) === JSON.stringify(['/calculators/budget', '/calculators/emi']), JSON.stringify(plan))
   await page.context().close()
 
   // ── Desktop ──────────────────────────────────────────────────────────

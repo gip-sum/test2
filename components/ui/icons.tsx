@@ -109,3 +109,23 @@ export function ArrowRightIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+export function CalculatorIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <rect x="5" y="3" width="14" height="18" rx="2.5" />
+      <path d="M8.5 7h7M8.5 11h.01M12 11h.01M15.5 11h.01M8.5 14.5h.01M12 14.5h.01M15.5 14.5v3M8.5 18h.01M12 18h.01" />
+    </svg>
+  )
+}
+
+/** A wallet — "what can I afford", as opposed to the calculator's "what will it cost". */
+export function WalletIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <path d="M4 7.5A2.5 2.5 0 016.5 5H17v3" />
+      <rect x="4" y="8" width="16" height="11" rx="2.5" />
+      <path d="M16 13.5h.01" />
+    </svg>
+  )
+}

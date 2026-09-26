@@ -22,6 +22,7 @@ Phase 8 — Implemented (real-account save verification pending)
 Phase 9 — Implemented (real seller assignment and notification verification pending)
 Phase 10 — Postponed (phone OTP is not required for now)
 Phase 11 — Complete and deployed
+Phase 40A — Implemented (home loan calculators, built ahead of order)
 
 Temporary brand:
 GharBazaar
@@ -602,6 +603,20 @@ Key focus:
 - Amenities
 - Seller
 - Side-by-side comparison
+
+
+PHASE 40A — HOME LOAN CALCULATORS
+Status: IMPLEMENTED (built ahead of order at client request; numbering unchanged)
+
+Help buyers work out what they can afford and what a home will cost each month.
+
+Key focus:
+- Budget / affordability calculator
+- Home loan EMI calculator
+- RBI loan-to-value limits
+- Year-by-year repayment schedule
+- Links into search and from listings
+- No invented rates or offers
 
 
 ==================================================

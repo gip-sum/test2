@@ -21,7 +21,8 @@
     "post-check": "node scripts/post-check.mjs",
     "notfound-check": "node scripts/notfound-check.mjs",
     "login-check": "node scripts/login-check.mjs",
-    "home-check": "node scripts/home-check.mjs"
+    "home-check": "node scripts/home-check.mjs",
+    "calculator-check": "node scripts/calculator-check.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

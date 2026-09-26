@@ -31,6 +31,11 @@ const ROUTES = [
   // The animated 404, reached by an unmatched path and by a dead listing.
   '/this-page-does-not-exist',
   '/property/missing-pabcdef',
+  // Phase 40A: the calculators, one with a lender-limit warning and a
+  // thirty-year schedule, the widest figures they print.
+  '/calculators',
+  '/calculators/emi?price=125000000&down=25000000&years=30',
+  '/calculators/budget',
   '/buy/kolkata',
   '/buy/kolkata?loc=howrah&type=VILLA&bhk=5&pmax=1600000',
   '/property/4-bhk-flat-for-sale-in-ballygunge-p5d40ab',

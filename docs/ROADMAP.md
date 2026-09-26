@@ -31,12 +31,15 @@ but its eight-phase build order is superseded.
 | 10 | Phone contact and OTP reveal | Postponed by client decision |
 | 11 | Post property entry flow | **Complete** and deployed |
 | 12 | Property information form | Implemented; CI on `main` and deployment pending |
+| 40A | Home loan calculators | Implemented ahead of order at client request |
 
 Phase 0 (planning) and the GharBazaar rebrand plus light-first conversion
 sit outside the numbering; both are complete and are recorded in the git
 history. So is the mobile-first homepage redesign that followed Phase 12,
 which reworked Phase 2's homepage without starting a new phase; the
-sections it deliberately left out are listed below.
+sections it deliberately left out are listed below. The budget and EMI
+calculators it first listed there are now Phase 40A, inserted without
+renumbering at the client's request.
 
 Each phase is specified in `docs/phases/` with the nine sections required
 by `CLAUDE.md` before any code is written for it.
@@ -59,7 +62,7 @@ each one in the phase that makes it real, not before.
 | Offers | No project commercial terms, no paid placement | 47 (builder terms), 61 (featured listings) |
 | "Post property FREE" | No seller plan defines what is free | 59 |
 | A localities page | The homepage section at `/#localities` stands in, and the header, footer and quick routes point there | 29 (city hub), 30 (locality pages) |
-| Budget and EMI calculators, short videos | Not in `Phases.txt` | Needs a roadmap decision |
+| Short videos | Not in `Phases.txt` | Needs a roadmap decision |
 | Terms of use and privacy policy | The pages do not exist; their links, which returned 404, were removed | Client-supplied text; not yet in `Phases.txt` |
 
 ---
