@@ -32,14 +32,23 @@ export function Neighbour() {
       <g className="wh-p1">
         <ellipse className="wh-person-shadow" cx="0" cy="0.4" rx="10" ry="2" />
         <g className="wh-p-bob">
-          <StrideLegs prefix="wh-p1">
-            {(side) => (
-              <>
-                <path className={side === 'b' ? 'wh-p-shin-b' : 'wh-p-shin'} d="M0 -24 V-2" />
-                <path className="wh-p-sandal" d="M-2.4 -1.8 H3.6 Q5 -1.8 5 -0.4 V0.4 H-2.4 Z" />
-              </>
-            )}
-          </StrideLegs>
+          {/* Walking feet, and standing feet for when she stops to talk. */}
+          <g className="wh-p1-walking">
+            <StrideLegs prefix="wh-p1">
+              {(side) => (
+                <>
+                  <path className={side === 'b' ? 'wh-p-shin-b' : 'wh-p-shin'} d="M0 -24 V-2" />
+                  <path className="wh-p-sandal" d="M-2.4 -1.8 H3.6 Q5 -1.8 5 -0.4 V0.4 H-2.4 Z" />
+                </>
+              )}
+            </StrideLegs>
+          </g>
+          <g className="wh-p1-standing">
+            <path className="wh-p-shin-b" d="M-2.4 -24 V-2" />
+            <path className="wh-p-sandal" d="M-4.8 -1.8 H1.2 Q2.6 -1.8 2.6 -0.4 V0.4 H-4.8 Z" />
+            <path className="wh-p-shin" d="M2.4 -24 V-2" />
+            <path className="wh-p-sandal" d="M0 -1.8 H6 Q7.4 -1.8 7.4 -0.4 V0.4 H0 Z" />
+          </g>
           <path className="wh-sari-p" d="M-7 -31 C-8.5 -20 -10.5 -10 -11.5 -4.5 H10.5 C9.5 -10 8 -20 6.5 -31 Z" />
           <path className="wh-sari-edge" d="M-11.5 -4.5 H10.5 L10.8 -2.6 H-11.8 Z" />
           <path className="wh-fold" d="M1 -30 L-0.2 -5" />
@@ -179,8 +188,11 @@ export function ChaiWallah() {
       <path className="wh-moustache-dark" d="M97 486.8 Q99 485.7 101 486.8" />
       <circle className="wh-eye-p" cx="97.4" cy="484.4" r="0.55" />
       <circle className="wh-eye-p" cx="100.6" cy="484.4" r="0.55" />
+      {/* His other arm, resting behind the counter's lip until he raises
+          it: long enough, with a hand, that the wave reads on a phone. */}
       <g className="wh-vendor-wave">
-        <path className="wh-p-arm" d="M106 491 L109 494.5" />
+        <path className="wh-p-arm" d="M106 491 L110.5 497.2" />
+        <circle className="wh-skin" cx="110.8" cy="497.6" r="1.6" />
       </g>
       {/* The gamchha off his shoulder and across the counter in front of
           him, clear of the cups, where the wiping can be seen. */}

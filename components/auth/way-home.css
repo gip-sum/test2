@@ -29,24 +29,22 @@
      always     flame-tree leaves in three layers, far bridge traffic
      14–27+     three windows go dark for a while and come back
 
-   The street's people (StreetPeople.tsx), on one 40s cycle from 7.6s so
-   every meeting with the traffic repeats exactly
+   The street's people (StreetPeople.tsx), on one 40s cycle from 9.4s so
+   every meeting with the traffic repeats exactly (detail further down)
      0.9–2.45   the hunter looks up at the approaching taxi, lowers the
                 phone and waits while it passes behind them; only once it
                 is out of the picture (2.13) do they gather themselves and
                 cross (2.45)
-     7.6–15.2   a neighbour walks in from the left with her jhola; the
-                chai-wallah waves (9.4), she raises a hand (9.8); at 14.1 her
-                door opens and she goes in (the taxi passes below at 11–15)
      1.4, 13.5+ the stall's awning stirs as the taxi goes by, every pass
-     16.3       the crow takes off; it glides back and lands at 27
-     22–24      the chai-wallah wipes his counter
-     24.9–32.3  her son comes out of the same door, after the rickshaw has
-                passed; he and the chai-wallah wave (27.2) as he comes up to
-                the stall, and he walks off left
-     33–44.6    the old gentleman steps in from the right along the wall
-                side, stops to wave at the newcomer (who waves back), turns
-                and goes home
+     9.4–19.7   a neighbour walks in, stops at the stall to greet the
+                chai-wallah (11.9–13.4), walks home and goes in (17.7)
+     20.8       the crow takes off; it glides back and lands at 31.6
+     20.9–22.9  the chai-wallah wipes his counter
+     26.4–34.3  her son comes out, waves to the chai-wallah (28.7) and
+                walks off left
+     36.4–48    the old gentleman walks up, stops to wave at the newcomer
+                (who waves back), turns and goes home
+     ≤599px     the phone's framing follows the story (end of this file)
 
    Motion is transform and opacity, on SVG parts only; nothing here can
    move layout. Origins are in the part's own user units (the SVG default
@@ -288,7 +286,7 @@
 .wh-p1-leg { transform-origin: 0px -24px; }
 .wh-p2-leg { transform-origin: 0px -28px; }
 .wh-p3-leg { transform-origin: 0px -26px; }
-.wh-p3-standing, .wh-vendor-wiping { opacity: 0; }
+.wh-p1-standing, .wh-p3-standing, .wh-vendor-wiping { opacity: 0; }
 .wh-p1-wave { transform-origin: -2px -46px; }
 .wh-p2-swing { transform-origin: -1px -51px; }
 .wh-p2-wave, .wh-p2-swing-f { transform-origin: 1.5px -51px; }
@@ -370,7 +368,7 @@
 .wh-leg-b { animation: wh-stride-b 0.47s ease-in-out 2.45s 5; }
 @keyframes wh-stride-f { 25% { transform: rotate(-24deg); } 75% { transform: rotate(22deg); } }
 @keyframes wh-stride-b { 25% { transform: rotate(22deg); } 75% { transform: rotate(-24deg); } }
-.wh-arm-b { animation: wh-swing 0.47s ease-in-out 2.45s 5, wh-wave 1.25s ease-in-out 6.95s, wh-wave-back 40s ease-in-out 33s infinite; }
+.wh-arm-b { animation: wh-swing 0.47s ease-in-out 2.45s 5, wh-wave 1.25s ease-in-out 6.95s, wh-wave-back 40s ease-in-out 9.4s infinite; }
 @keyframes wh-swing { 25% { transform: rotate(-20deg); } 75% { transform: rotate(18deg); } }
 .wh-bob { animation: wh-bob 0.235s ease-in-out 2.45s 10, wh-hop 0.44s cubic-bezier(0.3, 0, 0.3, 1) 6.95s 2; }
 @keyframes wh-bob { 50% { transform: translateY(1.3px); } }
@@ -457,7 +455,8 @@
 
 /* ── Resting loop and the life of the street ─────────────────────────── */
 .wh-halo { animation: wh-halo 3.6s ease-out 7.6s infinite; }
-@keyframes wh-halo { 0% { opacity: 0.55; transform: scale(0.7); } 70%, 100% { opacity: 0; transform: scale(2.4); } }
+/* Each ring swells into view rather than appearing at full strength. */
+@keyframes wh-halo { 0% { opacity: 0; transform: scale(0.7); } 8% { opacity: 0.55; transform: scale(0.84); } 70%, 100% { opacity: 0; transform: scale(2.4); } }
 .wh-lit.wh-twinkle { animation: wh-light-on 0.5s ease-out var(--d) both, wh-twinkle 7.5s ease-in-out var(--t) infinite; }
 @keyframes wh-twinkle { 0%, 100% { opacity: 1; } 45%, 60% { opacity: 0.55; } }
 .wh-cat-tail { animation: wh-tail 2.8s ease-in-out 7.8s infinite alternate; }
@@ -550,10 +549,25 @@
 @keyframes wh-switch { 0%, 38% { opacity: 1; } 42%, 72% { opacity: 0.08; } 76%, 100% { opacity: 1; } }
 
 /* ── The street's people ─────────────────────────────────────────────
-   One 40s cycle from 7.6s for the neighbours and the chai-wallah, and
-   from 33s for the old gentleman: the same period as the rickshaw and
-   twice the taxi's, so every meeting with the traffic recurs exactly.
-   Percentages below are of that cycle; 1% is 0.4s. */
+   One 40s cycle from 9.4s for everyone: the same period as the rickshaw
+   and twice the taxi's, so every meeting with the traffic recurs exactly
+   and the loop has no seam. Percentages are of that cycle; 1% is 0.4s,
+   and "c" below is seconds into it.
+
+   The beats take turns rather than overlapping, each one small enough to
+   read at phone size, and the phone's framing (the camera, at the end of
+   this file) moves only between them:
+     c 0–10.3   the neighbour: walks in, stops at the stall to greet the
+                chai-wallah (c 2.5–4), walks home while the taxi passes on
+                the road (c 1.6–5.8), goes in (c 8.3–9.1)
+     c 7–21     the rickshaw's slow crossing, left to right, alone
+     c 11.5–13.5  the chai-wallah wipes his counter
+     c 17–24.9  her son comes out, waves to the chai-wallah on his way
+                past (c 19.3), and walks out of the picture ahead of the
+                taxi's second pass (c 21.6–25.8)
+     c 27–38.6  the old gentleman walks up, stops, waves to the newcomer,
+                who waves back (c 32–33.7), and goes home
+     c 38.6–40  the street is briefly still before she comes again */
 
 /* Strides: legs swing in opposite phase, about a step every half second. */
 .wh-stride-f { animation: wh-stride-p 1.07s ease-in-out infinite; }
@@ -570,95 +584,109 @@
 .wh-p2-swing-f { animation: wh-arm-swing 1.07s ease-in-out -0.535s infinite; }
 @keyframes wh-arm-swing { 25% { transform: rotate(16deg); } 75% { transform: rotate(-14deg); } }
 
-/* The neighbour: in from the left at 30 units a second (0–17%), and at
-   her door she steps up into the doorway and is gone (17–19%). */
-.wh-p1 { animation: wh-p1 40s linear 7.6s infinite backwards; }
+/* Walking legs and standing legs: whoever stops to greet someone stands
+   on both feet while they do, instead of treading the air. */
+.wh-p1-walking { animation: wh-p1-walking 40s steps(1, end) 9.4s infinite backwards; }
+@keyframes wh-p1-walking { 0% { opacity: 1; } 6.25% { opacity: 0; } 10%, 100% { opacity: 1; } }
+.wh-p1-standing { animation: wh-p1-standing 40s steps(1, end) 9.4s infinite backwards; }
+@keyframes wh-p1-standing { 0% { opacity: 0; } 6.25% { opacity: 1; } 10%, 100% { opacity: 0; } }
+
+/* The neighbour: in from the left at 30 units a second, a stop at the
+   stall (c 2.5–4), on to her door, and up into the doorway (c 8.3–9.1). */
+.wh-p1 { animation: wh-p1 40s linear 9.4s infinite backwards; }
 @keyframes wh-p1 {
   0% { transform: translate(-16px, 0) scale(1); opacity: 1; }
-  17% { transform: translate(188px, 0) scale(1); opacity: 1; animation-timing-function: ease-in; }
-  19%, 100% { transform: translate(190px, -12px) scale(0.9); opacity: 0; }
+  6.25%, 10% { transform: translate(58px, 0) scale(1); opacity: 1; }
+  20.83% { transform: translate(188px, 0) scale(1); opacity: 1; animation-timing-function: ease-in; }
+  22.75%, 100% { transform: translate(190px, -12px) scale(0.9); opacity: 0; }
 }
-/* Her free hand, raised back to the chai-wallah. */
-.wh-p1-wave { animation: wh-p1-wave 40s ease-in-out 7.6s infinite; }
-@keyframes wh-p1-wave { 0%, 5.5% { transform: rotate(0deg); } 6% { transform: rotate(-138deg); } 6.75% { transform: rotate(-118deg); } 7.5%, 100% { transform: rotate(0deg); } }
+/* Her free hand raised to the chai-wallah, twice, while she stands. */
+.wh-p1-wave { animation: wh-p1-wave 40s ease-in-out 9.4s infinite; }
+@keyframes wh-p1-wave {
+  0%, 7.25% { transform: rotate(0deg); }
+  7.75% { transform: rotate(-140deg); }
+  8.5% { transform: rotate(-116deg); }
+  9.25% { transform: rotate(-140deg); }
+  9.75%, 100% { transform: rotate(0deg); }
+}
 
-/* Their door opens for her (16.25–21.25%) and for her son (42.5–47.5%). */
-.wh-door-b { animation: wh-door-b 40s ease-in-out 7.6s infinite; }
+/* Their door opens as each of them reaches it: for her (c 7.9–10.3) and
+   for her son (c 17–19.6). */
+.wh-door-b { animation: wh-door-b 40s ease-in-out 9.4s infinite; }
 @keyframes wh-door-b {
-  0%, 16.25% { transform: scaleX(1); }
-  17.25%, 19.75% { transform: scaleX(0.15); }
-  21.25%, 42.5% { transform: scaleX(1); }
-  43.5%, 46% { transform: scaleX(0.15); }
-  47.5%, 100% { transform: scaleX(1); }
+  0%, 19.75% { transform: scaleX(1); }
+  21.5%, 23.25% { transform: scaleX(0.15); }
+  25.75%, 42.5% { transform: scaleX(1); }
+  44.25%, 46.5% { transform: scaleX(0.15); }
+  49%, 100% { transform: scaleX(1); }
 }
 
-/* Her son: out of the doorway (43.25–45.25%), then left to the edge at
-   30 units a second. By then the rickshaw is well past, going the other
-   way. */
-.wh-p2 { animation: wh-p2 40s linear 7.6s infinite backwards; }
+/* Her son: out of the doorway (c 17.3–18.3) once the rickshaw is well
+   past and going away, then left at 30 units a second, out of the
+   picture (c 24.9) as the taxi comes along behind him. */
+.wh-p2 { animation: wh-p2 40s linear 9.4s infinite backwards; }
 @keyframes wh-p2 {
   0%, 43.25% { transform: translate(187px, -12px) scale(0.9); opacity: 0; animation-timing-function: ease-out; }
-  45.25% { transform: translate(182px, 0) scale(1); opacity: 1; }
-  61.75%, 100% { transform: translate(-16px, 0) scale(1); opacity: 1; }
+  45.75% { transform: translate(182px, 0) scale(1); opacity: 1; }
+  62.25%, 100% { transform: translate(-16px, 0) scale(1); opacity: 1; }
 }
-/* The wave to the chai-wallah takes his swinging arm for a moment, as he
-   comes up to the stall rather than once he is in front of it. */
-.wh-p2-wave { animation: wh-p2-wave 40s ease-in-out 7.6s infinite; }
-@keyframes wh-p2-wave { 0%, 49% { transform: rotate(0deg); } 49.6% { transform: rotate(-150deg); } 50.2% { transform: rotate(-135deg); } 51%, 100% { transform: rotate(0deg); } }
+/* A hand up to the chai-wallah as he comes up to the stall, not once he
+   is in front of it, so the two never overlap. */
+.wh-p2-wave { animation: wh-p2-wave 40s ease-in-out 9.4s infinite; }
+@keyframes wh-p2-wave { 0%, 48.25% { transform: rotate(0deg); } 49% { transform: rotate(-150deg); } 49.5% { transform: rotate(-132deg); } 50%, 100% { transform: rotate(0deg); } }
 
-/* The chai-wallah: a wave for her (4.5–7%), the counter wiped (36–41%),
-   a wave for her son (48.5–50.75%). */
-.wh-vendor-wave { animation: wh-vendor-wave 40s ease-in-out 7.6s infinite; }
+/* The chai-wallah: a wave for her (c 2.6–3.7), the counter wiped
+   (c 11.5–13.5), a wave for her son (c 19.1–20). */
+.wh-vendor-wave { animation: wh-vendor-wave 40s ease-in-out 9.4s infinite; }
 @keyframes wh-vendor-wave {
-  0%, 4.5% { transform: rotate(0deg); }
-  5% { transform: rotate(-140deg); }
-  5.6% { transform: rotate(-118deg); }
-  6.2% { transform: rotate(-142deg); }
-  7%, 48.5% { transform: rotate(0deg); }
-  49% { transform: rotate(-140deg); }
-  49.6% { transform: rotate(-120deg); }
-  50.2% { transform: rotate(-140deg); }
-  50.75%, 100% { transform: rotate(0deg); }
+  0%, 6.5% { transform: rotate(0deg); }
+  7% { transform: rotate(-140deg); }
+  7.75% { transform: rotate(-116deg); }
+  8.5% { transform: rotate(-140deg); }
+  9.25%, 47.75% { transform: rotate(0deg); }
+  48.25% { transform: rotate(-140deg); }
+  49% { transform: rotate(-118deg); }
+  49.5% { transform: rotate(-140deg); }
+  50%, 100% { transform: rotate(0deg); }
 }
 /* The wipe swaps his resting arm and shoulder cloth for the wiping arm
    (a hard switch, like a change of pose), and rubs back and forth. */
-.wh-vendor-rest { animation: wh-vendor-rest 40s steps(1, end) 7.6s infinite; }
-@keyframes wh-vendor-rest { 0% { opacity: 1; } 36% { opacity: 0; } 41%, 100% { opacity: 1; } }
-.wh-vendor-wiping { animation: wh-vendor-wiping 40s steps(1, end) 7.6s infinite; }
-@keyframes wh-vendor-wiping { 0% { opacity: 0; } 36% { opacity: 1; } 41%, 100% { opacity: 0; } }
-.wh-vendor-wipe { animation: wh-vendor-wipe 40s ease-in-out 7.6s infinite; }
+.wh-vendor-rest { animation: wh-vendor-rest 40s steps(1, end) 9.4s infinite; }
+@keyframes wh-vendor-rest { 0% { opacity: 1; } 28.75% { opacity: 0; } 33.75%, 100% { opacity: 1; } }
+.wh-vendor-wiping { animation: wh-vendor-wiping 40s steps(1, end) 9.4s infinite; }
+@keyframes wh-vendor-wiping { 0% { opacity: 0; } 28.75% { opacity: 1; } 33.75%, 100% { opacity: 0; } }
+.wh-vendor-wipe { animation: wh-vendor-wipe 40s ease-in-out 9.4s infinite; }
 @keyframes wh-vendor-wipe {
-  0%, 36% { transform: translateX(0); }
-  37% { transform: translateX(5px); }
-  38% { transform: translateX(-1px); }
-  39% { transform: translateX(5px); }
-  40% { transform: translateX(-1px); }
-  41%, 100% { transform: translateX(0); }
+  0%, 28.75% { transform: translateX(0); }
+  29.75% { transform: translateX(5px); }
+  30.75% { transform: translateX(-1px); }
+  31.75% { transform: translateX(5px); }
+  32.75% { transform: translateX(-1px); }
+  33.75%, 100% { transform: translateX(0); }
 }
 
 /* The old gentleman (drawn at 0.88, so his path is in his own units:
-   659 is x = 580, 534 is x = 470). In at 24 units a second (0–11.5%),
-   stands and waves (11.5–17.5%), turns (17%) and goes home (17.5–29%).
-   His walking legs and standing legs swap, so he never treads the air
-   while he stands. */
-.wh-p3 { animation: wh-p3 40s linear 33s infinite backwards; }
+   659 is x = 580, 534 is x = 470). In at 27 units a second once the
+   taxi has gone (c 27–31.6), stands and waves (c 31.6–34), turns
+   (c 33.8) and goes home (c 34–38.6). */
+.wh-p3 { animation: wh-p3 40s linear 9.4s infinite backwards; }
 @keyframes wh-p3 {
-  0% { transform: translate(659px, 0); }
-  11.5%, 17.5% { transform: translate(534px, 0); }
-  29%, 100% { transform: translate(659px, 0); }
+  0%, 67.5% { transform: translate(659px, 0); }
+  79%, 85% { transform: translate(534px, 0); }
+  96.5%, 100% { transform: translate(659px, 0); }
 }
-.wh-p3-face { animation: wh-p3-face 40s steps(1, end) 33s infinite backwards; }
-@keyframes wh-p3-face { 0% { transform: scaleX(-1); } 17%, 100% { transform: scaleX(1); } }
-.wh-p3-walking { animation: wh-p3-walking 40s steps(1, end) 33s infinite backwards; }
-@keyframes wh-p3-walking { 0% { opacity: 1; } 11.5% { opacity: 0; } 17.5%, 100% { opacity: 1; } }
-.wh-p3-standing { animation: wh-p3-standing 40s steps(1, end) 33s infinite backwards; }
-@keyframes wh-p3-standing { 0% { opacity: 0; } 11.5% { opacity: 1; } 17.5%, 100% { opacity: 0; } }
-.wh-p3-wave { animation: wh-p3-wave 40s ease-in-out 33s infinite; }
-@keyframes wh-p3-wave { 0%, 12.25% { transform: rotate(0deg); } 13% { transform: rotate(-140deg); } 13.75% { transform: rotate(-118deg); } 14.5% { transform: rotate(-140deg); } 15.25%, 100% { transform: rotate(0deg); } }
-/* …and the newcomer at the door waves back (13.25–16.5% of his cycle). */
-/* Held lower than the hop's wave (which swings up past the head): a
-   hand raised to a neighbour, kept beside the face where it can be seen. */
-@keyframes wh-wave-back { 0%, 13.25% { transform: rotate(0deg); } 14% { transform: rotate(-142deg); } 14.8% { transform: rotate(-122deg); } 15.6% { transform: rotate(-142deg); } 16.5%, 100% { transform: rotate(0deg); } }
+.wh-p3-face { animation: wh-p3-face 40s steps(1, end) 9.4s infinite backwards; }
+@keyframes wh-p3-face { 0% { transform: scaleX(-1); } 84.5%, 100% { transform: scaleX(1); } }
+.wh-p3-walking { animation: wh-p3-walking 40s steps(1, end) 9.4s infinite backwards; }
+@keyframes wh-p3-walking { 0% { opacity: 1; } 79% { opacity: 0; } 85%, 100% { opacity: 1; } }
+.wh-p3-standing { animation: wh-p3-standing 40s steps(1, end) 9.4s infinite backwards; }
+@keyframes wh-p3-standing { 0% { opacity: 0; } 79% { opacity: 1; } 85%, 100% { opacity: 0; } }
+.wh-p3-wave { animation: wh-p3-wave 40s ease-in-out 9.4s infinite; }
+@keyframes wh-p3-wave { 0%, 80% { transform: rotate(0deg); } 80.75% { transform: rotate(-140deg); } 81.5% { transform: rotate(-118deg); } 82.25% { transform: rotate(-140deg); } 83%, 100% { transform: rotate(0deg); } }
+/* …and the newcomer at the door waves back (c 32.4–33.7). Held lower
+   than the hop's wave (which swings up past the head): a hand raised to
+   a neighbour, kept beside the face where it can be seen. */
+@keyframes wh-wave-back { 0%, 81% { transform: rotate(0deg); } 81.75% { transform: rotate(-142deg); } 82.5% { transform: rotate(-122deg); } 83.25% { transform: rotate(-142deg); } 84.25%, 100% { transform: rotate(0deg); } }
 
 /* The awning stirs only when the taxi goes past the stall — the intro
    pass at 1.4s and every pass after (13–21% of its 20s loop) — and is
@@ -667,12 +695,13 @@
 @keyframes wh-awning { 0%, 12.5% { transform: scaleY(1); } 14.5% { transform: scaleY(1.07); } 16.5% { transform: scaleY(0.97); } 18.5% { transform: scaleY(1.03); } 21%, 100% { transform: scaleY(1); } }
 @keyframes wh-awning-in { 30% { transform: scaleY(1.07); } 60% { transform: scaleY(0.97); } }
 
-/* The crow takes off as the neighbours' door shuts (16.3s), flies out
+/* The crow (a desktop detail: it sits above the phone's framing) takes
+   off in the quiet after the neighbours' door shuts (c 11.4), flies out
    over the rooftops to the right — never across the words at the top
-   left — and glides back to its wire ten seconds later: turned about
-   while out of sight, so it always faces the way it flies, and turning
-   back round on the wire once it has settled. */
-.wh-crow { animation: wh-crow-fly 40s 16.3s infinite; }
+   left — and glides back to its wire after her son's wave (c 20.4–22.2):
+   turned about while out of sight, so it always faces the way it flies,
+   and turning back round on the wire once it has settled. */
+.wh-crow { animation: wh-crow-fly 40s 20.8s infinite; }
 @keyframes wh-crow-fly {
   0% { transform: translate(0, 0); animation-timing-function: ease-out; }
   0.8% { transform: translate(2px, -4px); animation-timing-function: ease-in; }
@@ -681,11 +710,55 @@
   27% { transform: translate(3px, -5px); animation-timing-function: ease-in-out; }
   27.6%, 100% { transform: translate(0, 0); }
 }
-.wh-crow-wings { animation: wh-crow-wings 40s steps(1, end) 16.3s infinite, wh-flap 0.24s ease-in-out infinite alternate; }
+.wh-crow-wings { animation: wh-crow-wings 40s steps(1, end) 20.8s infinite, wh-flap 0.24s ease-in-out infinite alternate; }
 @keyframes wh-crow-wings { 0% { opacity: 0; } 0.5% { opacity: 1; } 27.4%, 100% { opacity: 0; } }
-.wh-crow-face { animation: wh-crow-face 40s steps(1, end) 16.3s infinite; }
+.wh-crow-face { animation: wh-crow-face 40s steps(1, end) 20.8s infinite; }
 @keyframes wh-crow-face { 0% { transform: scaleX(1); } 10% { transform: scaleX(-1); } 30%, 100% { transform: scaleX(1); } }
 @keyframes wh-flap { from { transform: scaleY(1); } to { transform: scaleY(-0.7); } }
+
+/* ── The phone's framing ──────────────────────────────────────────────
+   On a phone the whole street at the banner's width draws a person about
+   six pixels high in the face: a wave is a smudge. So when the scene's
+   frame (a size container named wh-frame, opted into by the page) is
+   phone-narrow, the scene is drawn about 1:1 instead — scaled so its
+   bottom 212 units, from the pin above the door down to the kerb, fill
+   the banner's height — and a camera slides across the street to keep
+   each moment in frame. It moves only between beats, never during one:
+
+     intro      starts on the kerb with the hunter and the taxi, follows
+                them to the door (3.4–4.8) and holds on door, pin and cat;
+                comes back left as the intro ends (8.2–9.4)
+     c 0–25.9   left: the stall, the neighbours' door, the new home
+     c 25.9–27.4  across to the right once the taxi has gone
+     c 27.4–38.4  right: the old gentleman and the newcomer's wave
+     c 38.4–40  back to the left, before she comes along again
+
+   --pan is how far the scene can slide (negative), so every camera
+   position is a fraction of the street, correct at any phone width. The
+   slide is a transform of the whole drawing, which the browser moves
+   without repainting it. The still picture, for reduced motion, is the
+   shot of the door, the pin and the cat. */
+@container wh-frame (max-width: 520px) {
+  svg.wh-scene {
+    --u: max(100cqh / 212, 100cqw / 560);
+    --pan: calc(100cqw - 560 * var(--u));
+    inset: auto auto 0 0;
+    width: calc(560 * var(--u));
+    height: calc(600 * var(--u));
+    transform: translateX(calc(var(--pan) * 0.4));
+    animation: wh-camera 40s ease-in-out 9.4s infinite backwards, wh-camera-in 9.4s ease-in-out;
+  }
+}
+@keyframes wh-camera {
+  0%, 64.75% { transform: translateX(0); }
+  68.5%, 96% { transform: translateX(var(--pan)); }
+  99.75%, 100% { transform: translateX(0); }
+}
+@keyframes wh-camera-in {
+  0%, 36.2% { transform: translateX(0); }
+  51.1%, 87.2% { transform: translateX(calc(var(--pan) * 0.4)); }
+  100% { transform: translateX(0); }
+}
 
 /* Out of view, nothing moves: the scene's frame marks itself paused (see
    ScenePlayback.tsx) and every animation holds where it is, all together,

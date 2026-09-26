@@ -9,8 +9,11 @@ import { BRAND } from '@/lib/brand'
 const initialCode: CodeState = { status: 'idle', message: '', email: '' }
 const initialVerify: VerifyState = { status: 'idle', message: '' }
 
+// text-body-lg (17px), not text-body (15px): Safari on iPhone zooms the
+// whole page into any field set below 16px when it is focused, which throws
+// the layout around just as the keyboard opens.
 const inputClass =
-  'mt-2 h-12 w-full rounded-md border border-border-strong bg-surface-000 px-3.5 text-body text-ink-900 placeholder:text-ink-500 hover:border-ink-500 aria-[invalid=true]:border-2 aria-[invalid=true]:border-danger-600'
+  'mt-2 h-12 w-full rounded-md border border-border-strong bg-surface-000 px-3.5 text-body-lg text-ink-900 placeholder:text-ink-500 hover:border-ink-500 aria-[invalid=true]:border-2 aria-[invalid=true]:border-danger-600'
 
 /**
  * A message the form must not hide: an error (announced as an alert) or a

@@ -82,6 +82,15 @@ try {
   await probe.close()
   console.log(configured ? '— server has sign-in configured: full run' : '— server has no sign-in configured: unavailable state')
 
+  // A public "send a test email" route once shipped here: unauthenticated,
+  // spending the email key on a fixed inbox for anyone who asked. Email
+  // sign-in never used it (codes go through the auth provider), so it was
+  // removed; this keeps it from coming back unnoticed.
+  for (const method of ['POST', 'GET']) {
+    const res = await fetch(`${BASE}/api/send-email`, { method, redirect: 'manual' })
+    await check(`no public email-sending endpoint (${method} /api/send-email → ${res.status})`, res.status === 404)
+  }
+
   // ── Layout at each width ────────────────────────────────────────────
   for (const viewport of [{ width: 390, height: 844 }, { width: 412, height: 915 }, { width: 768, height: 1024 }, { width: 1280, height: 900 }]) {
     const page = await browser.newPage({ viewport })
@@ -93,7 +102,7 @@ try {
     const art = await page.locator('.login-art').boundingBox()
     const card = await page.locator('.login-card').boundingBox()
     if (w < 1024) {
-      await check(`${w}px scene is a compact banner above the form`, art.y + art.height <= card.y + 1 && art.height <= (w < 500 ? 180 : 240), `art ${Math.round(art.height)}px`)
+      await check(`${w}px scene is a compact banner above the form`, art.y + art.height <= card.y + 1 && art.height <= (w < 500 ? 225 : 240), `art ${Math.round(art.height)}px`)
       await check(`${w}px scene tagline is left out on small screens`, !(await page.locator('.login-art-copy').isVisible()))
     } else {
       await check(`${w}px scene has its own column beside the form`, art.x + art.width <= card.x && art.height >= 600 && art.width >= card.width * 0.9, `art ${Math.round(art.width)}×${Math.round(art.height)}, card ${Math.round(card.width)}`)
@@ -241,8 +250,8 @@ try {
   }
 
   // ── The street's people: who is where, and when ───────────────────
-  // One 40s cycle from 7.6s (the old gentleman's from 33s). Seeks go
-  // forward only: the awning's one-shot intro stir is checked first.
+  // One 40s cycle from 9.4s for everyone ("c" is seconds into it). Seeks
+  // go forward only: the awning's one-shot intro stir is checked first.
   {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
     await page.goto(`${BASE}/login`)
@@ -254,71 +263,124 @@ try {
     await check('5s: nobody on the pavement yet — the walkers wait off-stage',
       (await matrix(page, '.wh-p1')).e <= -16 && await opacity(page, '.wh-p2') < 0.05 && (await matrix(page, '.wh-p3')).e >= 659 &&
       identity(await matrix(page, '.wh-awning')))
-    await at(10100)
+    await at(10600)
     const p1 = await matrix(page, '.wh-p1')
-    await check('10.1s: a neighbour walks in from the left, mid-stride',
-      p1.e > 20 && p1.e < 100 && await opacity(page, '.wh-p1') > 0.99 && !identity(await matrix(page, '.wh-p1-leg.wh-stride-f')), JSON.stringify(p1))
-    await check('10.1s: the chai-wallah waves to her, and she raises a hand back',
+    await check('10.6s: a neighbour walks in from the left, mid-stride',
+      p1.e > 0 && p1.e < 58 && await opacity(page, '.wh-p1') > 0.99 && await opacity(page, '.wh-p1-walking') > 0.99 && !identity(await matrix(page, '.wh-p1-leg.wh-stride-f')), JSON.stringify(p1))
+    await at(12600)
+    await check('12.6s: she stops at the stall — on both feet, not mid-stride',
+      Math.abs((await matrix(page, '.wh-p1')).e - 58) < 0.5 && await opacity(page, '.wh-p1-standing') > 0.99 && await opacity(page, '.wh-p1-walking') < 0.05)
+    await check('12.6s: the chai-wallah waves to her, and she raises a hand back',
       rot(await matrix(page, '.wh-vendor-wave')) < -100 && rot(await matrix(page, '.wh-p1-wave')) < -100)
-    await at(14500)
+    await at(14400)
+    const taxi = await matrix(page, '.wh-taxi')
+    await check('14.4s: she walks on home while the taxi passes on the road',
+      (await matrix(page, '.wh-p1')).e > 70 && await opacity(page, '.wh-p1-walking') > 0.99 && taxi.e < 0 && taxi.e > -500, JSON.stringify(taxi))
+    await at(18200)
     const home = await matrix(page, '.wh-p1')
-    await check('14.5s: her door opens as she reaches it', (await matrix(page, '.wh-door-b')).a < 0.3 && home.e > 185 && home.e <= 190, JSON.stringify(home))
-    await at(15400)
-    await check('15.4s: she has gone in; nobody is left standing in the doorway', await opacity(page, '.wh-p1') < 0.05)
-    await at(16400)
-    await check('16.4s: the door is shut behind her', identity(await matrix(page, '.wh-door-b')))
-    await at(17200)
-    await check('17.2s: the crow has taken off, wings out, flying the way it faces',
+    await check('18.2s: her door is open and she is stepping in', (await matrix(page, '.wh-door-b')).a < 0.3 && home.e >= 187 && home.e <= 190, JSON.stringify(home))
+    await at(18900)
+    await check('18.9s: she has gone in; nobody is left standing in the doorway', await opacity(page, '.wh-p1') < 0.05)
+    await at(20000)
+    await check('20s: the door is shut behind her', identity(await matrix(page, '.wh-door-b')))
+    await at(21600)
+    await check('21.6s: in the quiet, the crow takes off, wings out, flying the way it faces',
       (await matrix(page, '.wh-crow')).e > 20 && await opacity(page, '.wh-crow-wings') > 0.99 && (await matrix(page, '.wh-crow-face')).a > 0)
-    await at(22800)
-    await check('22.8s: the chai-wallah wipes his counter, the gamchha off his shoulder',
+    await at(21900)
+    await check('21.9s: the chai-wallah wipes his counter, the gamchha off his shoulder',
       await opacity(page, '.wh-vendor-wiping') > 0.99 && await opacity(page, '.wh-vendor-rest') < 0.05 && Math.abs((await matrix(page, '.wh-vendor-wipe')).e) > 0.5)
-    await at(24000)
-    await check('24s: the door stays shut while the rickshaw passes it', identity(await matrix(page, '.wh-door-b')) && await opacity(page, '.wh-p2') < 0.05)
     await at(25400)
-    await check('25.4s: the door opens again and her son steps out', (await matrix(page, '.wh-door-b')).a < 0.3 && await opacity(page, '.wh-p2') > 0.5)
-    await at(26100)
-    await check('26.1s: the crow glides home facing the way it flies', (await matrix(page, '.wh-crow')).e > 20 && (await matrix(page, '.wh-crow-face')).a < 0)
-    await at(27500)
+    await check('25.4s: the door stays shut while the rickshaw passes it', identity(await matrix(page, '.wh-door-b')) && await opacity(page, '.wh-p2') < 0.05)
+    await at(27300)
+    await check('27.3s: the door opens again and her son steps out', (await matrix(page, '.wh-door-b')).a < 0.3 && await opacity(page, '.wh-p2') > 0.5)
+    await at(29100)
     const p2 = await matrix(page, '.wh-p2')
-    await check('27.5s: he walks left, facing left, and he and the chai-wallah wave',
-      p2.e < 140 && p2.e > 100 && (await matrix(page, '.wh-face-left')).a < 0 && rot(await matrix(page, '.wh-p2-wave')) < -100 && rot(await matrix(page, '.wh-vendor-wave')) < -100, JSON.stringify(p2))
-    await at(29000)
-    await check('29s: the crow is back on its wire, turned round, wings folded',
+    await check('29.1s: he walks left, facing left, and he and the chai-wallah wave as he comes up to the stall',
+      p2.e < 165 && p2.e > 120 && (await matrix(page, '.wh-face-left')).a < 0 && rot(await matrix(page, '.wh-p2-wave')) < -100 && rot(await matrix(page, '.wh-vendor-wave')) < -100, JSON.stringify(p2))
+    await at(30200)
+    await check('30.2s: the crow glides home facing the way it flies', (await matrix(page, '.wh-crow')).e > 20 && (await matrix(page, '.wh-crow-face')).a < 0)
+    await at(33200)
+    await check('33.2s: the crow is back on its wire, turned round, wings folded',
       identity(await matrix(page, '.wh-crow')) && identity(await matrix(page, '.wh-crow-face')) && await opacity(page, '.wh-crow-wings') < 0.05)
-    await at(32600)
-    await check('32.6s: he has walked out of the picture', (await matrix(page, '.wh-p2')).e <= -16)
-    await at(35500)
-    await check('35.5s: the old gentleman steps in from the right, facing left, walking',
-      (await matrix(page, '.wh-p3')).e < 640 && (await matrix(page, '.wh-p3-face')).a < 0 && await opacity(page, '.wh-p3-walking') > 0.99 && await opacity(page, '.wh-p3-standing') < 0.05)
-    await at(38700)
-    await check('38.7s: he stops — standing legs, not mid-stride — and waves across to the newcomer',
+    await at(34500)
+    await check('34.5s: he has walked out of the picture ahead of the taxi', (await matrix(page, '.wh-p2')).e <= -16)
+    await at(37800)
+    await check('37.8s: once the taxi has gone, the old gentleman steps in from the right, facing left, walking',
+      (await matrix(page, '.wh-p3')).e < 640 && (await matrix(page, '.wh-p3-face')).a < 0 && await opacity(page, '.wh-p3-walking') > 0.99 && await opacity(page, '.wh-p3-standing') < 0.05 &&
+      [(await matrix(page, '.wh-taxi')).e].every((e) => e >= 118 || e <= -556))
+    await at(42200)
+    await check('42.2s: he stops — standing legs, not mid-stride — and waves across to the newcomer',
       Math.abs((await matrix(page, '.wh-p3')).e - 534) < 0.5 && await opacity(page, '.wh-p3-standing') > 0.99 && await opacity(page, '.wh-p3-walking') < 0.05 &&
       rot(await matrix(page, '.wh-p3-wave')) < -100)
-    await check('38.7s: the house-hunter waves back', rot(await matrix(page, '.wh-arm-b')) < -100)
-    await at(41000)
+    await check('42.2s: the house-hunter waves back', rot(await matrix(page, '.wh-arm-b')) < -100)
+    await at(44400)
     const going = (await matrix(page, '.wh-p3')).e
-    await at(42000)
-    await check('41–42s: he turns for home and walks back the way he came',
+    await at(45400)
+    await check('44–45s: he turns for home and walks back the way he came',
       (await matrix(page, '.wh-p3-face')).a > 0 && (await matrix(page, '.wh-p3')).e > going + 15)
-    await at(45000)
-    await check('45s: gone; the street is quiet again', (await matrix(page, '.wh-p3')).e >= 658.5 && (await matrix(page, '.wh-p2')).e <= -16 && await opacity(page, '.wh-p1') < 0.05)
-    await at(50100)
-    await check('50.1s: the story repeats exactly, a cycle later', Math.abs((await matrix(page, '.wh-p1')).e - p1.e) < 0.01)
+    await at(48400)
+    await check('48.4s: gone; the street is quiet again', (await matrix(page, '.wh-p3')).e >= 658.5 && (await matrix(page, '.wh-p2')).e <= -16 && await opacity(page, '.wh-p1') < 0.05)
+    await at(50600)
+    await check('50.6s: the story repeats exactly, a cycle later', Math.abs((await matrix(page, '.wh-p1')).e - p1.e) < 0.01)
+    await page.close()
+  }
+
+  // ── On a phone, the camera keeps each moment in frame ──────────────
+  // The scene is drawn about 1:1 in the banner and slides between beats.
+  // At each exchange both people are inside the banner; the camera never
+  // moves while someone is greeting someone, or while the taxi drives
+  // through; and the whole street, camera included, is in exactly the
+  // same state a cycle later, so the loop has no seam.
+  {
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
+    await page.goto(`${BASE}/login`)
+    const framed = (ms, sels) => page.evaluate(({ ms, sels }) => {
+      document.getAnimations().forEach((a) => { a.pause(); a.currentTime = ms })
+      const art = document.querySelector('.login-art').getBoundingClientRect()
+      return sels.map((s) => { const r = document.querySelector(s).getBoundingClientRect(); return r.left >= art.left - 0.5 && r.right <= art.right + 0.5 && r.top >= art.top - 0.5 && r.bottom <= art.bottom + 0.5 })
+    }, { ms, sels })
+    const camera = async (ms) => { await seek(page, ms); return (await matrix(page, '.wh-scene')).e }
+    const scale = await page.evaluate(() => document.querySelector('.wh-scene').getScreenCTM().a)
+    await check(`390px the street is drawn at about full size (${scale.toFixed(2)}), not shrunk to fit its width`, scale > 0.95)
+    await check('390px 7s: the new home in frame — the hunter at the door, the pin above it, the cat beside it',
+      (await framed(7000, ['.wh-hunter', '.wh-pin', '.wh-cat', '.wh-leaf-l'])).every(Boolean))
+    await check('390px 12.6s: the neighbour and the chai-wallah both in frame as they greet', (await framed(12600, ['.wh-p1', '.wh-vendor'])).every(Boolean))
+    await check('390px 29.1s: her son and the chai-wallah both in frame as they wave', (await framed(29100, ['.wh-p2', '.wh-vendor'])).every(Boolean))
+    await check('390px 42.2s: the old gentleman and the newcomer both in frame as they wave', (await framed(42200, ['.wh-p3 .wh-p3-face', '.wh-hunter'])).every(Boolean))
+    const still = [[11900, 13400], [28600, 29600], [31000, 35200], [41400, 43200]]
+    const moves = []
+    for (const [from, to] of still) moves.push(Math.abs((await camera(from)) - (await camera(to))))
+    await check('390px the camera holds still through every greeting and the taxi\'s pass', moves.every((d) => d < 0.01), JSON.stringify(moves))
+    await check('390px it does move between them: left for the neighbours, right for the old gentleman',
+      Math.abs(await camera(20000)) < 0.01 && (await camera(40000)) < -150)
+    const sels = ['.wh-scene', '.wh-p1', '.wh-p2', '.wh-p3', '.wh-p3-face', '.wh-p1-wave', '.wh-p3-standing', '.wh-door-b', '.wh-vendor-wave', '.wh-vendor-wiping', '.wh-crow', '.wh-crow-face', '.wh-taxi', '.wh-rickshaw', '.wh-arm-b']
+    const state = (ms) => page.evaluate(({ ms, sels }) => {
+      document.getAnimations().forEach((a) => { a.pause(); a.currentTime = ms })
+      return sels.map((s) => { const c = getComputedStyle(document.querySelector(s)); return `${c.transform} ${Number(c.opacity).toFixed(3)}` })
+    }, { ms, sels })
+    const seams = []
+    // From 21s every loop has begun (the crow's is the last, at 20.8s);
+    // before that, things wait off-stage in poses equivalent but not equal.
+    for (const ms of [21000, 26000, 35300, 42200, 49300, 57000]) {
+      const a = await state(ms), b = await state(ms + 40000)
+      a.forEach((v, i) => { if (v !== b[i]) seams.push(`${ms / 1000}s ${sels[i]}: ${v} ≠ ${b[i]}`) })
+    }
+    await check('390px the loop is seamless: camera, people, door, crow and traffic are exactly as they were a cycle before', seams.length === 0, seams.slice(0, 4).join('; '))
     await page.close()
   }
 
   // ── Nobody walks through anyone ─────────────────────────────────────
-  // Every 100ms across two whole cycles, at the phone width where the
-  // story has least room: the on-screen boxes (in the scene's own units)
-  // of every pair that must never share space. Two kinds of meeting are
+  // Every 100ms across two whole cycles, at desktop width, where the whole
+  // street is always in view (a phone frames part of it at a time, so a
+  // meeting out of shot would go unaudited): the on-screen boxes (in the
+  // scene's own units) of every pair that must never share space. Two kinds of meeting are
   // depth, not collision, and are held to what makes them so: the taxi
   // passes behind the house-hunter only while they stand waiting at the
   // kerb; and at their door the taxi and the rickshaw pass in front of
   // them only on the road, wheels well below their feet. Walkers passing
   // the tea stall pass the chai-wallah behind his counter: not listed.
   {
-    const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
     await page.goto(`${BASE}/login`)
     const audit = await page.evaluate(() => {
       const parts = { neighbour: '.wh-p1', son: '.wh-p2', babu: '.wh-p3 .wh-p3-face', hunter: '.wh-hunter', taxi: '.wh-taxi-ride', rickshaw: '.wh-rickshaw', cat: '.wh-cat', lamp: '.wh-post' }
@@ -359,7 +421,7 @@ try {
       }
       return { bad, onStage }
     })
-    await check(`390px across two cycles nobody walks through a vehicle, a person, the cat or the lamp post${audit.bad.length ? '' : ''}`, audit.bad.length === 0, audit.bad.slice(0, 8).join('; '))
+    await check(`across two cycles nobody walks through a vehicle, a person, the cat or the lamp post`, audit.bad.length === 0, audit.bad.slice(0, 8).join('; '))
     // The audit is only worth its silence if everyone it watches was there to be caught.
     await check('the audit saw every walker and both vehicles on stage', ['neighbour', 'son', 'babu', 'taxi', 'rickshaw'].every((k) => (audit.onStage[k] ?? 0) > 50), JSON.stringify(audit.onStage))
     await page.close()
@@ -425,6 +487,17 @@ try {
       identity(await matrix(page, '.wh-door-b')) && identity(await matrix(page, '.wh-crow')) && await opacity(page, '.wh-crow-wings') < 0.05 && identity(await matrix(page, '.wh-awning')))
     await page.close()
   }
+  {
+    // On a phone the still picture is the camera's shot of the new home.
+    const page = await browser.newPage({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' })
+    await page.goto(`${BASE}/login`)
+    const inFrame = await page.evaluate(() => {
+      const art = document.querySelector('.login-art').getBoundingClientRect()
+      return ['.wh-hunter', '.wh-pin', '.wh-cat', '.wh-leaf-l'].every((s) => { const r = document.querySelector(s).getBoundingClientRect(); return r.left >= art.left && r.right <= art.right && r.top >= art.top && r.bottom <= art.bottom })
+    })
+    await check('390px reduced motion: the still picture frames the new home — hunter, open door, pin and cat', inFrame && identity(await matrix(page, '.wh-p1-wave')))
+    await page.close()
+  }
 
   if (!configured) {
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
@@ -433,6 +506,29 @@ try {
       await page.getByRole('textbox', { name: 'Email address' }).count() === 0 && await page.getByRole('link', { name: 'Continue with Google' }).count() === 0)
     await page.close()
   } else {
+    // ── A phone with its keyboard open ─────────────────────────────────
+    // When the layout viewport shrinks to what the keyboard leaves (the
+    // worst case: some Android browsers resize it), the banner drops to
+    // its floor, the focused email field is on screen and uncovered, and
+    // the field's text is at least 16px so no phone zooms the page.
+    for (const viewport of [{ width: 390, height: 480 }, { width: 360, height: 400 }]) {
+      const page = await browser.newPage({ viewport })
+      await page.goto(`${BASE}/login`)
+      const field = page.getByRole('textbox', { name: 'Email address' })
+      await field.focus()
+      await page.waitForTimeout(150)
+      const r = await page.evaluate(() => {
+        const input = document.activeElement.getBoundingClientRect()
+        const art = document.querySelector('.login-art').getBoundingClientRect()
+        const top = document.elementFromPoint(input.left + input.width / 2, input.top + input.height / 2)
+        return { input: input.toJSON(), art: art.height, covered: !document.activeElement.contains(top) && top !== document.activeElement, font: parseFloat(getComputedStyle(document.activeElement).fontSize) }
+      })
+      await check(`${viewport.width}×${viewport.height} keyboard open: the banner shrinks (${Math.round(r.art)}px), the focused email field is on screen and uncovered, text ${r.font}px`,
+        r.art <= 130 && r.input.top >= 0 && r.input.bottom <= viewport.height && !r.covered && r.font >= 16, JSON.stringify(r))
+      await check(`${viewport.width}×${viewport.height} keyboard open: no horizontal overflow`, await noOverflow(page))
+      await page.close()
+    }
+
     // ── Keyboard: every control in order, every focus visible ─────────
     {
       const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })

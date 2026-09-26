@@ -38,8 +38,15 @@
   isolation: isolate;
   overflow: hidden;
   contain: paint;
-  height: clamp(132px, 40vw, 236px);
+  /* Tall enough on a phone for the street's people to be drawn at about
+     their full size (a head about ten pixels across), and no taller: the
+     email field and its button still sit in the first screen, and short
+     screens (26svh) keep the form first. */
+  height: clamp(132px, 54vw, 236px);
   max-height: max(120px, 26svh);
+  /* The scene frames itself to this box when it is phone-narrow (see
+     "The phone's framing" in components/auth/way-home.css). */
+  container: wh-frame / size;
   border: 1px solid var(--color-border-subtle);
   border-radius: 22px;
   /* The scene's own sky, so the panel reads as sky before the SVG paints. */
@@ -62,6 +69,9 @@
     height: auto;
     max-height: none;
     min-height: 660px;
+    /* Its height comes from the column here, so it cannot be a size
+       container; the whole scene shows at this size anyway. */
+    container-type: normal;
     border-radius: 28px;
     box-shadow: var(--shadow-e2);
   }
