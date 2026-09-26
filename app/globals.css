@@ -297,6 +297,15 @@
   --wh-scarf: #e39a2d;
   --wh-alpana: #fffaf0;
   --wh-crow-nape: #7b817e;
+  /* Phase 1 of the living street: a krishnachura (flame tree) on the
+     pavement, a cycle rickshaw, and the taxi's road shadow. */
+  --wh-leaf: #4f8f5a;
+  --wh-leaf-deep: #2f6b4a;
+  --wh-leaf-light: #86b86e;
+  --wh-blossom: #e4572e;
+  --wh-hood: #33476b;
+  --wh-lungi: #4c7fb3;
+  --wh-road-shadow: #26352e;
 }
 /* Third-party marks. Google's sign-in button must use Google's own "G"
    in Google's own colours; they are tokens for the same reason as ours. */

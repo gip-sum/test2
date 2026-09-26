@@ -100,6 +100,12 @@ try {
       await check(`${w}px form is centred against the scene`, Math.abs((art.y + art.height / 2) - (card.y + card.height / 2)) < 40)
       await check(`${w}px tagline sits in the scene`, await page.locator('.login-art-copy').isVisible())
     }
+    for (const [ms, sel] of [[1300, '.wh-taxi-body'], [23000, '.wh-rk-hood']]) {
+      await seek(page, ms)
+      const v = await page.locator(sel).boundingBox()
+      await check(`${w}px ${sel === '.wh-taxi-body' ? 'the taxi' : 'the rickshaw'} drives inside the illustration, clear of the form`,
+        v && v.y >= art.y && v.y + v.height <= art.y + art.height + 0.5 && (w >= 1024 || v.y + v.height <= card.y), JSON.stringify(v))
+    }
     if (w < 700) {
       // Scoped to the card: Next.js renders its own (empty) role="alert" route announcer on every page.
       const target = configured ? page.getByRole('button', { name: 'Send sign-in code' }) : page.locator('.login-card [role="alert"]')
@@ -126,7 +132,11 @@ try {
     await check(`${viewport.width}px no layout shift across the intro (CLS ${cls.toFixed(4)})`, cls < 0.01)
     await check(`${viewport.width}px the form never moves while the scene plays`, Math.abs(before.y - after.y) < 0.5 && Math.abs(before.height - after.height) < 0.5)
     const loops = await page.evaluate(() => document.getAnimations().filter((a) => a.effect?.target?.closest?.('.wh-scene') && a.playState === 'running').length)
-    await check(`${viewport.width}px after the intro only the resting loop runs (${loops} loops)`, loops >= 8 && loops <= 24)
+    // The story's resting loops (about 16) plus the street's: the taxi's
+    // drive, wheels and ride, the rickshaw and its moving parts, the tree's
+    // leaves, bridge traffic and three windows. A jump well past this means
+    // something is animating that should have stopped.
+    await check(`${viewport.width}px after the intro only the resting loop runs (${loops} loops)`, loops >= 30 && loops <= 44)
     await page.close()
   }
 
@@ -173,6 +183,49 @@ try {
     await page.close()
   }
 
+  // ── The street: the taxi drives through first, then comes back ──
+  // A fresh page: a one-shot animation seeked past its end and not filling
+  // forwards drops out of document.getAnimations(), so the story checks'
+  // later seeks would leave the taxi's first pass unreachable.
+  {
+    const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
+    await page.goto(`${BASE}/login`)
+    // Off-stage is past either edge: right before a pass, left after one.
+    const offStage = (e) => e >= 118 || e <= -556
+    // One-shot animations first: seeking past their end drops them.
+    await seek(page, 1100)
+    await check('1.1s: the tree leans in the air the taxi pushes', !identity(await matrix(page, '.wh-tree')))
+    await seek(page, 150)
+    await check('0.15s: the taxi waits off-stage right, unseen', (await matrix(page, '.wh-taxi')).e >= 118)
+    await seek(page, 1300)
+    const passing = await matrix(page, '.wh-taxi')
+    const wheelF = await matrix(page, '.wh-wheel-f')
+    const wheelR = await matrix(page, '.wh-wheel-r')
+    await check('1.3s: the taxi is driving through, both wheels turned alike',
+      passing.e < -100 && passing.e > -500 && !identity(wheelF) && Math.abs(wheelF.a - wheelR.a) < 1e-6, JSON.stringify({ passing, wheelF, wheelR }))
+    // 2.14s: the last moment of the first pass (it ends at 2.15s, and then
+    // the loop's off-stage fill takes over, which would prove nothing).
+    await seek(page, 2140)
+    await check('2.14s: the taxi has cleared the lane before the hunter steps off (2.2s)', (await matrix(page, '.wh-taxi')).e <= -556, JSON.stringify(await matrix(page, '.wh-taxi')))
+    await seek(page, 2600)
+    await check('2.6s: gone, not parked: it only ever appears driving', (await matrix(page, '.wh-taxi')).e >= 118)
+    const spun = async (ms) => { await seek(page, ms); return (await matrix(page, '.wh-wheel-f')).a }
+    await check('the wheels turn only while it moves: still between passes', (await spun(6000)) === (await spun(9000)))
+    await seek(page, 13100)
+    const again = await matrix(page, '.wh-taxi')
+    await check('13.1s: it comes back through, calmer', again.e < 0 && again.e > -500)
+    await seek(page, 12000)
+    await check('12s: the rickshaw is off-stage between passes', (await matrix(page, '.wh-rickshaw')).e <= -63)
+    await seek(page, 23000)
+    const rk = await matrix(page, '.wh-rickshaw')
+    await check('23s: a cycle rickshaw passes the other way in the far lane, in the taxi\'s pause',
+      rk.e > 0 && rk.e < 500 && offStage((await matrix(page, '.wh-taxi')).e))
+    await seek(page, 29000)
+    await check('29s: a window has gone dark for a while', await page.evaluate(() => [...document.querySelectorAll('.wh-switch')].some((w) => Number(getComputedStyle(w).opacity) < 0.2)))
+
+    await page.close()
+  }
+
   // ── Reduced motion: the finished picture, perfectly still ───────────
   {
     const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' })
@@ -184,6 +237,8 @@ try {
       await opacity(page, '.wh-pin') > 0.99 && identity(await matrix(page, '.wh-pin')) &&
       identity(await matrix(page, '.wh-hunter')) && await opacity(page, '.wh-cat') > 0.99 && await opacity(page, '.wh-scene') > 0.99)
     await check('reduced motion: the tagline is shown, unmoving', await opacity(page, '.login-art-copy') > 0.99)
+    await check('reduced motion: the taxi is parked in the street, and no passer-by is frozen mid-lane',
+      identity(await matrix(page, '.wh-taxi')) && (await matrix(page, '.wh-rickshaw')).e <= -63)
     await page.close()
   }
 

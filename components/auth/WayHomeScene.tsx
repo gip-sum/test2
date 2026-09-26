@@ -13,6 +13,14 @@ import './way-home.css'
  * out to meet them. Then everything rests: breathing, a blink, a kite on
  * its string, steam off the kettle, the pin's slow halo.
  *
+ * The street lives around them. A yellow taxi drives past behind the
+ * hunter while they wait at the kerb — the first thing that moves — and
+ * comes back every twenty seconds; a cycle rickshaw passes the other way
+ * in the far lane; the flame tree's leaves drift and lean in the taxi's
+ * wake; tiny traffic crosses the far bridge; a few windows go dark and
+ * light again. Speed follows distance — taxi, rickshaw, bridge, clouds —
+ * which is what gives the flat drawing its depth.
+ *
  * Built as one inline SVG with CSS keyframes (way-home.css): no video, no
  * animation library, nothing to download, server-rendered with the page.
  * Every colour is a token (the --wh-* block in app/globals.css).
@@ -37,7 +45,7 @@ const vars = (values: Vars) => values as CSSProperties
 const r1 = (n: number) => Math.round(n * 10) / 10
 
 /** A window: open louvred shutters, frame, dark glass and the light that comes on. */
-function Win({ x, y, w, h, d, arch = true, shutters = true, bars = false, twinkle }: {
+function Win({ x, y, w, h, d, arch = true, shutters = true, bars = false, twinkle, life }: {
   x: number; y: number; w: number; h: number
   /** When its light comes on, in seconds from page load. */
   d: number
@@ -46,6 +54,8 @@ function Win({ x, y, w, h, d, arch = true, shutters = true, bars = false, twinkl
   bars?: boolean
   /** Start of this window's slow resting twinkle, if it has one. */
   twinkle?: number
+  /** Someone at home: the light goes off for a while and comes back, from `start`, every `period` seconds. */
+  life?: { start: number; period: number }
 }) {
   const r = w / 2
   const inset = 2.2
@@ -55,6 +65,7 @@ function Win({ x, y, w, h, d, arch = true, shutters = true, bars = false, twinkl
   const shutterTop = arch ? y + r : y
   const style: Vars = { '--d': `${d}s` }
   if (twinkle) style['--t'] = `${twinkle}s`
+  if (life) { style['--s'] = `${life.start}s`; style['--p'] = `${life.period}s` }
   const barPath = bars
     ? Array.from({ length: Math.max(2, Math.floor(w / 6)) }, (_, i) => {
         const bx = r1(x + ((i + 1) * w) / (Math.max(2, Math.floor(w / 6)) + 1))
@@ -69,7 +80,7 @@ function Win({ x, y, w, h, d, arch = true, shutters = true, bars = false, twinkl
       </>}
       <path className="wh-frame" d={shape(0)} />
       <path className="wh-glass" d={shape(inset)} />
-      <path className={twinkle ? 'wh-lit wh-twinkle' : 'wh-lit'} d={shape(inset)} style={vars(style)} />
+      <path className={twinkle ? 'wh-lit wh-twinkle' : life ? 'wh-lit wh-switch' : 'wh-lit'} d={shape(inset)} style={vars(style)} />
       <path className="wh-bars" d={barPath} />
       <rect className="wh-sill" x={x - 2} y={y + h} width={w + 4} height={2.6} />
     </g>
@@ -91,6 +102,34 @@ function Railing({ x, y, w, h }: { x: number; y: number; w: number; h: number })
 /** A house front that settles into place as the scene opens. */
 function House({ d, children }: { d: number; children: ReactNode }) {
   return <g className="wh-rise" style={vars({ '--d': `${d}s` })}>{children}</g>
+}
+
+/**
+ * A car wheel. The one white bar on the hubcap is what makes the turning
+ * visible: a plain tyre and hub look the same at every angle, and a
+ * symmetric pattern strobes at driving speed.
+ */
+function Wheel({ cx, cy, className }: { cx: number; cy: number; className: string }) {
+  return (
+    <g className={className}>
+      <circle className="wh-tyre" cx={cx} cy={cy} r="7.5" />
+      <circle className="wh-steel" cx={cx} cy={cy} r="4.4" />
+      <path className="wh-hub-mark" d={`M${cx} ${cy - 0.8} H${cx + 3.9} V${cy + 0.8} H${cx} Z`} />
+      <circle className="wh-tyre" cx={cx} cy={cy} r="1.3" />
+      <circle className="wh-steel" cx={cx - 6.1} cy={cy} r="0.7" />
+    </g>
+  )
+}
+
+/** Krishnachura flowers come in clusters, not polka dots. */
+function Blossom({ x, y }: { x: number; y: number }) {
+  return (
+    <>
+      <circle className="wh-blossom" cx={x} cy={y} r="1.5" />
+      <circle className="wh-blossom" cx={r1(x + 2.2)} cy={r1(y + 0.8)} r="1.2" />
+      <circle className="wh-blossom-deep" cx={r1(x + 0.8)} cy={r1(y - 1.7)} r="1.1" />
+    </>
+  )
 }
 
 function cloud(x: number, y: number, s: number) {
@@ -203,6 +242,14 @@ export function WayHomeScene({ className }: { className?: string }) {
         <path className="wh-far-line" d="M170 320 L321 258 L406 290 L496 258 L575 305" />
         <path className="wh-far-lattice" d={LATTICE} />
       </g>
+      {/* Evening traffic on the far bridge: the slowest movers in the
+          picture, because they are the farthest away. Seen only in the gap
+          above the mint house; the other roofs hide the deck. */}
+      <path className="wh-bridge-taxi" d="M0 318 V315.2 Q0 314 1.4 313.9 L3 313.8 L4.6 311.8 H9 L10.6 313.8 L12 313.9 Q13.2 314 13.2 315.2 V318 Z" />
+      <g className="wh-bridge-bus">
+        <rect className="wh-bridge-bus-body" x="0" y="311.2" width="19" height="6.8" rx="1.3" />
+        <path className="wh-bridge-bus-glass" d="M2 313.2 H17" />
+      </g>
 
       {/* ── House A: ochre, three storeys, a tea stall at its foot ──── */}
       <House d={0.05}>
@@ -212,7 +259,7 @@ export function WayHomeScene({ className }: { className?: string }) {
         <rect className="wh-trim" x="-12" y="438" width="164" height="6" />
         <rect className="wh-oxide" x="-10" y="512" width="160" height="8" />
         <Win x={14} y={288} w={26} h={52} d={6.4} />
-        <Win x={84} y={288} w={26} h={52} d={6.34} />
+        <Win x={84} y={288} w={26} h={52} d={6.34} life={{ start: 14, period: 26 }} />
         <Win x={18} y={368} w={30} h={62} d={6.22} twinkle={11.2} />
         <Win x={90} y={368} w={30} h={62} d={6.28} />
         <Railing x={6} y={404} w={128} h={26} />
@@ -230,7 +277,7 @@ export function WayHomeScene({ className }: { className?: string }) {
         <rect className="wh-trim" x="148" y="294" width="154" height="8" />
         <rect className="wh-trim" x="148" y="438" width="154" height="6" />
         <rect className="wh-oxide" x="150" y="512" width="150" height="8" />
-        <Win x={164} y={370} w={24} h={50} d={6.14} />
+        <Win x={164} y={370} w={24} h={50} d={6.14} life={{ start: 21, period: 31 }} />
         <Win x={213} y={370} w={24} h={50} d={6.06} twinkle={8.6} />
         <Win x={262} y={370} w={24} h={50} d={6.0} />
         <rect className="wh-trim" x="166" y="450" width="42" height="5" />
@@ -298,7 +345,7 @@ export function WayHomeScene({ className }: { className?: string }) {
         <Win x={466} y={280} w={28} h={50} d={6.24} twinkle={13.8} />
         <Win x={466} y={370} w={28} h={50} d={6.1} />
         <Win x={526} y={370} w={28} h={50} d={6.16} />
-        <Win x={466} y={462} w={28} h={38} d={6.02} shutters={false} bars />
+        <Win x={466} y={462} w={28} h={38} d={6.02} shutters={false} bars life={{ start: 27, period: 23 }} />
         <Railing x={508} y={312} w={62} h={28} />
         <g className="wh-sari">
           <path className="wh-sari-cloth" d="M522 311 H541 V356 Q531.5 360 522 356 Z" />
@@ -358,6 +405,39 @@ export function WayHomeScene({ className }: { className?: string }) {
       <path className="wh-glass" d="M441.6 432.2 L450.4 432.2 L449 422 L443 422 Z" />
       <path className="wh-lamp-glass" d="M441.6 432.2 L450.4 432.2 L449 422 L443 422 Z" />
 
+      {/* A krishnachura on the pavement. Its leaves drift in three layers
+          at different speeds, and the whole tree leans a little in the
+          air a passing taxi pushes ahead of it. */}
+      <g className="wh-tree">
+        <ellipse className="wh-tree-pit" cx="521" cy="538.2" rx="12" ry="1.9" />
+        <path className="wh-trunk" d="M515.5 539 C517 518 518 496 517 478 C512 466 505 455 496 443 L499.5 440.5 C507 450 513 459 518.6 468 C519 458 519.5 446 518.5 433 L522.5 433 C523.5 446 523.2 457 522.6 467 C528 457 536 446 546 436.5 L549 439 C539.5 449 531 461 526 474 C524.5 494 525.5 518 527 539 Z" />
+        {/* A krishnachura's crown is an umbrella: wide, flat-topped, lit
+            on top, deep underneath, with flame-red flowers all over. */}
+        <g className="wh-canopy">
+          <g className="wh-clump wh-clump-back">
+            {[[490, 428, 23, 12], [522, 421, 27, 14], [557, 425, 22, 13]].map(([cx, cy, rx, ry]) => (
+              <ellipse key={`${cx}-${cy}`} className="wh-leaf-deep" cx={cx} cy={cy} rx={rx} ry={ry} />
+            ))}
+          </g>
+          <g className="wh-clump wh-clump-mid">
+            {[[500, 411, 21, 12], [531, 405, 25, 13], [561, 411, 17, 10]].map(([cx, cy, rx, ry]) => (
+              <ellipse key={`${cx}-${cy}`} className="wh-leaf-mid" cx={cx} cy={cy} rx={rx} ry={ry} />
+            ))}
+            {[[487, 414], [503, 404], [522, 398], [540, 401], [556, 407], [571, 414], [512, 416], [549, 420]].map(([cx, cy]) => (
+              <Blossom key={`${cx}-${cy}`} x={cx!} y={cy!} />
+            ))}
+          </g>
+          <g className="wh-clump wh-clump-front">
+            {[[480, 437, 12, 7], [511, 440, 16, 8], [546, 438, 16, 8], [518, 397, 15, 7], [546, 395, 10, 6]].map(([cx, cy, rx, ry]) => (
+              <ellipse key={`${cx}-${cy}`} className="wh-leaf-light" cx={cx} cy={cy} rx={rx} ry={ry} />
+            ))}
+            {[[478, 434], [498, 441], [528, 442], [557, 437], [514, 393], [533, 391], [551, 394], [566, 432]].map(([cx, cy]) => (
+              <Blossom key={`${cx}-${cy}`} x={cx!} y={cy!} />
+            ))}
+          </g>
+        </g>
+      </g>
+
       {/* The tea stall: kettle on the boil, clay cups, a bulb under the awning. */}
       <rect className="wh-wood-deep" x="22" y="474" width="2.6" height="56" />
       <rect className="wh-wood-deep" x="111.4" y="474" width="2.6" height="56" />
@@ -377,23 +457,30 @@ export function WayHomeScene({ className }: { className?: string }) {
       <path className="wh-steam" style={vars({ '--d': '1.25s' })} d="M63 473 C60.5 469 65.5 465 63 460" />
       <path className="wh-steam" style={vars({ '--d': '2.3s' })} d="M59.5 474 C57 470 62 466 59.5 461" />
 
-      {/* A yellow Ambassador taxi, parked. */}
-      <g className="wh-taxi">
-        <path className="wh-taxi-body" d="M444 580 V566 Q444 560 452 559 L468 558 L480 548 Q484 545 492 545 L520 545 Q527 545 531 549 L540 558 L550 559 Q556 560 556 566 V580 Z" />
-        <path className="wh-taxi-glass" d="M484.5 549.5 Q486.5 548 492 548 H505 V558 H477 Z M508 548 H520 Q525 548 528 551 L534 558 H508 Z" />
-        <rect className="wh-taxi-sign" x="498" y="540" width="14" height="5" rx="1" />
-        <rect className="wh-steel" x="442" y="575" width="116" height="3.2" rx="1.2" />
-        <circle className="wh-lit" cx="447.5" cy="567.5" r="2.4" style={vars({ '--d': '6.08s' })} />
-        <circle className="wh-tyre" cx="466" cy="582" r="7.5" />
-        <circle className="wh-steel" cx="466" cy="582" r="3" />
-        <circle className="wh-tyre" cx="534" cy="582" r="7.5" />
-        <circle className="wh-steel" cx="534" cy="582" r="3" />
-      </g>
-
       {/* The route, plotted one step at a time. */}
       {ROUTE_DOTS.map(([x, y], i) => (
         <circle key={i} className="wh-dot" cx={x} cy={y} r="2.3" style={vars({ '--d': `${r1(0.8 + i * 0.06)}s` })} />
       ))}
+
+      {/* A yellow Ambassador taxi, the street's loudest mover. In the still
+          picture it is parked here. In motion it is only ever seen driving:
+          it passes just behind the house-hunter while they wait at the kerb,
+          then comes back through every twenty seconds. Nested groups, one
+          job each: the drive, the body's ride over the road, the wheels. */}
+      <g className="wh-taxi">
+        <ellipse className="wh-car-shadow" cx="500" cy="590.2" rx="59" ry="2.8" />
+        <g className="wh-taxi-ride">
+          <path className="wh-taxi-body" d="M444 580 V566 Q444 560 452 559 L468 558 L480 548 Q484 545 492 545 L520 545 Q527 545 531 549 L540 558 L550 559 Q556 560 556 566 V580 Z" />
+          <path className="wh-taxi-glass" d="M484.5 549.5 Q486.5 548 492 548 H505 V558 H477 Z M508 548 H520 Q525 548 528 551 L534 558 H508 Z" />
+          <circle className="wh-driver" cx="496.2" cy="551.4" r="2.6" />
+          <path className="wh-driver" d="M491.2 558 Q491.8 554.4 496.2 554.2 Q500.6 554.4 501.2 558 Z" />
+          <rect className="wh-taxi-sign" x="498" y="540" width="14" height="5" rx="1" />
+          <rect className="wh-steel" x="442" y="575" width="116" height="3.2" rx="1.2" />
+          <circle className="wh-lit" cx="447.5" cy="567.5" r="2.4" style={vars({ '--d': '6.08s' })} />
+        </g>
+        <Wheel cx={466} cy={582} className="wh-wheel wh-wheel-f" />
+        <Wheel cx={534} cy={582} className="wh-wheel wh-wheel-r" />
+      </g>
 
       {/* The pin: pops, winds up, drops, lands once — then only its halo moves. */}
       <circle className="wh-halo" cx="375" cy="442" r="10" />
@@ -463,6 +550,46 @@ export function WayHomeScene({ className }: { className?: string }) {
                 <circle className="wh-skin" cx="12" cy="-48" r="2.2" />
               </g>
             </g>
+          </g>
+        </g>
+      </g>
+
+      {/* A cycle rickshaw in the far lane, going the other way, as Kolkata's
+          left-hand traffic would: smaller and slower than the taxi because
+          it is farther off. Drawn at the left edge and kept off-stage by its
+          own style, so the still picture does not include a passer-by. */}
+      <g className="wh-rickshaw">
+        <ellipse className="wh-car-shadow" cx="31" cy="563.4" rx="32" ry="1.9" />
+        <g className="wh-rk-wheel wh-rk-wheel-r">
+          <circle className="wh-rk-tyre" cx="13" cy="554" r="8.4" />
+          <path className="wh-rk-spokes" d="M13 545.6 V562.4 M4.6 554 H21.4 M7.06 548.06 L18.94 559.94 M18.94 548.06 L7.06 559.94" />
+        </g>
+        <path className="wh-rk-frame" d="M13 554 L16 545 M27 543 L47 533 M47 529 L53 556.5 M44.5 527.5 H50.5" />
+        <path className="wh-rk-panel" d="M2 537 H28 L26 546 H6 Z" />
+        <rect className="wh-rk-seat" x="1.5" y="532.5" width="25" height="5" rx="1.5" />
+        <path className="wh-rk-hood" d="M1 534 C-0.5 519 7 510.5 20 510.5 C24 510.5 27 511.5 28.5 513.5 L26.8 516.2 C22.5 514.2 10.5 514.5 7 520.5 C5 524.5 4.6 529.5 4.8 534 Z" />
+        <path className="wh-rk-trim" d="M3 533 C2 521 8.5 513.8 20 513.3 C23.5 513.3 25.8 514 27.2 515" />
+        <rect className="wh-rk-foot" x="26" y="544" width="9" height="2" rx="0.6" />
+        <g className="wh-rk-wheel wh-rk-wheel-f">
+          <circle className="wh-rk-tyre" cx="53" cy="556.5" r="6.3" />
+          <path className="wh-rk-spokes" d="M53 550.2 V562.8 M46.7 556.5 H59.3 M48.55 552.05 L57.45 560.95 M57.45 552.05 L48.55 560.95" />
+        </g>
+        <g className="wh-rk-crank">
+          <path className="wh-rk-crank-arm" d="M35.8 546 H42.2" />
+        </g>
+        <g className="wh-rider">
+          <g className="wh-rk-leg wh-rk-leg-b">
+            <path className="wh-rk-shin-b" d="M38 529 L44.5 537.5 L41 545.5" />
+          </g>
+          <rect className="wh-rk-saddle" x="34.5" y="528.8" width="7" height="2.2" rx="1" />
+          <path className="wh-rk-vest" d="M34.5 529 C34 521 37 514.5 42.5 512.5 L46 514.5 C44.6 519.5 42.5 524 42 529.5 Z" />
+          <path className="wh-rk-lungi" d="M33.8 526 H42.6 L46 534.5 Q41 537 37 535 Z" />
+          <path className="wh-rk-arm" d="M43.5 515 L49.5 527.5" />
+          <circle className="wh-rk-skin" cx="45.6" cy="508" r="3.6" />
+          <path className="wh-rk-hair" d="M41.9 507.2 Q42 503.2 45.6 503.4 Q49 503.6 49.4 506.6 Q45.6 505 41.9 507.2 Z" />
+          <path className="wh-rk-gamchha" d="M41.9 507.4 Q45.6 505.2 49.4 506.8 L49.5 508 Q45.6 506.6 42 508.7 Z" />
+          <g className="wh-rk-leg wh-rk-leg-f">
+            <path className="wh-rk-shin" d="M38.5 529 L45 537.5 L42 545.5" />
           </g>
         </g>
       </g>
