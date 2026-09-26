@@ -306,6 +306,12 @@
   --wh-hood: #33476b;
   --wh-lungi: #4c7fb3;
   --wh-road-shadow: #26352e;
+  /* Phase 2, the street's people: a laal-paar sari's red border, a young
+     man's blue shirt and jeans, and an old gentleman's grey hair. */
+  --wh-sari-red: #c8323c;
+  --wh-shirt: #5b86b8;
+  --wh-jeans: #34466a;
+  --wh-grey-hair: #c9cdca;
 }
 /* Third-party marks. Google's sign-in button must use Google's own "G"
    in Google's own colours; they are tokens for the same reason as ours. */

@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import './way-home.css'
+import { Babu, ChaiWallah, Neighbour, YoungMan } from './StreetPeople'
 
 /**
  * "Finding your way home" — the login illustration.
@@ -12,6 +13,11 @@ import './way-home.css'
  * light, an alpana appears on the red-oxide step and the house cat comes
  * out to meet them. Then everything rests: breathing, a blink, a kite on
  * its string, steam off the kettle, the pin's slow halo.
+ *
+ * People live on it too (StreetPeople.tsx): a neighbour comes home from
+ * the bazaar and the chai-wallah waves to her; later her son goes out;
+ * an old gentleman walks up the street to wave to the newcomer at their
+ * new door, and goes home again.
  *
  * The street lives around them. A yellow taxi drives past behind the
  * hunter while they wait at the kerb — the first thing that moves — and
@@ -281,8 +287,13 @@ export function WayHomeScene({ className }: { className?: string }) {
         <Win x={213} y={370} w={24} h={50} d={6.06} twinkle={8.6} />
         <Win x={262} y={370} w={24} h={50} d={6.0} />
         <rect className="wh-trim" x="166" y="450" width="42" height="5" />
-        <rect className="wh-wood" x="172" y="456" width="30" height="64" />
-        <path className="wh-wood-line" d="M187 458 V520 M175 470 H184 M190 470 H199 M175 496 H184 M190 496 H199" />
+        {/* The neighbours' door: it opens on warm light to let her in and,
+            later, her son out. Hinged on the left, like the mint house's. */}
+        <rect className="wh-door-b-inside" fill="url(#wh-interior-g)" x="172" y="456" width="30" height="64" />
+        <g className="wh-door-b">
+          <rect className="wh-wood" x="172" y="456" width="30" height="64" />
+          <path className="wh-wood-line" d="M187 458 V520 M175 470 H184 M190 470 H199 M175 496 H184 M190 496 H199" />
+        </g>
         <Win x={234} y={462} w={44} h={36} d={6.04} arch={false} shutters={false} bars />
       </House>
 
@@ -357,13 +368,20 @@ export function WayHomeScene({ className }: { className?: string }) {
       <path className="wh-wire" d="M-10 306 Q130 330 262 316 Q392 302 570 318" />
       <path className="wh-wire" d="M-10 318 Q150 344 300 328 Q420 318 570 334" />
       <g className="wh-crow">
-        <path className="wh-crow-body" d="M200 316 Q206 309 213 311 L216 314 Q210 319 200 316 Z M200 316 L192 318 L195 314 Z" />
-        <path className="wh-crow-leg" d="M205 316.5 V320.5 M209 316 V320" />
-        <g className="wh-crow-head">
-          <circle className="wh-crow-body" cx="214.5" cy="309" r="3.6" />
-          <path className="wh-crow-nape" d="M211.5 307 Q212 312.5 214.5 312.6 Q211 313 210.8 309.5 Z" />
-          <path className="wh-crow-beak" d="M217.6 308 L222.4 309.4 L217.6 310.6 Z" />
-          <circle className="wh-crow-eye" cx="215.6" cy="308.2" r="0.7" />
+        {/* It faces the way it flies: turned about for the glide home. */}
+        <g className="wh-crow-face">
+          {/* Wings for flight; folded away while it perches. */}
+          <g className="wh-crow-wings">
+            <path className="wh-crow-wing" d="M204 313 Q199 301 191 297 Q200 298.5 211 311 Z" />
+          </g>
+          <path className="wh-crow-body" d="M200 316 Q206 309 213 311 L216 314 Q210 319 200 316 Z M200 316 L192 318 L195 314 Z" />
+          <path className="wh-crow-leg" d="M205 316.5 V320.5 M209 316 V320" />
+          <g className="wh-crow-head">
+            <circle className="wh-crow-body" cx="214.5" cy="309" r="3.6" />
+            <path className="wh-crow-nape" d="M211.5 307 Q212 312.5 214.5 312.6 Q211 313 210.8 309.5 Z" />
+            <path className="wh-crow-beak" d="M217.6 308 L222.4 309.4 L217.6 310.6 Z" />
+            <circle className="wh-crow-eye" cx="215.6" cy="308.2" r="0.7" />
+          </g>
         </g>
       </g>
 
@@ -405,6 +423,9 @@ export function WayHomeScene({ className }: { className?: string }) {
       <path className="wh-glass" d="M441.6 432.2 L450.4 432.2 L449 422 L443 422 Z" />
       <path className="wh-lamp-glass" d="M441.6 432.2 L450.4 432.2 L449 422 L443 422 Z" />
 
+      {/* The old gentleman walks the wall side, behind the tree. */}
+      <Babu />
+
       {/* A krishnachura on the pavement. Its leaves drift in three layers
           at different speeds, and the whole tree leans a little in the
           air a passing taxi pushes ahead of it. */}
@@ -445,6 +466,7 @@ export function WayHomeScene({ className }: { className?: string }) {
       <path className="wh-bulb-cord" d="M67 474 V478" />
       <circle className="wh-glass" cx="67" cy="480.5" r="2.4" />
       <circle className="wh-lit" cx="67" cy="480.5" r="2.4" style={vars({ '--d': '6.12s' })} />
+      <ChaiWallah />
       <rect className="wh-wood" x="28" y="500" width="78" height="30" />
       <rect className="wh-wood-deep" x="24" y="495" width="86" height="6" />
       <path className="wh-wood-line" d="M28 512 H106 M54 501 V530 M80 501 V530" />
@@ -456,6 +478,11 @@ export function WayHomeScene({ className }: { className?: string }) {
       <path className="wh-steam" style={vars({ '--d': '0.2s' })} d="M61 474 C58.5 470 63.5 466 61 461" />
       <path className="wh-steam" style={vars({ '--d': '1.25s' })} d="M63 473 C60.5 469 65.5 465 63 460" />
       <path className="wh-steam" style={vars({ '--d': '2.3s' })} d="M59.5 474 C57 470 62 466 59.5 461" />
+
+      {/* The neighbours, on the kerb side of the pavement in front of the
+          stall: she comes home, and later her son goes out. */}
+      <Neighbour />
+      <YoungMan />
 
       {/* The route, plotted one step at a time. */}
       {ROUTE_DOTS.map(([x, y], i) => (

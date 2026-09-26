@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { PageShell } from '@/components/layout/PageShell'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { WayHomeScene } from '@/components/auth/WayHomeScene'
+import { ScenePlayback } from '@/components/auth/ScenePlayback'
 import { getVerifiedUser } from '@/lib/auth/session'
 import { safeReturnPath } from '@/lib/auth/validation'
 import { authConfig } from '@/lib/auth/provider'
@@ -29,14 +30,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <PageShell>
       <div className="login-stage">
         <div className="login-layout">
-          <div className="login-art">
+          <ScenePlayback className="login-art">
             <WayHomeScene className="login-scene" />
             <div className="login-art-copy">
               <p className="login-art-eyebrow"><span aria-hidden="true">✦</span> Your {BRAND.name} account</p>
               <p className="login-art-title">Welcome <em>home.</em></p>
               <p className="login-art-text">Save the homes you love and keep every enquiry in one place.</p>
             </div>
-          </div>
+          </ScenePlayback>
           <div className="login-form-col">
             <LoginForm
               mode={mode === 'register' ? 'register' : 'login'}
