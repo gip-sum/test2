@@ -24,6 +24,7 @@ Phase 10 — Postponed (phone OTP is not required for now)
 Phase 11 — Complete and deployed
 Phase 40A — Implemented (home loan calculators, built ahead of order)
 Phase A — Implemented (marketplace navigation and shell; docs/phases/PHASE-A-marketplace-shell.md)
+Phase B — Implemented (homepage discovery and content density; docs/phases/PHASE-B-homepage-discovery.md)
 
 Temporary brand:
 GharBazaar

@@ -6,11 +6,14 @@ import { DevDataNotice } from '@/components/home/DevDataNotice'
 import { QuickRoutes } from '@/components/home/QuickRoutes'
 import { ListingRail } from '@/components/home/ListingRail'
 import { PopularLocalities } from '@/components/home/PopularLocalities'
-import { BrowseTiles } from '@/components/home/BrowseTiles'
+import { BudgetAndSize, PropertyTypes } from '@/components/home/BrowseTiles'
 import { PlanTiles } from '@/components/home/PlanTiles'
 import { SupplyCta } from '@/components/home/SupplyCta'
-import { HowItWorks } from '@/components/home/HowItWorks'
+import { WhyGharBazaar } from '@/components/home/WhyGharBazaar'
 import { LAUNCH_CITY } from '@/lib/brand'
+import {
+  getBudgetDiscovery, getHomeCollections, getLocalityDiscovery, getSizeDiscovery, getTypeDiscovery, type CollectionId,
+} from '@/lib/home/discovery'
 
 /**
  * Recent inventory and relative dates go stale in a static build, so the
@@ -32,19 +35,25 @@ export const metadata: Metadata = {
  * the rest of the filters one tap away — and listings begin right after,
  * because proof of inventory is the second thing people look for.
  *
- * Order after the search is by how directly each block leads back into a
- * search: quick routes, homes for sale, places, homes to rent, then browse
- * by type, budget and size, the budget and EMI calculators, and finally
- * the owner invitation.
+ * Below the search it is a discovery hierarchy (Phase B,
+ * docs/phases/PHASE-B-homepage-discovery.md): quick routes; collections of
+ * live listings — newest for sale, newest to rent, price reduced; places;
+ * kinds of home; budgets and sizes; homes still being built; the
+ * calculators; why this marketplace; and the owner invitation. Every count
+ * on the page comes from the search seam and equals the results page it
+ * links to, and a collection, type, band or size with nothing in it is
+ * left out rather than shown empty.
  *
- * Only blocks backed by real data and working routes appear. Projects, RERA
- * details, demand statistics, price trends and offers — common on larger
- * portals — wait for the phases that make them real, and a placeholder
- * would claim what we cannot show. The register of which section waits on
- * which phase is "Homepage sections waiting on their phase" in
- * docs/ROADMAP.md.
+ * Only blocks backed by real data and working routes appear. Project pages,
+ * RERA details, guides, demand statistics, price trends and offers —
+ * common on larger portals — wait for the phases that make them real, and
+ * a placeholder would claim what we cannot show. The register of which
+ * section waits on which phase is "Homepage sections waiting on their
+ * phase" in docs/ROADMAP.md.
  */
 export default function HomePage() {
+  const rail = Object.fromEntries(getHomeCollections().map((c) => [c.id, c])) as Record<CollectionId, ReturnType<typeof getHomeCollections>[number]>
+  const localities = getLocalityDiscovery()
   return (
     <PageShell footer={<Footer />}>
       <div className="home-stage">
@@ -63,22 +72,42 @@ export default function HomePage() {
         <QuickRoutes />
         <DevDataNotice />
         <ListingRail
-          intent="buy"
+          collection={rail['new-sale']}
           eyebrow={`New for sale in ${LAUNCH_CITY.name}`}
           title="Homes worth a closer look"
           description="Explore the latest additions, then save the ones that feel right."
+          noun="for sale"
+          invite
+          priority
         />
-        <PopularLocalities />
         <ListingRail
-          intent="rent"
+          collection={rail['new-rent']}
           eyebrow={`New to rent in ${LAUNCH_CITY.name}`}
           title="Rentals worth a closer look"
           description="The newest homes to rent, from studios to family flats."
+          noun="to rent"
+          invite
         />
-        <BrowseTiles />
+        <ListingRail
+          collection={rail.reduced}
+          eyebrow="Price reduced"
+          title="Now asking less"
+          description="Homes for sale whose sellers have lowered the price."
+          noun="with a reduced price"
+        />
+        <PopularLocalities {...localities} />
+        <PropertyTypes tiles={getTypeDiscovery()} />
+        <BudgetAndSize budget={getBudgetDiscovery()} size={getSizeDiscovery()} />
+        <ListingRail
+          collection={rail['under-construction']}
+          eyebrow="Under construction"
+          title="Homes still being built"
+          description="For sale in developments that are not finished yet. Ask the seller when possession is expected."
+          noun="under construction"
+        />
         <PlanTiles />
+        <WhyGharBazaar />
         <SupplyCta />
-        <HowItWorks />
       </div>
     </PageShell>
   )

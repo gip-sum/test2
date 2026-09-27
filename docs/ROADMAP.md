@@ -55,7 +55,9 @@ each one in the phase that makes it real, not before.
 
 | Section on larger portals | Why it is absent today | Phase that makes it real |
 |---|---|---|
-| New and upcoming projects, with RERA numbers | There is no project entity | 44–47, with RERA claims verified in 65–66 |
+| New and upcoming projects, with RERA numbers | There is no project entity. Since Phase B, the homepage's "Homes still being built" rail shows real under-construction *listings*, titled as listings, never as projects | 44–47, with RERA claims verified in 65–66 |
+| Buying, renting and locality guides | No editorial content exists; the homepage links only to the two calculators, the one guide-like content that is real | 54 (guides), 49 (locality insights) |
+| Plots and land | There is no property type for them, so there is no type tile or search | Needs a roadmap decision |
 | "Recommended for you" | No recommendation logic; the rails show the newest listings and are titled that way | 39 |
 | Demand by locality ("n% of buyers…") | Nothing measures demand yet | 69 measures it, 50 presents it |
 | Price trends and locality insights | No price history | 50–51 |

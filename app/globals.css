@@ -483,11 +483,11 @@
 @media (min-width: 1100px) { .hero-caption { display: block; } }
 
 .home-content { isolation: isolate; padding-top: 14px; }
-.home-content > section { margin-top: 36px; }
+.home-content > section, .home-content > .browse-pair > section { margin-top: 36px; }
 .home-content h2 { font-size: 21px; line-height: 1.25; font-weight: 600; letter-spacing: -.025em; }
 @media (min-width: 640px) { .home-content h2 { font-size: 26px; } }
-@media (min-width: 768px) { .home-content { padding-top: 48px; } .home-content > section { margin-top: 56px; } }
-@media (min-width: 1024px) { .home-content { padding-top: 56px; } .home-content > section { margin-top: 64px; } .home-content h2 { font-size: 30px; letter-spacing: -.03em; } }
+@media (min-width: 768px) { .home-content { padding-top: 48px; } .home-content > section, .home-content > .browse-pair > section { margin-top: 56px; } }
+@media (min-width: 1024px) { .home-content { padding-top: 56px; } .home-content > section, .home-content > .browse-pair > section { margin-top: 64px; } .home-content h2 { font-size: 30px; letter-spacing: -.03em; } }
 /* In-page targets (the Localities route is /#localities) land below the
    sticky header, not under it. */
 .home-anchor { scroll-margin-top: calc(env(safe-area-inset-top, 0px) + 76px); }
@@ -535,6 +535,11 @@
    instruction — and snap so each swipe lands cleanly. Each row turns into
    a plain grid on a wide screen, where a mouse cannot swipe. */
 .listing-rail, .locality-tiles, .type-tiles {
+  /* Positioned, so the visually hidden text in its links (.sr-only is
+     absolutely positioned) is contained — and clipped — by the scroller.
+     Without it that text was placed against the page, past the scroller's
+     edge, and widened the whole document. */
+  position: relative;
   margin: 12px -16px 0;
   padding: 4px 16px 12px;
   overflow-x: auto;
@@ -555,7 +560,9 @@
 .listing-rail-item { flex: 0 0 min(68%, 272px); min-width: 0; scroll-snap-align: start; }
 .listing-rail-end { flex-basis: 148px; }
 @media (min-width: 640px) { .listing-rail-item { flex-basis: 264px; } .listing-rail-end { flex-basis: 176px; } }
-.rail-end-card { display: flex; height: 100%; min-height: 160px; flex-direction: column; justify-content: center; gap: 4px; padding: 16px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-lg); background: var(--home-tint-mint); transition: border-color .2s, box-shadow .2s; }
+/* White, not mint: with four rails a tinted end card on each made the
+   page read as blocks of green. The arrow keeps the brand. */
+.rail-end-card { display: flex; height: 100%; min-height: 160px; flex-direction: column; justify-content: center; gap: 4px; padding: 16px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-lg); background: var(--color-surface-000); transition: border-color .2s, box-shadow .2s; }
 .rail-end-card:hover { border-color: var(--color-border-strong); box-shadow: var(--shadow-e2); }
 .rail-end-icon { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 8px; border-radius: 50%; background: var(--color-brand-600); color: var(--color-on-brand); transition: transform .2s; }
 .rail-end-card:hover .rail-end-icon { transform: translateX(3px); }
@@ -574,17 +581,25 @@
   .compact-card:hover img { transform: scale(1.03); }
 }
 
-/* Localities: two rows of tinted tiles that scroll together, then a grid. */
-.locality-tiles { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, auto); grid-auto-columns: min(45%, 176px); gap: 8px; scroll-snap-type: x proximity; }
+/* Localities: two rows of tinted tiles that scroll together, then a grid.
+   Each tile names the place and offers what it holds for each intent as
+   its own 44px link — "5 for sale", "2 to rent" (Phase B). */
+.locality-tiles { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, auto); grid-auto-columns: min(52%, 188px); gap: 8px; scroll-snap-type: x proximity; }
 .locality-tiles > li { min-width: 0; scroll-snap-align: start; }
-.locality-tile { display: flex; height: 100%; min-height: 58px; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; color: var(--color-brand-700); transition: transform .2s, box-shadow .2s; }
+.locality-tile { display: flex; height: 100%; flex-direction: column; justify-content: space-between; gap: 2px; padding: 10px 8px 4px 12px; border-radius: 14px; transition: box-shadow .2s; }
+.locality-tile-name { display: flex; min-width: 0; align-items: center; gap: 6px; font-size: var(--text-body-sm); font-weight: 600; line-height: 20px; color: var(--color-ink-900); }
+.locality-tile-name svg { color: var(--color-brand-700); }
+.locality-tile-links { display: flex; flex-wrap: wrap; column-gap: 2px; margin-left: -8px; }
+.locality-count { display: inline-flex; min-height: 44px; align-items: center; gap: 3px; padding: 0 8px; border-radius: 10px; font-size: 13px; color: var(--color-ink-700); white-space: nowrap; }
+.locality-count:hover { background: var(--color-surface-000); color: var(--color-brand-700); text-decoration: underline; }
 .locality-tone-0 { background: var(--home-tint-mint); }
 .locality-tone-1 { background: var(--home-tint-sand); }
 .locality-tone-2 { background: var(--home-tint-sky); }
 .locality-tone-3 { background: var(--home-tint-rose); }
 @media (min-width: 1024px) {
-  .locality-tiles { grid-auto-flow: row; grid-template-rows: none; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin: 20px 0 0; padding: 0; overflow: visible; }
+  .locality-tiles { grid-auto-flow: row; grid-template-rows: none; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 20px 0 0; padding: 0; overflow: visible; }
 }
+@media (min-width: 1280px) { .locality-tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 .all-localities { margin-top: 4px; border: 1px solid var(--color-border-subtle); border-radius: 14px; background: var(--color-surface-000); }
 .all-localities summary { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px; border-radius: 13px; cursor: pointer; list-style: none; font-size: 14px; font-weight: 600; color: var(--color-brand-700); }
 .all-localities summary::-webkit-details-marker { display: none; }
@@ -596,23 +611,21 @@
 @media (min-width: 640px) { .all-localities ul { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1024px) { .all-localities { margin-top: 16px; } .all-localities ul { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 
-/* Property types: a drawing per type, so five tiles read as five things. */
-.browse-subhead { margin-top: 16px; font-size: 15px; line-height: 20px; font-weight: 600; color: var(--color-ink-900); }
-.type-tiles { display: grid; grid-auto-flow: column; grid-auto-columns: min(38%, 152px); gap: 10px; margin-top: 8px; scroll-snap-type: x proximity; }
+/* Property types: a drawing per type, so five tiles read as five things;
+   under it, what each holds for sale and to rent, each its own link. */
+.type-tiles { display: grid; grid-auto-flow: column; grid-auto-columns: min(52%, 196px); gap: 10px; margin-top: 16px; scroll-snap-type: x proximity; }
 .type-tiles > li { min-width: 0; scroll-snap-align: start; }
-.type-tile { display: flex; height: 100%; flex-direction: column; gap: 2px; padding: 12px; border-radius: 16px; transition: transform .2s, box-shadow .2s; }
+.type-tile { display: flex; height: 100%; flex-direction: column; padding: 12px 8px 4px 12px; border-radius: 16px; transition: box-shadow .2s; }
+.type-tile-name { font-size: var(--text-body-sm); font-weight: 600; line-height: 20px; color: var(--color-ink-900); }
+.type-tile-links { display: flex; flex-wrap: wrap; column-gap: 2px; margin: auto 0 0 -6px; padding-top: 2px; }
+.type-count { display: inline-flex; min-height: 44px; align-items: center; gap: 3px; padding: 0 6px; border-radius: 10px; font-size: 13px; color: var(--color-ink-700); white-space: nowrap; }
+.type-count:hover { background: var(--color-surface-000); color: var(--color-brand-700); text-decoration: underline; }
 .type-tone-0 { background: var(--home-tint-mint); }
 .type-tone-1 { background: var(--home-tint-sand); }
 .type-tone-2 { background: var(--home-tint-sky); }
 .type-tone-3 { background: var(--home-tint-rose); }
 .type-tone-4 { background: var(--home-tint-lime); }
-.type-art { display: block; width: 72px; height: 54px; margin-bottom: 6px; }
-/* Wide tiles put the drawing in the corner, so a row of five stays short. */
-@media (min-width: 1024px) {
-  .type-tile { position: relative; min-height: 136px; padding: 16px 16px 14px; }
-  .type-tile > span:first-of-type { max-width: calc(100% - 20px); }
-  .type-art { position: absolute; right: 12px; bottom: 12px; width: 88px; height: 66px; margin: 0; }
-}
+.type-art { display: block; width: 64px; height: 48px; margin-bottom: 6px; }
 .type-art-ground { fill: var(--color-border-strong); }
 .type-art-main { fill: var(--color-brand-600); }
 .type-art-accent { fill: var(--home-art-ochre); }
@@ -622,21 +635,30 @@
 .type-art-leaf { fill: var(--color-brand-500); }
 .type-art-wall { fill: var(--color-surface-000); }
 @media (min-width: 768px) {
-  .type-tiles { grid-auto-flow: row; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 12px 0 0; padding: 0; overflow: visible; }
+  .type-tiles { grid-auto-flow: row; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin: 20px 0 0; padding: 0; overflow: visible; }
 }
 @media (hover: hover) {
-  .locality-tile:hover, .type-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-e2); }
+  .locality-tile:hover, .type-tile:hover { box-shadow: var(--shadow-e2); }
 }
 
-/* Budget and configuration: labelled chip rows, scannable in one pass. */
-.browse-grid { display: grid; gap: 12px; margin-top: 16px; }
-.browse-card { padding: 16px; border: 1px solid var(--color-border-subtle); border-radius: 18px; background: var(--color-surface-000); }
-.browse-card-title { font-size: 15px; line-height: 20px; font-weight: 600; color: var(--color-ink-900); }
-.browse-caption { margin-top: 12px; font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--color-ink-500); }
-.link-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-.link-chip { display: inline-flex; min-height: 40px; align-items: center; padding: 0 14px; border: 1px solid var(--color-border-strong); border-radius: var(--radius-full); background: var(--color-surface-000); font-size: 13px; font-weight: 600; color: var(--color-ink-900); transition: background-color .2s, border-color .2s, color .2s; }
-.link-chip:hover { border-color: var(--color-brand-600); background: var(--color-brand-100); color: var(--color-brand-700); }
-@media (min-width: 768px) { .browse-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } .browse-card { padding: 20px; } }
+/* Budget and size: compact white tiles, the count under the label, in
+   grids a thumb can scan. Side by side from 1024px. */
+.browse-pair { display: grid; }
+@media (min-width: 1024px) { .browse-pair { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); column-gap: 40px; } }
+.browse-caption { margin-top: 16px; font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--color-ink-500); }
+.count-tiles { display: grid; gap: 8px; margin-top: 8px; }
+.count-tiles-budget { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.count-tiles-size { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (min-width: 560px) { .count-tiles-budget { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.count-tile {
+  display: flex; height: 100%; min-height: 56px; flex-direction: column; justify-content: center; gap: 1px;
+  padding: 8px 12px; border: 1px solid var(--color-border-subtle); border-radius: 12px; background: var(--color-surface-000);
+  transition: border-color .2s, box-shadow .2s;
+}
+.count-tile:hover { border-color: var(--color-brand-600); box-shadow: var(--shadow-e1); }
+.count-tile-label { font-size: 14px; line-height: 19px; font-weight: 600; color: var(--color-ink-900); white-space: nowrap; }
+.count-tile-count { font-size: 12.5px; line-height: 17px; color: var(--color-ink-500); }
+.count-tiles-size .count-tile { align-items: center; padding: 8px 4px; text-align: center; }
 
 .property-card { transition: box-shadow .25s, transform .25s; }
 .property-card:hover { box-shadow: 0 12px 32px var(--home-shadow); transform: translateY(-3px); }
@@ -661,14 +683,20 @@
 }
 @media (min-width: 1101px) { .seller-invitation { padding: 58px; } .seller-invitation h2 { font-size: 42px; } .seller-orbit { right: -40px; opacity: 1; } }
 
-.home-how { padding-bottom: 24px; }
-.how-steps { display: grid; margin-top: 12px; }
-.how-step { display: flex; gap: 14px; padding: 14px 0; border-top: 1px solid var(--color-border-subtle); }
-.how-number { flex: none; width: 30px; font-family: Georgia, serif; font-size: 22px; line-height: 24px; color: var(--color-brand-600); }
-@media (min-width: 768px) {
-  .how-steps { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 24px; }
-  .how-step { flex-direction: column; gap: 12px; padding: 24px 0 0; border-top-color: var(--color-border-strong); }
-  .how-number { width: auto; font-size: 34px; line-height: 1; }
+/* Why GharBazaar: four plain statements, each with a pastel icon — the
+   page's colour here comes from the tints, not from more green. */
+.home-why { padding-bottom: 8px; }
+.why-points { display: grid; gap: 12px; margin-top: 16px; }
+.why-point { display: flex; gap: 14px; padding: 16px; border: 1px solid var(--color-border-subtle); border-radius: 16px; background: var(--color-surface-000); }
+.why-icon { display: grid; flex: none; place-items: center; width: 44px; height: 44px; border-radius: 12px; color: var(--color-ink-900); }
+.why-tone-mint { background: var(--home-tint-mint); }
+.why-tone-sky { background: var(--home-tint-sky); }
+.why-tone-sand { background: var(--home-tint-sand); }
+.why-tone-rose { background: var(--home-tint-rose); }
+@media (min-width: 768px) { .why-points { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } }
+@media (min-width: 1280px) {
+  .why-points { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .why-point { flex-direction: column; }
 }
 
 .footer-intro { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 40px; margin-bottom: 35px; border-bottom: 1px solid var(--color-border-subtle); }
@@ -679,7 +707,7 @@
   .footer-intro p { font-size: 23px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .compact-card:hover, .locality-tile:hover, .type-tile:hover, .seller-link:hover, .property-card:hover { transform: none; }
+  .compact-card:hover, .seller-link:hover, .property-card:hover { transform: none; }
   .compact-card:hover img, .property-card:hover img { transform: none; }
 }
 

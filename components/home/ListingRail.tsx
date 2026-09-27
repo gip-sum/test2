@@ -2,12 +2,11 @@ import Link from 'next/link'
 import { SectionHeading } from './SectionHeading'
 import { CompactPropertyCard } from '@/components/property/CompactPropertyCard'
 import { ArrowRightIcon } from '@/components/ui/icons'
-import { getListingCount, getRecentListings } from '@/lib/property/queries'
-import type { Intent } from '@/lib/property/types'
+import type { Collection } from '@/lib/home/discovery'
 import { LAUNCH_CITY } from '@/lib/brand'
 
 /**
- * Live inventory, as a swipeable rail.
+ * A collection of live listings, as a swipeable rail.
  *
  * Phones and tablets get a horizontal scroller whose cards are narrower
  * than the screen, so the next card always shows at the edge — the peek is
@@ -15,33 +14,44 @@ import { LAUNCH_CITY } from '@/lib/brand'
  * cleanly. From 1024px it becomes a four-column grid of the same list: one
  * DOM, no duplicate rendering, and no mouse user stranded in a scroller.
  *
- * The rail ends in a "see all" card carrying the real inventory count, so
- * a swipe finishes at a next step rather than a dead end. On a wide screen
- * the grid shows the first four items: with four or more listings that is
- * four cards, and with fewer the card fills the row instead of a hole.
+ * The rail ends in a "see all" card carrying the real total, so a swipe
+ * finishes at a next step rather than a dead end. On a wide screen the grid
+ * shows the first four items: with four or more listings that is four
+ * cards, and with fewer the card fills the row instead of a hole.
  *
- * Titled for what it is — the newest listings — not "recommended": there
- * is no recommendation logic behind it (that is Phase 39). No two cards
- * share a cover photo: the same photo twice in one row reads as a repost.
+ * Presentational (Phase B): what goes in it, and how many there are in
+ * all, comes from lib/home/discovery, through the search seam. Each rail is
+ * titled for what it is — the newest, the reduced, the under construction
+ * — never "recommended": there is no recommendation logic (Phase 39).
+ *
+ * A rail with nothing in it disappears, unless it is given an invitation
+ * to show instead: the two main rails say plainly that nothing is listed
+ * yet and invite the first listing; a secondary collection just steps
+ * aside.
  */
 export function ListingRail({
-  intent,
+  collection,
   eyebrow,
   title,
   description,
+  noun,
+  invite = false,
+  priority = false,
 }: {
-  intent: Intent
+  collection: Collection
   eyebrow: string
   title: string
   description: string
+  /** Completes "See all homes …" and the empty invitation: "for sale", "to rent", "with a reduced price". */
+  noun: string
+  invite?: boolean
+  priority?: boolean
 }) {
-  const listings = getRecentListings({ intent, limit: 8, withPhotos: true, distinctPhotos: true })
-  const total = getListingCount(intent)
-  const headingId = `rail-${intent}`
-  const seeAll = `/${intent}/${LAUNCH_CITY.slug}?sort=newest`
-  const noun = intent === 'buy' ? 'for sale' : 'to rent'
+  const { id, listings, total, href } = collection
+  const headingId = `rail-${id}`
 
   if (listings.length === 0) {
+    if (!invite) return null
     return (
       <section aria-labelledby={headingId} className="home-section">
         <SectionHeading id={headingId} eyebrow={eyebrow} title={title} />
@@ -64,16 +74,16 @@ export function ListingRail({
         eyebrow={eyebrow}
         title={title}
         description={description}
-        action={{ href: seeAll, label: 'See all', context: `homes ${noun}` }}
+        action={{ href, label: 'See all', context: `homes ${noun}` }}
       />
       <ul className="listing-rail" aria-labelledby={headingId}>
         {listings.map((property, index) => (
           <li key={property.id} className="listing-rail-item">
-            <CompactPropertyCard property={property} priority={intent === 'buy' && index === 0} />
+            <CompactPropertyCard property={property} priority={priority && index === 0} />
           </li>
         ))}
         <li className="listing-rail-item listing-rail-end">
-          <Link href={seeAll} className="rail-end-card">
+          <Link href={href} className="rail-end-card">
             <span className="rail-end-icon" aria-hidden="true"><ArrowRightIcon className="size-5" /></span>
             <span className="text-body font-semibold text-ink-900">See all homes {noun}</span>
             <span className="tabular text-body-sm text-ink-700">

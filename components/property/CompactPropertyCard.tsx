@@ -26,7 +26,7 @@ import { propertyPath } from '@/lib/property/public-id'
 export function CompactPropertyCard({ property, priority }: { property: PropertySummary; priority?: boolean }) {
   const {
     publicId, slug, title, society, localityName, cityName, intent, price, bedrooms,
-    carpetArea, areaUnit, areaBasis, propertyType, sellerType, postedAt, photos, isPriceReduced,
+    carpetArea, areaUnit, areaBasis, propertyType, sellerType, postedAt, photos, isPriceReduced, constructionStatus,
   } = property
   const cover = photos[0]
   // Bedrooms and the area with its basis — the two figures a browser
@@ -35,10 +35,13 @@ export function CompactPropertyCard({ property, priority }: { property: Property
   const configuration = propertyType === 'STUDIO' ? 'Studio' : formatConfiguration(bedrooms, null)
   const area = formatAreaCompact(carpetArea, areaUnit, areaBasis)
 
-  // Two badges maximum, in the same priority order as PropertyCard.
-  const badges: Array<{ tone: 'brand' | 'supply'; label: string }> = []
+  // Two badges maximum, in the same priority order as PropertyCard. Each
+  // is a fact the listing states — never a judgement like "hot" or
+  // "verified" the platform cannot back.
+  const badges: Array<{ tone: 'brand' | 'supply' | 'neutral'; label: string }> = []
   if (isNewListing(postedAt)) badges.push({ tone: 'brand', label: 'New' })
   if (isPriceReduced) badges.push({ tone: 'supply', label: 'Price reduced' })
+  if (constructionStatus === 'UNDER_CONSTRUCTION') badges.push({ tone: 'neutral', label: 'Under construction' })
 
   return (
     <article className="compact-card group relative flex h-full flex-col overflow-hidden rounded-lg border border-border-subtle bg-surface-000 shadow-e1 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-focus-ring">

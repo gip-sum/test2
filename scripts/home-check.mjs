@@ -207,11 +207,19 @@ try {
 
   // ── Listing rails: swipe, snap, peek, and an honest end card ─────────
   await home(page)
-  const rails = await page.locator('ul.listing-rail').count()
-  await check('there is a rail for sale and a rail to rent', rails === 2)
+  // Phase B: the collections the data supports, in page order. With the
+  // fixture that is all four; a collection with nothing in it would not
+  // render (unit-tested in lib/home/discovery.test.ts).
+  const railIds = await page.locator('ul.listing-rail').evaluateAll((uls) => uls.map((ul) => ul.getAttribute('aria-labelledby')))
+  await check(`the collections, in order: ${railIds.join(', ')}`, JSON.stringify(railIds) === JSON.stringify(['rail-new-sale', 'rail-new-rent', 'rail-reduced', 'rail-under-construction']))
+  const railListings = await page.locator('ul.listing-rail').evaluateAll((uls) => uls.map((ul) => [...ul.querySelectorAll('article')].map((a) => ({ href: a.querySelector('a').getAttribute('href'), cover: a.querySelector('img')?.getAttribute('src') ?? '' }))))
+  const everyListing = railListings.flat().map((c) => c.href)
+  await check('no listing appears in two collections', new Set(everyListing).size === everyListing.length, JSON.stringify(everyListing))
+  await check('no collection repeats a cover photo', railListings.every((cards) => new Set(cards.map((c) => c.cover)).size === cards.length))
   const client = await page.context().newCDPSession(page)
-  for (const [index, intent] of [[0, 'buy'], [1, 'rent']]) {
+  for (const [index, id] of railIds.entries()) {
     const rail = page.locator('ul.listing-rail').nth(index)
+    const section = page.locator(`section[aria-labelledby="${id}"]`)
     await rail.evaluate((ul) => ul.scrollIntoView({ block: 'center', behavior: 'instant' }))
     const m = await rail.evaluate((ul) => {
       const items = [...ul.children].map((li) => li.getBoundingClientRect())
@@ -227,11 +235,11 @@ try {
         cards: cards.length,
       }
     })
-    await check(`${intent} rail: scrolls sideways and snaps`, m.scrolls && m.snap.includes('x') && m.snap.includes('mandatory'), m.snap)
-    await check(`${intent} rail: the first card is wholly on screen`, m.first.left >= 0 && m.first.right <= 390)
+    await check(`${id}: scrolls sideways and snaps`, m.scrolls && m.snap.includes('x') && m.snap.includes('mandatory'), m.snap)
+    await check(`${id}: the first card is wholly on screen`, m.first.left >= 0 && m.first.right <= 390)
     const peek = (390 - m.second.left) / m.second.width
-    await check(`${intent} rail: the next card shows at the edge`, peek > 0.2 && peek < 0.8, `${Math.round(peek * 100)}% visible`)
-    await check(`${intent} rail: every card is the same size`, m.widths.length === 1 && m.heights.length === 1, `widths ${m.widths}, heights ${m.heights}`)
+    await check(`${id}: the next card shows at the edge`, peek > 0.2 && peek < 0.8, `${Math.round(peek * 100)}% visible`)
+    await check(`${id}: every card is the same size`, m.widths.length === 1 && m.heights.length === 1, `widths ${m.widths}, heights ${m.heights}`)
 
     // A real touch swipe — finger down on the first card's photo, dragged
     // 170px to the left, lifted — through the browser's own gesture
@@ -249,7 +257,7 @@ try {
       const edge = ul.getBoundingClientRect().left + parseFloat(getComputedStyle(ul).scrollPaddingLeft || '0')
       return { scrollLeft: ul.scrollLeft, offsets: [...ul.children].map((li) => Math.round(li.getBoundingClientRect().left - edge)) }
     })
-    await check(`${intent} rail: a swipe moves on and lands a card cleanly at the edge`, landed.scrollLeft > 0 && landed.offsets.some((o) => Math.abs(o) <= 1), JSON.stringify(landed))
+    await check(`${id}: a swipe moves on and lands a card cleanly at the edge`, landed.scrollLeft > 0 && landed.offsets.some((o) => Math.abs(o) <= 1), JSON.stringify(landed))
     await rail.evaluate((ul) => ul.scrollTo({ left: 0, behavior: 'instant' }))
 
     // Each card: one link to its listing, a named save button, a price, and
@@ -260,18 +268,26 @@ try {
       price: /₹/.test(a.textContent ?? ''),
       sample: [...a.querySelectorAll('span')].some((s) => s.textContent === 'Sample'),
     })))
-    await check(`${intent} rail: each card is one link to its listing, with a price, a save button and the sample label`,
+    await check(`${id}: each card is one link to its listing, with a price, a save button and the sample label`,
       cards.length > 0 && cards.every((c) => c.links.length === 1 && c.links[0].startsWith('/property/') && /^Save /.test(c.save) && c.price && c.sample), JSON.stringify(cards[0]))
 
     const end = rail.locator('li.listing-rail-end a')
     const endText = (await end.innerText()).replace(/\s+/g, ' ')
     const claimed = Number(endText.match(/(\d+) listings?/)?.[1])
-    await check(`${intent} rail: ends in a "see all" card`, (await end.getAttribute('href')) === `/${intent}/kolkata?sort=newest` && endText.includes(`See all homes ${intent === 'buy' ? 'for sale' : 'to rent'}`), endText)
+    const endHref = await end.getAttribute('href')
+    const headHref = await section.locator('.home-section-head a').getAttribute('href')
+    await check(`${id}: ends in a "see all" card that goes where the heading's See all goes (${endHref})`, endHref === headHref && endText.startsWith('See all homes'), endText)
     const results = await open(390, 844)
-    await results.goto(base + `/${intent}/kolkata?sort=newest`)
-    await check(`${intent} rail: the end card's count is the count its results page shows`, claimed === (await resultCount(results)), `${claimed} claimed`)
+    await results.goto(base + endHref)
+    await check(`${id}: the end card's count (${claimed}) is the count its results page shows`, claimed === (await resultCount(results)), `${claimed} claimed`)
     await results.context().close()
   }
+  await check('the first two collections are the newest for sale and to rent',
+    await page.locator('section[aria-labelledby="rail-new-sale"] li.listing-rail-end a').getAttribute('href') === '/buy/kolkata?sort=newest' &&
+    await page.locator('section[aria-labelledby="rail-new-rent"] li.listing-rail-end a').getAttribute('href') === '/rent/kolkata?sort=newest')
+  const reducedBadges = await page.locator('section[aria-labelledby="rail-reduced"] article').evaluateAll((as) => as.map((a) => a.textContent.includes('Price reduced')))
+  const buildingBadges = await page.locator('section[aria-labelledby="rail-under-construction"] article').evaluateAll((as) => as.map((a) => a.textContent.includes('Under construction')))
+  await check('every card in the price-reduced and under-construction collections says so on its photo', reducedBadges.every(Boolean) && buildingBadges.every(Boolean) && reducedBadges.length > 0 && buildingBadges.length > 0)
 
   // ── Save, signed out ─────────────────────────────────────────────────
   await home(page)
@@ -307,32 +323,50 @@ try {
   const headerLines = await page.locator('header a').evaluateAll((links) => links.filter((l) => l.offsetParent).map((l) => [l.textContent.trim(), Math.round(l.getBoundingClientRect().height)]))
   await check('header controls keep to one line', headerLines.every(([, h]) => h <= 48), JSON.stringify(headerLines))
 
-  // ── Localities and property types: real counts, real pages ───────────
-  const localityTiles = await page.locator('ul.locality-tiles a').evaluateAll((links) => links.map((l) => ({
-    href: l.getAttribute('href'), text: l.textContent, top: Math.round(l.getBoundingClientRect().top), height: l.getBoundingClientRect().height,
+  // ── Every count on the page: a real link, and the number its page shows ──
+  // Localities, property types, budgets and sizes (Phase B). Each figure is
+  // read off the page and checked against the results page it opens.
+  const localityTiles = await page.locator('ul.locality-tiles > li').evaluateAll((lis) => lis.map((li) => ({
+    name: li.querySelector('.locality-tile-name').textContent.trim(),
+    top: Math.round(li.getBoundingClientRect().top),
+    links: [...li.querySelectorAll('a')].map((a) => ({ href: a.getAttribute('href'), text: a.textContent.trim() })),
   })))
-  await check('twelve popular localities, each a link to its results', localityTiles.length === 12 && localityTiles.every((t) => /^\/buy\/kolkata\/[a-z-]+$/.test(t.href)))
+  await check('twelve popular localities, each offering its sale and rent results', localityTiles.length === 12 &&
+    localityTiles.every((t) => t.links.length >= 1 && t.links.every((l) => /^\/(buy|rent)\/kolkata\/[a-z-]+$/.test(l.href))), JSON.stringify(localityTiles[0]))
+  await check('each locality link names its place for a screen reader', localityTiles.every((t) => t.links.every((l) => l.text.includes(t.name))))
+  await check('some localities offer homes to rent as well as for sale', localityTiles.some((t) => t.links.some((l) => l.href.startsWith('/rent/'))))
   await check('on a phone they sit in two rows that scroll together', new Set(localityTiles.map((t) => t.top)).size === 2 && await page.locator('ul.locality-tiles').evaluate((ul) => ul.scrollWidth > ul.clientWidth))
-  await check('every locality tile is at least 44px tall', localityTiles.every((t) => t.height >= 44))
-  const typeTiles = await page.locator('ul.type-tiles a').evaluateAll((links) => links.map((l) => ({ href: l.getAttribute('href'), text: l.textContent })))
-  await check('five property types, each a link to its landing page',
-    JSON.stringify(typeTiles.map((t) => t.href)) === JSON.stringify(['/buy/kolkata/flats', '/buy/kolkata/independent-houses', '/buy/kolkata/builder-floors', '/buy/kolkata/villas', '/buy/kolkata/studio-apartments']))
-  const counted = [...localityTiles, ...typeTiles].filter((t) => /\d+ for sale/.test(t.text))
+  const typeLinks = await page.locator('ul.type-tiles a').evaluateAll((links) => links.map((l) => l.getAttribute('href')))
+  await check('property types link to their landing pages, for sale and to rent',
+    typeLinks.length >= 5 && typeLinks.every((h) => /^\/(buy|rent)\/kolkata\/(flats|independent-houses|builder-floors|villas|studio-apartments)$/.test(h)) && typeLinks.includes('/buy/kolkata/flats') && typeLinks.includes('/rent/kolkata/flats'), JSON.stringify(typeLinks))
+  const countLinks = await page.locator('ul.locality-tiles a, ul.type-tiles a, ul.count-tiles a').evaluateAll((links) => links.map((l) => ({
+    href: l.getAttribute('href'),
+    text: l.textContent.replace(/\s+/g, ' ').trim(),
+    height: l.getBoundingClientRect().height,
+    width: l.getBoundingClientRect().width,
+  })))
+  await check(`every count link is at least 44px tall (${countLinks.length} links)`, countLinks.every((l) => l.height >= 44), JSON.stringify(countLinks.filter((l) => l.height < 44).slice(0, 3)))
+  await check('budget and size tiles cover buying and renting', (await page.locator('section[aria-labelledby="browse-budget"] ul.count-tiles').count()) === 2 && (await page.locator('section[aria-labelledby="browse-size"] ul.count-tiles').count()) === 2)
+  await check('"Up to ₹25 L" goes to its landing page, not a query string', await page.locator('section[aria-labelledby="browse-budget"] a', { hasText: 'Up to ₹25 L' }).getAttribute('href') === '/buy/kolkata/under-25-lakh')
   const checker = await open(390, 844)
-  for (const tile of counted) {
-    const claimed = Number(tile.text.match(/(\d+) for sale/)[1])
-    await checker.goto(base + tile.href)
+  let matched = 0
+  for (const link of countLinks) {
+    const claimed = Number(link.text.match(/(\d+) (for sale|to rent|homes?)/)?.[1])
+    if (!Number.isFinite(claimed)) continue
+    await checker.goto(base + link.href)
     const shown = await resultCount(checker)
-    await check(`"${tile.text.replace(/(\d+ for sale)/, ' — $1')}" matches its results page`, claimed === shown, `${shown} on the page`)
+    if (claimed !== shown) await check(`"${link.text}" matches its results page (${link.href})`, false, `${shown} on the page`)
+    matched++
   }
+  await check(`every count on the homepage matches its results page (${matched} counts checked)`, matched >= 40)
   await checker.context().close()
-  await check('a place or type with nothing listed says Explore, never 0', [...localityTiles, ...typeTiles].every((t) => !/\b0 for sale/.test(t.text)))
+  await check('nothing says 0: an empty place, type, band or size is left out, or says Explore', countLinks.every((l) => !/(^|\s)0 (for sale|to rent|homes?)/.test(l.text)))
 
   const all = page.locator('details.all-localities')
   await check('the full locality index starts closed', !(await all.evaluate((d) => d.open)))
   await all.locator('summary').click()
   const index = await all.locator('ul a').evaluateAll((links) => links.map((l) => [l.getAttribute('href'), l.getBoundingClientRect().height]))
-  const promised = Number((await all.locator('summary').innerText()).match(/All (\d+) localities/)?.[1])
+  const promised = Number((await all.locator('summary').innerText()).match(/See all (\d+) localities/)?.[1])
   await check('opening it lists every locality it promises, as 44px links', index.length === promised && promised >= 30 && index.every(([href, h]) => href.startsWith('/buy/kolkata/') && h >= 44), `${index.length} of ${promised}`)
 
   // ── Every link on the page resolves ──────────────────────────────────
@@ -347,8 +381,14 @@ try {
   // ── Honesty: sample data is labelled; nothing is invented ────────────
   await check('the sample-data notice is on the page', await page.getByText('Listings shown are sample data.').isVisible())
   const body = await page.locator('main').innerText()
-  const invented = ['RERA', 'Recommended', 'Offer', 'Demand', 'FREE', 'Verified', 'Trending'].filter((word) => new RegExp(`\\b${word}`, 'i').test(body))
-  await check('no projects, RERA badges, offers or demand figures the product cannot back', invented.length === 0, invented.join(', '))
+  const invented = ['RERA', 'Recommended', 'Offer', 'Demand', 'FREE', 'Verified', 'Trending', 'Trusted', 'rated', 'reviews?', 'customers', 'users', 'happy', 'No\\.? ?1', '#1', 'projects?'].filter((word) => new RegExp(`\\b${word}`, 'i').test(body))
+  await check('no projects, RERA badges, offers, ratings, user counts or demand figures the product cannot back', invented.length === 0, invented.join(', '))
+  // Phase B's discovery hierarchy, in order, below the search.
+  const order = await page.locator('main h2').evaluateAll((hs) => hs.map((h) => h.id).filter(Boolean))
+  await check(`the homepage sections, in order: ${order.join(' › ')}`, JSON.stringify(order) === JSON.stringify([
+    'rail-new-sale', 'rail-new-rent', 'rail-reduced', 'popular-localities', 'browse-type', 'browse-budget', 'browse-size',
+    'rail-under-construction', 'plan-purchase', 'why-us', 'post-cta',
+  ]))
   // The calculators are real (Phase 40A), so the homepage may point at them.
   const plan = await page.locator('section[aria-labelledby="plan-purchase"] a').evaluateAll((links) => links.map((l) => l.getAttribute('href')))
   await check('the plan-your-purchase section links to both working calculators', JSON.stringify(plan) === JSON.stringify(['/calculators/budget', '/calculators/emi']), JSON.stringify(plan))
@@ -438,10 +478,20 @@ try {
   }
 
   // ── No horizontal overflow at any target width ───────────────────────
-  for (const width of [390, 412, 768, 1280]) {
+  // Measured after scrolling the whole page, and with layout shift recorded
+  // throughout: tiles, rails and images are sized before they paint.
+  for (const width of [390, 412, 768, 1024, 1280]) {
     const p = await open(width, 900)
+    await p.addInitScript(() => {
+      window.__cls = 0
+      new PerformanceObserver((list) => { for (const e of list.getEntries()) if (!e.hadRecentInput) window.__cls += e.value }).observe({ type: 'layout-shift', buffered: true })
+    })
     await home(p)
-    await check(`${width}px: no horizontal overflow`, await p.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1))
+    await p.evaluate(async () => { for (let y = 0; y < document.body.scrollHeight; y += 500) { window.scrollTo(0, y); await new Promise((r) => setTimeout(r, 30)) } })
+    await p.waitForTimeout(300)
+    await check(`${width}px: no horizontal overflow, top to bottom`, await p.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1))
+    const cls = await p.evaluate(() => window.__cls)
+    await check(`${width}px: no layout shift while the page loads and scrolls (CLS ${cls.toFixed(4)})`, cls < 0.01)
     await p.context().close()
   }
 
