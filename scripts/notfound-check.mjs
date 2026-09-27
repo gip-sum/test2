@@ -40,7 +40,10 @@ try {
     const response = await page.goto(`${base}${path}`)
     await check(`${path} returns 404 with the animated page`, response.status() === 404 && await page.getByRole('heading', { level: 1, name: TITLE }).isVisible() && await page.locator('.nf-scene').count() === 1)
   }
-  await check('the bottom nav is shown even under /property', await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Saved' }).isVisible())
+  await check('the bottom nav is shown even under /property', await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Activity' }).isVisible())
+  // The page forces the bar on, so the header must not add a second Menu (Phase D).
+  await check('…with one Menu control, the bar\'s, not a second in the header', await page.getByRole('button', { name: 'Menu', exact: true }).count() === 1 &&
+    await page.locator('header.app-bar').getByRole('button', { name: 'Menu' }).count() === 0)
 
   await page.goto(`${base}/this-page-does-not-exist`)
   await check('one h1, and the page is titled', await page.locator('h1').count() === 1 && (await page.title()).startsWith('Page not found'))

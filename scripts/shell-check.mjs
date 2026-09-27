@@ -29,6 +29,17 @@
 //  • every hub link resolves, and the page it opens names that same URL as
 //    its canonical, so the navigation never links a duplicate address.
 //
+// Phase D, the phone bar (components/navigation/BottomNav.tsx):
+//  • Home, Search, Post, Videos, Activity, Menu, in that order, at 360, 390,
+//    412 and 768, and no bar from 1024px;
+//  • six slots of at least 44×44 with no truncated label, Post inside the
+//    bar in the supply fill, labels on one baseline;
+//  • where you are on Home, Search and Videos by pill, weight and
+//    aria-current; Activity's signed-out redirect back to itself;
+//  • one Menu control per screen — the bar's, or the header's where the bar
+//    is hidden — opening the hub and taking focus back;
+//  • the page's last content clears the bar, safe-area inset included.
+//
 // Usage: npm run build && npm run start, then npm run shell-check
 import { chromium } from 'playwright-core'
 
@@ -102,20 +113,22 @@ try {
       const header = page.locator('header.app-bar')
       const navVisible = await header.getByRole('navigation', { name: 'Marketplace' }).isVisible()
       const menu = await header.getByRole('button', { name: 'Menu' }).isVisible()
+      // One menu control per screen: the bar's below 1024px (Phase D), none on desktop.
+      const menus = await page.getByRole('button', { name: 'Menu', exact: true }).evaluateAll((els) => els.filter((e) => e.offsetParent !== null).length)
       const headerPost = await header.getByRole('link', { name: 'Post property' }).isVisible()
       const barPost = await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Post' }).isVisible()
       const tops = await visibleText(page, 'header.app-bar .nav-top')
       const toggles = await header.getByRole('button', { name: /^More in / }).evaluateAll((els) => els.filter((e) => e.offsetParent !== null).length)
       const hubToggle = await header.getByRole('button', { name: 'Explore all' }).isVisible()
       if (width < 768) {
-        check(`${where}: phone header is logo, account and menu — no row of text links`,
-          !navVisible && menu && await header.getByRole('link', { name: /home$/ }).isVisible() && await header.getByRole('link', { name: /^(Log in|Account)$/ }).isVisible())
+        check(`${where}: phone header is logo and account — the bar carries Menu, so the header does not repeat it`,
+          !navVisible && !menu && menus === 1 && await header.getByRole('link', { name: /home$/ }).isVisible() && await header.getByRole('link', { name: /^(Log in|Account)$/ }).isVisible())
       } else if (width < 1024) {
-        check(`${where}: tablet header is a condensed nav (${tops.join(', ')}) plus account and menu, no panels`,
-          navVisible && JSON.stringify(tops) === JSON.stringify(['Buy', 'Rent', 'Localities']) && toggles === 0 && !hubToggle && menu)
+        check(`${where}: tablet header is a condensed nav (${tops.join(', ')}) plus account, no panels, and the bar's Menu is the only one`,
+          navVisible && JSON.stringify(tops) === JSON.stringify(['Buy', 'Rent', 'Localities']) && toggles === 0 && !hubToggle && !menu && menus === 1)
       } else {
         check(`${where}: desktop header has the four sections with their panels, Explore all, and no menu button`,
-          navVisible && JSON.stringify(tops) === JSON.stringify(['Buy', 'Rent', 'Localities', 'Home loans']) && toggles === 4 && hubToggle && !menu)
+          navVisible && JSON.stringify(tops) === JSON.stringify(['Buy', 'Rent', 'Localities', 'Home loans']) && toggles === 4 && hubToggle && !menu && menus === 0)
       }
       check(`${where}: Post property appears once (${headerPost ? 'header' : 'bottom bar'})`, headerPost !== barPost)
       if (path === '/buy/kolkata' || width >= 1024) {
@@ -164,8 +177,8 @@ try {
   const menuHrefs = new Set()
   {
     const page = await open(390, 844, '/calculators/emi')
-    const trigger = page.locator('header.app-bar').getByRole('button', { name: 'Menu' })
-    check('390px the menu button says it opens a dialog', await trigger.getAttribute('aria-haspopup') === 'dialog' && await trigger.getAttribute('aria-expanded') === 'false')
+    const trigger = page.getByRole('navigation', { name: 'Primary' }).getByRole('button', { name: 'Menu' })
+    check('390px the bar\'s Menu says it opens a dialog', await trigger.getAttribute('aria-haspopup') === 'dialog' && await trigger.getAttribute('aria-expanded') === 'false')
     await trigger.click()
     const dialog = page.getByRole('dialog', { name: /^Explore / })
     await dialog.waitFor()
@@ -189,12 +202,12 @@ try {
     check('390px the menu offers nothing the product does not have', !names.some((n) => FUTURE.test(n)))
     await page.keyboard.press('Escape')
     await dialog.waitFor({ state: 'detached' })
-    check('390px Escape returns focus to the menu button, and the page is no longer inert',
+    check('390px Escape returns focus to the bar\'s Menu, and the page is no longer inert',
       await trigger.evaluate((el) => el === document.activeElement) && await page.locator('[data-app-root]').evaluate((el) => el.inert === false))
     await page.context().close()
 
     const home = await open(390, 844, '/')
-    await home.locator('header.app-bar').getByRole('button', { name: 'Menu' }).click()
+    await home.getByRole('navigation', { name: 'Primary' }).getByRole('button', { name: 'Menu' }).click()
     await home.getByRole('dialog').getByRole('link', { name: /^Localities in/ }).click()
     await home.waitForFunction(() => location.hash === '#localities')
     await home.waitForTimeout(300)
@@ -279,19 +292,126 @@ try {
     check('1280px on a calculator, Home loans is marked', (await mark('Home loans')).current === 'true')
     await page.context().close()
 
-    const phone = await open(390, 844, '/')
-    const items = await phone.getByRole('navigation', { name: 'Primary' }).getByRole('link').evaluateAll((els) => els.map((el) => {
-      const pill = el.querySelector('span.rounded-full')
-      const label = el.lastElementChild
-      return { name: el.textContent.trim(), current: el.getAttribute('aria-current'), pill: pill ? getComputedStyle(pill).backgroundColor : null, weight: Number(getComputedStyle(label).fontWeight) }
+  }
+
+  // ── Phase D: the phone bar ───────────────────────────────────────────
+  const barItems = (page) => page.getByRole('navigation', { name: 'Primary' }).locator(':scope > ul > li > *').evaluateAll((els) => els.map((el) => {
+    const r = el.getBoundingClientRect()
+    const face = el.querySelector('.bar-pill, .bar-post')
+    const label = el.querySelector('.bar-label')
+    const lr = label.getBoundingClientRect()
+    return {
+      name: el.textContent.trim(), tag: el.tagName, current: el.getAttribute('aria-current'),
+      w: r.width, h: r.height, faceTop: face.getBoundingClientRect().top, labelTop: Math.round(lr.top),
+      fill: getComputedStyle(face).backgroundColor, weight: Number(getComputedStyle(label).fontWeight),
+      truncated: label.scrollWidth > label.clientWidth + 0.5 || lr.right > r.right + 0.5 || lr.left < r.left - 0.5,
+      ring: null,
+    }
+  }))
+  const ORDER = ['Home', 'Search', 'Post', 'Videos', 'Activity', 'Menu']
+  for (const [width, height] of [[360, 740], [390, 844], [412, 915], [768, 1024]]) {
+    const w = `${width}px`
+    const page = await open(width, height, '/')
+    const items = await barItems(page)
+    const bar = await page.getByRole('navigation', { name: 'Primary' }).evaluate((el) => ({ top: el.getBoundingClientRect().top, position: getComputedStyle(el).position, bottomGap: innerHeight - el.getBoundingClientRect().bottom }))
+    check(`${w} bar: ${ORDER.join(', ')}, in that order — Menu a button, the rest links`,
+      JSON.stringify(items.map((i) => i.name)) === JSON.stringify(ORDER) && items.every((i) => i.tag === (i.name === 'Menu' ? 'BUTTON' : 'A')), JSON.stringify(items.map((i) => [i.name, i.tag])))
+    check(`${w} bar: fixed to the bottom edge`, bar.position === 'fixed' && Math.abs(bar.bottomGap) < 1, JSON.stringify(bar))
+    check(`${w} bar: six slots of at least 44×44, no label cut off`, items.every((i) => i.w >= 43.5 && i.h >= 43.5 && !i.truncated), JSON.stringify(items.map((i) => [i.name, Math.round(i.w), Math.round(i.h), i.truncated])))
+    check(`${w} bar: the six labels share one baseline`, new Set(items.map((i) => i.labelTop)).size === 1, JSON.stringify(items.map((i) => i.labelTop)))
+    const post = items.find((i) => i.name === 'Post')
+    const supply = await page.evaluate(() => { const probe = document.createElement('i'); probe.style.color = 'var(--color-supply-600)'; document.body.append(probe); const c = getComputedStyle(probe).color; probe.remove(); return c })
+    check(`${w} bar: Post is the supply-filled circle, and sits inside the bar rather than over the page`,
+      post.fill === supply && post.faceTop >= bar.top && items.filter((i) => i.fill === supply).length === 1, JSON.stringify({ post, supply, barTop: bar.top }))
+    const home = items.find((i) => i.name === 'Home')
+    const rest = items.filter((i) => i.name !== 'Home' && i.name !== 'Post')
+    check(`${w} bar: on the homepage, Home is current — by a filled pill and a bold label, not only colour`,
+      home.current === 'page' && home.fill !== 'rgba(0, 0, 0, 0)' && home.weight >= 700 &&
+      rest.every((i) => i.current === null && i.fill === 'rgba(0, 0, 0, 0)' && i.weight < 700), JSON.stringify(items))
+    // The last thing on the page must clear the bar, safe-area inset included.
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+    await page.waitForTimeout(150)
+    const clear = await page.evaluate(() => {
+      const last = document.querySelector('footer.site-footer') ?? document.querySelector('main')
+      return { last: last.getBoundingClientRect().bottom, bar: document.querySelector('nav[aria-label="Primary"]').getBoundingClientRect().top }
+    })
+    check(`${w} bar: scrolled to the end, the page's last content ends above the bar`, clear.last <= clear.bar + 0.5, JSON.stringify(clear))
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)
+    check(`${w} bar: no horizontal overflow`, !overflow)
+    await page.context().close()
+  }
+  {
+    // The spacer carries the safe-area inset: emulate a home indicator.
+    const page = await open(390, 844, '/')
+    const spacer = await page.evaluate(() => {
+      const probe = document.createElement('div')
+      probe.style.cssText = 'position:fixed;height:env(safe-area-inset-bottom, 0px)'
+      document.body.append(probe)
+      const inset = probe.getBoundingClientRect().height
+      probe.remove()
+      const bar = document.querySelector('nav[aria-label="Primary"]').getBoundingClientRect().height
+      const gap = document.querySelector('.bar-spacer').getBoundingClientRect().height
+      return { inset, bar, gap, rule: [...document.styleSheets].flatMap((s) => { try { return [...s.cssRules] } catch { return [] } }).some((r) => r.selectorText === '.bar-spacer' && /safe-area-inset-bottom/.test(r.style.height)) }
+    })
+    check('390px the page\'s spacer is taller than the bar and includes the safe-area inset', spacer.gap > spacer.bar && spacer.rule, JSON.stringify(spacer))
+    await page.context().close()
+  }
+  for (const [path, name] of [['/buy/kolkata', 'Search'], ['/rent/kolkata/flats', 'Search'], ['/videos', 'Videos']]) {
+    const page = await open(390, 844, path)
+    const items = await barItems(page)
+    const current = items.filter((i) => i.current === 'page')
+    check(`390px on ${path}, ${name} is the one current item, by pill and weight`,
+      current.length === 1 && current[0].name === name && current[0].fill !== 'rgba(0, 0, 0, 0)' && current[0].weight >= 700, JSON.stringify(current))
+    await page.context().close()
+  }
+  {
+    // Keyboard: every item in order, each with a visible ring.
+    const page = await open(390, 844, '/videos')
+    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Home' }).focus()
+    const seen = []
+    for (let i = 0; i < 6; i++) {
+      seen.push(await page.evaluate(() => ({ name: document.activeElement.textContent.trim(), ring: getComputedStyle(document.activeElement).outlineStyle, inBar: Boolean(document.activeElement.closest('nav[aria-label="Primary"]')) })))
+      await page.keyboard.press('Tab')
+    }
+    check('390px Tab walks the bar in order, each item showing a focus ring',
+      JSON.stringify(seen.map((s) => s.name)) === JSON.stringify(ORDER) && seen.every((s) => s.inBar && s.ring !== 'none'), JSON.stringify(seen))
+    // Menu from the bar: expanded while open, focus returned on close.
+    const menu = page.getByRole('navigation', { name: 'Primary' }).getByRole('button', { name: 'Menu' })
+    await menu.focus()
+    await page.keyboard.press('Enter')
+    const dialog = page.getByRole('dialog', { name: /^Explore / })
+    await dialog.waitFor()
+    check('390px Enter on the bar\'s Menu opens the marketplace menu', await dialog.getByRole('navigation', { name: 'All destinations' }).isVisible())
+    await page.keyboard.press('Escape')
+    await dialog.waitFor({ state: 'detached' })
+    check('390px closing it returns focus to the bar\'s Menu', await menu.evaluate((el) => el === document.activeElement && el.getAttribute('aria-expanded') === 'false'))
+    // Videos is honest: a real page, not indexed, with no player pretending.
+    const videos = await page.evaluate(() => ({
+      h1: document.querySelector('h1')?.textContent, robots: document.querySelector('meta[name="robots"]')?.content,
+      media: document.querySelectorAll('video, iframe').length,
     }))
-    const homeItem = items.find((i) => i.name === 'Home')
-    const others = items.filter((i) => i.name !== 'Home' && i.name !== 'Post')
-    check('390px bottom bar: the six items, in order', JSON.stringify(items.map((i) => i.name)) === JSON.stringify(['Home', 'Search', 'Saved', 'Post', 'Enquiries', 'Account']))
-    check('390px bottom bar: Home is current by a filled pill and a bold label, not only colour',
-      homeItem.current === 'page' && homeItem.pill !== 'rgba(0, 0, 0, 0)' && homeItem.weight >= 700 &&
-      others.every((i) => i.current === null && i.pill === 'rgba(0, 0, 0, 0)' && i.weight < 700), JSON.stringify(items))
-    await phone.context().close()
+    check('/videos is an intentional page: one h1 saying there are no videos yet, noindex, no player', /aren.t here yet/.test(videos.h1) && /noindex/.test(videos.robots) && /follow/.test(videos.robots) && !/nofollow/.test(videos.robots) && videos.media === 0, JSON.stringify(videos))
+    const small = await page.locator('main a').evaluateAll((els) => els.map((el) => { const r = el.getBoundingClientRect(); return { t: el.textContent.trim().slice(0, 20), h: r.height } }).filter((t) => t.h < 43.5))
+    check('/videos every link is at least 44px tall', small.length === 0, JSON.stringify(small))
+    for (const a of await page.locator('main a').evaluateAll((els) => els.map((e) => e.getAttribute('href')))) menuHrefs.add(a)
+    await page.context().close()
+  }
+  {
+    // Activity, signed out: the existing guard, and back to Activity after.
+    const page = await open(390, 844, '/')
+    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Activity' }).click()
+    await page.waitForURL((url) => url.pathname === '/login')
+    check('390px Activity, signed out, goes through sign-in and returns to Activity', new URL(page.url()).searchParams.get('next') === '/account/activity', page.url())
+    await page.context().close()
+  }
+  for (const [width, height] of [[1024, 768], [1280, 800]]) {
+    const page = await open(width, height, '/')
+    const gone = await page.evaluate(() => ({
+      bar: document.querySelector('nav[aria-label="Primary"]')?.getBoundingClientRect().height ?? 0,
+      spacer: document.querySelector('.bar-spacer')?.getBoundingClientRect().height ?? 0,
+    }))
+    check(`${width}px no bottom bar and no spacer for it on desktop — the header carries navigation`, gone.bar === 0 && gone.spacer === 0, JSON.stringify(gone))
+    await page.context().close()
   }
 
   // ── The discovery hub: the phone and tablet menu ────────────────────
@@ -299,7 +419,7 @@ try {
   for (const [width, height] of [[390, 844], [412, 915], [768, 1024]]) {
     const w = `${width}px`
     const page = await open(width, height, '/')
-    await page.locator('header.app-bar').getByRole('button', { name: 'Menu' }).click()
+    await page.getByRole('navigation', { name: 'Primary' }).getByRole('button', { name: 'Menu' }).click()
     const dialog = page.getByRole('dialog', { name: /^Explore / })
     await dialog.waitFor()
     const shape = await dialog.evaluate((d) => {
@@ -342,7 +462,7 @@ try {
   {
     // Where you are, inside the hub: a section, a pill, a whole-row link.
     const page = await open(390, 844, '/rent/kolkata/flats')
-    await page.locator('header.app-bar').getByRole('button', { name: 'Menu' }).click()
+    await page.getByRole('navigation', { name: 'Primary' }).getByRole('button', { name: 'Menu' }).click()
     const dialog = page.getByRole('dialog')
     await dialog.waitFor()
     const marks = await dialog.locator('[aria-current]').evaluateAll((els) => els.map((e) => ({ v: e.getAttribute('aria-current'), t: e.textContent.trim(), bg: getComputedStyle(e.querySelector('.hub-pill-face') ?? e).backgroundColor })))

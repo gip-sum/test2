@@ -7,6 +7,7 @@ import { Sheet } from '@/components/ui/Sheet'
 import { ChevronRightIcon, HomeIcon, MenuIcon } from '@/components/ui/icons'
 import { BRAND } from '@/lib/brand'
 import { cn } from '@/lib/cn'
+import { bottomBarShown } from '@/lib/navigation/bottom-bar'
 import type { MarketplaceNav } from '@/lib/navigation/types'
 import { HUB_TITLE, HubGroup, HubRows, HubSell, HubTiles } from './hub'
 
@@ -29,10 +30,16 @@ import { HUB_TITLE, HubGroup, HubRows, HubSell, HubTiles } from './hub'
  * A link closes the sheet as it navigates: an in-page link (/#localities
  * on the homepage) would otherwise scroll the page behind a dialog that is
  * still open.
+ *
+ * Triggers: the bottom bar's Menu item ('bar', Phase D), "View all" on the
+ * quick routes ('text'), and the header's icon ('icon'), which shows only
+ * where the bottom bar is hidden — one menu control per screen.
  */
-export function MarketplaceMenu({ nav, trigger, className }: {
+export function MarketplaceMenu({ nav, trigger, barForced = false, className }: {
   nav: MarketplaceNav
-  trigger: 'icon' | 'text'
+  trigger: 'icon' | 'text' | 'bar'
+  /** For the header icon: the page forces the bottom bar on, so the bar's Menu is there. */
+  barForced?: boolean
   className?: string
 }) {
   const [open, setOpen] = useState(false)
@@ -41,9 +48,16 @@ export function MarketplaceMenu({ nav, trigger, className }: {
   const at = { pathname, onNavigate: done }
   const { hub } = nav
 
+  if (trigger === 'icon' && bottomBarShown(pathname, barForced)) return null
+
   return (
     <>
-      {trigger === 'icon' ? (
+      {trigger === 'bar' ? (
+        <button type="button" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)} className="bar-item">
+          <span className="bar-pill" aria-hidden="true"><MenuIcon className="size-5.5" /></span>
+          <span className="bar-label">Menu</span>
+        </button>
+      ) : trigger === 'icon' ? (
         <button type="button" aria-haspopup="dialog" aria-expanded={open} aria-label="Menu" onClick={() => setOpen(true)}
           className={cn('grid size-11 shrink-0 place-items-center rounded-md border border-border-strong text-ink-900 hover:border-ink-500', className)}>
           <MenuIcon className="size-5" />

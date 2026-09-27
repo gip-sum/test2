@@ -2,39 +2,55 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import type { ComponentType } from 'react'
 import { cn } from '@/lib/cn'
-import { HomeIcon, SearchIcon, HeartIcon, PlusIcon, MailIcon, UserIcon } from '@/components/ui/icons'
+import { HeartIcon, HomeIcon, PlusIcon, SearchIcon, VideoIcon } from '@/components/ui/icons'
 import { LAUNCH_CITY } from '@/lib/brand'
+import { bottomBarShown } from '@/lib/navigation/bottom-bar'
+import type { MarketplaceNav } from '@/lib/navigation/types'
+import { MarketplaceMenu } from './MarketplaceMenu'
+
+type Item = { href: string; label: string; Icon: ComponentType<{ className?: string }>; current: (path: string) => boolean }
+
+const under = (path: string, prefix: string) => path === prefix || path.startsWith(`${prefix}/`)
 
 /**
- * Primary navigation on phones, where most of this product's traffic will be.
+ * Primary navigation on phones and tablets, where most of this product's
+ * traffic will be (Phase D: the client's six-item model, after the 99acres
+ * app, in GharBazaar's own terms and colours).
  *
- * "Post" sits in the centre with the supply accent because supply is the
- * scarce side of the marketplace.
+ * Home · Search · Post · Videos · Activity · Menu.
  *
- * Hidden during focused workflows — the posting wizard, auth, and (later)
- * the gallery lightbox — where a persistent nav competes with the one
- * action the screen exists for. On the property page the sticky contact
- * bar takes its place: stacking a five-item nav under a primary call to
- * action on a 390px screen leaves neither of them usable.
+ *  • Post is the one filled circle, in the supply accent: supply is the
+ *    scarce side of the marketplace, and the seller's action must never be
+ *    mistaken for a buyer's. It sits inside the bar — Phase A lifted it
+ *    over the page, where it covered the content scrolling beneath.
+ *  • Activity replaces Saved and Enquiries: one place for what a visitor
+ *    has done, current on every page it leads to.
+ *  • Menu opens the marketplace menu (Phase C) — a button, not a page, and
+ *    the only menu control on screen wherever this bar shows.
+ *  • Account left the bar for Menu; it stays in the header on every screen.
+ *
+ * Where it is hidden lives in lib/navigation/bottom-bar, shared with the
+ * header's menu button.
  */
-const HIDDEN_PREFIXES = ['/post', '/login', '/admin', '/property']
+const ITEMS: Item[] = [
+  { href: '/', label: 'Home', Icon: HomeIcon, current: (p) => p === '/' },
+  { href: `/buy/${LAUNCH_CITY.slug}`, label: 'Search', Icon: SearchIcon, current: (p) => under(p, '/buy') || under(p, '/rent') },
+  { href: '/post', label: 'Post', Icon: PlusIcon, current: (p) => under(p, '/post') },
+  { href: '/videos', label: 'Videos', Icon: VideoIcon, current: (p) => under(p, '/videos') },
+  {
+    href: '/account/activity',
+    label: 'Activity',
+    Icon: HeartIcon,
+    // Everything the hub leads to is "in" Activity.
+    current: (p) => ['/account/activity', '/account/saved', '/account/enquiries', '/dashboard/enquiries'].some((prefix) => under(p, prefix)),
+  },
+]
 
-export function BottomNav({ alwaysShow = false }: { alwaysShow?: boolean }) {
+export function BottomNav({ nav, alwaysShow = false }: { nav: MarketplaceNav; alwaysShow?: boolean }) {
   const pathname = usePathname()
-  // A page can overrule the path: the 404 for a dead /property link has no
-  // contact bar to stand in for the nav, and a dead end with no way out
-  // is exactly what a 404 must not be.
-  if (!alwaysShow && HIDDEN_PREFIXES.some((p) => pathname.startsWith(p))) return null
-
-  const items = [
-    { href: '/', label: 'Home', Icon: HomeIcon, match: ['/'] },
-    { href: `/buy/${LAUNCH_CITY.slug}`, label: 'Search', Icon: SearchIcon, match: ['/buy', '/rent', '/search'] },
-    { href: '/account/saved', label: 'Saved', Icon: HeartIcon, match: ['/account/saved'] },
-    { href: '/post', label: 'Post', Icon: PlusIcon, match: ['/post'], supply: true },
-    { href: '/account/enquiries', label: 'Enquiries', Icon: MailIcon, match: ['/account/enquiries'] },
-    { href: '/account', label: 'Account', Icon: UserIcon, match: ['/account'] },
-  ]
+  if (!bottomBarShown(pathname, alwaysShow)) return null
 
   return (
     <nav
@@ -42,38 +58,29 @@ export function BottomNav({ alwaysShow = false }: { alwaysShow?: boolean }) {
       className="app-bar app-bar-bottom fixed inset-x-0 bottom-0 z-50 border-t border-border-subtle lg:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      <ul className="flex">
-        {items.map(({ href, label, Icon, match, supply }) => {
-          const active = href === '/' ? pathname === '/' : href === '/account' ? pathname === '/account' : match.some((m) => pathname.startsWith(m))
+      <ul className="bar-items">
+        {ITEMS.map(({ href, label, Icon, current }) => {
+          const active = current(pathname)
+          const post = href === '/post'
           return (
-            <li key={label} className="flex-1">
-              <Link
-                href={href}
-                aria-current={active ? 'page' : undefined}
-                // 44px minimum target, comfortably exceeded at 56px.
-                className={cn(
-                  'flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-semibold',
-                  supply ? 'text-supply-700' : active ? 'text-brand-600' : 'text-ink-500',
-                )}
-              >
-                {supply ? (
-                  <span className="-mt-3 grid size-9 place-items-center rounded-full bg-supply-600 text-on-supply shadow-e2">
-                    <Icon className="size-5" />
-                  </span>
+            <li key={label}>
+              <Link href={href} aria-current={active ? 'page' : undefined} className={cn('bar-item', post && 'bar-item-post')}>
+                {post ? (
+                  <span className="bar-post" aria-hidden="true"><Icon className="size-5.5" /></span>
                 ) : (
                   // Where you are is a shape and a weight as well as a colour
-                  // (the pill behind the icon, a bold label): colour alone
-                  // fails anyone who cannot tell brand green from grey. The
-                  // pill's box is always there, so nothing shifts when it fills.
-                  <span className={cn('grid h-7 w-12 place-items-center rounded-full', active && 'bg-brand-100')}>
-                    <Icon className="size-5.5" />
-                  </span>
+                  // (the pill behind the icon, a bold label). The pill's box
+                  // is always there, so nothing shifts when it fills.
+                  <span className="bar-pill" aria-hidden="true"><Icon className="size-5.5" /></span>
                 )}
-                <span className={active ? 'font-bold' : undefined}>{label}</span>
+                <span className="bar-label">{label}</span>
               </Link>
             </li>
           )
         })}
+        <li>
+          <MarketplaceMenu nav={nav} trigger="bar" />
+        </li>
       </ul>
     </nav>
   )

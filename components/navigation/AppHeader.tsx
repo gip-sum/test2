@@ -9,13 +9,14 @@ import { MarketplaceMenu } from './MarketplaceMenu'
 /**
  * Persistent top bar: the marketplace's front door (Phase A).
  *
- *  • Phones (< 768px): logo, account, menu. The bottom bar is the phone's
+ *  • Phones (< 768px): logo and account. The bottom bar is the phone's
  *    navigation; a row of text links here would only crowd it. The old
- *    "Home" link went — the logo and the bottom bar both go home — and the
- *    menu button now reaches every destination, including on the pages
- *    that hide the bottom bar (posting, sign-in, a property).
+ *    "Home" link went — the logo and the bottom bar both go home. Since
+ *    Phase D the bar carries Menu, so the header's menu button appears
+ *    only on the pages that hide the bar (posting, sign-in, a property),
+ *    and there it still reaches every destination.
  *  • Tablets (768–1023px): a condensed Buy · Rent · Localities nav, then
- *    account and menu.
+ *    account (and the menu button, where the bar is hidden).
  *  • Desktop (≥ 1024px): each section with a panel of real destinations,
  *    "Explore all" for the whole discovery hub (Phase C), Post property,
  *    account. No menu button — everything is on the bar.
@@ -28,7 +29,7 @@ import { MarketplaceMenu } from './MarketplaceMenu'
  * buyer's. It appears once per screen — here only from 1024px, because
  * below that the bottom bar's centre action is the same button.
  */
-export function AppHeader() {
+export function AppHeader({ bottomNavForced = false }: { bottomNavForced?: boolean }) {
   // Built on the server from the data seams; the client components below
   // receive plain data, never the corpus.
   const nav = getMarketplaceNav()
@@ -50,7 +51,7 @@ export function AppHeader() {
             Post property
           </Link>
           <AccountLink />
-          <MarketplaceMenu nav={nav} trigger="icon" className="lg:hidden" />
+          <MarketplaceMenu nav={nav} trigger="icon" barForced={bottomNavForced} className="lg:hidden" />
         </div>
       </div>
     </header>

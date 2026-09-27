@@ -224,6 +224,39 @@
 .app-bar-top { box-shadow: var(--shadow-e1); }
 .app-bar-bottom { box-shadow: var(--shadow-e3); }
 
+/* ── The phone bar (Phase D; components/navigation/BottomNav.tsx) ─────────
+   Six equal slots, each a 60px-tall target. Where you are: the pill behind
+   the icon fills, the label goes bold and green. Post is the one filled
+   circle, kept inside the bar so it never covers the page scrolling under
+   it; supply-600 is its fill only, supply-700 its label. */
+.bar-items { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.bar-item {
+  display: flex; width: 100%; min-height: 60px; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  padding: 4px 2px; font-size: 11px; font-weight: 600; line-height: 14px; color: var(--color-ink-500);
+  -webkit-tap-highlight-color: transparent;
+}
+.bar-label { white-space: nowrap; }
+/* 30px pill in the same 40px slot as Post's circle, so all six labels share one baseline. */
+.bar-pill { display: grid; width: 48px; height: 30px; margin-block: 5px; place-items: center; border-radius: var(--radius-full); transition: background-color .15s, transform .1s; }
+.bar-item:hover .bar-pill { background: var(--color-surface-100); }
+.bar-item:active .bar-pill { transform: scale(.92); }
+.bar-item[aria-current], .bar-item[aria-expanded='true'] { color: var(--color-brand-600); }
+.bar-item[aria-current] .bar-label, .bar-item[aria-expanded='true'] .bar-label { font-weight: 700; }
+.bar-item[aria-current] .bar-pill, .bar-item[aria-expanded='true'] .bar-pill { background: var(--color-brand-100); }
+.bar-item-post { color: var(--color-supply-700); }
+.bar-item-post[aria-current] { color: var(--color-supply-700); }
+.bar-post {
+  display: grid; width: 40px; height: 40px; place-items: center; border-radius: var(--radius-full);
+  background: var(--color-supply-600); color: var(--color-on-supply);
+  box-shadow: 0 0 0 3px var(--color-supply-100), var(--shadow-e1); transition: transform .1s;
+}
+.bar-item-post:active .bar-post { transform: scale(.92); }
+.bar-item-post[aria-current] .bar-post { box-shadow: 0 0 0 3px var(--color-supply-700); }
+/* The page's clearance under the bar: the bar's height plus its safe-area
+   padding, plus a little air, so the last thing on a page is never under it. */
+.bar-spacer { height: calc(72px + env(safe-area-inset-bottom, 0px)); }
+@media (min-width: 1024px) { .bar-spacer { display: none; } }
+
 /* ── Marketplace navigation (Phase A; components/navigation) ─────────────
    Brand green marks where you are and the buyer's way in; neutral surfaces
    carry everything secondary; the supply accent stays with posting. Where
@@ -315,6 +348,7 @@
 .hub-link[aria-current] { background: var(--color-brand-100); }
 .hub-icon { display: grid; width: 40px; height: 40px; flex-shrink: 0; place-items: center; border-radius: 12px; background: var(--color-brand-100); color: var(--color-brand-700); }
 .hub-link[aria-current] .hub-icon, .hub-tile[aria-current] .hub-icon { background: var(--color-surface-000); }
+.hub-icon-supply { background: var(--color-supply-100); color: var(--color-supply-700); }
 .hub-text { min-width: 0; flex: 1; }
 .hub-label { display: block; font-weight: 600; line-height: 20px; }
 .hub-hint { display: block; font-size: 13px; line-height: 18px; color: var(--color-ink-500); }

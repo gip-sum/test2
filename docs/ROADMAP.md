@@ -64,7 +64,7 @@ each one in the phase that makes it real, not before.
 | Offers | No project commercial terms, no paid placement | 47 (builder terms), 61 (featured listings) |
 | "Post property FREE" | No seller plan defines what is free | 59 |
 | A localities page | The homepage section at `/#localities` stands in, and the header, footer and quick routes point there | 29 (city hub), 30 (locality pages) |
-| Short videos | Not in `Phases.txt` | Needs a roadmap decision |
+| Short videos | Since Phase D the phone bar's Videos item opens `/videos`, which says plainly that no listing has a video yet (noindex). There is no upload, storage or player | Needs a phase in `Phases.txt`; video would extend `media_asset` (15) |
 | Terms of use and privacy policy | The pages do not exist; their links, which returned 404, were removed | Client-supplied text; not yet in `Phases.txt` |
 
 ## Navigation destinations waiting on their phase
@@ -90,6 +90,22 @@ can use, and a row they cannot use would be the one false thing in it.
 | Buying, renting and locality guides | No editorial content; the discovery hub's Resources group is absent until there is | 54 |
 | FAQs | No FAQ content | 53 |
 | My properties (a seller's own listings) | No seller dashboard; the hub offers the enquiries on an advertiser's listings, which exist | 19 |
+
+## Activity sections waiting on their phase
+
+The phone bar's Activity item (Phase D) opens `/account/activity`, which
+links only to what exists: saved homes, your enquiries, and enquiries on
+your listings. Each section below joins it — as its own table, never as a
+column on an existing one — in the phase that builds it. None is shown as
+a placeholder.
+
+| Section | Why it is absent today | Phase that makes it real |
+|---|---|---|
+| Recently viewed | Nothing records a viewing | 39 |
+| Contact and reveal history | Phone reveal is postponed | 10 |
+| Saved searches | No saved-search table | 36 |
+| Search alerts | No alert delivery | 37 |
+| A buyer notification count on the bar | Only sellers have notifications | Needs a buyer-side notification model |
 
 ---
 

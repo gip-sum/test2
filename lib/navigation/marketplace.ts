@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { CALCULATORS } from '@/components/calculators/catalogue'
 import { LAUNCH_CITY } from '@/lib/brand'
 import { getPopularLocalities } from '@/lib/location/queries'
@@ -65,7 +66,13 @@ function group(title: string, links: NavLink[]): NavGroup[] {
   return links.length ? [{ title, links }] : []
 }
 
-export function getMarketplaceNav(options?: Options): MarketplaceNav {
+/**
+ * Cached per request: the header and the bottom bar (Phase D) both need
+ * it, and building it runs a search per link.
+ */
+export const getMarketplaceNav = cache(buildMarketplaceNav)
+
+function buildMarketplaceNav(options?: Options): MarketplaceNav {
   const city = LAUNCH_CITY.slug
   const cityName = LAUNCH_CITY.name
 

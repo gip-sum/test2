@@ -44,6 +44,8 @@ jobs:
       # where-you-are beyond colour, and every navigation link resolving.
       # Phase C: the discovery hub in the menu and the desktop Explore all
       # panel, and every search link being its page's own canonical URL.
+      # Phase D: the six-item phone bar, one Menu per screen, Post inside
+      # the bar, and the page clearing it (auth-check covers Activity signed in).
       - run: npm run shell-check
       - run: npm run post-check
       - run: npm run notfound-check

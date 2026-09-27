@@ -241,3 +241,13 @@ export function HouseIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/** A frame with a play mark: videos (Phase D). */
+export function VideoIcon({ className }: IconProps) {
+  return (
+    <svg {...base} className={className}>
+      <rect x="3.5" y="5" width="17" height="14" rx="3" />
+      <path d="M10.5 9.5v5l4-2.5-4-2.5z" />
+    </svg>
+  )
+}

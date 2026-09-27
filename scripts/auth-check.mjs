@@ -135,6 +135,28 @@ try {
   check('token is absent from rendered HTML', !(await page.content()).includes('a'.repeat(48)))
   check('signed-in navigation opens account', await page.getByRole('link', { name: 'Account' }).first()
     .waitFor({ timeout: 5000 }).then(() => true).catch(() => false))
+  // Phase D: the phone bar's Activity hub, signed in. Saved and enquiries
+  // stay reachable from it, and Activity is current on each page it leads to.
+  await page.setViewportSize({ width: 390, height: 844 })
+  const bar = page.getByRole('navigation', { name: 'Primary' })
+  await bar.getByRole('link', { name: 'Activity' }).click()
+  await page.waitForURL('**/account/activity')
+  check('signed-in Activity opens the activity hub, marked current in the bar', await page.getByRole('heading', { level: 1, name: 'Your activity' }).isVisible() &&
+    await bar.getByRole('link', { name: 'Activity' }).getAttribute('aria-current') === 'page')
+  const hubLinks = await page.locator('main a').evaluateAll((els) => els.map((e) => ({ href: e.getAttribute('href'), h: e.getBoundingClientRect().height, text: e.textContent })))
+  check('the hub reaches saved homes, your enquiries and enquiries on your listings, each 44px or more', JSON.stringify(hubLinks.map((l) => l.href)) === JSON.stringify(['/account/saved', '/account/enquiries', '/dashboard/enquiries']) &&
+    hubLinks.every((l) => l.h >= 44), JSON.stringify(hubLinks))
+  check('the hub never shows a guessed count: a figure appears only where its query answered', hubLinks.every((l) => !/\b0\b/.test(l.text)))
+  for (const [name, path] of [['Saved homes', '/account/saved'], ['Your enquiries', '/account/enquiries']]) {
+    await page.getByRole('link', { name: new RegExp(`^${name}`) }).click()
+    await page.waitForURL(`**${path}`)
+    check(`${name} is reachable from Activity, and Activity stays current on ${path}`, await bar.getByRole('link', { name: 'Activity' }).getAttribute('aria-current') === 'page')
+    await page.goBack()
+    await page.waitForURL('**/account/activity')
+  }
+  await page.setViewportSize({ width: 1280, height: 844 })
+  // Back where the next checks expect to be.
+  await page.goto(BASE + '/account')
   // Expire the app's own access cookie by rewriting it with its own
   // attributes. A lookalike with different attributes would not replace it:
   // current Chromium binds cookies to the scheme that set them and keeps both.
