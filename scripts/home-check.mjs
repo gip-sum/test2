@@ -154,7 +154,9 @@ try {
   await sheet.getByRole('button', { name: '₹50 L – ₹75 L', exact: true }).click()
   await page.keyboard.press('Escape')
   await sheet.waitFor({ state: 'hidden' })
-  await check('Escape closes the sheet and returns focus to More filters', await page.evaluate(() => /More filters/.test(document.activeElement?.textContent ?? '')))
+  // Radix returns focus in a setTimeout after the sheet unmounts, so wait
+  // (bounded) for it rather than checking the instant the sheet is hidden.
+  await check('Escape closes the sheet and returns focus to More filters', await page.waitForFunction(() => /More filters/.test(document.activeElement?.textContent ?? ''), null, { timeout: 2000 }).then(() => true, () => false))
   const chips = form.getByRole('list', { name: 'Selected filters' }).getByRole('listitem')
   await check('every chosen filter is echoed on the form as a chip', (await chips.allInnerTexts()).map((t) => t.trim()).join('|') === 'Flat / Apartment|₹50 L – ₹75 L|2 BHK|3 BHK', (await chips.allInnerTexts()).join('|'))
   await check('More filters states how many are chosen', /More filters\s*4 selected/.test((await more.textContent()) ?? ''))

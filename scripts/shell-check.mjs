@@ -69,6 +69,18 @@ const shellControls = (page) => page.evaluate(() => {
     .filter((el) => el.offsetParent !== null && getComputedStyle(el).visibility !== 'hidden')
     .map((el) => { const r = el.getBoundingClientRect(); return { name: (el.getAttribute('aria-label') || el.textContent).trim().replace(/\s+/g, ' '), w: r.width, h: r.height, top: r.top, bottom: r.bottom } })
 })
+/**
+ * Waits (bounded) for focus to come back to `locator` after a sheet closes.
+ * Radix hands focus back — and the Sheet lifts `inert` — in a setTimeout
+ * after the dialog unmounts, so "detached" resolves a task before it: a
+ * check made at that instant races the return and fails on a slower runner
+ * (it did, in CI). Waiting for the state itself, with a timeout, still
+ * fails loudly if focus never returns.
+ */
+const focusReturns = async (page, locator) => page.waitForFunction(
+  (el) => el === document.activeElement && document.querySelector('[data-app-root]')?.inert === false,
+  await locator.elementHandle(), { timeout: 2000 },
+).then(() => true, () => false)
 const visibleText = (page, sel) => page.locator(sel).evaluateAll((els) => els.filter((e) => e.offsetParent !== null).map((e) => e.textContent.trim()))
 
 try {
@@ -166,7 +178,7 @@ try {
     check('390px View all opens the marketplace menu', await dialog.getByRole('navigation', { name: 'All destinations' }).isVisible())
     await page.keyboard.press('Escape')
     await dialog.waitFor({ state: 'detached' })
-    check('390px Escape closes it and returns focus to View all', await viewAll.evaluate((el) => el === document.activeElement))
+    check('390px Escape closes it and returns focus to View all', await focusReturns(page, viewAll))
     await page.context().close()
     const desk = await open(1280, 900)
     check('1280px the quick routes give way to the header', !(await desk.getByRole('navigation', { name: 'Quick routes' }).isVisible()))
@@ -203,7 +215,7 @@ try {
     await page.keyboard.press('Escape')
     await dialog.waitFor({ state: 'detached' })
     check('390px Escape returns focus to the bar\'s Menu, and the page is no longer inert',
-      await trigger.evaluate((el) => el === document.activeElement) && await page.locator('[data-app-root]').evaluate((el) => el.inert === false))
+      await focusReturns(page, trigger))
     await page.context().close()
 
     const home = await open(390, 844, '/')
@@ -384,7 +396,7 @@ try {
     check('390px Enter on the bar\'s Menu opens the marketplace menu', await dialog.getByRole('navigation', { name: 'All destinations' }).isVisible())
     await page.keyboard.press('Escape')
     await dialog.waitFor({ state: 'detached' })
-    check('390px closing it returns focus to the bar\'s Menu', await menu.evaluate((el) => el === document.activeElement && el.getAttribute('aria-expanded') === 'false'))
+    check('390px closing it returns focus to the bar\'s Menu', await focusReturns(page, menu) && await menu.getAttribute('aria-expanded') === 'false')
     // Videos is honest: a real page, not indexed, with no player pretending.
     const videos = await page.evaluate(() => ({
       h1: document.querySelector('h1')?.textContent, robots: document.querySelector('meta[name="robots"]')?.content,
