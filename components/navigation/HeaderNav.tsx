@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
-import { ChevronDownIcon, ArrowRightIcon } from '@/components/ui/icons'
+import { ChevronDownIcon, ArrowRightIcon, GridIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/cn'
-import type { MarketplaceNav, NavLink, NavSection } from '@/lib/navigation/types'
+import type { DiscoveryHub, MarketplaceNav, NavLink, NavSection } from '@/lib/navigation/types'
 import { sectionState } from './current'
+import { HUB_TITLE, HubGroup, HubRows, HubSell } from './hub'
 
 /**
  * The header's marketplace navigation (Phase A): tablets and up.
@@ -24,6 +25,13 @@ import { sectionState } from './current'
  * outside, focus leaving the navigation, another panel opening, or a
  * navigation: the open panel is remembered together with the path it was
  * opened on, so a new path closes it without an effect.
+ *
+ * Last in the row, "Explore all" (Phase C) opens the discovery hub — the
+ * same groups as the phone menu — as a mega panel the width of the header:
+ * three columns and a band for posting and the account, short enough to
+ * sit under the header at 1024×768. It is a button only, with no page of
+ * its own to link to, and follows the same open and close rules as the
+ * section panels, so the header has one behaviour, not two.
  */
 export function HeaderNav({ nav }: { nav: MarketplaceNav }) {
   const pathname = usePathname()
@@ -92,8 +100,69 @@ export function HeaderNav({ nav }: { nav: MarketplaceNav }) {
             </li>
           )
         })}
+        {/* Not `relative`, unlike the sections: the panel is positioned
+            against the header's content box, so it spans the header. */}
+        <li className="flex items-center">
+          <button
+            type="button"
+            className="nav-hub-toggle"
+            aria-expanded={openId === 'hub'}
+            aria-controls="nav-panel-hub"
+            onClick={() => setOpened(openId === 'hub' ? null : { id: 'hub', path: pathname })}
+          >
+            <GridIcon className="size-4.5" />
+            Explore all
+            <ChevronDownIcon className="size-4" />
+          </button>
+          <div id="nav-panel-hub" hidden={openId !== 'hub'} className="nav-panel nav-panel-hub">
+            <HubPanel hub={nav.hub} pathname={pathname} onNavigate={() => setOpened(null)} />
+          </div>
+        </li>
       </ul>
     </nav>
+  )
+}
+
+/**
+ * The hub on desktop. Groups are h2 here: the panel sits in the page's own
+ * outline, under its h1, rather than in a titled dialog.
+ */
+function HubPanel({ hub, pathname, onNavigate }: { hub: DiscoveryHub; pathname: string; onNavigate: () => void }) {
+  const at = { pathname, onNavigate }
+  return (
+    <>
+      <div className="hub-panel-grid">
+        <div className="hub-col">
+          <HubGroup id="hub-d-explore" title={HUB_TITLE.explore} level={2}>
+            <HubRows entries={hub.explore} section {...at} />
+          </HubGroup>
+          <HubGroup id="hub-d-discover" title={HUB_TITLE.discover} level={2}>
+            <HubRows entries={hub.discover} {...at} />
+          </HubGroup>
+        </div>
+        <div className="hub-col">
+          {hub.types.length > 0 && (
+            <HubGroup id="hub-d-types" title={HUB_TITLE.types} level={2}>
+              <HubRows entries={hub.types} {...at} />
+            </HubGroup>
+          )}
+          <HubGroup id="hub-d-tools" title={HUB_TITLE.tools} level={2}>
+            <HubRows entries={hub.tools} {...at} />
+          </HubGroup>
+        </div>
+        <div className="hub-col">
+          <HubGroup id="hub-d-localities" title={HUB_TITLE.localities} level={2}>
+            <HubRows entries={hub.localities} icons={false} {...at} />
+          </HubGroup>
+        </div>
+      </div>
+      <div className="hub-band">
+        <HubSell id="hub-d-sell" level={2} sell={hub.sell} className="hub-sell-inline" {...at} />
+        <HubGroup id="hub-d-account" title={HUB_TITLE.account} level={2} className="hub-account-inline">
+          <HubRows entries={hub.account} {...at} />
+        </HubGroup>
+      </div>
+    </>
   )
 }
 

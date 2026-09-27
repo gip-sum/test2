@@ -385,6 +385,52 @@ export function buildLandingUrl(input: {
   return `/${segments.join('/')}`
 }
 
+/**
+ * The landing slug whose filter is exactly this patch, if there is one.
+ *
+ * Exact: every field the slug sets, and nothing else. `{ bedrooms: [2] }`
+ * is 2-bhk; `{ bedrooms: [2], propertyTypes: ['APARTMENT'] }` is no slug at
+ * all, because no single landing page holds it.
+ */
+export function landingSlugFor(patch: Partial<SearchQuery>): string | undefined {
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+  const keys = Object.keys(patch).filter((k) => patch[k as keyof SearchQuery] !== undefined)
+  return Object.entries(FILTER_SLUGS).find(([, { patch: p }]) => {
+    const pk = Object.keys(p)
+    return pk.length === keys.length && pk.every((k) => same(p[k as keyof SearchQuery], patch[k as keyof SearchQuery]))
+  })?.[0]
+}
+
+/**
+ * The one URL a search is indexed under (Phase C).
+ *
+ * A search that a landing page holds exactly — optionally in one locality —
+ * is canonical at that landing path: /buy/kolkata/flats, not
+ * /buy/kolkata?type=APARTMENT. Before this, the results page declared the
+ * query-string form canonical even when reached at the landing path, so
+ * every internal link (header, menu, homepage tiles) pointed at a URL that
+ * named a different URL as its canonical: two addresses competing for one
+ * page, and the pretty one losing. Anything a landing page cannot hold
+ * stays in buildSearchUrl's query-string form.
+ *
+ * Sort and page are ignored here: a re-sorted or later page canonicalises
+ * to the first page of its base search, and is noindexed by the page.
+ */
+export function canonicalSearchUrl(query: SearchQuery): string {
+  const base = { ...query, page: 1, sort: 'relevance' as const }
+  if (base.localities.length > 1) return buildSearchUrl(base)
+  const empty = emptyQuery(base.intent, base.city)
+  const patch: Partial<SearchQuery> = {}
+  for (const key of Object.keys(base) as Array<keyof SearchQuery>) {
+    if (key === 'intent' || key === 'city' || key === 'localities' || key === 'sort' || key === 'page') continue
+    if (base[key] === undefined || base[key] === false || JSON.stringify(base[key]) === JSON.stringify(empty[key])) continue
+    Object.assign(patch, { [key]: base[key] })
+  }
+  if (!Object.keys(patch).length) return buildSearchUrl(base)
+  const slug = landingSlugFor(patch)
+  return slug ? buildLandingUrl({ intent: base.intent, city: base.city, locality: base.localities[0], slug }) : buildSearchUrl(base)
+}
+
 /** Any filter change resets pagination — page 3 of the old result set is meaningless. */
 export function withFilterChange(q: SearchQuery, patch: Partial<SearchQuery>): SearchQuery {
   return { ...q, ...patch, page: 1 }

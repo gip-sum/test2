@@ -19,6 +19,7 @@ export function Sheet({
   description,
   children,
   footer,
+  size = 'default',
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -26,6 +27,8 @@ export function Sheet({
   description?: string
   children: ReactNode
   footer?: ReactNode
+  /** 'wide' for a sheet whose content is laid out in columns from 768px (the marketplace menu). */
+  size?: 'default' | 'wide'
 }) {
   // Radix hands focus back only to its own Dialog.Trigger, and every sheet
   // here is opened by an ordinary button beside it (a controlled `open`).
@@ -70,7 +73,8 @@ export function Sheet({
           // hid whatever did not fit behind an inner scroll.
           className={cn(
             'fixed inset-x-0 bottom-0 top-0 z-50 flex flex-col bg-surface-000',
-            'sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:h-auto sm:max-h-[85vh] sm:w-[min(32rem,calc(100vw-2rem))]',
+            'sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:h-auto sm:max-h-[85vh]',
+            size === 'wide' ? 'sm:w-[min(52rem,calc(100vw-2rem))]' : 'sm:w-[min(32rem,calc(100vw-2rem))]',
             'sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-lg sm:shadow-e3',
           )}
         >

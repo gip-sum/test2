@@ -25,6 +25,7 @@ Phase 11 — Complete and deployed
 Phase 40A — Implemented (home loan calculators, built ahead of order)
 Phase A — Implemented (marketplace navigation and shell; docs/phases/PHASE-A-marketplace-shell.md)
 Phase B — Implemented (homepage discovery and content density; docs/phases/PHASE-B-homepage-discovery.md)
+Phase C — Implemented (marketplace menu and discovery hub; docs/phases/PHASE-C-discovery-hub.md)
 
 Temporary brand:
 GharBazaar

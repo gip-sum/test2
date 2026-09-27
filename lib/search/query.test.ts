@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest'
 import {
   buildSearchUrl,
   buildLandingUrl,
+  canonicalSearchUrl,
   emptyQuery,
+  landingSlugFor,
   parseSearchQuery,
   toSearchParams,
   withFilterChange,
@@ -273,5 +275,50 @@ describe('buildLandingUrl', () => {
   it('ignores a slug outside the closed set', () => {
     expect(buildLandingUrl({ intent: 'buy', city: 'kolkata', slug: '7-bhk-penthouse' }))
       .toBe('/buy/kolkata')
+  })
+})
+
+describe('canonicalSearchUrl', () => {
+  const parse = (href: string) => {
+    const url = new URL(href, 'https://example.invalid')
+    const [, intent, city, ...segments] = url.pathname.split('/')
+    return parseSearchQuery({ intent: intent!, city: city!, segments, params: url.searchParams, isKnownLocality })
+  }
+
+  it('gives a landing page its own path, however it was reached', () => {
+    expect(canonicalSearchUrl(parse('/buy/kolkata/flats'))).toBe('/buy/kolkata/flats')
+    expect(canonicalSearchUrl(parse('/buy/kolkata?type=APARTMENT'))).toBe('/buy/kolkata/flats')
+    expect(canonicalSearchUrl(parse('/rent/kolkata/salt-lake?bhk=2'))).toBe('/rent/kolkata/salt-lake/2-bhk')
+    expect(canonicalSearchUrl(parse('/buy/kolkata?cons=UNDER_CONSTRUCTION'))).toBe('/buy/kolkata/under-construction')
+    expect(canonicalSearchUrl(parse('/buy/kolkata?pmax=5000000'))).toBe('/buy/kolkata/under-50-lakh')
+  })
+
+  it('keeps the query-string form for a search no landing page holds', () => {
+    expect(canonicalSearchUrl(parse('/buy/kolkata/flats?bhk=2'))).toBe('/buy/kolkata?type=APARTMENT&bhk=2')
+    expect(canonicalSearchUrl(parse('/buy/kolkata?pmin=2500000&pmax=5000000'))).toBe('/buy/kolkata?pmin=2500000&pmax=5000000')
+    expect(canonicalSearchUrl(parse('/buy/kolkata/2-bhk?loc=new-town,salt-lake')))
+      .toBe(buildSearchUrl({ intent: 'buy', city: 'kolkata', localities: ['new-town', 'salt-lake'], bedrooms: [2] }))
+  })
+
+  it('drops sort and page, which only reorder or slice the same set', () => {
+    expect(canonicalSearchUrl(parse('/buy/kolkata/flats?sort=newest&page=3'))).toBe('/buy/kolkata/flats')
+    expect(canonicalSearchUrl(parse('/buy/kolkata/new-town?sort=price_asc'))).toBe('/buy/kolkata/new-town')
+    expect(canonicalSearchUrl(parse('/rent/kolkata'))).toBe('/rent/kolkata')
+  })
+
+  it('is a fixed point: the canonical URL of a canonical URL is itself', () => {
+    for (const href of ['/buy/kolkata/flats', '/rent/kolkata/furnished', '/buy/kolkata/new-town/3-bhk', '/buy/kolkata?type=VILLA&bhk=4']) {
+      expect(canonicalSearchUrl(parse(href))).toBe(href)
+    }
+  })
+})
+
+describe('landingSlugFor', () => {
+  it('matches a patch only when it is exactly one slug\'s filter', () => {
+    expect(landingSlugFor({ bedrooms: [2] })).toBe('2-bhk')
+    expect(landingSlugFor({ sellerTypes: ['OWNER'] })).toBe('owner-properties')
+    expect(landingSlugFor({ bedrooms: [2], propertyTypes: ['APARTMENT'] })).toBeUndefined()
+    expect(landingSlugFor({ priceMin: 2_500_000, priceMax: 5_000_000 })).toBeUndefined()
+    expect(landingSlugFor({ priceMax: 5_000_000, priceMin: undefined })).toBe('under-50-lakh')
   })
 })

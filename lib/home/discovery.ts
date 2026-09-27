@@ -3,7 +3,7 @@ import { getCityLocalities, getPopularLocalities } from '@/lib/location/queries'
 import { searchProperties } from '@/lib/property/search'
 import { PROPERTY_TYPE_ORDER, PROPERTY_TYPE_PLURAL, type Intent, type PropertySummary, type PropertyTypeCode } from '@/lib/property/types'
 import {
-  BUY_BUDGET_BANDS, FILTER_SLUGS, RENT_BUDGET_BANDS, buildLandingUrl, buildSearchUrl, emptyQuery, type SearchQuery,
+  BUY_BUDGET_BANDS, RENT_BUDGET_BANDS, buildLandingUrl, buildSearchUrl, emptyQuery, landingSlugFor, type SearchQuery,
 } from '@/lib/search/query'
 
 /**
@@ -39,20 +39,10 @@ function total(patch: Partial<SearchQuery> & { intent: Intent }, options?: Optio
   return searchProperties({ ...emptyQuery(patch.intent, CITY), ...patch }, { corpus: options?.corpus }).total
 }
 
-/** The landing slug whose filter is exactly this patch, if there is one. */
-function landingSlug(patch: Partial<SearchQuery>): string | undefined {
-  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
-  const keys = Object.keys(patch).filter((k) => patch[k as keyof SearchQuery] !== undefined)
-  return Object.entries(FILTER_SLUGS).find(([, { patch: p }]) => {
-    const pk = Object.keys(p)
-    return pk.length === keys.length && pk.every((k) => same(p[k as keyof SearchQuery], patch[k as keyof SearchQuery]))
-  })?.[0]
-}
-
 function linkFor(intent: Intent, patch: Partial<SearchQuery>, options?: Options): CountLink | null {
   const count = total({ intent, ...patch }, options)
   if (count === 0) return null
-  const slug = landingSlug(patch)
+  const slug = landingSlugFor(patch)
   const href = slug ? buildLandingUrl({ intent, city: CITY, slug }) : buildSearchUrl({ intent, city: CITY, ...patch })
   return { count, href }
 }

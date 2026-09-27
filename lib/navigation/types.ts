@@ -36,9 +36,55 @@ export type NavSection = {
 
 export type LocalityNav = { name: string; buy: string; rent: string }
 
+/**
+ * One destination in the discovery hub (Phase C).
+ *
+ * Either a place of its own (`href`: "Home loan EMI calculator"), or a
+ * name with a link per intent (`pills`: "Flats — Buy · Rent"), where the
+ * name alone could mean either. A pill exists only for an intent with
+ * listings behind it, and an entry left with no pills is not offered.
+ */
+export type HubEntry = {
+  /** Stable, unique in the hub: the React key and the icon's name. */
+  id: string
+  label: string
+  href?: string
+  /** The row's second line. */
+  hint?: string
+  /** "Buy" and "Rent", each with its context ("flats", "in Salt Lake"). */
+  pills?: NavLink[]
+}
+
+/**
+ * Everything GharBazaar offers, grouped the way people look for it
+ * (Phase C): the phone menu and the desktop "Explore all" panel both
+ * render this, so they cannot disagree.
+ *
+ * Only destinations that exist. There is no field for a destination the
+ * product has not built — commercial, plots, projects, builders, agents,
+ * comparison, price trends, guides, FAQs, a seller's own listings — and a
+ * group with nothing real in it has no field either (resources). Each
+ * waits in docs/ROADMAP.md for the phase that builds it.
+ */
+export type DiscoveryHub = {
+  /** Buy and Rent. */
+  explore: HubEntry[]
+  /** The supported property types, each with the intents that have them. */
+  types: HubEntry[]
+  /** The localities index and the listing collections worth a name. */
+  discover: HubEntry[]
+  /** Popular localities, each with Buy and Rent where there are listings. */
+  localities: HubEntry[]
+  tools: HubEntry[]
+  account: HubEntry[]
+  /** Posting, and what an advertiser already has. */
+  sell: { post: HubEntry; more: HubEntry[] }
+}
+
 export type MarketplaceNav = {
   city: string
   sections: NavSection[]
   /** Popular localities, each with its for-sale and to-rent results. */
   localities: LocalityNav[]
+  hub: DiscoveryHub
 }

@@ -17,7 +17,8 @@ import { MarketplaceMenu } from './MarketplaceMenu'
  *  • Tablets (768–1023px): a condensed Buy · Rent · Localities nav, then
  *    account and menu.
  *  • Desktop (≥ 1024px): each section with a panel of real destinations,
- *    Post property, account. No menu button — everything is on the bar.
+ *    "Explore all" for the whole discovery hub (Phase C), Post property,
+ *    account. No menu button — everything is on the bar.
  *
  * Logo left, because people expect "home" there and breaking that
  * convention measurably costs task success.

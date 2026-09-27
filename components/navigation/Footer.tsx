@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { getPopularLocalities } from '@/lib/location/queries'
-import { buildSearchUrl } from '@/lib/search/query'
+import { FILTER_SLUGS, buildLandingUrl } from '@/lib/search/query'
 import { PROPERTY_TYPE_LABEL, type PropertyTypeCode } from '@/lib/property/types'
 import { BRAND, LAUNCH_CITY } from '@/lib/brand'
 
@@ -11,8 +11,17 @@ import { BRAND, LAUNCH_CITY } from '@/lib/brand'
  * the locality and filter landing pages, and how a visitor navigates the
  * catalogue laterally. Generated from the location tree rather than
  * hand-authored, so it cannot go stale.
+ *
+ * Landing URLs throughout (Phase C): the query-string form of the same
+ * search (/buy/kolkata?type=APARTMENT) is a second address for the landing
+ * page, and a crawl surface that links to it splits the page in two.
  */
-const TYPES: PropertyTypeCode[] = ['APARTMENT', 'INDEPENDENT_HOUSE', 'BUILDER_FLOOR', 'VILLA']
+const TYPES: Array<{ type: PropertyTypeCode; slug: string }> = [
+  { type: 'APARTMENT', slug: 'flats' },
+  { type: 'INDEPENDENT_HOUSE', slug: 'independent-houses' },
+  { type: 'BUILDER_FLOOR', slug: 'builder-floors' },
+  { type: 'VILLA', slug: 'villas' },
+]
 
 export function Footer() {
   const localities = getPopularLocalities().slice(0, 8)
@@ -42,32 +51,15 @@ export function Footer() {
           </FooterGroup>
 
           <FooterGroup title="By property type">
-            {TYPES.map((t) => (
-              <FooterLink
-                key={t}
-                href={buildSearchUrl({
-                  intent: 'buy',
-                  city,
-                  localities: [],
-                  propertyTypes: [t],
-                  bedrooms: [],
-                })}
-              >
-                {PROPERTY_TYPE_LABEL[t]} for sale
+            {TYPES.map(({ type, slug }) => (
+              <FooterLink key={type} href={buildLandingUrl({ intent: 'buy', city, slug })}>
+                {PROPERTY_TYPE_LABEL[type]} for sale
               </FooterLink>
             ))}
-            {[2, 3].map((n) => (
-              <FooterLink
-                key={n}
-                href={buildSearchUrl({
-                  intent: 'buy',
-                  city,
-                  localities: [],
-                  propertyTypes: [],
-                  bedrooms: [n],
-                })}
-              >
-                {n} BHK flats in {LAUNCH_CITY.name}
+            {/* "Homes", not "flats": the 2-bhk page holds every type. */}
+            {(['2-bhk', '3-bhk'] as const).map((slug) => (
+              <FooterLink key={slug} href={buildLandingUrl({ intent: 'buy', city, slug })}>
+                {FILTER_SLUGS[slug]!.label} homes in {LAUNCH_CITY.name}
               </FooterLink>
             ))}
           </FooterGroup>

@@ -69,11 +69,13 @@ each one in the phase that makes it real, not before.
 
 ## Navigation destinations waiting on their phase
 
-The marketplace navigation (Phase A, `lib/navigation/marketplace.ts`) links
-only to routes that exist. Larger portals' headers also offer the entries
-below. Each one joins the navigation model — one entry, reaching the
-header, the menu and the quick routes' "View all" together — in the phase
-that builds its page, and not before.
+The marketplace navigation (Phase A, `lib/navigation/marketplace.ts`) and
+its discovery hub (Phase C) link only to routes that exist. Larger portals'
+menus also offer the entries below. Each one joins the navigation model —
+one entry, reaching the header, the phone menu and the desktop "Explore
+all" panel together — in the phase that builds its page, and not before.
+None is shown as "coming soon": the hub is where people learn what they
+can use, and a row they cannot use would be the one false thing in it.
 
 | Destination | Why it is absent today | Phase that makes it real |
 |---|---|---|
@@ -82,6 +84,12 @@ that builds its page, and not before.
 | Builders | No builder profiles | 43 |
 | Insights and price trends | No price history or locality insight pages | 49–51 |
 | A localities page | `/#localities` on the homepage stands in, as it does for the homepage section | 29 (city hub), 30 (locality pages) |
+| Commercial property | No commercial property type or intent; not in `Phases.txt` | Needs a roadmap decision |
+| Residential land and plots | No property type for them (as on the homepage) | Needs a roadmap decision |
+| Property comparison | No comparison page or shortlist-to-compare flow | 40 |
+| Buying, renting and locality guides | No editorial content; the discovery hub's Resources group is absent until there is | 54 |
+| FAQs | No FAQ content | 53 |
+| My properties (a seller's own listings) | No seller dashboard; the hub offers the enquiries on an advertiser's listings, which exist | 19 |
 
 ---
 

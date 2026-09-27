@@ -288,38 +288,113 @@
 }
 .nav-pill:hover { background: var(--color-brand-100); }
 
-/* The menu sheet: rows for the main destinations, chips for the long tail. */
-.menu-sheet { padding: 8px 16px 24px; }
+/* ── Discovery hub (Phase C; components/navigation/hub.tsx) ──────────────
+   One set of rows for the phone menu and the desktop "Explore all" panel.
+   A pill's target is the 44px link; its visible face is a 32px chip inside
+   it, so a row of pills stays light without shrinking what a thumb hits.
+   Where you are is "You are here" in words, a tint, or a filled pill. */
+.hub-sheet { padding: 8px 16px 28px; }
 .menu-home {
   display: flex; min-height: 48px; align-items: center; gap: 12px; padding: 0 8px;
   border-radius: var(--radius-md); font-weight: 600; color: var(--color-ink-900);
 }
 .menu-home[aria-current] { box-shadow: inset 3px 0 0 var(--color-brand-600); }
-.menu-group { margin-top: 18px; }
-.menu-group-title { padding: 0 8px 6px; font-size: var(--text-overline); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--color-ink-500); }
-.menu-rows { display: grid; gap: 2px; }
-.menu-row {
+.hub-cols { display: grid; gap: 0 28px; }
+@media (min-width: 768px) { .hub-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.hub-group, .hub-sell { margin-top: 18px; }
+.hub-title { padding: 0 8px 6px; font-size: var(--text-overline); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--color-ink-500); }
+.hub-subgroup { margin-top: 10px; }
+.hub-subtitle { padding: 0 8px 2px; font-size: 13px; font-weight: 700; line-height: 20px; color: var(--color-ink-900); }
+.hub-rows { display: grid; gap: 2px; }
+.hub-row {
   display: flex; min-height: 56px; align-items: center; gap: 12px; padding: 6px 8px;
   border-radius: var(--radius-md); color: var(--color-ink-900);
 }
-.menu-row:hover { background: var(--color-surface-100); }
-.menu-row[aria-current] { background: var(--color-brand-100); }
-.menu-row-icon { display: grid; width: 40px; height: 40px; flex-shrink: 0; place-items: center; border-radius: 12px; background: var(--color-brand-100); color: var(--color-brand-700); }
-.menu-row[aria-current] .menu-row-icon { background: var(--color-surface-000); }
-.menu-row-icon-supply { background: var(--color-supply-100); color: var(--color-supply-700); }
-.menu-row-label { display: block; font-weight: 600; line-height: 20px; }
-.menu-row-summary { display: block; font-size: 13px; line-height: 18px; color: var(--color-ink-500); }
-.menu-current { flex-shrink: 0; font-size: 12px; font-weight: 700; color: var(--color-brand-700); }
-.menu-localities { display: grid; gap: 2px; }
-.menu-localities li { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 8px; padding-left: 8px; }
-.menu-chips { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 4px; }
-.menu-chip {
-  display: inline-flex; min-height: 44px; align-items: center; padding: 0 14px;
-  border: 1px solid var(--color-border-subtle); border-radius: var(--radius-full);
-  background: var(--color-surface-000); font-size: 14px; font-weight: 500; color: var(--color-ink-900);
+.hub-subgroup .hub-row { min-height: 48px; padding-block: 2px; }
+.hub-link:hover { background: var(--color-surface-100); }
+.hub-link[aria-current] { background: var(--color-brand-100); }
+.hub-icon { display: grid; width: 40px; height: 40px; flex-shrink: 0; place-items: center; border-radius: 12px; background: var(--color-brand-100); color: var(--color-brand-700); }
+.hub-link[aria-current] .hub-icon, .hub-tile[aria-current] .hub-icon { background: var(--color-surface-000); }
+.hub-text { min-width: 0; flex: 1; }
+.hub-label { display: block; font-weight: 600; line-height: 20px; }
+.hub-hint { display: block; font-size: 13px; line-height: 18px; color: var(--color-ink-500); }
+.hub-chevron { flex-shrink: 0; color: var(--color-ink-500); }
+.hub-here { flex-shrink: 0; font-size: 12px; font-weight: 700; color: var(--color-brand-700); }
+.hub-pills { display: flex; flex-shrink: 0; }
+.hub-pill { display: inline-grid; min-width: 44px; min-height: 44px; place-items: center; padding: 0 2px; border-radius: var(--radius-full); }
+.hub-pill-face {
+  display: inline-flex; height: 32px; align-items: center; padding: 0 12px;
+  border: 1px solid var(--color-border-subtle); border-radius: var(--radius-full); background: var(--color-surface-000);
+  font-size: 13px; font-weight: 600; color: var(--color-brand-700);
 }
-.menu-chip:hover { border-color: var(--color-border-strong); }
-.menu-chip[aria-current] { border-color: var(--color-brand-600); font-weight: 700; }
+.hub-pill:hover .hub-pill-face { border-color: var(--color-brand-600); background: var(--color-brand-100); }
+.hub-pill[aria-current] .hub-pill-face { border-color: var(--color-brand-600); background: var(--color-brand-600); color: var(--color-on-brand); }
+
+/* Buy and Rent: the two big first choices in the menu. */
+.hub-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.hub-tile {
+  display: flex; height: 100%; min-height: 112px; flex-direction: column; gap: 2px; padding: 14px;
+  border: 1px solid var(--color-border-subtle); border-radius: var(--radius-lg); background: var(--color-surface-000); color: var(--color-ink-900);
+}
+.hub-tile .hub-icon { margin-bottom: 8px; }
+.hub-tile:hover { border-color: var(--color-border-strong); box-shadow: var(--shadow-e1); }
+.hub-tile[aria-current] { border-color: var(--color-brand-600); background: var(--color-brand-100); }
+.hub-tile-label { font-size: 17px; font-weight: 700; line-height: 22px; }
+.hub-tile .hub-here { margin-top: 4px; }
+
+/* Posting: a supply-tinted card with a filled supply icon. supply-600 is
+   only ever a fill here; the orange used as text is supply-700. */
+.hub-sell { padding: 10px 8px 6px; border-radius: var(--radius-lg); background: var(--color-supply-100); }
+.hub-sell .hub-title { color: var(--color-supply-700); }
+.hub-post {
+  display: flex; min-height: 64px; align-items: center; gap: 12px; padding: 8px;
+  border: 1px solid transparent; border-radius: var(--radius-md); background: var(--color-surface-000); color: var(--color-ink-900);
+}
+.hub-post:hover { border-color: var(--color-supply-600); }
+.hub-post .hub-label { font-size: 16px; }
+.hub-post-icon { display: grid; width: 40px; height: 40px; flex-shrink: 0; place-items: center; border-radius: var(--radius-full); background: var(--color-supply-600); color: var(--color-on-supply); }
+.hub-sell-more { margin-top: 2px; }
+.hub-sell-link {
+  display: flex; min-height: 44px; align-items: center; gap: 8px; padding: 0 8px;
+  border-radius: var(--radius-md); font-size: 14px; font-weight: 600; color: var(--color-ink-900);
+}
+.hub-sell-link:hover { text-decoration: underline; }
+.hub-post[aria-current], .hub-sell-link[aria-current] { box-shadow: inset 3px 0 0 var(--color-supply-600); }
+
+/* Desktop: "Explore all" and its panel, the width of the header. */
+.nav-hub-toggle {
+  display: inline-flex; min-height: 44px; align-items: center; gap: 6px; margin-left: 8px; padding: 0 10px 0 12px;
+  border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md);
+  font-size: 15px; font-weight: 600; line-height: 1; white-space: nowrap; color: var(--color-ink-700);
+}
+.nav-hub-toggle:hover { border-color: var(--color-border-strong); color: var(--color-ink-900); }
+.nav-hub-toggle[aria-expanded='true'] { border-color: transparent; background: var(--color-brand-100); color: var(--color-brand-700); }
+.nav-hub-toggle svg:last-child { transition: transform .15s; }
+.nav-hub-toggle[aria-expanded='true'] svg:last-child { transform: rotate(180deg); }
+/* After the rule above, not in the panels' media query earlier in the
+   file: an earlier `display: none` loses to this later `inline-flex`. */
+@media (max-width: 1023px) { .nav-hub-toggle { display: none; } }
+.nav-panel-hub {
+  top: calc(100% - 8px); left: 32px; right: 32px; width: auto;
+  max-height: calc(100dvh - 88px); overflow-y: auto; overscroll-behavior: contain; padding: 4px 20px 16px;
+}
+.hub-panel-grid { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.15fr) minmax(0, .85fr); gap: 0 24px; }
+.nav-panel-hub .hub-group { margin-top: 12px; }
+.nav-panel-hub .hub-row { min-height: 44px; gap: 10px; padding: 2px 8px; }
+.nav-panel-hub .hub-icon { width: 32px; height: 32px; border-radius: 10px; }
+.nav-panel-hub .hub-icon svg { width: 18px; height: 18px; }
+.nav-panel-hub .hub-label { font-size: 14px; line-height: 18px; }
+.nav-panel-hub .hub-hint { font-size: 12px; line-height: 16px; }
+.hub-band {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start;
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--color-border-subtle);
+}
+.nav-panel-hub .hub-sell-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; margin-top: 0; }
+.hub-sell-inline .hub-title { flex-basis: 100%; }
+.hub-sell-inline .hub-post { flex: 1 1 220px; min-height: 52px; }
+.nav-panel-hub .hub-account-inline { margin-top: 0; }
+.hub-account-inline .hub-rows { display: flex; flex-wrap: wrap; gap: 2px 4px; }
+.hub-account-inline .hub-hint, .hub-account-inline .hub-chevron { display: none; }
 .glass-panel, .glass-card { background: var(--color-surface-000); }
 .glass-card {
   border-color: var(--color-border-strong);

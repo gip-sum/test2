@@ -2,30 +2,29 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, type ComponentType } from 'react'
+import { useState } from 'react'
 import { Sheet } from '@/components/ui/Sheet'
-import {
-  CalculatorIcon, ChevronRightIcon, HeartIcon, HomeIcon, KeyIcon, MailIcon, MapPinIcon, MenuIcon, PlusIcon, UserIcon,
-} from '@/components/ui/icons'
+import { ChevronRightIcon, HomeIcon, MenuIcon } from '@/components/ui/icons'
 import { BRAND } from '@/lib/brand'
 import { cn } from '@/lib/cn'
-import type { MarketplaceNav, NavSectionId } from '@/lib/navigation/types'
-import { sectionState } from './current'
-
-type Row = { href: string; label: string; summary?: string; Icon: ComponentType<{ className?: string }>; current: boolean; supply?: boolean }
-
-const SECTION_ICON: Record<NavSectionId, ComponentType<{ className?: string }>> = {
-  buy: HomeIcon, rent: KeyIcon, localities: MapPinIcon, loans: CalculatorIcon,
-}
+import type { MarketplaceNav } from '@/lib/navigation/types'
+import { HUB_TITLE, HubGroup, HubRows, HubSell, HubTiles } from './hub'
 
 /**
- * Every destination in one place, on phones and tablets (Phase A).
+ * Every destination in one place, on phones and tablets: the discovery hub
+ * (Phase C, over Phase A's menu).
  *
  * Opened from the header's menu button and from "View all" on the quick
  * routes. Each trigger owns its sheet — there is no global menu state to
  * keep in step — and the sheet is the shared Radix-based one, which
- * already traps focus, locks scroll, closes on Escape and hands focus back
- * to whatever opened it.
+ * already traps focus, locks scroll, closes on Escape, makes the page
+ * behind inert and hands focus back to whatever opened it.
+ *
+ * Full screen on phones, grouped the way people look: Buy and Rent first
+ * as the two big choices, posting straight after in the supply accent,
+ * then kinds of home, ways to discover, tools and the account. From 768px
+ * the same groups sit in two columns of a wide dialog. The bottom bar
+ * stays as it is; this supplements it.
  *
  * A link closes the sheet as it navigates: an in-page link (/#localities
  * on the homepage) would otherwise scroll the page behind a dialog that is
@@ -39,21 +38,8 @@ export function MarketplaceMenu({ nav, trigger, className }: {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   const done = () => setOpen(false)
-
-  const find: Row[] = nav.sections.map((s) => ({
-    href: s.href, label: s.label, summary: s.summary, Icon: SECTION_ICON[s.id], current: sectionState(s, pathname) !== null,
-  }))
-  const at = (href: string) => pathname === href
-  const owners: Row[] = [
-    { href: '/post', label: 'Post a property', summary: 'List a home for sale or rent', Icon: PlusIcon, current: pathname.startsWith('/post'), supply: true },
-    { href: '/dashboard/enquiries', label: 'Enquiries on your listings', summary: 'Buyers and tenants who got in touch', Icon: MailIcon, current: at('/dashboard/enquiries') },
-  ]
-  const yours: Row[] = [
-    { href: '/account/saved', label: 'Saved homes', Icon: HeartIcon, current: at('/account/saved') },
-    { href: '/account/enquiries', label: 'Your enquiries', Icon: MailIcon, current: at('/account/enquiries') },
-    { href: '/account', label: 'Account', Icon: UserIcon, current: at('/account') },
-  ]
-  const browse = nav.sections.filter((s) => s.id === 'buy' || s.id === 'rent')
+  const at = { pathname, onNavigate: done }
+  const { hub } = nav
 
   return (
     <>
@@ -70,70 +56,42 @@ export function MarketplaceMenu({ nav, trigger, className }: {
         </button>
       )}
 
-      <Sheet open={open} onOpenChange={setOpen} title={`Explore ${BRAND.shortName}`} description="Every part of the marketplace, in one list.">
-        <nav aria-label="All destinations" className="menu-sheet">
-          <Link href="/" onClick={done} aria-current={at('/') ? 'page' : undefined} className="menu-home">
+      <Sheet open={open} onOpenChange={setOpen} size="wide" title={`Explore ${BRAND.shortName}`} description="Every part of the marketplace, grouped: finding a home, posting one, tools and your account.">
+        {/* Headings: the sheet's title is the h2, each group an h3, the
+            popular localities an h4 inside Discover. */}
+        <nav aria-label="All destinations" className="hub-sheet">
+          <Link href="/" onClick={done} aria-current={pathname === '/' ? 'page' : undefined} className="menu-home">
             <HomeIcon className="size-5" /> Home
           </Link>
-
-          <MenuGroup title="Find a home" rows={find} onNavigate={done} />
-          <MenuGroup title="Sell or let out" rows={owners} onNavigate={done} />
-          <MenuGroup title="Your account" rows={yours} onNavigate={done} />
-
-          <section aria-labelledby="menu-localities" className="menu-group">
-            <h3 id="menu-localities" className="menu-group-title">Popular localities</h3>
-            <ul className="menu-localities">
-              {nav.localities.map((l) => (
-                <li key={l.name}>
-                  <span className="font-semibold text-ink-900">{l.name}</span>
-                  <span className="flex gap-1.5">
-                    <Link href={l.buy} onClick={done} className="nav-pill">Buy<span className="sr-only"> in {l.name}</span></Link>
-                    <Link href={l.rent} onClick={done} className="nav-pill">Rent<span className="sr-only"> in {l.name}</span></Link>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          {browse.map((s) => (
-            <section key={s.id} aria-labelledby={`menu-browse-${s.id}`} className="menu-group">
-              <h3 id={`menu-browse-${s.id}`} className="menu-group-title">{s.summary}</h3>
-              <ul className="menu-chips">
-                {s.groups.flatMap((g) => g.links).map((link) => (
-                  <li key={link.href}>
-                    <Link href={link.href} onClick={done} aria-current={at(link.href) ? 'page' : undefined} className="menu-chip">
-                      {link.label}{link.context && <span className="sr-only"> {link.context}</span>}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
+          <div className="hub-cols">
+            <div className="hub-col">
+              <HubGroup id="hub-m-explore" title={HUB_TITLE.explore} level={3}>
+                <HubTiles entries={hub.explore} {...at} />
+              </HubGroup>
+              <HubSell id="hub-m-sell" level={3} sell={hub.sell} {...at} />
+              {hub.types.length > 0 && (
+                <HubGroup id="hub-m-types" title={HUB_TITLE.types} level={3}>
+                  <HubRows entries={hub.types} {...at} />
+                </HubGroup>
+              )}
+            </div>
+            <div className="hub-col">
+              <HubGroup id="hub-m-discover" title={HUB_TITLE.discover} level={3}>
+                <HubRows entries={hub.discover} {...at} />
+                <HubGroup id="hub-m-localities" title={HUB_TITLE.localities} level={4} className="hub-subgroup">
+                  <HubRows entries={hub.localities} icons={false} {...at} />
+                </HubGroup>
+              </HubGroup>
+              <HubGroup id="hub-m-tools" title={HUB_TITLE.tools} level={3}>
+                <HubRows entries={hub.tools} {...at} />
+              </HubGroup>
+              <HubGroup id="hub-m-account" title={HUB_TITLE.account} level={3}>
+                <HubRows entries={hub.account} {...at} />
+              </HubGroup>
+            </div>
+          </div>
         </nav>
       </Sheet>
     </>
-  )
-}
-
-function MenuGroup({ title, rows, onNavigate }: { title: string; rows: Row[]; onNavigate: () => void }) {
-  const id = `menu-${title.toLowerCase().replace(/[^a-z]+/g, '-')}`
-  return (
-    <section aria-labelledby={id} className="menu-group">
-      <h3 id={id} className="menu-group-title">{title}</h3>
-      <ul className="menu-rows">
-        {rows.map(({ href, label, summary, Icon, current, supply }) => (
-          <li key={href}>
-            <Link href={href} onClick={onNavigate} aria-current={current ? 'page' : undefined} className="menu-row">
-              <span className={cn('menu-row-icon', supply && 'menu-row-icon-supply')} aria-hidden="true"><Icon className="size-5" /></span>
-              <span className="min-w-0 flex-1">
-                <span className="menu-row-label">{label}</span>
-                {summary && <span className="menu-row-summary">{summary}</span>}
-              </span>
-              {current ? <span className="menu-current">You are here</span> : <ChevronRightIcon className="size-4 shrink-0 text-ink-500" />}
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </section>
   )
 }

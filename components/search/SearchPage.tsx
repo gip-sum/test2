@@ -10,7 +10,7 @@ import { Pagination } from '@/components/ui/Pagination'
 import { searchProperties } from '@/lib/property/search'
 import { getLocationBySlug, getAllLocalitySlugs, getLocalityNameMap } from '@/lib/location/queries'
 import { describeSearch } from '@/lib/search/describe'
-import { buildSearchUrl, parseSearchQuery, type SearchQuery } from '@/lib/search/query'
+import { buildSearchUrl, canonicalSearchUrl, parseSearchQuery, type SearchQuery } from '@/lib/search/query'
 import type { Intent } from '@/lib/property/types'
 import { BRAND } from '@/lib/brand'
 
@@ -66,8 +66,9 @@ export async function searchMetadata(intent: Intent, props: SearchRouteProps): P
     description: `Browse ${what} on ${BRAND.name}. Filter by locality, budget, configuration and more, then contact owners, agents and builders directly.`,
     // Page 2 onward is a slice of the same set, and every sort is a
     // reordering of it. Canonicalising to the first page of the base search
-    // stops them competing with each other.
-    alternates: { canonical: buildSearchUrl({ ...query, page: 1, sort: 'relevance' }) },
+    // stops them competing with each other — at its landing path, where a
+    // landing page holds it (canonicalSearchUrl).
+    alternates: { canonical: canonicalSearchUrl(query) },
     // A paginated or re-sorted view has nothing new to index, but its links
     // are still worth following.
     robots:
