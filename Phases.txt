@@ -22,6 +22,8 @@ Phase 8 — Implemented (real-account save verification pending)
 Phase 9 — Implemented (real seller assignment and notification verification pending)
 Phase 10 — Postponed (phone OTP is not required for now)
 Phase 11 — Complete and deployed
+Phase 12 — Implemented (property information form)
+Phase 13 — Implemented (property location form; review and deployment verification pending)
 Phase 40A — Implemented (home loan calculators, built ahead of order)
 Phase A — Implemented (marketplace navigation and shell; docs/phases/PHASE-A-marketplace-shell.md)
 Phase B — Implemented (homepage discovery and content density; docs/phases/PHASE-B-homepage-discovery.md)
@@ -229,6 +231,8 @@ Key focus:
 
 
 PHASE 13 — PROPERTY LOCATION FORM
+Status: IMPLEMENTED (review and deployment verification pending)
+Spec: docs/phases/PHASE-13-property-location-form.md
 
 Build accurate property-location selection.
 

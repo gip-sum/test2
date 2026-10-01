@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import { AREA_UNITS, applicableKeys, hasUnitFloor, type DetailErrors, type DetailInput, type DetailKey } from '@/lib/posting/details'
+import { locationPairs, type LocationInput } from '@/lib/posting/location'
 import { postingUrl } from '@/lib/posting/entry'
 import type { CompleteEntry } from '@/lib/posting/flow'
 import { FURNISHING_LABEL, FURNISHING_ORDER, PROPERTY_TYPE_LABEL, SELLER_LABEL } from '@/lib/property/types'
@@ -114,11 +115,12 @@ function Group({ title, children, className = '' }: { title: string; children: R
   )
 }
 
-export function DetailsForm({ entry, values, errors, today }: {
+export function DetailsForm({ entry, values, errors, today, location = {} }: {
   entry: CompleteEntry
   values: DetailInput
   errors: DetailErrors
   today: string
+  location?: LocationInput
 }) {
   const keys = applicableKeys(entry)
   const unitFloor = hasUnitFloor(entry.type)
@@ -133,7 +135,7 @@ export function DetailsForm({ entry, values, errors, today }: {
     <p className="mt-3 max-w-xl text-body-lg text-ink-700">Answer for the property as it is today. You can change anything on the next screen.</p>
     <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm text-ink-700">
       <span className="font-semibold text-ink-900">{SELLER_LABEL[entry.role]} · {plan} · {PROPERTY_TYPE_LABEL[entry.type]}</span>
-      <Link href={postingUrl({ role: entry.role, intent: entry.intent }, { details: values })} className="inline-flex min-h-11 items-center text-label text-brand-700 underline underline-offset-4">Change property type</Link>
+      <Link href={postingUrl({ role: entry.role, intent: entry.intent }, { details: values, location })} className="inline-flex min-h-11 items-center text-label text-brand-700 underline underline-offset-4">Change property type</Link>
     </p>
 
     <form method="get" action="/post" noValidate className="post-form mt-7 grid gap-8">
@@ -141,6 +143,7 @@ export function DetailsForm({ entry, values, errors, today }: {
       <input type="hidden" name="role" value={entry.role} />
       <input type="hidden" name="intent" value={entry.intent} />
       <input type="hidden" name="type" value={entry.type} />
+      {locationPairs(location).map(([key, value]) => <input key={key} type="hidden" name={key} value={value} />)}
 
       <Group title="Rooms" className="border-t-0 pt-0">
         {keys.has('bhk') && <ChipGroup name="bhk" legend="Bedrooms (BHK)" options={COUNTS.map((n) => ({ value: n, label: n }))} values={shown} errors={errors} />}

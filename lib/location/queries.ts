@@ -123,3 +123,10 @@ export function getSiblingLocalitySlugs(slug: string): string[] {
     (l) => l.slug !== slug && (l.slug === parent || (l.type === 'SUB_LOCALITY' && l.parentSlug === parent)),
   ).map((l) => l.slug)
 }
+
+/** Geographic choices for posting; invented development societies are excluded. */
+export function getPostingLocations(): Location[] {
+  return KOLKATA_LOCATIONS.filter((place) =>
+    place.type === 'CITY' || place.type === 'LOCALITY' || place.type === 'SUB_LOCALITY',
+  ).slice().sort((a, b) => a.name.localeCompare(b.name))
+}
