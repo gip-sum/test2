@@ -5,6 +5,7 @@ import { postingUrl } from '@/lib/posting/entry'
 import type { DetailInput, DetailKey, PropertyFacts } from '@/lib/posting/details'
 import type { CompleteEntry } from '@/lib/posting/flow'
 import { CONSTRUCTION_LABEL, FURNISHING_LABEL, PROPERTY_TYPE_LABEL, SELLER_LABEL } from '@/lib/property/types'
+import type { LocationInput } from '@/lib/posting/location'
 import { fieldId } from './DetailsForm'
 
 function formatMonth(month: string): string {
@@ -37,15 +38,15 @@ type Row = { label: string; value: React.ReactNode; edit: string; changeLabel: s
  * An optional basis that was not given says so rather than disappearing:
  * on this screen the seller is checking what they did and did not state.
  */
-export function DetailsReview({ entry, facts, carried }: { entry: CompleteEntry; facts: PropertyFacts; carried: DetailInput }) {
-  const edit = (key: DetailKey) => `${postingUrl(entry, { details: carried, edit: true })}#${fieldId(key)}`
+export function DetailsReview({ entry, facts, carried, location = {}, finalReview = false }: { entry: CompleteEntry; facts: PropertyFacts; carried: DetailInput; location?: LocationInput; finalReview?: boolean }) {
+  const edit = (key: DetailKey) => `${postingUrl(entry, { details: carried, edit: true, location })}#${fieldId(key)}`
   const unit = facts.areaUnit
   const notStated = <span className="font-normal text-ink-500">Not stated</span>
 
   const choices: Row[] = [
-    { label: 'You are posting as', value: SELLER_LABEL[entry.role], edit: postingUrl({}, { details: carried }), changeLabel: 'Change You are posting as' },
-    { label: 'You want to', value: entry.intent === 'buy' ? 'Sell a property' : 'Rent out a property', edit: postingUrl({ role: entry.role }, { details: carried }), changeLabel: 'Change You want to' },
-    { label: 'Property type', value: PROPERTY_TYPE_LABEL[entry.type], edit: postingUrl({ role: entry.role, intent: entry.intent }, { details: carried }), changeLabel: 'Change Property type' },
+    { label: 'You are posting as', value: SELLER_LABEL[entry.role], edit: postingUrl({}, { details: carried, location }), changeLabel: 'Change You are posting as' },
+    { label: 'You want to', value: entry.intent === 'buy' ? 'Sell a property' : 'Rent out a property', edit: postingUrl({ role: entry.role }, { details: carried, location }), changeLabel: 'Change You want to' },
+    { label: 'Property type', value: PROPERTY_TYPE_LABEL[entry.type], edit: postingUrl({ role: entry.role, intent: entry.intent }, { details: carried, location }), changeLabel: 'Change Property type' },
   ]
 
   const details: Row[] = [
@@ -90,16 +91,17 @@ export function DetailsReview({ entry, facts, carried }: { entry: CompleteEntry;
   )
 
   return <>
-    <h1 id="post-heading" className="font-display text-heading-1 text-ink-900 sm:text-[40px] sm:leading-tight">Check the property details.</h1>
+    <h1 id="post-heading" className="font-display text-heading-1 text-ink-900 sm:text-[40px] sm:leading-tight">{finalReview ? 'Check the details and location.' : 'Check the property details.'}</h1>
     <p className="mt-3 max-w-xl text-body-lg text-ink-700">Check each answer before moving on, and change anything that is not right.</p>
     <h2 className="mt-8 font-display text-heading-3 text-ink-900">Your choices</h2>
     <div className="mt-3">{list(choices, 'Your choices')}</div>
     <h2 className="mt-8 font-display text-heading-3 text-ink-900">Property details</h2>
     <div className="mt-3">{list(details, 'Property details')}</div>
-    <div className="mt-6 rounded-lg border border-brand-600/20 bg-brand-100/65 p-5 sm:p-6">
+    {!finalReview && <div className="mt-6 rounded-lg border border-brand-600/20 bg-brand-100/65 p-5 sm:p-6">
       <h2 className="font-display text-heading-3 text-ink-900">What happens next?</h2>
-      <p className="mt-2 text-body text-ink-700">The next stage, the property&apos;s location, is being prepared. Your answers are in this page link only: they have not been saved to an account and no property has been posted.</p>
-      <Link href={postingUrl(entry, { details: carried, edit: true })} className="mt-5 inline-flex min-h-11 items-center rounded-full border border-brand-600 bg-surface-000 px-5 text-label text-brand-700 hover:bg-brand-100">Edit property details</Link>
-    </div>
+      <p className="mt-2 text-body text-ink-700">Continue to add the property&apos;s location. Your answers are in this page link only: they have not been saved to an account and no property has been posted.</p>
+      <Link href={postingUrl(entry, { details: carried, location, step: 'location' })} className="mt-5 inline-flex min-h-12 items-center rounded-full bg-supply-600 px-5 text-label text-on-supply">Continue to location</Link>
+      <Link href={postingUrl(entry, { details: carried, edit: true, location })} className="mt-5 inline-flex min-h-11 items-center rounded-full border border-brand-600 bg-surface-000 px-5 text-label text-brand-700 hover:bg-brand-100">Edit property details</Link>
+    </div>}
   </>
 }

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 // Visual verification harness. Renders routes at the four target widths and
 // reports horizontal overflow, which is the defect class that hides from
 // eyeballing a screenshot.
@@ -17,6 +18,10 @@ const DEFAULT_ROUTES = [
   // Phase 12: a failed submission (error summary, every field marked) and a review.
   '/post?role=OWNER&intent=buy&type=APARTMENT&carpet=',
   '/post?role=OWNER&intent=buy&type=APARTMENT&bhk=3&baths=2&unit=sqft&carpet=1240&super=1650&furnishing=SEMI_FURNISHED&floor=4&floors=12&status=READY&age=6',
+  // Phase 13: location form, validation error and long-address combined review.
+  '/post?role=OWNER&intent=buy&type=APARTMENT&bhk=3&baths=2&unit=sqft&carpet=1240&super=1650&furnishing=SEMI_FURNISHED&floor=4&floors=12&status=READY&age=6&step=location',
+  '/post?role=OWNER&intent=buy&type=APARTMENT&bhk=3&baths=2&unit=sqft&carpet=1240&super=1650&furnishing=SEMI_FURNISHED&floor=4&floors=12&status=READY&age=6&city=kolkata&locality=missing&address=&step=location-review',
+  '/post?role=OWNER&intent=buy&type=APARTMENT&bhk=3&baths=2&unit=sqft&carpet=1240&super=1650&furnishing=SEMI_FURNISHED&floor=4&floors=12&status=READY&age=6&city=kolkata&locality=new-town&sublocality=new-town-action-area-i&address=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&lat=22.58&lng=88.46&step=location-review',
   // Sign-in: the scene beside (desktop) or above (phones) the form.
   '/login',
   '/login?mode=register',
@@ -66,7 +71,10 @@ for (const route of routes) {
         .slice(0, 5)
         .map((el) => `${el.tagName.toLowerCase()}.${(el.className || '').toString().split(' ')[0]} → ${Math.round(el.getBoundingClientRect().right)}px`),
     }))
-    const slug = route === '/' ? 'home' : route.replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '')
+    const readable = route === '/' ? 'home' : route.replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '')
+    // Addresses and query-heavy routes exceed filesystem filename limits.
+    // Keep a readable prefix plus a hash so distinct long routes cannot collide.
+    const slug = readable.length <= 180 ? readable : `${readable.slice(0, 120)}-${createHash('sha256').update(route).digest('hex').slice(0, 12)}`
     await page.screenshot({ path: join(OUT, `${slug}-${width}.png`), fullPage: true })
     const overflow = m.scrollWidth > m.clientWidth + 1
     if (overflow) failures++
