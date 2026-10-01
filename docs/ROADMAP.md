@@ -31,7 +31,8 @@ but its eight-phase build order is superseded.
 | 10 | Phone contact and OTP reveal | Postponed by client decision |
 | 11 | Post property entry flow | **Complete** and deployed |
 | 12 | Property information form | Implemented; CI on `main` and deployment pending |
-| 13 | Property location form | Implemented; review and deployment verification pending |
+| 13 | Property location form | Complete and deployed |
+| 14 | Property pricing form | Implemented; review pending |
 | 40A | Home loan calculators | Implemented ahead of order at client request |
 
 Phase 0 (planning) and the GharBazaar rebrand plus light-first conversion

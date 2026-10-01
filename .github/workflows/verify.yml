@@ -49,6 +49,7 @@ jobs:
       # Phase D: the six-item phone bar, one Menu per screen, Post inside
       # the bar, and the page clearing it (auth-check covers Activity signed in).
       - run: npm run shell-check
+      - run: npm run pricing-check
       - run: npm run post-check
       - run: npm run notfound-check
       # Without auth configured: the honest "unavailable" state, plus the

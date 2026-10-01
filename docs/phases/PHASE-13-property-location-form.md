@@ -38,3 +38,5 @@ No claim of verified geocoding, saved drafts or published listings. Location is 
 - `npm run light-check`: all route surfaces, including the three location states, stay light under a dark-mode browser.
 - `npm run shots`: all routes measured at 390/412/768/1280; the new long-address fixture required bounded, hash-suffixed screenshot filenames.
 - Browser checks used Chrome Headless Shell 154 through Playwright. The agent-browser daemon could not start because local IPC sockets are restricted; equivalent browser checks ran in the same execution session as the server. The location form at 390px was visually inspected.
+
+- Merged via PR #3 at `3908bcc`; GitHub Actions run 36893401552 passed the default production build and full browser checks. Vercel production was READY and the live location flow was verified after deployment.

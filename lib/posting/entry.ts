@@ -1,6 +1,7 @@
 import type { Intent, PropertyTypeCode, SellerType } from '@/lib/property/types'
 import { PROPERTY_TYPE_ORDER } from '@/lib/property/types'
 import { detailPairs, type DetailInput } from './details'
+import { pricingPairs, type PricingInput } from './pricing'
 import { locationPairs, type LocationInput } from './location'
 
 export type EntryInput = Record<string, string | string[] | undefined>
@@ -40,7 +41,7 @@ export function parsePostingEntry(input: EntryInput): PostingEntry {
  */
 export function postingUrl(
   entry: Pick<PostingEntry, 'role' | 'intent' | 'type'>,
-  options: { details?: DetailInput; edit?: boolean; location?: LocationInput; step?: 'location' | 'location-review' } = {},
+  options: { details?: DetailInput; edit?: boolean; location?: LocationInput; pricing?: PricingInput; step?: 'location' | 'location-review' | 'pricing' | 'pricing-review' } = {},
 ): string {
   const params = new URLSearchParams()
   if (entry.role) params.set('role', entry.role)
@@ -50,6 +51,7 @@ export function postingUrl(
   for (const [key, value] of pairs) params.append(key, value)
   if (options.edit && pairs.length > 0) params.set('edit', '1')
   for (const [key, value] of locationPairs(options.location ?? {})) params.append(key, value)
+  for (const [key, value] of pricingPairs(options.pricing ?? {})) params.append(key, value)
   if (options.step) params.set('step', options.step)
   const query = params.toString()
   return query ? `/post?${query}` : '/post'

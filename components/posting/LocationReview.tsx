@@ -1,3 +1,4 @@
+import type { PricingInput } from '@/lib/posting/pricing'
 import Link from 'next/link'
 import type { Location } from '@/lib/location/types'
 import type { CompleteEntry } from '@/lib/posting/flow'
@@ -6,11 +7,11 @@ import { postingUrl } from '@/lib/posting/entry'
 import type { LocationInput, LocationKey, PropertyLocation } from '@/lib/posting/location'
 import { locationFieldId } from './LocationForm'
 
-export function LocationReview({ entry, carried, values, location, places }: {
-  entry: CompleteEntry; carried: DetailInput; values: LocationInput; location: PropertyLocation; places: readonly Location[]
+export function LocationReview({ entry, carried, values, location, places, pricing = {}, finalReview = false }: {
+  entry: CompleteEntry; carried: DetailInput; values: LocationInput; location: PropertyLocation; places: readonly Location[]; pricing?: PricingInput; finalReview?: boolean
 }) {
   const name = (id: string | undefined) => places.find((p) => p.id === id)?.name ?? 'Not stated'
-  const edit = (key: LocationKey) => `${postingUrl(entry, { details: carried, location: values, step: 'location' })}#${locationFieldId(key)}`
+  const edit = (key: LocationKey) => `${postingUrl(entry, { details: carried, location: values, pricing, step: 'location' })}#${locationFieldId(key)}`
   const rows: { key: LocationKey; label: string; value: string }[] = [
     { key: 'city', label: 'City', value: name(location.cityId) },
     { key: 'locality', label: 'Locality', value: name(location.localityId) },
@@ -27,10 +28,11 @@ export function LocationReview({ entry, carried, values, location, places }: {
         <Link href={edit(row.key)} aria-label={`Change ${row.label}`} className="inline-flex min-h-11 shrink-0 items-center px-3 text-label text-brand-700 underline underline-offset-4">Change</Link>
       </div>)}
     </dl>
-    <div className="mt-6 rounded-lg border border-brand-600/20 bg-brand-100/65 p-5 sm:p-6">
+    {!finalReview && <div className="mt-6 rounded-lg border border-brand-600/20 bg-brand-100/65 p-5 sm:p-6">
       <h2 className="font-display text-heading-3 text-ink-900">What happens next?</h2>
-      <p className="mt-2 text-body text-ink-700">Pricing is the next stage to be built. Your answers are in this page link only: they have not been saved to an account and no property has been posted.</p>
-      <Link href={postingUrl(entry, { details: carried, location: values, step: 'location' })} className="mt-4 inline-flex min-h-11 items-center text-label text-brand-700 underline underline-offset-4">Edit property location</Link>
-    </div>
+      <p className="mt-2 text-body text-ink-700">Continue to add sale or rental pricing. Your answers are in this page link only: they have not been saved to an account and no property has been posted.</p>
+      <Link href={postingUrl(entry, { details: carried, location: values, pricing, step: 'pricing' })} className="mt-5 inline-flex min-h-12 items-center rounded-full bg-supply-600 px-5 text-label text-on-supply">Continue to pricing</Link>
+      <Link href={postingUrl(entry, { details: carried, location: values, pricing, step: 'location' })} className="mt-4 inline-flex min-h-11 items-center text-label text-brand-700 underline underline-offset-4">Edit property location</Link>
+    </div>}
   </>
 }

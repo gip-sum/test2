@@ -1,3 +1,4 @@
+import { pricingPairs, type PricingInput } from '@/lib/posting/pricing'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
 import type { Location } from '@/lib/location/types'
@@ -24,8 +25,8 @@ const HINTS: Record<LocationKey, string> = {
 }
 const inputClass = 'mt-2 block min-h-12 w-full min-w-0 rounded-md border border-border-strong bg-surface-000 px-3 py-3 text-base text-ink-900 aria-[invalid=true]:border-danger-600 aria-[invalid=true]:border-2'
 
-export function LocationForm({ entry, carried, values, errors, places }: {
-  entry: CompleteEntry; carried: DetailInput; values: LocationInput; errors: LocationErrors; places: readonly Location[]
+export function LocationForm({ entry, carried, values, errors, places, pricing = {} }: {
+  entry: CompleteEntry; carried: DetailInput; values: LocationInput; errors: LocationErrors; places: readonly Location[]; pricing?: PricingInput
 }) {
   const field = (key: LocationKey) => {
     const error = errors[key]
@@ -53,13 +54,14 @@ export function LocationForm({ entry, carried, values, errors, places }: {
   return <>
     <h1 id="post-heading" className="font-display text-heading-1 text-ink-900 sm:text-[40px] sm:leading-tight">Where is the property?</h1>
     <p className="mt-3 text-body-lg text-ink-700">Help buyers find the right neighbourhood. You can check and change every answer before moving on.</p>
-    <Link href={postingUrl(entry, { details: carried, location: values })} className="mt-3 inline-flex min-h-11 items-center text-label text-brand-700 underline underline-offset-4">Check property details</Link>
+    <Link href={postingUrl(entry, { details: carried, location: values, pricing })} className="mt-3 inline-flex min-h-11 items-center text-label text-brand-700 underline underline-offset-4">Check property details</Link>
     <form method="get" action="/post" noValidate className="mt-6 grid gap-6">
       {Object.values(errors).some(Boolean) && <ErrorSummary errors={LOCATION_KEYS.flatMap((key) => errors[key] ? [{ id: locationFieldId(key), message: errors[key]! }] : [])} />}
       <input type="hidden" name="role" value={entry.role} />
       <input type="hidden" name="intent" value={entry.intent} />
       <input type="hidden" name="type" value={entry.type} />
       {detailPairs(carried).map(([key, value]) => <input key={key} type="hidden" name={key} value={value} />)}
+      {pricingPairs(pricing).map(([key, value]) => <input key={key} type="hidden" name={key} value={value} />)}
       {field('city')}{field('locality')}{field('sublocality')}{field('society')}{field('address')}
       <section className="border-t border-border-subtle pt-6">
         <h2 className="font-display text-heading-3 text-ink-900">Property coordinates</h2>

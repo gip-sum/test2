@@ -1,3 +1,6 @@
+import type { PricingInput } from '@/lib/posting/pricing'
+import { PricingForm } from '@/components/posting/PricingForm'
+import { PricingReview } from '@/components/posting/PricingReview'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -41,39 +44,41 @@ const TYPES: Record<PropertyTypeCode, string> = {
   STUDIO: 'A compact, open-plan apartment.',
 }
 
-function RoleStep({ carried, location }: { carried: DetailInput; location: LocationInput }) {
+function RoleStep({ carried, location, pricing }: { carried: DetailInput; location: LocationInput; pricing: PricingInput }) {
   return <>
     <h1 id="post-heading" className="font-display text-heading-1 text-ink-900 sm:text-[40px] sm:leading-tight">First, tell us about you.</h1>
     <p className="mt-3 max-w-xl text-body-lg text-ink-700">Who will be listing this property?</p>
     <ul className="mt-7 grid gap-3">{ROLES.map((role) => (
-      <Choice key={role.value} href={postingUrl({ role: role.value }, { details: carried, location })} number={role.number} title={role.title} description={role.description} />
+      <Choice key={role.value} href={postingUrl({ role: role.value }, { details: carried, location, pricing })} number={role.number} title={role.title} description={role.description} />
     ))}</ul>
   </>
 }
 
-function IntentStep({ role, carried, location }: { role: SellerType; carried: DetailInput; location: LocationInput }) {
+function IntentStep({ role, carried, location, pricing }: { role: SellerType; carried: DetailInput; location: LocationInput; pricing: PricingInput }) {
   return <>
     <h1 id="post-heading" className="font-display text-heading-1 text-ink-900 sm:text-[40px] sm:leading-tight">What would you like to do?</h1>
     <p className="mt-3 text-body-lg text-ink-700">You can list a home for sale or for rent.</p>
     <ul className="mt-7 grid gap-3">{INTENTS.map((intent) => (
-      <Choice key={intent.value} href={postingUrl({ role, intent: intent.value }, { details: carried, location })} number={intent.number} title={intent.title} description={intent.description} />
+      <Choice key={intent.value} href={postingUrl({ role, intent: intent.value }, { details: carried, location, pricing })} number={intent.number} title={intent.title} description={intent.description} />
     ))}</ul>
   </>
 }
 
-function TypeStep({ role, intent, carried, location }: { role: SellerType; intent: Intent; carried: DetailInput; location: LocationInput }) {
+function TypeStep({ role, intent, carried, location, pricing }: { role: SellerType; intent: Intent; carried: DetailInput; location: LocationInput; pricing: PricingInput }) {
   return <>
     <h1 id="post-heading" className="font-display text-heading-1 text-ink-900 sm:text-[40px] sm:leading-tight">What kind of place is it?</h1>
     <p className="mt-3 text-body-lg text-ink-700">Choose the best match. {Object.keys(carried).length > 0 ? 'Details you have already entered come with you; you can check them on the next screen.' : 'You can change it later.'}</p>
     <ul className="mt-7 grid gap-3 sm:grid-cols-2">{PROPERTY_TYPE_ORDER.map((type, index) => (
-      <Choice key={type} href={postingUrl({ role, intent, type }, { details: carried, edit: true, location })} number={String(index + 1).padStart(2, '0')} title={PROPERTY_TYPE_LABEL[type]} description={TYPES[type]} />
+      <Choice key={type} href={postingUrl({ role, intent, type }, { details: carried, edit: true, location, pricing })} number={String(index + 1).padStart(2, '0')} title={PROPERTY_TYPE_LABEL[type]} description={TYPES[type]} />
     ))}</ul>
   </>
 }
 
 function backUrl(view: PostingView): string | null {
-  if (view.stage === 'location') return postingUrl(view.entry, { details: view.carried, location: view.locationCarried })
-  if (view.stage === 'location-review') return postingUrl(view.entry, { details: view.carried, location: view.locationCarried, step: 'location' })
+  if (view.stage === 'location') return postingUrl(view.entry, { details: view.carried, pricing: view.pricingCarried, location: view.locationCarried })
+  if (view.stage === 'location-review') return postingUrl(view.entry, { details: view.carried, pricing: view.pricingCarried, location: view.locationCarried, step: 'location' })
+  if (view.stage === 'pricing') return postingUrl(view.entry, { details: view.carried, location: view.locationCarried, pricing: view.pricingCarried, step: 'location-review' })
+  if (view.stage === 'pricing-review') return stageUrl(5, view)
   const index = ['role', 'intent', 'type', 'details', 'review'].indexOf(view.stage)
   return index === 0 ? null : stageUrl(index - 1, view)
 }
@@ -85,6 +90,8 @@ const GUIDE: Record<PostingView['stage'], { title: string; body: string }> = {
   details: { title: 'Three areas, three meanings.', body: 'Carpet, built-up and super built-up are different measurements. Buyers compare prices on carpet area, so it is the one we ask for first — and we never merge them.' },
   location: { title: 'A clear address helps people find you.', body: 'Choose the correct locality and give the building or street address. Coordinates are optional and seller-provided; no map position is invented.' },
   'location-review': { title: 'Nothing is posted yet.', body: 'Check the property details and location. Pricing comes next; your answers have not been saved to an account.' },
+  pricing: { title: 'Clear amounts, clear expectations.', body: 'Separate monthly charges from the total deposit. The rate is based on carpet area, and unknown maintenance stays distinct from no charge.' },
+  'pricing-review': { title: 'Nothing is posted yet.', body: 'Check the property facts, location and pricing. Photos come next; your answers have not been saved to an account.' },
   review: { title: 'Nothing is posted yet.', body: 'This review is only in your page link. Location, price and photos come next, and nothing is saved until drafts arrive.' },
 }
 
@@ -108,19 +115,25 @@ export default async function PostPropertyPage({ searchParams }: { searchParams:
           <div className="inline-flex items-center gap-2 rounded-full border border-brand-600/15 bg-brand-100 px-4 py-2 text-overline font-semibold uppercase tracking-[0.1em] text-brand-700"><span aria-hidden="true">✦</span> Begin your listing</div>
           <PostingProgress view={view} />
           <div className="mt-9">
-            {view.stage === 'role' && <RoleStep carried={view.carried} location={view.locationCarried} />}
-            {view.stage === 'intent' && view.entry.role && <IntentStep role={view.entry.role} carried={view.carried} location={view.locationCarried} />}
-            {view.stage === 'type' && view.entry.role && view.entry.intent && <TypeStep role={view.entry.role} intent={view.entry.intent} carried={view.carried} location={view.locationCarried} />}
+            {view.stage === 'role' && <RoleStep carried={view.carried} location={view.locationCarried} pricing={view.pricingCarried} />}
+            {view.stage === 'intent' && view.entry.role && <IntentStep role={view.entry.role} carried={view.carried} location={view.locationCarried} pricing={view.pricingCarried} />}
+            {view.stage === 'type' && view.entry.role && view.entry.intent && <TypeStep role={view.entry.role} intent={view.entry.intent} carried={view.carried} location={view.locationCarried} pricing={view.pricingCarried} />}
             {/* Keyed by the link so a client-side navigation between two
                 states of the form remounts it: the inputs are uncontrolled,
                 and a reused node would keep the previous state's values. */}
-            {view.stage === 'details' && <DetailsForm key={canonicalUrl} entry={view.entry} values={view.values} errors={view.errors} today={today} location={view.locationCarried} />}
-            {view.stage === 'location' && <LocationForm key={canonicalUrl} entry={view.entry} carried={view.carried} values={view.values} errors={view.errors} places={places} />}
+            {view.stage === 'details' && <DetailsForm key={canonicalUrl} entry={view.entry} values={view.values} errors={view.errors} today={today} location={view.locationCarried} pricing={view.pricingCarried} />}
+            {view.stage === 'location' && <LocationForm key={canonicalUrl} entry={view.entry} carried={view.carried} values={view.values} errors={view.errors} places={places} pricing={view.pricingCarried} />}
             {view.stage === 'location-review' && <>
-              <DetailsReview entry={view.entry} facts={view.facts} carried={view.carried} location={view.locationCarried} finalReview />
-              <LocationReview entry={view.entry} carried={view.carried} values={view.locationCarried} location={view.location} places={places} />
+              <DetailsReview entry={view.entry} facts={view.facts} carried={view.carried} location={view.locationCarried} pricing={view.pricingCarried} finalReview />
+              <LocationReview entry={view.entry} carried={view.carried} values={view.locationCarried} location={view.location} places={places} pricing={view.pricingCarried} />
             </>}
-            {view.stage === 'review' && <DetailsReview entry={view.entry} facts={view.facts} carried={view.carried} location={view.locationCarried} />}
+            {view.stage === 'pricing' && <PricingForm key={canonicalUrl} entry={view.entry} carried={view.carried} location={view.locationCarried} values={view.values} errors={view.errors} />}
+            {view.stage === 'pricing-review' && <>
+              <DetailsReview entry={view.entry} facts={view.facts} carried={view.carried} location={view.locationCarried} pricing={view.pricingCarried} finalReview heading="Check the property and pricing." />
+              <LocationReview entry={view.entry} carried={view.carried} values={view.locationCarried} location={view.location} places={places} pricing={view.pricingCarried} finalReview />
+              <PricingReview entry={view.entry} carried={view.carried} facts={view.facts} location={view.locationCarried} values={view.pricingCarried} pricing={view.pricing} />
+            </>}
+            {view.stage === 'review' && <DetailsReview entry={view.entry} facts={view.facts} carried={view.carried} location={view.locationCarried} pricing={view.pricingCarried} />}
           </div>
         </section>
         <aside className="post-guide rounded-[24px] border border-border-subtle bg-surface-000 p-6 shadow-e1 lg:sticky lg:top-28">

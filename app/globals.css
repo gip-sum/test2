@@ -1235,3 +1235,9 @@
     }
   }
 }
+
+/* Native selects keep this pricing follow-up usable without JavaScript. */
+@supports selector(:has(*)) {
+  .post-pricing-form .post-if-maintenance { display: none; }
+  .post-pricing-form:has(select[name="maintenance"] option[value="separate"]:checked) .post-if-maintenance { display: block; }
+}
