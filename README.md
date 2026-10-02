@@ -26,6 +26,7 @@ An original property marketplace for Kolkata, built around one loop:
 | 12 | Property information form | implemented |
 | 13 | Property location form | complete and deployed |
 | 14 | Property pricing form | Implemented; review pending |
+| E | 99acres interface redesign from client screenshots | Planned; specification recorded |
 
 The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
 criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)

@@ -29,12 +29,41 @@ Phase A — Implemented (marketplace navigation and shell; docs/phases/PHASE-A-m
 Phase B — Implemented (homepage discovery and content density; docs/phases/PHASE-B-homepage-discovery.md)
 Phase C — Implemented (marketplace menu and discovery hub; docs/phases/PHASE-C-discovery-hub.md)
 Phase D — Implemented (mobile navigation bar: Home, Search, Post, Videos, Activity, Menu; docs/phases/PHASE-D-mobile-navigation-bar.md)
+Phase E — Planned (99acres interface redesign from seven client screenshots; docs/phases/PHASE-E-99acres-interface-redesign.md)
 
 Temporary brand:
 GharBazaar
 
 Final brand:
 To be decided by client later.
+
+
+==================================================
+EXTRA INTERFACE PHASE — CLIENT REQUEST, 2 OCTOBER 2026
+==================================================
+
+PHASE E — 99ACRES INTERFACE REDESIGN
+Status: PLANNED — scope recorded; implementation not started.
+
+Recreate the mobile interface shown in the seven client-supplied 99acres
+screenshots, using GharBazaar branding and truthful GharBazaar content.
+This is an additional interface phase alongside A–D. It does not start
+Phase 15, replace its photo-upload scope, or renumber the 75 phases.
+
+Key focus:
+- Homepage header, horizontal category shortcuts and banner carousel
+- Overlapping search bar and compact sticky search on scroll
+- Horizontal property cards, image overlays and save controls
+- Cream BHK and seller-type discovery bands and possession cards
+- Pale-blue calculator/tool section and locality discovery cards
+- All Categories menu: left category rail and right scrollable tile grid
+- Guest Activity welcome, login action, activity summary and property cards
+- Six-item fixed bottom navigation matching the supplied visual reference
+- Reference typography, spacing, colours, borders, radii and icon treatment
+- Mobile fidelity first, with usable tablet and desktop adaptations
+
+Reference details and acceptance criteria:
+docs/phases/PHASE-E-99acres-interface-redesign.md
 
 
 ==================================================

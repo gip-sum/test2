@@ -33,6 +33,7 @@ but its eight-phase build order is superseded.
 | 12 | Property information form | Implemented; CI on `main` and deployment pending |
 | 13 | Property location form | Complete and deployed |
 | 14 | Property pricing form | Implemented; review pending |
+| E | 99acres interface redesign from client screenshots | Planned; specification recorded |
 | 40A | Home loan calculators | Implemented ahead of order at client request |
 
 Phase 0 (planning) and the GharBazaar rebrand plus light-first conversion
