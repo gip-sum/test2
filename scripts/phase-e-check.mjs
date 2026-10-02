@@ -17,14 +17,28 @@ try {
     check(`${width}: banner changes accessible content`, await page.getByRole('heading', { name: 'Your next move starts here' }).isVisible())
     check(`${width}: banner destination matches selected slide`, await page.getByRole('link', { name: 'Find a rental' }).getAttribute('href') === '/rent/kolkata')
     await page.locator('.reference-search-trigger').click()
+    // Visibility precedes Radix's focus-scope effect. Wait for its autofocus
+    // before opening a child, and before sending Escape to that child; otherwise
+    // a fast CI runner can dispatch the key while the parent still owns focus.
+    await page.waitForFunction(() => {
+      const dialog = document.activeElement?.closest('[role="dialog"]')
+      const title = dialog?.getAttribute('aria-labelledby')
+      return title && document.getElementById(title)?.textContent === 'Find your home'
+    })
     await page.getByRole('button', { name: /^More filters/ }).click()
     await page.getByRole('dialog', { name: 'More filters' }).waitFor()
+    await page.waitForFunction(() => {
+      const dialog = document.activeElement?.closest('[role="dialog"]')
+      const title = dialog?.getAttribute('aria-labelledby')
+      return title && document.getElementById(title)?.textContent === 'More filters'
+    })
     await page.keyboard.press('Escape')
     await page.getByRole('dialog', { name: 'More filters' }).waitFor({ state: 'hidden' })
     await page.waitForFunction(() => document.activeElement?.textContent?.includes('More filters'))
     check(`${width}: closing child keeps background inert`, await page.locator('[data-app-root]').evaluate(e => e.inert))
     await page.keyboard.press('Escape')
     await page.waitForFunction(() => !document.querySelector('[data-app-root]').inert)
+    await page.waitForFunction(() => document.activeElement === document.querySelector('.reference-search-trigger'))
     check(`${width}: closing search returns focus`, await page.locator('.reference-search-trigger').evaluate(e => e === document.activeElement))
     await page.locator('.reference-search-trigger').blur()
     for (const [name, selector] of [['discovery', '.discovery-band'], ['localities', '#localities'], ['tools', '.reference-tools']]) {
