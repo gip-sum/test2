@@ -8,25 +8,27 @@ const STAGES = [
   { id: 'type', label: 'Property type' },
   { id: 'details', label: 'Details' },
   { id: 'location', label: 'Location' },
+  { id: 'pricing', label: 'Pricing' },
   { id: 'review', label: 'Review' },
 ] as const
 
 /** Where "return to stage N" leads. Details typed so far always travel with it. */
 export function stageUrl(index: number, view: PostingView): string {
-  const { entry, carried, locationCarried: location } = view
-  if (index === 0) return postingUrl({}, { details: carried, location })
-  if (index === 1) return postingUrl({ role: entry.role }, { details: carried, location })
-  if (index === 2) return postingUrl({ role: entry.role, intent: entry.intent }, { details: carried, location })
-  if (index === 4) return postingUrl(entry, { details: carried, location, step: 'location' })
-  return postingUrl(entry, { details: carried, edit: true, location })
+  const { entry, carried, locationCarried: location, pricingCarried: pricing } = view
+  if (index === 0) return postingUrl({}, { details: carried, location, pricing })
+  if (index === 1) return postingUrl({ role: entry.role }, { details: carried, location, pricing })
+  if (index === 2) return postingUrl({ role: entry.role, intent: entry.intent }, { details: carried, location, pricing })
+  if (index === 4) return postingUrl(entry, { details: carried, location, pricing, step: 'location' })
+  if (index === 5) return postingUrl(entry, { details: carried, location, pricing, step: 'pricing' })
+  return postingUrl(entry, { details: carried, edit: true, location, pricing })
 }
 
 export function PostingProgress({ view }: { view: PostingView }) {
-  const active = STAGES.findIndex((stage) => stage.id === (view.stage === 'location-review' ? 'review' : view.stage === 'review' ? 'details' : view.stage))
+  const active = STAGES.findIndex((stage) => stage.id === (view.stage === 'pricing-review' ? 'review' : view.stage === 'location-review' ? 'location' : view.stage === 'review' ? 'details' : view.stage))
   return (
     <nav aria-label="Posting progress" className="mt-7 sm:mt-9">
       <p className="text-overline font-semibold uppercase tracking-[0.18em] text-brand-700">Step {active + 1} of {STAGES.length}</p>
-      <ol className="mt-3 grid grid-cols-6 gap-1.5 sm:gap-3">
+      <ol className="mt-3 grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-3">
         {STAGES.map((stage, index) => (
           <li key={stage.id} aria-current={index === active ? 'step' : undefined}>
             {index < active ? (

@@ -23,7 +23,8 @@
     "login-check": "node scripts/login-check.mjs",
     "home-check": "node scripts/home-check.mjs",
     "calculator-check": "node scripts/calculator-check.mjs",
-    "shell-check": "node scripts/shell-check.mjs"
+    "shell-check": "node scripts/shell-check.mjs",
+    "pricing-check": "node scripts/pricing-check.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

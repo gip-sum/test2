@@ -24,7 +24,8 @@ An original property marketplace for Kolkata, built around one loop:
 | 10 | Phone OTP | postponed by client decision |
 | 11 | Post property entry | complete and deployed |
 | 12 | Property information form | implemented |
-| 13 | Property location form | implemented; review and deployment verification pending |
+| 13 | Property location form | complete and deployed |
+| 14 | Property pricing form | Implemented; review pending |
 
 The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
 criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)
@@ -38,7 +39,7 @@ save behavior, ownership and verification.
 The [Phase 9 lead spec](docs/phases/PHASE-09-enquiry-leads.md) records enquiry
 persistence, buyer history and seller inbox readiness.
 
-Phase 13 collects locality, sub-locality, seller-stated society name, address and optional coordinates. Its [spec and verification record](docs/phases/PHASE-13-property-location-form.md) document location validation and the combined review. Draft saving remains Phase 16.
+Phase 13 collects locality, sub-locality, seller-stated society name, address and optional coordinates. Its [spec and verification record](docs/phases/PHASE-13-property-location-form.md) document location validation and the combined review. Phase 14 adds sale/rental pricing, deposit, maintenance, negotiability and carpet-area rates; see its [spec](docs/phases/PHASE-14-property-pricing-form.md). Draft saving remains Phase 16.
 
 ## Getting started
 
