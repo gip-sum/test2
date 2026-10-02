@@ -23,13 +23,13 @@ The screenshots show mobile surfaces only. Desktop adaptation is part of this ph
 ## 2. UX requirements
 
 - Home uses a compact white header, brand at left, outlined rounded post-property action at right, then a swipeable row of icon shortcuts.
-- Match the banner's width and height, carousel indicators and the white search box overlapping its lower edge. Give search a pale-blue border and restrained shadow. When scrolled, use the compact rounded search treatment seen in the references.
+- Match the banner's width and height, carousel indicators and the white search box overlapping its lower edge. Give search a pale-green border and restrained shadow. When scrolled, use the compact rounded search treatment seen in the references.
 - Property rails expose part of the next card to signal horizontal scrolling. Match image rounding, title/subtitle hierarchy, save control placement and lower-image overlays.
-- BHK and seller-type sections use cream backgrounds, a left illustration/title area and white cards sliding horizontally alongside it. Match the possession-card and pale-blue calculator-section layouts.
-- Menu uses the screenshot's split layout: a roughly 29% left category rail and 71% right content panel on phones, with a blue strip marking the selected category. The right panel contains welcome/login, section labels and two-column tiles. Scrolling must not bury the bottom navigation.
+- BHK and seller-type sections use cream backgrounds, a left illustration/title area and white cards sliding horizontally alongside it. Match the possession-card and pale-green calculator-section layouts.
+- Menu uses the screenshot's split layout: a roughly 29% left category rail and 71% right content panel on phones, with a green strip marking the selected category. The right panel contains welcome/login, section labels and two-column tiles. Scrolling must not bury the bottom navigation.
 - Guest Activity is a real accessible landing screen, with the reference's welcome/login structure and a compact property rail. Personal saved/enquiry data remains authenticated. A guest landing must not expose another user's data or misrepresent unavailable history as zero.
 - Bottom navigation follows Home, Search, Sell/Rent, Videos, Activity, Menu. Match the reference's white surface, top separator, grey inactive icons and filled dark active icon. Preserve GharBazaar naming rather than the reference's branded video name.
-- Match the reference blue actions, navy headings, white surfaces, pale-blue tiles, cream discovery bands and modest borders/shadows. These explicit reference choices supersede conflicting visual styling in A–D for the affected surfaces.
+- Keep the reference layout, navy headings, white surfaces, cream discovery bands and modest borders/shadows. Per the client’s 2 October 2026 correction, use GharBazaar green for primary actions, links, icons, focus rings and selected indicators, with pale-green tiles and a forest-green banner tint; the reference blue is not the brand colour. These explicit reference choices supersede conflicting visual styling in A–D for the affected surfaces.
 - All displayed actions must work. App-install prompts, voice search, rating, advertising badges and unsupported categories require real destinations or capabilities; record any necessary departure from the reference instead of shipping inert controls.
 
 ## 3. Technical requirements

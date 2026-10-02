@@ -43,9 +43,9 @@
   /* ---- Surfaces: white product, cool neutral ground ---- */
   --color-surface-000: #ffffff;      /* cards, sheets, header, inputs */
   --color-surface-100: #ffffff;      /* warm page background */
-  --color-surface-200: #f1f6fc;      /* sunken: skeletons, tab tracks */
+  --color-surface-200: #ecf5ef;      /* sunken: skeletons, tab tracks */
   --color-surface-raised: #ffffff;   /* dropdowns, sheets, toasts */
-  --color-media-ground: #e8eef5;     /* behind a photo before it loads */
+  --color-media-ground: #e5eee7;     /* behind a photo before it loads */
 
   /* ---- Ink: deep navy through medium grey ----
      Every step is measured against BOTH white and the page ground; the
@@ -58,13 +58,13 @@
 
   /* ---- Borders: light grey. They carry the layout, not shadows. ---- */
   --color-border-subtle: #e3e5e8;    /* default separator */
-  --color-border-strong: #b8cbdc;    /* hover, selected, emphasis */
+  --color-border-strong: #b9cebf;    /* hover, selected, emphasis */
 
   /* Green identity. Dark green keeps white button text accessible. */
-  --color-brand-500: #1684ce;        /* decorative brand accents */
-  --color-brand-600: #0068d9;        /* filled buttons, links, selected */
-  --color-brand-700: #075da8;        /* hover and emphasis */
-  --color-brand-100: #eef6ff;        /* selected chips, tinted rows */
+  --color-brand-500: #16a34a;        /* decorative brand accents */
+  --color-brand-600: #117744;        /* filled buttons, links, selected */
+  --color-brand-700: #0f6a38;        /* hover and emphasis */
+  --color-brand-100: #d1fae5;        /* selected chips, tinted rows */
   --color-on-brand: #ffffff;
 
   /* ---- Supply: the SELLER's action. Orange, a different hue on purpose.
@@ -90,7 +90,7 @@
   --color-neutral-600: #5f6a7d;      /* inactive states, deliberately flat */
   --color-neutral-100: #eef2f7;
 
-  --color-focus-ring: #0068d9;
+  --color-focus-ring: #117744;
   --color-overlay: #0f1b2da6;
 
   /* ---- Radius: four steps, by role ---- */
@@ -1244,17 +1244,17 @@
 /* Phase E: mobile reference layout. Colours remain in the shared token layer. */
 :root {
   --reference-cream: #fff6e4;
-  --reference-blue: #f0f7ff;
+  --reference-brand-tint: #f0f9f3;
   --reference-grey: #f2f2f2;
   --reference-dark: #292929;
   --reference-muted: #737373;
-  --reference-banner: #073e6e;
-  --reference-search-border: #b4d9eb;
-  --reference-shadow: #173e6226;
+  --reference-banner: #103f32;
+  --reference-search-border: #b9deca;
+  --reference-shadow: #173e2626;
 }
 .reference-wordmark { display: flex; align-items: center; min-height: 44px; color: var(--color-brand-700); font-family: var(--font-display); font-size: 23px; font-weight: 700; letter-spacing: -.8px; }
 .header-post { background: var(--color-surface-000); color: var(--color-brand-700); border: 1px solid var(--color-border-subtle); border-radius: 99px; padding: 0 14px; box-shadow: none; }
-.header-post:hover { background: var(--reference-blue); }
+.header-post:hover { background: var(--reference-brand-tint); }
 .app-bar-top, .app-bar-bottom { box-shadow: none; background: var(--color-surface-000); }
 .bar-item { color: var(--reference-muted); }
 .bar-item[aria-current], .bar-item[aria-expanded='true'] { color: var(--reference-dark); }
@@ -1314,13 +1314,13 @@
 .discovery-band li span { margin-top: 7px; font-size: 11px; color: var(--color-ink-500); }
 .possession-section > p { font-size: 13px; color: var(--color-ink-500); margin-top: 6px; }
 .possession-section ul { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin-top: 18px; }
-.possession-section li { border-radius: 10px; background: var(--reference-blue); }
+.possession-section li { border-radius: 10px; background: var(--reference-brand-tint); }
 .possession-section li:first-child { background: var(--reference-cream); }
 .possession-section a { display: flex; flex-direction: column; gap: 14px; padding: 20px 15px; min-height: 170px; }
 .possession-section strong { font-size: 19px; line-height: 1.25; }
 .possession-section span { font-size: 12px; }
 .possession-section svg { color: var(--color-brand-700); }
-.reference-tools { background: var(--reference-blue); margin-inline: -20px; padding: 26px 20px 32px; }
+.reference-tools { background: var(--reference-brand-tint); margin-inline: -20px; padding: 26px 20px 32px; }
 .reference-tools .calc-index { display: flex; overflow-x: auto; margin-right: -20px; padding: 4px 20px 4px 0; gap: 9px; }
 .reference-tools .calc-index > li { flex: 0 0 205px; }
 .reference-tools .calc-index-card { display: flex; flex-direction: column; align-items: flex-start; min-height: 190px; padding: 18px 16px; border-radius: 10px; box-shadow: 0 2px 4px var(--reference-shadow); }
@@ -1345,19 +1345,19 @@
 .menu-welcome p { font-size: 12px; line-height: 1.4; color: var(--reference-muted); margin-top: 3px; }
 .reference-login { display: flex; width: 100%; align-items: center; justify-content: center; min-height: 44px; border-radius: 99px; padding: 8px 12px; background: var(--color-brand-600); color: var(--color-on-brand); font-size: 14px; font-weight: 600; }
 .reference-menu-content h3 { font-size: 13px; font-weight: 400; color: var(--color-ink-500); margin: 24px 0 15px; }
-.menu-video, .menu-property-grid a { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 10px; min-height: 84px; background: var(--reference-blue); border-radius: 12px; padding: 13px; font-size: 13px; line-height: 1.4; color: var(--reference-dark); }
+.menu-video, .menu-property-grid a { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 10px; min-height: 84px; background: var(--reference-brand-tint); border-radius: 12px; padding: 13px; font-size: 13px; line-height: 1.4; color: var(--reference-dark); }
 .menu-video svg, .menu-property-grid svg { color: var(--color-brand-700); }
 .menu-property-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 23px 12px; }
 .menu-property-grid a { min-height: 88px; }
 .menu-extra-tiles { display: grid; gap: 10px; }
-.menu-extra-tiles li { background: var(--reference-blue); border-radius: 12px; padding: 10px 12px; font-size: 13px; }
+.menu-extra-tiles li { background: var(--reference-brand-tint); border-radius: 12px; padding: 10px 12px; font-size: 13px; }
 .menu-extra-tiles a { display: inline-flex; min-height: 44px; align-items: center; padding-right: 12px; }
 .menu-extra-tiles strong { font-weight: 500; }
 .reference-menu-bottom { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); }
 .reference-menu-bottom > * { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 5px; min-height: 68px; font-size: 11px; color: var(--reference-muted); }
 .reference-menu-bottom strong { color: var(--reference-dark); }
 .guest-activity { max-width: 900px; margin: auto; }
-.activity-welcome { display: flex; gap: 9px; align-items: center; padding: 30px 20px 22px; background: var(--reference-blue); }
+.activity-welcome { display: flex; gap: 9px; align-items: center; padding: 30px 20px 22px; background: var(--reference-brand-tint); }
 .activity-welcome > span { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--color-border-subtle); border-radius: 50%; background: var(--color-surface-000); }
 .activity-welcome h1 { font-size: 18px; font-weight: 600; color: var(--reference-dark); }
 .activity-welcome p { font-size: 17px; color: var(--reference-muted); }
@@ -1397,7 +1397,7 @@
 /* Keep absolutely positioned accessible labels inside their scrolling rail. */
 .quick-routes ul, .reference-tools .calc-index, .discovery-band ul { position: relative; }
 /* Paired locality lists follow the reference cards without inventing search percentages. */
-.locality-panels { position: relative; display: flex; gap: 12px; overflow-x: auto; margin: 18px -20px 0; padding: 12px 20px; background: var(--reference-blue); scroll-snap-type: x proximity; }
+.locality-panels { position: relative; display: flex; gap: 12px; overflow-x: auto; margin: 18px -20px 0; padding: 12px 20px; background: var(--reference-brand-tint); scroll-snap-type: x proximity; }
 .locality-panel { flex: 0 0 85%; min-width: 0; padding: 18px 16px; border: 1px solid var(--color-border-subtle); border-radius: 10px; background: var(--color-surface-000); box-shadow: 0 2px 4px var(--reference-shadow); scroll-snap-align: start; }
 .locality-panel h3 { font-size: 16px; font-weight: 600; }
 .locality-panel .locality-tiles { display: block; margin: 8px 0 0; padding: 0; overflow: visible; }
