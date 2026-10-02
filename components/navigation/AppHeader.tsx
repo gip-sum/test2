@@ -6,29 +6,7 @@ import { AccountLink } from './AccountLink'
 import { HeaderNav } from './HeaderNav'
 import { MarketplaceMenu } from './MarketplaceMenu'
 
-/**
- * Persistent top bar: the marketplace's front door (Phase A).
- *
- *  • Phones (< 768px): logo and account. The bottom bar is the phone's
- *    navigation; a row of text links here would only crowd it. The old
- *    "Home" link went — the logo and the bottom bar both go home. Since
- *    Phase D the bar carries Menu, so the header's menu button appears
- *    only on the pages that hide the bar (posting, sign-in, a property),
- *    and there it still reaches every destination.
- *  • Tablets (768–1023px): a condensed Buy · Rent · Localities nav, then
- *    account (and the menu button, where the bar is hidden).
- *  • Desktop (≥ 1024px): each section with a panel of real destinations,
- *    "Explore all" for the whole discovery hub (Phase C), Post property,
- *    account. No menu button — everything is on the bar.
- *
- * Logo left, because people expect "home" there and breaking that
- * convention measurably costs task success.
- *
- * Post property uses the SUPPLY accent, never the brand colour: in a
- * two-sided marketplace the seller's action must not be mistakable for the
- * buyer's. It appears once per screen — here only from 1024px, because
- * below that the bottom bar's centre action is the same button.
- */
+/** Shared header: compact brand/post action on phones, full navigation on desktop. */
 export function AppHeader({ bottomNavForced = false }: { bottomNavForced?: boolean }) {
   // Built on the server from the data seams; the client components below
   // receive plain data, never the corpus.
@@ -43,14 +21,10 @@ export function AppHeader({ bottomNavForced = false }: { bottomNavForced?: boole
         <HeaderNav nav={nav} />
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          {/* max-lg:hidden, not hidden + lg:inline-flex: cn() does not merge
-              classes, and the button's own inline-flex would beat a plain
-              `hidden`. A button nested in the link, as this once was, is
-              invalid — two focus stops for one action. */}
-          <Link href="/post" className={buttonClassName({ variant: 'supply', size: 'md', className: 'whitespace-nowrap max-lg:hidden' })}>
+          <Link href="/post" className={buttonClassName({ variant: 'supply', size: 'md', className: 'header-post whitespace-nowrap' })}>
             Post property
           </Link>
-          <AccountLink />
+          <div className="max-lg:hidden"><AccountLink /></div>
           <MarketplaceMenu nav={nav} trigger="icon" barForced={bottomNavForced} className="lg:hidden" />
         </div>
       </div>

@@ -74,7 +74,7 @@ function handleProperty(request: NextRequest): NextResponse | undefined {
 }
 
 async function accountGuard(request: NextRequest) {
-  const isAccount = request.nextUrl.pathname.startsWith('/account') || request.nextUrl.pathname.startsWith('/dashboard')
+  const isAccount = (request.nextUrl.pathname.startsWith('/account') && request.nextUrl.pathname !== '/account/activity') || request.nextUrl.pathname.startsWith('/dashboard')
   const access = request.cookies.get('gb-access')?.value
   const refresh = request.cookies.get('gb-refresh')?.value
   let verified = false

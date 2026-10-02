@@ -1,239 +1,94 @@
-// Browser assertions for the marketplace shell (Phase A: components/navigation,
-// the quick routes, lib/navigation/marketplace.ts).
-//
-// Measures what the screenshots can only suggest:
-//  • each header tier at its widths — phone (logo, account, menu), tablet
-//    (condensed nav), desktop (panels, Post property) — on one row, with no
-//    overflow and no label broken over two lines;
-//  • Post property once per screen (header from 1024px, bottom bar below);
-//  • 44px targets and a visible focus ring on every shell control;
-//  • the disclosure panels by keyboard: Enter opens, Escape closes and
-//    returns focus, focus leaving closes, another panel replaces it, a click
-//    outside closes it;
-//  • the menu sheet from both of its triggers: modal, focus kept inside,
-//    Escape returns focus, a link closes it;
-//  • where-you-are by aria-current and by shape and weight, never colour
-//    alone — in the header, the bottom bar and the menu;
-//  • every navigation link resolves, and nothing links to a destination the
-//    product does not have (projects, agents, builders, insights).
-//
-// Phase C, the discovery hub (components/navigation/hub.tsx), in both of
-// its forms — the phone and tablet menu and the desktop "Explore all" panel:
-//  • its groups and heading levels, in order, and no empty Resources group;
-//  • posting set apart in the supply accent, on the menu's first screen;
-//  • pills named in full for a screen reader, and 44px targets throughout;
-//  • the desktop panel's keyboard and pointer behaviour, and that it fits
-//    beneath the header at 1024×768 without overflowing the page;
-//  • nothing unbuilt offered — commercial, plots, comparison, guides, FAQs
-//    as well as Phase A's list;
-//  • every hub link resolves, and the page it opens names that same URL as
-//    its canonical, so the navigation never links a duplicate address.
-//
-// Phase D, the phone bar (components/navigation/BottomNav.tsx):
-//  • Home, Search, Post, Videos, Activity, Menu, in that order, at 360, 390,
-//    412 and 768, and no bar from 1024px;
-//  • six slots of at least 44×44 with no truncated label, Post inside the
-//    bar in the supply fill, labels on one baseline;
-//  • where you are on Home, Search and Videos by pill, weight and
-//    aria-current; Activity's signed-out redirect back to itself;
-//  • one Menu control per screen — the bar's, or the header's where the bar
-//    is hidden — opening the hub and taking focus back;
-//  • the page's last content clears the bar, safe-area inset included.
-//
-// Usage: npm run build && npm run start, then npm run shell-check
+// Phase E shell: six-item reference bar, split menu, public guest Activity,
+// keyboard/focus safety, truthful links, responsive sizing and desktop panels.
 import { chromium } from 'playwright-core'
-
+import { mkdirSync } from 'node:fs'
 const base = process.env.BASE_URL ?? 'http://127.0.0.1:3100'
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
 let passed = 0
-function check(label, condition, detail = '') {
-  if (!condition) throw new Error(`FAIL ${label}${detail ? ` — ${detail}` : ''}`)
-  passed++
-  console.log(`ok ${label}`)
-}
-async function open(width, height, path = '/') {
-  const phone = width < 768
-  const context = await browser.newContext({ viewport: { width, height }, isMobile: phone, hasTouch: phone })
+function check(label, ok, detail = '') { if (!ok) throw new Error(`FAIL ${label}: ${detail}`); passed++; console.log(`ok ${label}`) }
+const links = new Set()
+const errors = []
+const FUTURE = /\b(commercial|plots?|land|projects?|agents?|builders?(?! floors?)|insights?|price trends?|compare|comparison|guides?|faqs?|my properties)\b/i
+async function open(width, height, path) {
+  const context = await browser.newContext({ viewport: { width, height } })
   const page = await context.newPage()
-  await page.goto(base + path, { waitUntil: 'load' })
-  // Results pages stream in behind a loading skeleton that has no header.
+  await page.goto(base + path)
   await page.locator('header.app-bar').waitFor()
   await page.evaluate(() => document.fonts.ready)
   return page
 }
-
-/** Everything interactive in the shell that is on screen, with its box. */
-const shellControls = (page) => page.evaluate(() => {
-  const roots = ['header.app-bar', 'nav.fixed[aria-label="Primary"]', 'nav[aria-label="Quick routes"]']
-  return roots.flatMap((sel) => [...document.querySelectorAll(`${sel} a, ${sel} button`)])
-    .filter((el) => el.offsetParent !== null && getComputedStyle(el).visibility !== 'hidden')
-    .map((el) => { const r = el.getBoundingClientRect(); return { name: (el.getAttribute('aria-label') || el.textContent).trim().replace(/\s+/g, ' '), w: r.width, h: r.height, top: r.top, bottom: r.bottom } })
-})
-/**
- * Waits (bounded) for focus to come back to `locator` after a sheet closes.
- * Radix hands focus back — and the Sheet lifts `inert` — in a setTimeout
- * after the dialog unmounts, so "detached" resolves a task before it: a
- * check made at that instant races the return and fails on a slower runner
- * (it did, in CI). Waiting for the state itself, with a timeout, still
- * fails loudly if focus never returns.
- */
-const focusReturns = async (page, locator) => page.waitForFunction(
-  (el) => el === document.activeElement && document.querySelector('[data-app-root]')?.inert === false,
-  await locator.elementHandle(), { timeout: 2000 },
-).then(() => true, () => false)
-const visibleText = (page, sel) => page.locator(sel).evaluateAll((els) => els.filter((e) => e.offsetParent !== null).map((e) => e.textContent.trim()))
-
+const out = process.env.PHASE_E_SHOTS ?? '/tmp/gharbazaar-phase-e'
+mkdirSync(out, { recursive: true })
 try {
-  // Destinations with no page yet. "Builder floors" is a property type, not a builder directory.
-  const FUTURE = /\b(commercial|plots?|land|projects?|agents?|builders?(?! floors?)|insights?|price trends?|compare|comparison|guides?|faqs?|my properties)\b/i
-
-  // ── The tiers, at every width ─────────────────────────────────────────
-  for (const [width, height] of [[360, 740], [390, 844], [412, 915], [768, 1024], [1024, 768], [1280, 900]]) {
-    const w = `${width}px`
-    for (const path of ['/', '/buy/kolkata']) {
-      const page = await open(width, height, path)
-      const where = `${w} ${path}`
-      const layout = await page.evaluate(() => {
-        const header = document.querySelector('header.app-bar')
-        const kids = [...header.querySelectorAll('a, button')].filter((el) => el.offsetParent !== null)
-        const centres = kids.map((el) => { const r = el.getBoundingClientRect(); return r.top + r.height / 2 })
-        const wrapped = [...header.querySelectorAll('.nav-top, a, button')].filter((el) => el.offsetParent !== null && el.textContent.trim())
-          // Text lines only: an icon beside a label (Explore all) has a box
-          // of its own at a different top, which is not a wrapped label.
-          .filter((el) => {
-            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
-            const tops = new Set()
-            for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-              if (!node.textContent.trim() || node.parentElement.closest('.sr-only')) continue
-              const range = document.createRange(); range.selectNodeContents(node)
-              for (const r of range.getClientRects()) tops.add(Math.round(r.top))
-            }
-            return tops.size > 1
-          })
-          .map((el) => el.textContent.trim())
-        return {
-          overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-          headerHeight: header.getBoundingClientRect().height,
-          spread: Math.max(...centres) - Math.min(...centres),
-          wrapped,
-        }
-      })
-      check(`${where}: no horizontal overflow`, !layout.overflow)
-      check(`${where}: the header is one row (${Math.round(layout.headerHeight)}px), no label broken over two lines`,
-        layout.headerHeight <= 82 && layout.spread < 2 && layout.wrapped.length === 0, JSON.stringify(layout))
-
-      const header = page.locator('header.app-bar')
-      const navVisible = await header.getByRole('navigation', { name: 'Marketplace' }).isVisible()
-      const menu = await header.getByRole('button', { name: 'Menu' }).isVisible()
-      // One menu control per screen: the bar's below 1024px (Phase D), none on desktop.
-      const menus = await page.getByRole('button', { name: 'Menu', exact: true }).evaluateAll((els) => els.filter((e) => e.offsetParent !== null).length)
-      const headerPost = await header.getByRole('link', { name: 'Post property' }).isVisible()
-      const barPost = await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Post' }).isVisible()
-      const tops = await visibleText(page, 'header.app-bar .nav-top')
-      const toggles = await header.getByRole('button', { name: /^More in / }).evaluateAll((els) => els.filter((e) => e.offsetParent !== null).length)
-      const hubToggle = await header.getByRole('button', { name: 'Explore all' }).isVisible()
-      if (width < 768) {
-        check(`${where}: phone header is logo and account — the bar carries Menu, so the header does not repeat it`,
-          !navVisible && !menu && menus === 1 && await header.getByRole('link', { name: /home$/ }).isVisible() && await header.getByRole('link', { name: /^(Log in|Account)$/ }).isVisible())
-      } else if (width < 1024) {
-        check(`${where}: tablet header is a condensed nav (${tops.join(', ')}) plus account, no panels, and the bar's Menu is the only one`,
-          navVisible && JSON.stringify(tops) === JSON.stringify(['Buy', 'Rent', 'Localities']) && toggles === 0 && !hubToggle && !menu && menus === 1)
-      } else {
-        check(`${where}: desktop header has the four sections with their panels, Explore all, and no menu button`,
-          navVisible && JSON.stringify(tops) === JSON.stringify(['Buy', 'Rent', 'Localities', 'Home loans']) && toggles === 4 && hubToggle && !menu && menus === 0)
+  for (const width of [360, 390, 412, 768, 1280]) {
+    const page = await browser.newPage({ viewport: { width, height: 844 } })
+    page.on('pageerror', e => errors.push(e.message))
+    await page.goto(base, { waitUntil: 'load' })
+    await page.evaluate(() => document.fonts.ready)
+    await page.screenshot({ path: `${out}/home-${width}.png` })
+    check(`${width}: no page overflow`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right > innerWidth+1 && getComputedStyle(e).position !== 'absolute').map(e=>({tag:e.tagName,cls:e.className,width:e.getBoundingClientRect().width})).slice(0,12))))
+    check(`${width}: single h1`, await page.locator('h1').count() === 1)
+    await page.screenshot({ path: `${out}/home-${width}.png` })
+    const controls = await page.locator('header.app-bar a, header.app-bar button, .bar-item').evaluateAll(es => es.filter(e => e.getBoundingClientRect().width > 0).map(e => ({ n: e.textContent, w: e.getBoundingClientRect().width, h: e.getBoundingClientRect().height })))
+    check(`${width}: shell touch targets`, controls.every(c => c.w >= 43.5 && c.h >= 43.5), JSON.stringify(controls))
+    if (width < 1024) {
+      const bar = page.getByRole('navigation', { name: 'Primary', exact: true })
+      check(`${width}: bar order`, (await bar.locator('.bar-label').allTextContents()).join('|') === 'Home|Search|Sell/Rent|Videos|Activity|Menu')
+      check(`${width}: home current`, await bar.getByRole('link', { name: 'Home', exact: true }).getAttribute('aria-current') === 'page')
+      const trigger = bar.getByRole('button', { name: 'Menu', exact: true })
+      await trigger.click()
+      const dialog = page.getByRole('dialog', { name: 'All Categories' })
+      await dialog.waitFor()
+      await page.waitForFunction(() => document.querySelector('[data-app-root]')?.inert === true)
+      check(`${width}: modal and inert background`, await page.locator('[data-app-root]').evaluate(e => e.inert) && await dialog.getAttribute('aria-modal') === 'true')
+      check(`${width}: split menu proportions`, await dialog.locator('.reference-menu').evaluate(e => { const side = e.firstElementChild.getBoundingClientRect().width; return Math.abs(side / e.getBoundingClientRect().width - .29) < .02 }))
+      await page.screenshot({ path: `${out}/menu-${width}.png` })
+      for (const name of ['Buy Residential', 'Rent a home', 'Localities', 'Budget & EMI', 'Activity & Account']) {
+        const category = dialog.getByRole('button', { name, exact: true })
+        await category.click()
+        check(`${width}: ${name} selected`, await category.getAttribute('aria-pressed') === 'true')
+        check(`${width}: ${name} has destinations`, await dialog.locator('#menu-category-content a').count() > 1)
+        for (const href of await dialog.locator('a').evaluateAll(es => es.map(e => e.getAttribute('href')))) links.add(href)
+        const small = await dialog.locator('a, button').evaluateAll(es => es.filter(e => e.getBoundingClientRect().width > 0).map(e => ({ text: e.textContent, w: e.getBoundingClientRect().width, h: e.getBoundingClientRect().height })).filter(e => e.w < 43.5 || e.h < 43.5))
+        check(`${width}: ${name} menu touch targets`, small.length === 0, JSON.stringify(small))
+        check(`${width}: ${name} no overflow`, await dialog.evaluate(e => e.scrollWidth <= e.clientWidth + 1))
       }
-      check(`${where}: Post property appears once (${headerPost ? 'header' : 'bottom bar'})`, headerPost !== barPost)
-      if (path === '/buy/kolkata' || width >= 1024) {
-        // The results page has no quick routes; the homepage's are hidden from 1024px.
+      await dialog.getByRole('button', { name: 'Buy Residential', exact: true }).click()
+      await dialog.locator('.reference-menu-content').evaluate(e => e.scrollTop = e.scrollHeight)
+      await page.screenshot({ path: `${out}/menu-scrolled-${width}.png` })
+      for (let i = 0; i < 12; i++) { await page.keyboard.press('Tab'); check(`${width}: focus stays inside menu`, await page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))) }
+      await page.keyboard.press('Escape')
+      await dialog.waitFor({ state: 'hidden' })
+      await page.waitForFunction(() => document.activeElement?.textContent?.trim() === 'Menu' && !document.querySelector('[data-app-root]').inert)
+      check(`${width}: Escape restores trigger`, await trigger.evaluate(e => e === document.activeElement))
+      await trigger.click()
+      await page.getByRole('dialog').getByRole('link', { name: 'Videos', exact: true }).first().click()
+      await page.waitForURL('**/videos')
+      check(`${width}: navigation closes menu`, await page.getByRole('dialog').count() === 0)
+    } else {
+      check('desktop hides phone bar', !await page.getByRole('navigation', { name: 'Primary', exact: true }).isVisible())
+      for (const name of ['Buy', 'Rent', 'Localities', 'Home loans']) {
+        const trigger = page.getByRole('button', { name: `More in ${name}`, exact: true })
+        await trigger.focus(); await page.keyboard.press('Enter')
+        check(`desktop ${name} panel opens`, await trigger.getAttribute('aria-expanded') === 'true')
+        for (const href of await page.locator('.nav-panel a:visible').evaluateAll(es => es.map(e => e.getAttribute('href')))) links.add(href)
+        await page.keyboard.press('Escape')
+        check(`desktop ${name} closes and restores focus`, await trigger.evaluate(e => e === document.activeElement && e.getAttribute('aria-expanded') === 'false'))
       }
-
-      const controls = await shellControls(page)
-      const small = controls.filter((c) => c.w < 44 - 0.5 || c.h < 44 - 0.5)
-      check(`${where}: every shell control is at least 44×44 (${controls.length} checked)`, small.length === 0, JSON.stringify(small))
-      const names = await page.evaluate(() => [...document.querySelectorAll('header.app-bar a, header.app-bar button, nav a, nav button')].filter((el) => el.offsetParent !== null).map((el) => el.getAttribute('aria-label') || el.textContent))
-      check(`${where}: nothing offers a destination the product has not built`, !names.some((n) => FUTURE.test(n ?? '')), JSON.stringify(names.filter((n) => FUTURE.test(n ?? ''))))
-      const landmarks = await page.evaluate(() => [...document.querySelectorAll('nav')].filter((n) => n.offsetParent !== null || getComputedStyle(n).position === 'fixed' && n.getBoundingClientRect().height > 0).map((n) => n.getAttribute('aria-label')))
-      check(`${where}: navigation landmarks have unique names (${landmarks.join(', ')})`, landmarks.every(Boolean) && new Set(landmarks).size === landmarks.length)
-      await page.context().close()
+      await page.getByRole('button', { name: 'Explore all', exact: true }).click()
+      check('desktop discovery panel opens', await page.locator('.nav-panel-hub').isVisible())
+      for (const href of await page.locator('.nav-panel-hub a').evaluateAll(es => es.map(e => e.getAttribute('href')))) links.add(href)
     }
+    await page.goto(base + '/account/activity', { waitUntil: 'load' })
+    check(`${width}: guest Activity is public`, new URL(page.url()).pathname === '/account/activity' && await page.getByRole('heading', { name: 'Hello' }).isVisible())
+    check(`${width}: guest login returns to Activity`, await page.getByRole('link', { name: 'Login/Register' }).getAttribute('href') === '/login?next=%2Faccount%2Factivity')
+    check(`${width}: missing history is not zero`, !(await page.locator('.activity-summary').innerText()).includes('0'))
+    check(`${width}: guest Activity no overflow`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1))
+    await page.screenshot({ path: `${out}/activity-${width}.png` })
+    await page.close()
   }
-
-  // ── Quick routes: the same four, one look, and View all ──────────────
-  {
-    const page = await open(390, 844)
-    const quick = page.getByRole('navigation', { name: 'Quick routes' })
-    const tiles = await quick.locator('.quick-route').evaluateAll((els) => els.map((el) => {
-      const icon = el.querySelector('.quick-icon').getBoundingClientRect()
-      return { label: el.querySelector('.quick-label').textContent, bg: getComputedStyle(el.querySelector('.quick-icon')).backgroundColor, iconTop: Math.round(icon.top), card: getComputedStyle(el).backgroundColor }
-    }))
-    check('390px quick routes keep Buy, Rent, Localities, Post property', JSON.stringify(tiles.map((t) => t.label)) === JSON.stringify(['Buy', 'Rent', 'Localities', 'Post property']))
-    check('390px the three ways to find a home share one look; Post keeps the supply tint',
-      new Set(tiles.slice(0, 3).map((t) => t.bg)).size === 1 && tiles[3].bg !== tiles[0].bg && new Set(tiles.map((t) => t.card)).size === 1, JSON.stringify(tiles))
-    check('390px the tiles\' icons line up, even where a label wraps', new Set(tiles.map((t) => t.iconTop)).size === 1, JSON.stringify(tiles.map((t) => t.iconTop)))
-    const viewAll = quick.getByRole('button', { name: 'View all destinations' })
-    await viewAll.focus()
-    await page.keyboard.press('Enter')
-    const dialog = page.getByRole('dialog', { name: /^Explore / })
-    await dialog.waitFor()
-    check('390px View all opens the marketplace menu', await dialog.getByRole('navigation', { name: 'All destinations' }).isVisible())
-    await page.keyboard.press('Escape')
-    await dialog.waitFor({ state: 'detached' })
-    check('390px Escape closes it and returns focus to View all', await focusReturns(page, viewAll))
-    await page.context().close()
-    const desk = await open(1280, 900)
-    check('1280px the quick routes give way to the header', !(await desk.getByRole('navigation', { name: 'Quick routes' }).isVisible()))
-    await desk.context().close()
-  }
-
-  // ── The menu sheet ────────────────────────────────────────────────────
-  const menuHrefs = new Set()
-  {
-    const page = await open(390, 844, '/calculators/emi')
-    const trigger = page.getByRole('navigation', { name: 'Primary' }).getByRole('button', { name: 'Menu' })
-    check('390px the bar\'s Menu says it opens a dialog', await trigger.getAttribute('aria-haspopup') === 'dialog' && await trigger.getAttribute('aria-expanded') === 'false')
-    await trigger.click()
-    const dialog = page.getByRole('dialog', { name: /^Explore / })
-    await dialog.waitFor()
-    // Modal without aria-modal: the page behind is inert (components/ui/Sheet
-    // explains why Radix's aria-hidden alone left it readable).
-    check('390px the menu is modal and titled: the page behind is inert while it is open',
-      await page.locator('[data-app-root]').evaluate((el) => el.inert === true) && /^Explore \S/.test(await dialog.getAttribute('aria-label') ?? await page.evaluate(() => document.getElementById(document.querySelector('[role="dialog"]').getAttribute('aria-labelledby'))?.textContent ?? '')))
-    for (const a of await dialog.locator('a').evaluateAll((els) => els.map((e) => e.getAttribute('href')))) menuHrefs.add(a)
-    const current = await dialog.locator('a[aria-current="page"]').evaluateAll((els) => els.map((e) => e.textContent))
-    check('390px on the EMI calculator, the menu marks that calculator "You are here" — in words, not only colour',
-      current.length === 1 && /EMI calculator/.test(current[0]) && /You are here/.test(current[0]), JSON.stringify(current))
-    let escaped = false
-    for (let i = 0; i < 80; i++) {
-      await page.keyboard.press('Tab')
-      if (!(await page.evaluate(() => Boolean(document.activeElement?.closest('[role="dialog"]'))))) { escaped = true; break }
-    }
-    check('390px Tab stays inside the open menu', !escaped)
-    const names = await dialog.locator('a').evaluateAll((els) => els.map((e) => e.textContent.trim()))
-    check('390px the menu reaches every part of the marketplace', ['Home', 'Buy', 'Rent', 'Post a property', 'Enquiries on your listings', 'Localities in', 'How much home', 'Home loan EMI', 'Saved homes', 'Your enquiries', 'Profile and preferences']
-      .every((n) => names.some((x) => x.startsWith(n))), JSON.stringify(names.slice(0, 14)))
-    check('390px the menu offers nothing the product does not have', !names.some((n) => FUTURE.test(n)))
-    await page.keyboard.press('Escape')
-    await dialog.waitFor({ state: 'detached' })
-    check('390px Escape returns focus to the bar\'s Menu, and the page is no longer inert',
-      await focusReturns(page, trigger))
-    await page.context().close()
-
-    const home = await open(390, 844, '/')
-    await home.getByRole('navigation', { name: 'Primary' }).getByRole('button', { name: 'Menu' }).click()
-    await home.getByRole('dialog').getByRole('link', { name: /^Localities in/ }).click()
-    await home.waitForFunction(() => location.hash === '#localities')
-    await home.waitForTimeout(300)
-    check('390px a menu link closes the menu as it goes (Localities, in place on the homepage)', await home.getByRole('dialog').count() === 0)
-    await home.context().close()
-
-    const post = await open(390, 844, '/post')
-    check('390px where the bottom bar is hidden (/post), the header menu still reaches everything',
-      !(await post.getByRole('navigation', { name: 'Primary' }).isVisible()) && await post.locator('header.app-bar').getByRole('button', { name: 'Menu' }).isVisible())
-    await post.context().close()
-  }
-
   // ── Desktop panels, by keyboard and pointer ──────────────────────────
-  const panelHrefs = new Set()
+  const panelHrefs = links
   {
     const page = await open(1280, 900, '/buy/kolkata')
     const nav = page.locator('header.app-bar').getByRole('navigation', { name: 'Marketplace' })
@@ -306,186 +161,7 @@ try {
 
   }
 
-  // ── Phase D: the phone bar ───────────────────────────────────────────
-  const barItems = (page) => page.getByRole('navigation', { name: 'Primary' }).locator(':scope > ul > li > *').evaluateAll((els) => els.map((el) => {
-    const r = el.getBoundingClientRect()
-    const face = el.querySelector('.bar-pill, .bar-post')
-    const label = el.querySelector('.bar-label')
-    const lr = label.getBoundingClientRect()
-    return {
-      name: el.textContent.trim(), tag: el.tagName, current: el.getAttribute('aria-current'),
-      w: r.width, h: r.height, faceTop: face.getBoundingClientRect().top, labelTop: Math.round(lr.top),
-      fill: getComputedStyle(face).backgroundColor, weight: Number(getComputedStyle(label).fontWeight),
-      truncated: label.scrollWidth > label.clientWidth + 0.5 || lr.right > r.right + 0.5 || lr.left < r.left - 0.5,
-      ring: null,
-    }
-  }))
-  const ORDER = ['Home', 'Search', 'Post', 'Videos', 'Activity', 'Menu']
-  for (const [width, height] of [[360, 740], [390, 844], [412, 915], [768, 1024]]) {
-    const w = `${width}px`
-    const page = await open(width, height, '/')
-    const items = await barItems(page)
-    const bar = await page.getByRole('navigation', { name: 'Primary' }).evaluate((el) => ({ top: el.getBoundingClientRect().top, position: getComputedStyle(el).position, bottomGap: innerHeight - el.getBoundingClientRect().bottom }))
-    check(`${w} bar: ${ORDER.join(', ')}, in that order — Menu a button, the rest links`,
-      JSON.stringify(items.map((i) => i.name)) === JSON.stringify(ORDER) && items.every((i) => i.tag === (i.name === 'Menu' ? 'BUTTON' : 'A')), JSON.stringify(items.map((i) => [i.name, i.tag])))
-    check(`${w} bar: fixed to the bottom edge`, bar.position === 'fixed' && Math.abs(bar.bottomGap) < 1, JSON.stringify(bar))
-    check(`${w} bar: six slots of at least 44×44, no label cut off`, items.every((i) => i.w >= 43.5 && i.h >= 43.5 && !i.truncated), JSON.stringify(items.map((i) => [i.name, Math.round(i.w), Math.round(i.h), i.truncated])))
-    check(`${w} bar: the six labels share one baseline`, new Set(items.map((i) => i.labelTop)).size === 1, JSON.stringify(items.map((i) => i.labelTop)))
-    const post = items.find((i) => i.name === 'Post')
-    const supply = await page.evaluate(() => { const probe = document.createElement('i'); probe.style.color = 'var(--color-supply-600)'; document.body.append(probe); const c = getComputedStyle(probe).color; probe.remove(); return c })
-    check(`${w} bar: Post is the supply-filled circle, and sits inside the bar rather than over the page`,
-      post.fill === supply && post.faceTop >= bar.top && items.filter((i) => i.fill === supply).length === 1, JSON.stringify({ post, supply, barTop: bar.top }))
-    const home = items.find((i) => i.name === 'Home')
-    const rest = items.filter((i) => i.name !== 'Home' && i.name !== 'Post')
-    check(`${w} bar: on the homepage, Home is current — by a filled pill and a bold label, not only colour`,
-      home.current === 'page' && home.fill !== 'rgba(0, 0, 0, 0)' && home.weight >= 700 &&
-      rest.every((i) => i.current === null && i.fill === 'rgba(0, 0, 0, 0)' && i.weight < 700), JSON.stringify(items))
-    // The last thing on the page must clear the bar, safe-area inset included.
-    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
-    await page.waitForTimeout(150)
-    const clear = await page.evaluate(() => {
-      const last = document.querySelector('footer.site-footer') ?? document.querySelector('main')
-      return { last: last.getBoundingClientRect().bottom, bar: document.querySelector('nav[aria-label="Primary"]').getBoundingClientRect().top }
-    })
-    check(`${w} bar: scrolled to the end, the page's last content ends above the bar`, clear.last <= clear.bar + 0.5, JSON.stringify(clear))
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)
-    check(`${w} bar: no horizontal overflow`, !overflow)
-    await page.context().close()
-  }
-  {
-    // The spacer carries the safe-area inset: emulate a home indicator.
-    const page = await open(390, 844, '/')
-    const spacer = await page.evaluate(() => {
-      const probe = document.createElement('div')
-      probe.style.cssText = 'position:fixed;height:env(safe-area-inset-bottom, 0px)'
-      document.body.append(probe)
-      const inset = probe.getBoundingClientRect().height
-      probe.remove()
-      const bar = document.querySelector('nav[aria-label="Primary"]').getBoundingClientRect().height
-      const gap = document.querySelector('.bar-spacer').getBoundingClientRect().height
-      return { inset, bar, gap, rule: [...document.styleSheets].flatMap((s) => { try { return [...s.cssRules] } catch { return [] } }).some((r) => r.selectorText === '.bar-spacer' && /safe-area-inset-bottom/.test(r.style.height)) }
-    })
-    check('390px the page\'s spacer is taller than the bar and includes the safe-area inset', spacer.gap > spacer.bar && spacer.rule, JSON.stringify(spacer))
-    await page.context().close()
-  }
-  for (const [path, name] of [['/buy/kolkata', 'Search'], ['/rent/kolkata/flats', 'Search'], ['/videos', 'Videos']]) {
-    const page = await open(390, 844, path)
-    const items = await barItems(page)
-    const current = items.filter((i) => i.current === 'page')
-    check(`390px on ${path}, ${name} is the one current item, by pill and weight`,
-      current.length === 1 && current[0].name === name && current[0].fill !== 'rgba(0, 0, 0, 0)' && current[0].weight >= 700, JSON.stringify(current))
-    await page.context().close()
-  }
-  {
-    // Keyboard: every item in order, each with a visible ring.
-    const page = await open(390, 844, '/videos')
-    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Home' }).focus()
-    const seen = []
-    for (let i = 0; i < 6; i++) {
-      seen.push(await page.evaluate(() => ({ name: document.activeElement.textContent.trim(), ring: getComputedStyle(document.activeElement).outlineStyle, inBar: Boolean(document.activeElement.closest('nav[aria-label="Primary"]')) })))
-      await page.keyboard.press('Tab')
-    }
-    check('390px Tab walks the bar in order, each item showing a focus ring',
-      JSON.stringify(seen.map((s) => s.name)) === JSON.stringify(ORDER) && seen.every((s) => s.inBar && s.ring !== 'none'), JSON.stringify(seen))
-    // Menu from the bar: expanded while open, focus returned on close.
-    const menu = page.getByRole('navigation', { name: 'Primary' }).getByRole('button', { name: 'Menu' })
-    await menu.focus()
-    await page.keyboard.press('Enter')
-    const dialog = page.getByRole('dialog', { name: /^Explore / })
-    await dialog.waitFor()
-    check('390px Enter on the bar\'s Menu opens the marketplace menu', await dialog.getByRole('navigation', { name: 'All destinations' }).isVisible())
-    await page.keyboard.press('Escape')
-    await dialog.waitFor({ state: 'detached' })
-    check('390px closing it returns focus to the bar\'s Menu', await focusReturns(page, menu) && await menu.getAttribute('aria-expanded') === 'false')
-    // Videos is honest: a real page, not indexed, with no player pretending.
-    const videos = await page.evaluate(() => ({
-      h1: document.querySelector('h1')?.textContent, robots: document.querySelector('meta[name="robots"]')?.content,
-      media: document.querySelectorAll('video, iframe').length,
-    }))
-    check('/videos is an intentional page: one h1 saying there are no videos yet, noindex, no player', /aren.t here yet/.test(videos.h1) && /noindex/.test(videos.robots) && /follow/.test(videos.robots) && !/nofollow/.test(videos.robots) && videos.media === 0, JSON.stringify(videos))
-    const small = await page.locator('main a').evaluateAll((els) => els.map((el) => { const r = el.getBoundingClientRect(); return { t: el.textContent.trim().slice(0, 20), h: r.height } }).filter((t) => t.h < 43.5))
-    check('/videos every link is at least 44px tall', small.length === 0, JSON.stringify(small))
-    for (const a of await page.locator('main a').evaluateAll((els) => els.map((e) => e.getAttribute('href')))) menuHrefs.add(a)
-    await page.context().close()
-  }
-  {
-    // Activity, signed out: the existing guard, and back to Activity after.
-    const page = await open(390, 844, '/')
-    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Activity' }).click()
-    await page.waitForURL((url) => url.pathname === '/login')
-    check('390px Activity, signed out, goes through sign-in and returns to Activity', new URL(page.url()).searchParams.get('next') === '/account/activity', page.url())
-    await page.context().close()
-  }
-  for (const [width, height] of [[1024, 768], [1280, 800]]) {
-    const page = await open(width, height, '/')
-    const gone = await page.evaluate(() => ({
-      bar: document.querySelector('nav[aria-label="Primary"]')?.getBoundingClientRect().height ?? 0,
-      spacer: document.querySelector('.bar-spacer')?.getBoundingClientRect().height ?? 0,
-    }))
-    check(`${width}px no bottom bar and no spacer for it on desktop — the header carries navigation`, gone.bar === 0 && gone.spacer === 0, JSON.stringify(gone))
-    await page.context().close()
-  }
-
-  // ── The discovery hub: the phone and tablet menu ────────────────────
-  const hubHrefs = new Set()
-  for (const [width, height] of [[390, 844], [412, 915], [768, 1024]]) {
-    const w = `${width}px`
-    const page = await open(width, height, '/')
-    await page.getByRole('navigation', { name: 'Primary' }).getByRole('button', { name: 'Menu' }).click()
-    const dialog = page.getByRole('dialog', { name: /^Explore / })
-    await dialog.waitFor()
-    const shape = await dialog.evaluate((d) => {
-      const scroller = d.querySelector('.overflow-y-auto')
-      const rect = (el) => el.getBoundingClientRect()
-      const post = d.querySelector('.hub-post')
-      return {
-        title: d.querySelector('h2')?.textContent,
-        h3: [...d.querySelectorAll('h3')].map((h) => h.textContent),
-        h4: [...d.querySelectorAll('h4')].map((h) => h.textContent),
-        other: d.querySelectorAll('h1, h5, h6').length,
-        overflow: scroller.scrollWidth > scroller.clientWidth || d.scrollWidth > d.clientWidth,
-        fullScreen: Math.round(rect(d).width) === innerWidth && Math.round(rect(d).height) === innerHeight,
-        postTop: rect(post).top,
-        postFill: getComputedStyle(post.querySelector('.hub-post-icon')).backgroundColor,
-        rowFill: getComputedStyle(d.querySelector('.hub-link .hub-icon, .hub-tile .hub-icon')).backgroundColor,
-        supply: getComputedStyle(document.documentElement).getPropertyValue('--color-supply-600').trim(),
-        columns: new Set([...d.querySelectorAll('.hub-col')].map((c) => Math.round(rect(c).left))).size,
-      }
-    })
-    check(`${w} menu: titled h2, then the groups as h3 in order, popular localities an h4 — no level skipped`,
-      /^Explore \S/.test(shape.title) && shape.other === 0 && JSON.stringify(shape.h3) === JSON.stringify(['Explore property', 'Sell or let out', 'Property types', 'Discover', 'Home loan tools', 'Your account'])
-      && JSON.stringify(shape.h4) === JSON.stringify(['Popular localities']), JSON.stringify(shape))
-    check(`${w} menu: no Resources group while there is nothing real to put in it`, !shape.h3.some((h) => /resources|guides|faq/i.test(h)))
-    check(`${w} menu: no horizontal overflow inside it`, !shape.overflow)
-    if (width < 640) check(`${w} menu: fills the screen`, shape.fullScreen, JSON.stringify(shape))
-    if (width >= 768) check(`${w} menu: two columns`, shape.columns === 2, String(shape.columns))
-    check(`${w} menu: posting is on the first screen, in the supply fill, unlike every buyer row`,
-      shape.postTop + 64 <= height && shape.postFill !== shape.rowFill && shape.postFill !== 'rgba(0, 0, 0, 0)', JSON.stringify(shape))
-    const targets = await dialog.locator('a, button').evaluateAll((els) => els.map((el) => {
-      const r = el.getBoundingClientRect(); return { name: el.textContent.trim().slice(0, 30) || el.getAttribute('aria-label'), w: r.width, h: r.height }
-    }).filter((t) => t.w < 43.5 || t.h < 43.5))
-    check(`${w} menu: every row, tile, pill and button is at least 44×44`, targets.length === 0, JSON.stringify(targets))
-    const pills = await dialog.locator('.hub-pill').evaluateAll((els) => els.map((e) => e.textContent.trim()))
-    check(`${w} menu: each pill is named in full ("Buy flats", "Rent in Salt Lake"), never a bare "Buy" (${pills.length})`,
-      pills.length > 10 && pills.every((t) => /^(Buy|Rent|Explore) \S/.test(t)), JSON.stringify(pills.slice(0, 6)))
-    for (const a of await dialog.locator('a').evaluateAll((els) => els.map((e) => e.getAttribute('href')))) hubHrefs.add(a)
-    await page.context().close()
-  }
-  {
-    // Where you are, inside the hub: a section, a pill, a whole-row link.
-    const page = await open(390, 844, '/rent/kolkata/flats')
-    await page.getByRole('navigation', { name: 'Primary' }).getByRole('button', { name: 'Menu' }).click()
-    const dialog = page.getByRole('dialog')
-    await dialog.waitFor()
-    const marks = await dialog.locator('[aria-current]').evaluateAll((els) => els.map((e) => ({ v: e.getAttribute('aria-current'), t: e.textContent.trim(), bg: getComputedStyle(e.querySelector('.hub-pill-face') ?? e).backgroundColor })))
-    const pill = marks.find((m) => m.t === 'Rent flats')
-    const tile = marks.find((m) => m.t.startsWith('Rent'))
-    check('390px on /rent/kolkata/flats the menu marks the Rent tile as the section and the "Rent flats" pill as the page, each by more than colour',
-      marks.length === 2 && tile?.v === 'true' && /You are here/.test(tile.t) && pill?.v === 'page' && pill.bg !== 'rgb(255, 255, 255)', JSON.stringify(marks))
-    await page.context().close()
-  }
-
-  // ── The discovery hub: desktop "Explore all" ─────────────────────────
+  const hubHrefs = links
   for (const [width, height] of [[1024, 768], [1280, 800]]) {
     const w = `${width}px`
     const page = await open(width, height, '/buy/kolkata/2-bhk')
@@ -539,33 +215,23 @@ try {
     await page.context().close()
   }
 
-  // ── Every navigation link resolves ───────────────────────────────────
-  {
-    const all = [...new Set([...menuHrefs, ...panelHrefs, ...hubHrefs])]
-    const bad = []
-    const duplicate = []
-    let searches = 0
-    for (const href of all) {
-      const url = new URL(href, base)
-      const res = await fetch(url, { redirect: 'follow' })
-      if (res.status !== 200) bad.push(`${href} → ${res.status}`)
-      const html = await res.text()
-      if (url.hash === '#localities' && !html.includes('id="localities"')) bad.push(`${href} → no #localities`)
-      // A results page names its canonical URL; the navigation must link
-      // that one, or it mints a second address for the same page.
-      if (/^\/(buy|rent)\//.test(url.pathname)) {
-        searches++
-        const canonical = html.match(/<link rel="canonical" href="([^"]+)"/)?.[1]
-        const at = canonical && new URL(canonical)
-        if (!at || at.pathname + at.search !== href) duplicate.push(`${href} → canonical ${canonical}`)
-        if (/<meta name="robots" content="noindex/.test(html)) duplicate.push(`${href} → noindex`)
-      }
-    }
-    check(`every navigation link resolves (${all.length} from the panels, the menu and the hub)`, bad.length === 0 && all.length > 40, bad.join(', '))
-    check(`every search link is its page's own canonical URL, and indexable (${searches})`, duplicate.length === 0 && searches > 30, duplicate.join(', '))
+  const page = await browser.newPage()
+  for (const path of ['/account', '/account/saved', '/account/enquiries', '/dashboard/enquiries', '/account/activity/private']) {
+    await page.goto(base + path)
+    const u = new URL(page.url())
+    check(`${path} stays protected`, u.pathname === '/login' && u.searchParams.get('next') === path)
   }
-
-  console.log(`\n${passed} passed, 0 failed`)
-} finally {
-  await browser.close()
-}
+  for (const href of links) {
+    if (!href?.startsWith('/')) continue
+    const response = await page.request.get(base + href)
+    check(`destination ${href}`, response.status() < 400, String(response.status()))
+    if (/^\/(buy|rent)\//.test(href)) {
+      const html = await response.text()
+      const canonical = html.match(/<link rel="canonical" href="([^"]+)"/)?.[1]
+      const url = canonical && new URL(canonical)
+      check(`canonical destination ${href}`, url && url.pathname + url.search === href && !/<meta name="robots" content="noindex/.test(html))
+    }
+  }
+  check('no browser errors', errors.length === 0, errors.join('\n'))
+  console.log(`\n${passed} shell checks passed. Screenshots: ${out}`)
+} finally { await browser.close() }

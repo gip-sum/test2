@@ -4,6 +4,9 @@ import * as Dialog from '@radix-ui/react-dialog'
 import { useEffect, useRef, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 
+// Nested location/filter sheets must not release the parent sheet's inert lock.
+const openSheets = new Set<symbol>()
+
 /**
  * Full-screen sheet for focused mobile tasks.
  *
@@ -28,7 +31,7 @@ export function Sheet({
   children: ReactNode
   footer?: ReactNode
   /** 'wide' for a sheet whose content is laid out in columns from 768px (the marketplace menu). */
-  size?: 'default' | 'wide'
+  size?: 'default' | 'wide' | 'marketplace' | 'search'
 }) {
   // Radix hands focus back only to its own Dialog.Trigger, and every sheet
   // here is opened by an ordinary button beside it (a controlled `open`).
@@ -36,6 +39,7 @@ export function Sheet({
   // user started again from the top of the page. So: remember what had
   // focus as the sheet opened, and return there as it closes.
   const returnTo = useRef<HTMLElement | null>(null)
+  const lock = useRef(Symbol('sheet'))
 
   // Radix hides the rest of the page from assistive technology with
   // aria-hidden, but it deliberately never hides an aria-live region — or
@@ -46,21 +50,27 @@ export function Sheet({
   // the sheet (portalled outside it) stays live. Lifted before focus is
   // handed back, since an inert element cannot take focus.
   const appRoot = () => document.querySelector<HTMLElement>('[data-app-root]')
-  useEffect(() => () => { const root = appRoot(); if (root) root.inert = false }, [])
+  useEffect(() => {
+    const id = lock.current
+    return () => { openSheets.delete(id); const root = appRoot(); if (root) root.inert = openSheets.size > 0 }
+  }, [])
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-overlay" />
         <Dialog.Content
+          aria-modal="true"
           onOpenAutoFocus={() => {
             returnTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
             const root = appRoot()
+            openSheets.add(lock.current)
             if (root) root.inert = true
           }}
           onCloseAutoFocus={(event) => {
             const root = appRoot()
-            if (root) root.inert = false
+            openSheets.delete(lock.current)
+            if (root) root.inert = openSheets.size > 0
             const target = returnTo.current
             if (target?.isConnected) {
               event.preventDefault()
@@ -73,8 +83,10 @@ export function Sheet({
           // hid whatever did not fit behind an inner scroll.
           className={cn(
             'fixed inset-x-0 bottom-0 top-0 z-50 flex flex-col bg-surface-000',
+            size === 'marketplace' && 'marketplace-dialog',
+            size === 'search' && 'search-dialog',
             'sm:inset-x-auto sm:bottom-auto sm:left-1/2 sm:top-1/2 sm:h-auto sm:max-h-[85vh]',
-            size === 'wide' ? 'sm:w-[min(52rem,calc(100vw-2rem))]' : 'sm:w-[min(32rem,calc(100vw-2rem))]',
+            size !== 'default' ? 'sm:w-[min(52rem,calc(100vw-2rem))]' : 'sm:w-[min(32rem,calc(100vw-2rem))]',
             'sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-lg sm:shadow-e3',
           )}
         >

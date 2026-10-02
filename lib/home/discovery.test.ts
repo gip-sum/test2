@@ -4,7 +4,7 @@ import { searchProperties } from '@/lib/property/search'
 import { getAllLocalitySlugs } from '@/lib/location/queries'
 import { emptyQuery, parseSearchQuery } from '@/lib/search/query'
 import {
-  getBudgetDiscovery, getHomeCollections, getLocalityDiscovery, getSizeDiscovery, getTypeDiscovery,
+  getSellerDiscovery, getPossessionDiscovery, getBudgetDiscovery, getHomeCollections, getLocalityDiscovery, getSizeDiscovery, getTypeDiscovery,
 } from './discovery'
 
 /** The count a results page shows for a homepage link, read back from the link itself. */
@@ -77,6 +77,17 @@ describe('homepage collections', () => {
 })
 
 describe('homepage counts', () => {
+  it('seller and construction cards match their result URLs', () => {
+    const tiles = [...getSellerDiscovery(), ...getPossessionDiscovery()]
+    expect(tiles.length).toBeGreaterThan(2)
+    for (const tile of tiles) expect(tile.count).toBe(pageCount(tile.href, 'buy'))
+  })
+
+  it('new discovery cards omit empty inventory', () => {
+    expect(getSellerDiscovery({ corpus: [] })).toEqual([])
+    expect(getPossessionDiscovery({ corpus: [] })).toEqual([])
+  })
+
   it('match the results page each locality tile links to', () => {
     const { popular, all } = getLocalityDiscovery()
     expect(popular.length).toBe(12)

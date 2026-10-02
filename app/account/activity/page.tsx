@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
+import { GuestActivity } from '@/components/home/GuestActivity'
 import { PageShell } from '@/components/layout/PageShell'
 import { ChevronRightIcon, HeartIcon, MailIcon } from '@/components/ui/icons'
 import { getVerifiedUser } from '@/lib/auth/session'
@@ -34,12 +34,12 @@ function describe(count: number | null, one: string, many: string): string | nul
  * alerts and reveal history are not shown until their phases build them
  * (docs/ROADMAP.md, "Activity sections waiting on their phase").
  *
- * Under /account like the other signed-in pages, so the proxy's guard
- * sends a signed-out visitor to sign in and back here.
+ * This route has a public guest landing. Private queries below run only
+ * after verifying the user; other account routes remain guarded.
  */
 export default async function ActivityPage() {
   const user = await getVerifiedUser()
-  if (!user) redirect('/login?next=%2Faccount%2Factivity')
+  if (!user) return <GuestActivity />
 
   const [saved, sent, unread] = await Promise.all([listSaved(user), listLeads(user, 'buyer'), countUnreadNotifications(user)])
 

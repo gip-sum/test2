@@ -78,6 +78,7 @@ for (const route of ROUTES) {
     // filters sheet; open it so those surfaces are measured too, instead of
     // their probes finding nothing and being skipped.
     if (route === '/') {
+      await page.locator('.reference-search-trigger').click()
       await page.getByRole('button', { name: /^More filters/ }).click()
       await page.getByRole('dialog', { name: 'More filters' }).waitFor()
     }
@@ -170,7 +171,7 @@ for (const route of ROUTES) {
               .find((b) => /Clear all filters/.test(b.textContent)),
           ),
           'contact submit': bg(q('aside form button[type="submit"]')),
-          'mobile contact action': bg(q('div.fixed button[aria-haspopup="dialog"]')),
+          'mobile contact action': bg(byText('div.fixed button[aria-haspopup="dialog"]', /^Contact /)),
         },
         text: {
           'h1': resolvedColor(getComputedStyle(q('h1')).color),
@@ -184,7 +185,7 @@ for (const route of ROUTES) {
           button: bg(q('.seller-invitation a')),
           buttonText: resolvedColor(getComputedStyle(q('.seller-invitation a')).color),
         } : null,
-        heroText: Boolean(q('.home-hero')?.contains(q('h1'))),
+        heroText: Boolean(q('.reference-banner')?.contains(q('h1'))),
         colorScheme: getComputedStyle(document.documentElement).colorScheme,
       }
     })

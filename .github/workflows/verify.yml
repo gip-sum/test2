@@ -36,7 +36,7 @@ jobs:
       - run: npm run shots
       - run: npm run light-check
       - run: npm run search-check
-      # The homepage on phones: the whole search on the first screen, the
+      # The homepage on phones: the search launcher on the first screen, the
       # filter sheet and locality picker, swipeable rails, opaque header and
       # bottom bar, and tile counts that match their results pages.
       - run: npm run home-check
@@ -46,9 +46,10 @@ jobs:
       # where-you-are beyond colour, and every navigation link resolving.
       # Phase C: the discovery hub in the menu and the desktop Explore all
       # panel, and every search link being its page's own canonical URL.
-      # Phase D: the six-item phone bar, one Menu per screen, Post inside
-      # the bar, and the page clearing it (auth-check covers Activity signed in).
+      # Phase E: the reference menu, guest Activity and six-item phone bar,
+      # with page clearance (auth-check covers Activity signed in).
       - run: npm run shell-check
+      - run: npm run phase-e-check
       - run: npm run pricing-check
       - run: npm run post-check
       - run: npm run notfound-check

@@ -1,41 +1,26 @@
 import Link from 'next/link'
 import { SectionHeading } from './SectionHeading'
-import { MapPinIcon } from '@/components/ui/icons'
 import { localityExploreHref, type LocalityTile } from '@/lib/home/discovery'
 import { LAUNCH_CITY } from '@/lib/brand'
 
-/**
- * One-tap entry into the most-searched parts of the city, and the index of
- * all the rest.
- *
- * Each place says what it holds for both intents — "5 for sale", "2 to
- * rent" — and each figure is its own link into those results, so the tile
- * answers "is there anything here for me?" before the tap (Phase B). The
- * counts come from the search seam, so each equals the results page it
- * opens; an intent with nothing in a place is simply not offered. A place
- * with nothing at all keeps one "Explore" link, never a "0": zero reads as
- * broken where "explore" reads as new, and its results page suggests the
- * places nearby.
- *
- * Tinted tiles in two scrolling rows on phones, a grid from 1024px. This
- * section is also what the Localities route opens (`/#localities`) until
- * the city hub and locality pages arrive (Phases 29 and 30).
- */
+/** Reference-style locality panels show actual inventory counts, not demand statistics. */
 export function PopularLocalities({ popular, all }: { popular: LocalityTile[]; all: Array<{ name: string; href: string }> }) {
   return (
     <section id="localities" aria-labelledby="popular-localities" className="home-section home-anchor">
       <SectionHeading
         id="popular-localities"
         eyebrow="Explore the city"
-        title={`Where in ${LAUNCH_CITY.name} feels like home?`}
-        description="A different rhythm in every neighbourhood. See what each one holds, for sale and to rent."
+        title={`Explore localities in ${LAUNCH_CITY.name}`}
+        description="See the homes available in each neighbourhood"
       />
 
-      <ul className="locality-tiles" aria-label={`Popular localities in ${LAUNCH_CITY.name}`}>
-        {popular.map((l, index) => (
-          <li key={l.slug} className={`locality-tile locality-tone-${index % 4}`}>
+      <div className="locality-panels">
+        {[popular.slice(0, 6), popular.slice(6)].filter(group => group.length).map((group, index) => <div key={index} className="locality-panel">
+          <h3>{index === 0 ? 'Find your neighbourhood' : 'More places to explore'}</h3>
+          <ul className="locality-tiles" aria-label={`Localities in ${LAUNCH_CITY.name}, group ${index + 1}`}>
+        {group.map((l) => (
+          <li key={l.slug} className="locality-tile">
             <p className="locality-tile-name">
-              <MapPinIcon className="size-4 shrink-0" />
               <span className="truncate">{l.name}</span>
             </p>
             <p className="locality-tile-links">
@@ -57,7 +42,9 @@ export function PopularLocalities({ popular, all }: { popular: LocalityTile[]; a
             </p>
           </li>
         ))}
-      </ul>
+          </ul>
+        </div>)}
+      </div>
 
       <details className="all-localities">
         <summary>

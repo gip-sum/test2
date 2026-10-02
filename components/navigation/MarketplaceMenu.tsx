@@ -4,36 +4,16 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { Sheet } from '@/components/ui/Sheet'
-import { ChevronRightIcon, HomeIcon, MenuIcon } from '@/components/ui/icons'
-import { BRAND } from '@/lib/brand'
+import { ChevronRightIcon, HomeIcon, MenuIcon, KeyIcon, CalculatorIcon, UserIcon, MapPinIcon, PlusIcon, VideoIcon, HeartIcon, BuildingIcon, LayersIcon, VillaIcon, StudioIcon } from '@/components/ui/icons'
+import { BRAND, LAUNCH_CITY } from '@/lib/brand'
 import { cn } from '@/lib/cn'
 import { bottomBarShown } from '@/lib/navigation/bottom-bar'
 import type { MarketplaceNav } from '@/lib/navigation/types'
-import { HUB_TITLE, HubGroup, HubRows, HubSell, HubTiles } from './hub'
+import type { HubEntry } from '@/lib/navigation/types'
+import { BOTTOM_NAV_ITEMS } from './bottom-items'
 
-/**
- * Every destination in one place, on phones and tablets: the discovery hub
- * (Phase C, over Phase A's menu).
- *
- * Opened from the header's menu button and from "View all" on the quick
- * routes. Each trigger owns its sheet — there is no global menu state to
- * keep in step — and the sheet is the shared Radix-based one, which
- * already traps focus, locks scroll, closes on Escape, makes the page
- * behind inert and hands focus back to whatever opened it.
- *
- * Full screen on phones, grouped the way people look: Buy and Rent first
- * as the two big choices, posting straight after in the supply accent,
- * then kinds of home, ways to discover, tools and the account. From 768px
- * the same groups sit in two columns of a wide dialog. The bottom bar
- * stays as it is; this supplements it.
- *
- * A link closes the sheet as it navigates: an in-page link (/#localities
- * on the homepage) would otherwise scroll the page behind a dialog that is
- * still open.
- *
- * Triggers: the bottom bar's Menu item ('bar', Phase D), "View all" on the
- * quick routes ('text'), and the header's icon ('icon'), which shows only
- * where the bottom bar is hidden — one menu control per screen.
+/** The reference category rail uses the existing hub's destinations.
+ * The modal retains Radix focus/scroll handling and closes before navigation.
  */
 export function MarketplaceMenu({ nav, trigger, barForced = false, className }: {
   nav: MarketplaceNav
@@ -45,7 +25,7 @@ export function MarketplaceMenu({ nav, trigger, barForced = false, className }: 
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   const done = () => setOpen(false)
-  const at = { pathname, onNavigate: done }
+  const [category, setCategory] = useState(pathname.startsWith('/rent') ? 'rent' : pathname.startsWith('/account') ? 'account' : 'buy')
   const { hub } = nav
 
   if (trigger === 'icon' && bottomBarShown(pathname, barForced)) return null
@@ -70,42 +50,45 @@ export function MarketplaceMenu({ nav, trigger, barForced = false, className }: 
         </button>
       )}
 
-      <Sheet open={open} onOpenChange={setOpen} size="wide" title={`Explore ${BRAND.shortName}`} description="Every part of the marketplace, grouped: finding a home, posting one, tools and your account.">
-        {/* Headings: the sheet's title is the h2, each group an h3, the
-            popular localities an h4 inside Discover. */}
-        <nav aria-label="All destinations" className="hub-sheet">
-          <Link href="/" onClick={done} aria-current={pathname === '/' ? 'page' : undefined} className="menu-home">
-            <HomeIcon className="size-5" /> Home
-          </Link>
-          <div className="hub-cols">
-            <div className="hub-col">
-              <HubGroup id="hub-m-explore" title={HUB_TITLE.explore} level={3}>
-                <HubTiles entries={hub.explore} {...at} />
-              </HubGroup>
-              <HubSell id="hub-m-sell" level={3} sell={hub.sell} {...at} />
-              {hub.types.length > 0 && (
-                <HubGroup id="hub-m-types" title={HUB_TITLE.types} level={3}>
-                  <HubRows entries={hub.types} {...at} />
-                </HubGroup>
-              )}
-            </div>
-            <div className="hub-col">
-              <HubGroup id="hub-m-discover" title={HUB_TITLE.discover} level={3}>
-                <HubRows entries={hub.discover} {...at} />
-                <HubGroup id="hub-m-localities" title={HUB_TITLE.localities} level={4} className="hub-subgroup">
-                  <HubRows entries={hub.localities} icons={false} {...at} />
-                </HubGroup>
-              </HubGroup>
-              <HubGroup id="hub-m-tools" title={HUB_TITLE.tools} level={3}>
-                <HubRows entries={hub.tools} {...at} />
-              </HubGroup>
-              <HubGroup id="hub-m-account" title={HUB_TITLE.account} level={3}>
-                <HubRows entries={hub.account} {...at} />
-              </HubGroup>
-            </div>
+      <Sheet open={open} onOpenChange={setOpen} size="marketplace" title="All Categories" description="Choose a category, then a destination." footer={
+        <nav aria-label="Menu primary" className="reference-menu-bottom">
+          {BOTTOM_NAV_ITEMS.map(({ href, label, Icon }) => <Link key={href} href={href} onClick={done}><Icon className="size-6" /><span>{label}</span></Link>)}
+          <button onClick={done} type="button" aria-label="Close menu"><MenuIcon className="size-6" /><strong>Menu</strong></button>
+        </nav>
+      }>
+        <nav aria-label="All destinations" className="reference-menu">
+          <div className="reference-menu-categories" aria-label="Categories">
+            <Link href="/post" onClick={done}><PlusIcon className="size-6" />Sell/Rent</Link>
+            {[{ id: 'buy', label: 'Buy Residential', Icon: HomeIcon }, { id: 'rent', label: 'Rent a home', Icon: KeyIcon }, { id: 'places', label: 'Localities', Icon: MapPinIcon }, { id: 'tools', label: 'Budget & EMI', Icon: CalculatorIcon }, { id: 'account', label: 'Activity & Account', Icon: UserIcon }].map(({ id, label, Icon }) => <button key={id} type="button" aria-pressed={category === id} aria-controls="menu-category-content" onClick={() => setCategory(id)}><Icon className="size-6" /><span>{label}</span></button>)}
+          </div>
+          <div id="menu-category-content" className="reference-menu-content" key={category}>
+            <div className="menu-welcome"><UserIcon className="size-8" /><div><strong>Hello</strong><p>Your space on {BRAND.shortName}</p></div><Link href="/account" onClick={done} className="reference-login">Your account / Sign in</Link></div>
+            {(category === 'buy' || category === 'rent') && <>
+              <h3>Browse Videos</h3><Link className="menu-video" href="/videos" onClick={done}><VideoIcon className="size-6" />Videos</Link>
+              <h3>Property Options</h3>
+              <div className="menu-property-grid">
+                {hub.types.map((entry, i) => {
+                  const link = entry.pills?.find(p => p.label === (category === 'buy' ? 'Buy' : 'Rent'))
+                  const Icon = [BuildingIcon, HomeIcon, LayersIcon, VillaIcon, StudioIcon][i % 5]!
+                  return link ? <Link key={entry.id} href={link.href} aria-current={pathname === link.href ? 'page' : undefined} onClick={done}><Icon className="size-6" /><span>{entry.label}</span></Link> : null
+                })}
+              </div>
+              <Link className="menu-all-homes" href={`/${category}/${LAUNCH_CITY.slug}`} onClick={done}>View all homes {category === 'buy' ? 'for sale' : 'to rent'} <ChevronRightIcon className="size-4" /></Link>
+              <h3>Explore more</h3><MenuTiles entries={hub.discover} done={done} intent={category} />
+            </>}
+            {category === 'places' && <><h3>Popular localities</h3><MenuTiles entries={hub.localities} done={done} /></>}
+            {category === 'tools' && <><h3>Plan your purchase</h3><MenuTiles entries={hub.tools} done={done} /></>}
+            {category === 'account' && <><h3>Your activity</h3><Link href="/account/activity" className="menu-video" onClick={done}><HeartIcon className="size-6" />Activity</Link><MenuTiles entries={[...hub.account, ...hub.sell.more]} done={done} /></>}
           </div>
         </nav>
       </Sheet>
     </>
   )
+}
+
+function MenuTiles({ entries, done, intent }: { entries: HubEntry[]; done: () => void; intent?: string }) {
+  const available = entries.filter(entry => entry.href || entry.pills?.some(p => !intent || p.label === (intent === 'buy' ? 'Buy' : 'Rent')))
+  return <ul className="menu-extra-tiles">{available.map(entry => <li key={entry.id}>
+    {entry.href ? <Link href={entry.href} onClick={done}>{entry.label}</Link> : <><strong>{entry.label}</strong><div>{entry.pills?.filter(p => !intent || p.label === (intent === 'buy' ? 'Buy' : 'Rent')).map(p => <Link href={p.href} key={p.href} onClick={done}>{p.label}<span className="sr-only"> {p.context}</span></Link>)}</div></>}
+  </li>)}</ul>
 }

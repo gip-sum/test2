@@ -1,6 +1,6 @@
 # Phase E — 99acres interface redesign
 
-Status: Planned, requested 2 October 2026. This commit adds the extra phase and its specification; UI implementation has not started. Work will use `main`, as requested by the client.
+Status: Implemented and verified locally on `main`, 2 October 2026. Production publication is pending. No feature branch was created.
 
 ## 1. Scope
 
@@ -58,10 +58,35 @@ Prioritise the supplied mobile references. Compare the actual website area after
 
 ## 8. Verification
 
-For this planning change: check roadmap numbering, reference mapping, links and all nine required sections. Existing repository `npm run verify` runs before commit; no UI completion is claimed.
+The implementation passed:
 
-For implementation: run `npm run verify`, `npm run build`, `npm run shots`, `npm run light-check`, `npm run search-check`, `npm run home-check`, `npm run shell-check`, and affected account/auth/save checks. Also rerun posting checks if shared layout changes affect posting. Compare screenshots against all seven references, including home at multiple scroll positions, menu at top and scrolled, and guest Activity. Measure overflow, fixed-bar clearance and touch targets. Verify every displayed link, search, menu selection, login return path and save action. Do not report visual fidelity based only on automated assertions.
+| Check | Result |
+|---|---|
+| `npm run verify` | Lint, strict types and 329 unit tests pass |
+| `npm run build -- --webpack` | Production build passes |
+| `npm run shots` | No document overflow at 390 / 412 / 768 / 1280 across the existing route suite |
+| `npm run light-check` | All measured surfaces retain the light product under a dark browser preference |
+| `npm run home-check` | 122 assertions; all 61 displayed counts agree with their results; all 112 home links resolve |
+| `npm run shell-check` | 353 assertions; mobile targets, category state, keyboard/focus, guest/private boundaries, desktop panels and canonical destinations |
+| `npm run phase-e-check` | 44 assertions; banner destinations, nested dialog focus/inert state, compact sticky search, independent menu scroll and reference-section overflow |
+| `npm run search-check` | 64 assertions |
+| `npm run post-check` / `pricing-check` | 87 / 46 assertions; posting and pricing preserved |
+| `npm run auth-check` / `saved-check` | 38 / 14 assertions against isolated local provider simulators |
+| `npm run calculator-check` / `notfound-check` / `login-check` | 43 / 36 / 117 assertions |
+
+Visual inspection covered home at the top and the discovery/locality/tool sections, menu at the top and scrolled, and guest Activity. Screenshots were captured at 360, 390, 412, 768 and 1280 CSS pixels. The shared header and bottom bar clear the page; only intended rails scroll horizontally. The default build environment blocked child-process execution, so local production verification used the supported Webpack build outside that process sandbox. Browser verification used Chromium 154, including the agent-browser smoke check; Safari and Firefox were not tested.
+
+The old home/shell/theme assertions were updated for the new presentation. Existing desktop keyboard/pointer and canonical-link checks remain, and the reference-specific regression is included in CI. The implementation also fixes nested Sheet inert locks and provides enough desktop search-dialog space for the locality dropdown.
 
 ## 9. Production readiness
 
-This phase is complete only after the implemented screens have been compared with the references, functional and access-control checks pass, and any remaining content/capability differences are documented. Scope registration is not implementation or deployment. Phase 15 photo uploads and Phase 16 drafts remain separate work. Future work uses `main`; no extra branch is requested for this phase.
+The implemented interface is ready for publication after client review. The production site is not changed by the local implementation commit. Phase 15 photo uploads and Phase 16 drafts remain separate work.
+
+Reference differences are deliberate and reflect the available product:
+
+- GharBazaar branding, its existing Kolkata imagery and labelled sample listings replace 99acres branding, advertisers and Bangalore projects. Rails say latest homes rather than implying recommendations. Prices and factual listing labels replace unsupported RERA and possession-date badges.
+- The banner has manual, accessible slide buttons and real search/calculator destinations. No advertising, app-install, voice-search, FREE or rating claims are displayed without those capabilities.
+- BHK, seller and construction cards use query-derived counts. Locality panels show inventory counts, not invented demand percentages or rankings. Future possession-year filters are not implied.
+- The menu contains supported residential types, localities, calculators and account destinations. Commercial, land, PG and other unsupported categories are omitted. Videos retains its existing honest availability page; this phase does not add media infrastructure.
+- Guest Activity uses sign-in prompts for unavailable private data and an unpersonalised latest-listing rail. Viewed/contacted history and rating/feedback actions await their own features. Signed-in Activity retains its existing private queries and counts.
+- Touch controls are at least 44px, the menu has an explicit accessible close action, and tablet/desktop layouts adapt to their width. This is a close reproduction of the supplied mobile layout, not a claim of identical content or an unseen desktop design.

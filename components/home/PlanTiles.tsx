@@ -10,20 +10,21 @@ import { ChevronRightIcon } from '@/components/ui/icons'
  */
 export function PlanTiles() {
   return (
-    <section aria-labelledby="plan-purchase" className="home-section">
+    <section aria-labelledby="plan-purchase" className="home-section reference-tools">
       <SectionHeading
         id="plan-purchase"
         eyebrow="Plan your purchase"
-        title="Know your numbers first"
-        description="Work out a budget from your income and savings, or the monthly EMI on a home you like."
+        title="Use popular tools"
+        description="Go from browsing to buying"
+        action={{ href: '/calculators', label: 'View all' }}
       />
       <ul className="calc-index mt-4">
-        {CALCULATORS.map(({ href, title, body, Icon }) => (
+        {CALCULATORS.map(({ href, body, Icon }) => (
           <li key={href}>
             <Link href={href} className="calc-index-card">
               <span className="calc-index-icon" aria-hidden="true"><Icon className="size-6" /></span>
               <span className="min-w-0 flex-1">
-                <span className="block text-body font-semibold text-ink-900">{title}</span>
+                <span className="block text-body font-semibold text-ink-900">{href.endsWith('/budget') ? 'Budget Calculator' : 'EMI Calculator'}</span>
                 <span className="mt-0.5 block text-body-sm text-ink-700">{body}</span>
               </span>
               <ChevronRightIcon className="size-5 shrink-0 text-brand-600" />

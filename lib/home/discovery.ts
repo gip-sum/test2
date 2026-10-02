@@ -166,3 +166,18 @@ export function getSizeDiscovery(options?: Options): Record<Intent, BandTile[]> 
     })
   return { buy: sizes('buy'), rent: sizes('rent') }
 }
+
+/** These tiles and their URLs use the same query, so counts cannot drift. */
+export function getSellerDiscovery(options?: Options): BandTile[] {
+  return (['AGENT', 'OWNER', 'BUILDER'] as const).flatMap((seller) => {
+    const link = linkFor('buy', { sellerTypes: [seller] }, options)
+    return link ? [{ label: seller === 'AGENT' ? 'Dealer' : seller === 'OWNER' ? 'Owner' : 'Builder', ...link }] : []
+  })
+}
+
+export function getPossessionDiscovery(options?: Options): BandTile[] {
+  return (['READY', 'UNDER_CONSTRUCTION'] as const).flatMap((construction) => {
+    const link = linkFor('buy', { construction }, options)
+    return link ? [{ label: construction === 'READY' ? 'Ready to move' : 'Under construction', ...link }] : []
+  })
+}

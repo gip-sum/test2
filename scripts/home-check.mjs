@@ -66,18 +66,10 @@ try {
         const r = el.getBoundingClientRect()
         return { top: Math.round(r.top), bottom: Math.round(r.bottom), left: Math.round(r.left), right: Math.round(r.right), height: Math.round(r.height) }
       }
-      const form = document.querySelector('form[aria-label="Search properties"]')
-      const buttons = [...form.querySelectorAll('button')]
       return {
         header: box(document.querySelector('header')),
         bar: box(document.querySelector('nav.fixed[aria-label="Primary"]')),
-        controls: {
-          'the Buy tab': box(form.querySelector('[role="tab"]')),
-          'the Rent tab': box(form.querySelectorAll('[role="tab"]')[1]),
-          'the locality search': box(buttons.find((b) => /Search a locality/.test(b.textContent))),
-          'More filters': box(buttons.find((b) => /More filters/.test(b.textContent))),
-          'the Search button': box(form.querySelector('button[type="submit"]')),
-        },
+        controls: { 'search launcher': box(document.querySelector('.reference-search-trigger')) },
         headline: box(document.querySelector('#home-title')),
         firstCard: box(document.querySelector('.listing-rail article')),
       }
@@ -101,7 +93,7 @@ try {
   // ── The header and bottom bar are opaque, and on top, while scrolling ─
   await page.evaluate(() => window.scrollTo(0, 1200))
   await page.waitForTimeout(150)
-  const chrome = await page.evaluate(() => ['header', 'nav.fixed[aria-label="Primary"]'].map((selector) => {
+  const chrome = await page.evaluate(() => ['.reference-search', 'nav.fixed[aria-label="Primary"]'].map((selector) => {
     const el = document.querySelector(selector)
     const style = getComputedStyle(el)
     let opacity = 1
@@ -110,7 +102,7 @@ try {
     return { selector, background: style.backgroundColor, backdrop: style.backdropFilter, opacity, top: r.top, bottom: r.bottom }
   }))
   for (const bar of chrome) {
-    const name = bar.selector === 'header' ? 'the header' : 'the bottom bar'
+    const name = bar.selector === '.reference-search' ? 'the header' : 'the bottom bar'
     await check(`${name} paints a solid background over the scrolled page`, /^rgb\(\d+, \d+, \d+\)$/.test(bar.background) && (bar.backdrop === 'none' || bar.backdrop === '') && bar.opacity === 1, JSON.stringify(bar))
   }
   await check('the header stays pinned to the top after scrolling', chrome[0].top === 0)
@@ -122,20 +114,21 @@ try {
   for (const where of ['header', 'bar']) {
     const covered = await page.evaluate((where) => {
       const heart = document.querySelectorAll('.listing-rail')[where === 'header' ? 0 : 1].querySelector('article button[aria-label^="Save"]')
-      const header = document.querySelector('header').getBoundingClientRect()
+      const header = document.querySelector('.reference-search').getBoundingClientRect()
       const bar = document.querySelector('nav.fixed[aria-label="Primary"]')
       const target = where === 'header' ? header.top + header.height / 2 : bar.getBoundingClientRect().top + 20
       const r = heart.getBoundingClientRect()
       window.scrollBy(0, r.top + r.height / 2 - target)
       const now = heart.getBoundingClientRect()
       const hit = document.elementFromPoint(now.left + now.width / 2, now.top + now.height / 2)
-      return where === 'header' ? Boolean(hit?.closest('header')) : Boolean(hit?.closest('nav.fixed'))
+      return where === 'header' ? Boolean(hit?.closest('.reference-search')) : Boolean(hit?.closest('nav.fixed'))
     }, where)
     await check(`a save button scrolled under the ${where === 'header' ? 'header' : 'bottom bar'} stays underneath it`, covered)
   }
 
   // ── More filters: a sheet, echoed as chips, then the results URL ─────
   await home(page)
+  await page.locator('.reference-search-trigger').click()
   const more = form.getByRole('button', { name: /^More filters/ })
   await check('More filters announces that it opens a dialog', (await more.getAttribute('aria-haspopup')) === 'dialog')
   await more.click()
@@ -173,6 +166,7 @@ try {
   // Switching intent keeps type and bedrooms, drops a purchase budget, and
   // the sheet's own button is a second way to the results.
   await home(page)
+  await page.locator('.reference-search-trigger').click()
   await more.click()
   sheet = page.getByRole('dialog', { name: 'More filters' })
   for (const option of ['Independent house', '₹1 Cr – ₹2 Cr', '4 BHK']) await sheet.getByRole('button', { name: option, exact: true }).click()
@@ -189,6 +183,7 @@ try {
     url.searchParams.get('type') === 'INDEPENDENT_HOUSE' && url.searchParams.get('bhk') === '4' && url.searchParams.get('pmin') === '20000' && url.searchParams.get('pmax') === '35000', url.search)
 
   await home(page)
+  await page.locator('.reference-search-trigger').click()
   await more.click()
   await check('Clear all is disabled while nothing is chosen', await sheet.getByRole('button', { name: 'Clear all' }).isDisabled())
   await sheet.getByRole('button', { name: 'Villa', exact: true }).click()
@@ -302,7 +297,7 @@ try {
   const quick = page.getByRole('navigation', { name: 'Quick routes' })
   const routes = await quick.getByRole('link').evaluateAll((links) => links.map((l) => [l.querySelector('.quick-label').textContent, l.getAttribute('href'), l.getBoundingClientRect().height]))
   await check('quick routes go to Buy, Rent, Localities and Post property',
-    JSON.stringify(routes.map(([label, href]) => [label, href])) === JSON.stringify([['Buy', '/buy/kolkata'], ['Rent', '/rent/kolkata'], ['Localities', '/#localities'], ['Post property', '/post']]), JSON.stringify(routes))
+    JSON.stringify(routes.map(([label, href]) => [label, href])) === JSON.stringify([['Buy', '/buy/kolkata'], ['Rent', '/rent/kolkata'], ['Videos', '/videos'], ['Tools', '/calculators'], ['Localities', '/#localities'], ['Post property', '/post']]), JSON.stringify(routes))
   await check('every quick route is a 44px target', routes.every(([, , h]) => h >= 44))
   await quick.getByRole('link', { name: /Localities/ }).click()
   await page.waitForFunction(() => location.hash === '#localities')
@@ -311,7 +306,7 @@ try {
     section: document.querySelector('#localities').getBoundingClientRect().top,
     header: document.querySelector('header').getBoundingClientRect().bottom,
   }))
-  await check('Localities scrolls to the localities, not underneath the header', landing.section >= landing.header - 1 && landing.section <= landing.header + 32, JSON.stringify(landing))
+  await check('Localities scrolls to the localities, not underneath the header', landing.section >= landing.header + 54 && landing.section <= landing.header + 90, JSON.stringify(landing))
   for (const [name, path] of [['Buy', '/buy/kolkata'], ['Rent', '/rent/kolkata']]) {
     await home(page)
     await quick.getByRole('link', { name: new RegExp(`^${name}`) }).click()
@@ -319,9 +314,9 @@ try {
     await check(`the ${name} route opens its results`, (await resultCount(page)) > 0)
   }
   await home(page)
-  await check('on a phone, posting lives in the bottom bar, not a squeezed header button',
-    !(await page.locator('header').getByRole('link', { name: 'Post property' }).isVisible()) &&
-    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Post' }).isVisible())
+  await check('on a phone, posting is reachable in the header and bottom bar',
+    (await page.locator('header').getByRole('link', { name: 'Post property' }).isVisible()) &&
+    await page.getByRole('navigation', { name: 'Primary' }).getByRole('link', { name: 'Sell/Rent' }).isVisible())
   const headerLines = await page.locator('header a').evaluateAll((links) => links.filter((l) => l.offsetParent).map((l) => [l.textContent.trim(), Math.round(l.getBoundingClientRect().height)]))
   await check('header controls keep to one line', headerLines.every(([, h]) => h <= 48), JSON.stringify(headerLines))
 
@@ -337,11 +332,11 @@ try {
     localityTiles.every((t) => t.links.length >= 1 && t.links.every((l) => /^\/(buy|rent)\/kolkata\/[a-z-]+$/.test(l.href))), JSON.stringify(localityTiles[0]))
   await check('each locality link names its place for a screen reader', localityTiles.every((t) => t.links.every((l) => l.text.includes(t.name))))
   await check('some localities offer homes to rent as well as for sale', localityTiles.some((t) => t.links.some((l) => l.href.startsWith('/rent/'))))
-  await check('on a phone they sit in two rows that scroll together', new Set(localityTiles.map((t) => t.top)).size === 2 && await page.locator('ul.locality-tiles').evaluate((ul) => ul.scrollWidth > ul.clientWidth))
+  await check('on a phone locality panels scroll with a next-card peek', await page.locator('.locality-panels').evaluate(el => el.scrollWidth > el.clientWidth && el.querySelector('.locality-panel').getBoundingClientRect().width < el.clientWidth))
   const typeLinks = await page.locator('ul.type-tiles a').evaluateAll((links) => links.map((l) => l.getAttribute('href')))
   await check('property types link to their landing pages, for sale and to rent',
     typeLinks.length >= 5 && typeLinks.every((h) => /^\/(buy|rent)\/kolkata\/(flats|independent-houses|builder-floors|villas|studio-apartments)$/.test(h)) && typeLinks.includes('/buy/kolkata/flats') && typeLinks.includes('/rent/kolkata/flats'), JSON.stringify(typeLinks))
-  const countLinks = await page.locator('ul.locality-tiles a, ul.type-tiles a, ul.count-tiles a').evaluateAll((links) => links.map((l) => ({
+  const countLinks = await page.locator('ul.locality-tiles a, ul.type-tiles a, ul.count-tiles a, .discovery-band li a, .possession-section li a').evaluateAll((links) => links.map((l) => ({
     href: l.getAttribute('href'),
     text: l.textContent.replace(/\s+/g, ' ').trim(),
     height: l.getBoundingClientRect().height,
@@ -353,7 +348,7 @@ try {
   const checker = await open(390, 844)
   let matched = 0
   for (const link of countLinks) {
-    const claimed = Number(link.text.match(/(\d+) (for sale|to rent|homes?)/)?.[1])
+    const claimed = Number(link.text.match(/(\d+) (for sale|to rent|homes?|[Pp]roperties)/)?.[1])
     if (!Number.isFinite(claimed)) continue
     await checker.goto(base + link.href)
     const shown = await resultCount(checker)
@@ -362,7 +357,7 @@ try {
   }
   await check(`every count on the homepage matches its results page (${matched} counts checked)`, matched >= 40)
   await checker.context().close()
-  await check('nothing says 0: an empty place, type, band or size is left out, or says Explore', countLinks.every((l) => !/(^|\s)0 (for sale|to rent|homes?)/.test(l.text)))
+  await check('nothing says 0: an empty place, type, band or size is left out, or says Explore', countLinks.every((l) => !/(^|\s)0 (for sale|to rent|homes?|[Pp]roperties)/.test(l.text)))
 
   const all = page.locator('details.all-localities')
   await check('the full locality index starts closed', !(await all.evaluate((d) => d.open)))
@@ -388,12 +383,12 @@ try {
   // Phase B's discovery hierarchy, in order, below the search.
   const order = await page.locator('main h2').evaluateAll((hs) => hs.map((h) => h.id).filter(Boolean))
   await check(`the homepage sections, in order: ${order.join(' › ')}`, JSON.stringify(order) === JSON.stringify([
-    'rail-new-sale', 'rail-new-rent', 'rail-reduced', 'popular-localities', 'browse-type', 'browse-budget', 'browse-size',
+    'rail-new-sale', 'rail-new-rent', 'rail-reduced', 'bhk-choice', 'posted-by', 'possession-title', 'popular-localities', 'browse-type', 'browse-budget', 'browse-size',
     'rail-under-construction', 'plan-purchase', 'why-us', 'post-cta',
   ]))
   // The calculators are real (Phase 40A), so the homepage may point at them.
   const plan = await page.locator('section[aria-labelledby="plan-purchase"] a').evaluateAll((links) => links.map((l) => l.getAttribute('href')))
-  await check('the plan-your-purchase section links to both working calculators', JSON.stringify(plan) === JSON.stringify(['/calculators/budget', '/calculators/emi']), JSON.stringify(plan))
+  await check('the plan-your-purchase section links to both working calculators', JSON.stringify(plan) === JSON.stringify(['/calculators', '/calculators/budget', '/calculators/emi']), JSON.stringify(plan))
   await page.context().close()
 
   // ── Desktop ──────────────────────────────────────────────────────────
@@ -421,10 +416,11 @@ try {
     section: Math.round(document.querySelector('#localities').getBoundingClientRect().top),
     header: Math.round(document.querySelector('header').getBoundingClientRect().bottom),
   }))
-  await check('desktop: Localities in the header opens the localities from another page, below the header', landed.section >= landed.header - 1 && landed.section <= landed.header + 32, JSON.stringify(landed))
+  await check('desktop: Localities in the header opens the localities from another page, below the header', landed.section >= landed.header + 45 && landed.section <= landed.header + 80, JSON.stringify(landed))
   await home(desk)
 
   // The locality dropdown hangs over the first rail: it must paint on top.
+  await desk.locator('.reference-search-trigger').click()
   const combo = desk.getByRole('combobox')
   await combo.click()
   await combo.fill('sa')
@@ -450,14 +446,9 @@ try {
   await desk.keyboard.press('Tab')
   ring = await focusRing(desk)
   await check('desktop: then Search, with a visible focus ring', /^Search/.test(ring?.text) && ring.visible, JSON.stringify(ring))
+  // Search is now a modal: Tab must remain inside it until dismissed.
   await desk.keyboard.press('Tab')
-  await desk.keyboard.press('Tab')
-  const cardFocus = await desk.evaluate(() => {
-    const a = document.activeElement
-    const card = a?.closest('article')
-    return { href: a?.getAttribute('href'), outline: card ? getComputedStyle(card).outlineStyle : null }
-  })
-  await check('desktop: then the first listing, whose whole card shows the focus', cardFocus.href?.startsWith('/property/') && cardFocus.outline === 'solid', JSON.stringify(cardFocus))
+  await check('desktop: search keeps keyboard focus inside its dialog', await desk.evaluate(() => !!document.activeElement?.closest('[role="dialog"]')))
   await desk.getByRole('form', { name: 'Search properties' }).getByRole('button', { name: /^More filters/ }).click()
   const dialog = await desk.getByRole('dialog', { name: 'More filters' }).boundingBox()
   await check('desktop: More filters opens as a centred dialog, not a full-screen sheet', dialog.width < 600 && dialog.height < 900 && Math.abs(dialog.x + dialog.width / 2 - 640) <= 2, JSON.stringify(dialog))
@@ -469,6 +460,7 @@ try {
   for (const [width, height] of [[768, 1024], [1280, 900]]) {
     const p = await open(width, height)
     await home(p)
+    await p.locator('.reference-search-trigger').click()
     await p.getByRole('form', { name: 'Search properties' }).getByRole('button', { name: /^More filters/ }).click()
     const fit = await p.getByRole('dialog', { name: 'More filters' }).evaluate((d) => {
       const body = d.querySelector('fieldset').parentElement.parentElement
