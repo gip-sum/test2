@@ -133,7 +133,7 @@ export function PhotoManager({ collection }: { collection: string }) {
       </li>)}
     </ol>
     {!loading && !items.length && !loadError && <p className="mt-6 text-body text-ink-500">No photos yet. Start with a clear view of the home, then add rooms and amenities.</p>}
-    <div className="mt-7 rounded-lg bg-brand-100 p-5 text-body-sm text-ink-700"><strong className="text-ink-900">Your photos stay private.</strong> Uploaded photos are stored in this collection. Keep this page link to return to them. Property details are not yet saved as a draft, and nothing is published.</div>
+    <div className="mt-7 rounded-lg bg-brand-100 p-5 text-body-sm text-ink-700"><strong className="text-ink-900">Your photos stay private.</strong> Uploaded photos are stored in this collection. Save as draft to keep this collection with your property answers, or return through My drafts if already saved. Nothing is published.</div>
     <noscript><p className="mt-4 text-danger-600">Enable JavaScript to prepare, upload and arrange photos.</p></noscript>
   </div>
 }

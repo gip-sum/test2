@@ -71,7 +71,7 @@ export function LocationForm({ entry, carried, values, errors, places, pricing =
       <input type="hidden" name="step" value="location-review" />
       <div className="border-t border-border-subtle pt-6">
         <Button type="submit" variant="supply" size="lg" className="w-full sm:w-auto">Review details and location</Button>
-        <p className="mt-3 text-body-sm text-ink-500">Nothing is saved or posted yet. Your answers stay in this page link.</p>
+        <p className="mt-3 text-body-sm text-ink-500">Nothing is published. Use Save as draft to enable autosave, or check your draft save status above.</p>
       </div>
     </form>
   </>

@@ -90,7 +90,7 @@ try {
   await check('a valid submission lands on a canonical review link', new URL(review).search === '?role=OWNER&intent=buy&type=APARTMENT&bhk=3&baths=2&unit=sqft&carpet=1240&super=1650&furnishing=SEMI_FURNISHED&floor=4&floors=12&status=READY&age=6')
   await check('review states every fact with its area basis', await page.getByText('3 BHK · 2 Baths').isVisible() && await page.getByText('1,240 sqft carpet').isVisible() && await page.getByText('1,650 sqft super built-up').isVisible() && await page.getByText('Floor 4 of 12 floors').isVisible() && await page.getByText('6 years old').isVisible())
   await check('an unstated basis says so', await page.getByText('Not stated').count() === 1)
-  await check('review says nothing was posted or saved', (await page.getByText(/no property has been posted/).count()) === 1)
+  await check('review makes publication state explicit', (await page.getByText(/Nothing is published\. Save as draft/).count()) === 1)
   await page.reload()
   await check('refresh keeps the review', page.url() === review && await page.getByRole('heading', { name: REVIEW }).isVisible())
 

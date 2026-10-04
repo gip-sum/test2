@@ -202,7 +202,7 @@ export function DetailsForm({ entry, values, errors, today, location = {}, prici
 
       <div className="flex flex-col gap-3 border-t border-border-subtle pt-6 sm:flex-row sm:items-center">
         <Button type="submit" variant="supply" size="lg" className="w-full sm:w-auto">Continue to review</Button>
-        <p className="text-body-sm text-ink-500">Nothing is saved or posted yet. Your answers stay in this page link.</p>
+        <p className="text-body-sm text-ink-500">Nothing is published. Use Save as draft to enable autosave, or check your draft save status above.</p>
       </div>
     </form>
   </>

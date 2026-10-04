@@ -216,8 +216,8 @@ metadata and storage objects; all test records were rolled back. The bucket is
 private, JPEG-only and limited to 2 MB. The app uses the existing publishable key
 and the seller's verified cookie token; no service-role secret is required.
 
-Application changes are not yet pushed or deployed. A real-account browser
-upload/delete check against production remains outstanding after deployment.
+Phase 15 was pushed and deployed at `10ae47b`; CI passed. A real-account browser
+upload/delete check against production remains outstanding.
 Local browser verification uses real image bytes with simulated Auth/Storage.
 
 `npm run media-db-check` applies the migration to an ephemeral PGlite database
@@ -226,3 +226,24 @@ exercises browser → API → image processing → simulated Auth/Storage, inclu
 failures and retries. It needs an app at port 3101 with
 `SUPABASE_URL=http://127.0.0.1:3300 SUPABASE_PUBLISHABLE_KEY=test-public-key`;
 the script owns the simulator on port 3300. Both checks are included in CI.
+
+## Phase 16: private drafts and autosave
+
+Choose **Save as draft** from posting to create a private account-owned draft.
+After creation, partial edits autosave, with explicit saving/error/retry states.
+**My drafts** at `/post/drafts` resumes saved answers and the linked private photo
+collection on another signed-in device. Unsent changes can be recovered from the
+same tab after refresh; only confirmed saves are available across devices.
+Revision checks reject conflicting edits from another tab/device.
+
+Drafts have their own identity, owner, photo collection, revision and timestamps.
+Partial answer fields are individual text columns, not published property facts.
+Fifty drafts per account; no public access or publishing. This phase does not add
+draft deletion or automatic retention cleanup.
+
+`npm run draft-db-check` verifies actual PostgreSQL policies and revisions.
+`npm run draft-check` uses the same local Auth simulator settings and Chromium
+setup as `photo-check`. Both are included in CI. Phase 16 is not deployed:
+local lint/typecheck/unit/database/build checks pass, but browser verification is
+blocked by this execution environment's socket policy. Its migration has not
+been applied live; browser and live database verification remain release gates.

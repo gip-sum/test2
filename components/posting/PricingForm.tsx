@@ -44,7 +44,7 @@ export function PricingForm({ entry, carried, location, values, errors }: {
       {field('negotiable', 'Is the price negotiable?', 'Buyers or tenants can see whether you are open to discussing the asking price.', [{ value: 'yes', label: 'Yes, negotiable' }, { value: 'no', label: 'No, fixed price' }])}
       <input type="hidden" name="step" value="pricing-review" />
       <div className="border-t border-border-subtle pt-6"><Button type="submit" variant="supply" size="lg" className="w-full sm:w-auto">Review property and pricing</Button>
-        <p className="mt-3 text-body-sm text-ink-500">Nothing is saved or posted yet. Your answers stay in this page link.</p></div>
+        <p className="mt-3 text-body-sm text-ink-500">Nothing is published. Use Save as draft to enable autosave, or check your draft save status above.</p></div>
     </form>
   </>
 }

@@ -1,3 +1,4 @@
+import { StartDraft } from '@/components/drafts/StartDraft'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { randomUUID } from 'node:crypto'
@@ -21,6 +22,7 @@ export default async function PhotosPage({ searchParams }: { searchParams: Promi
   const photoUrl = resolved.canonicalUrl.replace('/post?', '/post/photos?') + (collection ? `&collection=${collection}` : '')
   if (user && !collection) redirect(photoUrl + `&collection=${randomUUID()}`)
   return <PageShell>
+    <StartDraft />
     <section className="mx-auto max-w-5xl px-4 pb-28 pt-8 sm:px-8" aria-labelledby="photo-heading">
       <Link href={resolved.canonicalUrl} className="inline-flex min-h-11 items-center text-label text-brand-700">← Back to pricing review</Link>
       <PostingProgress view={resolved.view} photos />

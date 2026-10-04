@@ -100,7 +100,7 @@ export function DetailsReview({ entry, facts, carried, location = {}, pricing = 
     <div className="mt-3">{list(details, 'Property details')}</div>
     {!finalReview && <div className="mt-6 rounded-lg border border-brand-600/20 bg-brand-100/65 p-5 sm:p-6">
       <h2 className="font-display text-heading-3 text-ink-900">What happens next?</h2>
-      <p className="mt-2 text-body text-ink-700">Continue to add the property&apos;s location. Your answers are in this page link only: they have not been saved to an account and no property has been posted.</p>
+      <p className="mt-2 text-body text-ink-700">Continue to add the property&apos;s location. Nothing is published. Save as draft to keep your progress, or check the save status above when editing a draft.</p>
       <Link href={postingUrl(entry, { details: carried, location, pricing, step: 'location' })} className="mt-5 inline-flex min-h-12 items-center rounded-full bg-supply-600 px-5 text-label text-on-supply">Continue to location</Link>
       <Link href={postingUrl(entry, { details: carried, edit: true, location, pricing })} className="mt-5 inline-flex min-h-11 items-center rounded-full border border-brand-600 bg-surface-000 px-5 text-label text-brand-700 hover:bg-brand-100">Edit property details</Link>
     </div>}

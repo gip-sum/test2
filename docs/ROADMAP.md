@@ -33,7 +33,8 @@ but its eight-phase build order is superseded.
 | 12 | Property information form | Implemented; CI on `main` and deployment pending |
 | 13 | Property location form | Complete and deployed |
 | 14 | Property pricing form | Complete and deployed |
-| 15 | Property photo upload | Implemented and verified locally; private storage migration applied; app deployment and production browser verification pending |
+| 15 | Property photo upload | Deployed at 10ae47b; CI passed; real-account production upload verification pending |
+| 16 | Property draft and autosave | Implemented locally; browser verification and live migration pending |
 | E | 99acres interface redesign from client screenshots | Complete and deployed; green primary colour and header logo restored |
 | 40A | Home loan calculators | Implemented ahead of order at client request |
 
@@ -126,7 +127,7 @@ widening an existing table.
 | `user`, `organisation` | 6 | Anyone can sign in |
 | `buyer_profile` | 7 | A signed-in buyer saves contact details and preferences |
 | `media_assets` | 15 | Implemented: private owner-scoped upload metadata and storage; migration applied and live owner isolation verified |
-| `listing_draft` | 16 | A posting can be resumed |
+| `property_drafts` | 16 | Implemented locally: private drafts, revisioned autosave and resume; live migration pending |
 | `listing_status_history` | 18 | A listing can change state |
 | `listing_stat` | 20 | A seller is shown views and saves |
 | `moderation_action` | 22 | A human approves or rejects |

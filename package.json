@@ -27,7 +27,9 @@
     "pricing-check": "node scripts/pricing-check.mjs",
     "phase-e-check": "node scripts/phase-e-check.mjs",
     "photo-check": "node scripts/photo-check.mjs",
-    "media-db-check": "node scripts/media-db-check.mjs"
+    "media-db-check": "node scripts/media-db-check.mjs",
+    "draft-check": "node scripts/draft-check.mjs",
+    "draft-db-check": "node scripts/draft-db-check.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

@@ -25,6 +25,7 @@ jobs:
       - run: npm ci
       - run: npm run verify
       - run: npm run media-db-check
+      - run: npm run draft-db-check
       - run: npm run build
       - name: Install browser for layout checks
         run: |
@@ -63,6 +64,9 @@ jobs:
         run: |
           SUPABASE_URL=http://127.0.0.1:3300 SUPABASE_PUBLISHABLE_KEY=test-public-key AUTH_SITE_URL=http://localhost:3101 PORT=3101 npm run start > /tmp/gharbazaar-auth-server.log 2>&1 &
           curl --fail --silent --show-error --output /dev/null --retry 30 --retry-connrefused --retry-delay 2 http://127.0.0.1:3101/post
+      - run: npm run draft-check
+        env:
+          BASE_URL: http://localhost:3101
       - run: npm run photo-check
         env:
           BASE_URL: http://localhost:3101

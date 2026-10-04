@@ -30,7 +30,7 @@ export function LocationReview({ entry, carried, values, location, places, prici
     </dl>
     {!finalReview && <div className="mt-6 rounded-lg border border-brand-600/20 bg-brand-100/65 p-5 sm:p-6">
       <h2 className="font-display text-heading-3 text-ink-900">What happens next?</h2>
-      <p className="mt-2 text-body text-ink-700">Continue to add sale or rental pricing. Your answers are in this page link only: they have not been saved to an account and no property has been posted.</p>
+      <p className="mt-2 text-body text-ink-700">Continue to add sale or rental pricing. Nothing is published. Save as draft to keep your progress, or check the save status above when editing a draft.</p>
       <Link href={postingUrl(entry, { details: carried, location: values, pricing, step: 'pricing' })} className="mt-5 inline-flex min-h-12 items-center rounded-full bg-supply-600 px-5 text-label text-on-supply">Continue to pricing</Link>
       <Link href={postingUrl(entry, { details: carried, location: values, pricing, step: 'location' })} className="mt-4 inline-flex min-h-11 items-center text-label text-brand-700 underline underline-offset-4">Edit property location</Link>
     </div>}
