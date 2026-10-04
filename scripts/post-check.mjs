@@ -37,7 +37,7 @@ try {
   await check('mobile way out stays visible: the home logo and the menu',
     await page.locator('header').getByRole('link', { name: /home$/ }).isVisible() && await page.locator('header').getByRole('button', { name: 'Menu' }).isVisible())
   await check('current progress is announced', await page.locator('nav[aria-label="Posting progress"] [aria-current="step"]').count() === 1)
-  await check('progress shows seven stages', await page.locator('nav[aria-label="Posting progress"] li').count() === 7)
+  await check('progress shows eight stages', await page.locator('nav[aria-label="Posting progress"] li').count() === 8)
 
   await page.getByRole('link', { name: /I own the property/ }).click()
   await page.getByRole('heading', { name: 'What would you like to do?' }).waitFor()

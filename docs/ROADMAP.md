@@ -32,8 +32,9 @@ but its eight-phase build order is superseded.
 | 11 | Post property entry flow | **Complete** and deployed |
 | 12 | Property information form | Implemented; CI on `main` and deployment pending |
 | 13 | Property location form | Complete and deployed |
-| 14 | Property pricing form | Implemented; review pending |
-| E | 99acres interface redesign from client screenshots | Implemented and verified locally; publication pending |
+| 14 | Property pricing form | Complete and deployed |
+| 15 | Property photo upload | Implemented and verified locally; private storage migration applied; app deployment and production browser verification pending |
+| E | 99acres interface redesign from client screenshots | Complete and deployed; green primary colour and header logo restored |
 | 40A | Home loan calculators | Implemented ahead of order at client request |
 
 Phase 0 (planning) and the GharBazaar rebrand plus light-first conversion
@@ -124,7 +125,7 @@ widening an existing table.
 | `contact_reveal` | 10 | A phone number can be released |
 | `user`, `organisation` | 6 | Anyone can sign in |
 | `buyer_profile` | 7 | A signed-in buyer saves contact details and preferences |
-| `media_asset` | 15 | Photos are uploaded rather than fixtures |
+| `media_assets` | 15 | Implemented: private owner-scoped upload metadata and storage; migration applied and live owner isolation verified |
 | `listing_draft` | 16 | A posting can be resumed |
 | `listing_status_history` | 18 | A listing can change state |
 | `listing_stat` | 20 | A seller is shown views and saves |

@@ -198,3 +198,31 @@ unearned trust badge is the one thing here that could do real harm.
 - `docs/kolkata-marketplace-screen-spec.md` — screen-by-screen behaviour
 - `docs/design-system/` — tokens, brand book, component guidelines
 - `docs/99acres-reverse-engineering-and-marketplace-spec.md` — the research
+
+## Phase 15: private property photos
+
+Pricing review now links to `/post/photos`. Signed-in sellers can upload up to
+20 JPEG/PNG/WebP photos per collection, compress them, choose a cover, reorder,
+retry failed transfers and remove photos. Originals are limited to 20 MB;
+uploads and stored JPEGs are limited to 2 MB. Metadata is stripped. Collections
+and previews are private; the page link retains the collection ID across refresh.
+This does not save the property answers as a draft or publish a listing.
+
+Migration `supabase/migrations/20261003062359_phase_15_private_property_photos.sql`
+was applied to the existing Auth project after restoring it. It creates
+`media_assets`, the private `property-photos` bucket, owner policies, quotas and
+an atomic reorder function. Live PostgreSQL checks verified owner isolation for
+metadata and storage objects; all test records were rolled back. The bucket is
+private, JPEG-only and limited to 2 MB. The app uses the existing publishable key
+and the seller's verified cookie token; no service-role secret is required.
+
+Application changes are not yet pushed or deployed. A real-account browser
+upload/delete check against production remains outstanding after deployment.
+Local browser verification uses real image bytes with simulated Auth/Storage.
+
+`npm run media-db-check` applies the migration to an ephemeral PGlite database
+and exercises actual PostgreSQL row policies and quotas. `npm run photo-check`
+exercises browser → API → image processing → simulated Auth/Storage, including
+failures and retries. It needs an app at port 3101 with
+`SUPABASE_URL=http://127.0.0.1:3300 SUPABASE_PUBLISHABLE_KEY=test-public-key`;
+the script owns the simulator on port 3300. Both checks are included in CI.

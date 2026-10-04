@@ -31,7 +31,7 @@ const CITY_SLUGS = new Set(KOLKATA_LOCATIONS.filter((l) => l.type === 'CITY').ma
  * literal segments, so Next 404s it without help.
  */
 export const config = {
-  matcher: ['/buy/:path+', '/rent/:path+', '/property/:handle', '/account/:path*', '/dashboard/:path*', '/login', '/api/auth/state'],
+  matcher: ['/buy/:path+', '/rent/:path+', '/property/:handle', '/account/:path*', '/dashboard/:path*', '/login', '/api/auth/state', '/post/photos', '/api/posting/photos/:path*'],
 }
 
 /**
@@ -108,7 +108,7 @@ async function accountGuard(request: NextRequest) {
 export async function proxy(request: NextRequest) {
   const [, first, second] = request.nextUrl.pathname.split('/')
 
-  if (first === 'account' || first === 'dashboard' || first === 'login' || request.nextUrl.pathname === '/api/auth/state') return accountGuard(request)
+  if (first === 'account' || first === 'dashboard' || first === 'login' || request.nextUrl.pathname === '/api/auth/state' || request.nextUrl.pathname === '/post/photos' || request.nextUrl.pathname.startsWith('/api/posting/photos')) return accountGuard(request)
 
   if (first === 'property') {
     return handleProperty(request) ?? NextResponse.next()

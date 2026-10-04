@@ -23,13 +23,15 @@ Phase 9 — Implemented (real seller assignment and notification verification pe
 Phase 10 — Postponed (phone OTP is not required for now)
 Phase 11 — Complete and deployed
 Phase 12 — Implemented (property information form)
-Phase 13 — Implemented (property location form; review and deployment verification pending)
+Phase 13 — Complete and deployed (property location form)
+Phase 14 — Complete and deployed (property pricing)
+Phase 15 — Implemented and verified locally (private storage migration applied; app deployment and production browser verification pending)
 Phase 40A — Implemented (home loan calculators, built ahead of order)
 Phase A — Implemented (marketplace navigation and shell; docs/phases/PHASE-A-marketplace-shell.md)
 Phase B — Implemented (homepage discovery and content density; docs/phases/PHASE-B-homepage-discovery.md)
 Phase C — Implemented (marketplace menu and discovery hub; docs/phases/PHASE-C-discovery-hub.md)
 Phase D — Implemented (mobile navigation bar: Home, Search, Post, Videos, Activity, Menu; docs/phases/PHASE-D-mobile-navigation-bar.md)
-Phase E — Implemented and verified locally; publication pending (99acres interface redesign from seven client screenshots; docs/phases/PHASE-E-99acres-interface-redesign.md)
+Phase E — Complete and deployed; green primary colour and header logo restored (99acres interface redesign from seven client screenshots; docs/phases/PHASE-E-99acres-interface-redesign.md)
 
 Temporary brand:
 GharBazaar

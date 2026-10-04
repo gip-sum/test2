@@ -25,16 +25,20 @@
     "calculator-check": "node scripts/calculator-check.mjs",
     "shell-check": "node scripts/shell-check.mjs",
     "pricing-check": "node scripts/pricing-check.mjs",
-    "phase-e-check": "node scripts/phase-e-check.mjs"
+    "phase-e-check": "node scripts/phase-e-check.mjs",
+    "photo-check": "node scripts/photo-check.mjs",
+    "media-db-check": "node scripts/media-db-check.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",
     "next": "^16.3.5",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "resend": "^6.30.0"
+    "resend": "^6.30.0",
+    "sharp": "0.35.4"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26.6.2",
     "@types/react": "^19.3.0",
