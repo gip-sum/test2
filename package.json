@@ -29,7 +29,9 @@
     "photo-check": "node scripts/photo-check.mjs",
     "media-db-check": "node scripts/media-db-check.mjs",
     "draft-check": "node scripts/draft-check.mjs",
-    "draft-db-check": "node scripts/draft-db-check.mjs"
+    "draft-db-check": "node scripts/draft-db-check.mjs",
+    "preview-db-check": "node scripts/preview-db-check.mjs",
+    "preview-check": "node scripts/preview-check.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

@@ -19,6 +19,7 @@ export default async function DraftsPage() {
       <h2 className="break-words text-heading-3 font-display text-ink-900">{draftTitle(draft)}</h2>
       <p className="mt-2 text-body-sm text-ink-500">Saved {new Date(draft.updated_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })} IST</p>
       <Link href={`/post/drafts/${draft.id}`} className="mt-3 inline-flex min-h-11 items-center font-semibold text-brand-700">Resume draft →<span className="sr-only"> {draftTitle(draft)}</span></Link>
+      <Link href={`/post/drafts/${draft.id}/preview`} className="ml-4 inline-flex min-h-11 items-center font-semibold text-brand-700">Preview<span className="sr-only"> {draftTitle(draft)}</span></Link>
     </li>)}</ul>}
   </section></PageShell>
 }

@@ -97,6 +97,7 @@ export function DraftEditor({ initial, children }: { initial: Draft; children: R
     <div className="mx-auto max-w-[1320px] px-4 pt-5 lg:px-8">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-brand-100 p-4">
         <div><p className="font-semibold text-ink-900">Private draft</p><p role="status" className="text-body-sm text-ink-700">{status}</p></div>
+        <button type="button" disabled={moving || !!recovery || conflict} onClick={async () => { if (await flush()) router.push(`/post/drafts/${initial.id}/preview`) }} className="min-h-11 px-3 font-semibold text-brand-700">Preview property</button>
         <button type="button" disabled={moving || !!recovery || conflict} onClick={async () => { if (await flush()) router.push('/post/drafts') }} className="min-h-11 px-3 font-semibold text-brand-700">Save & exit</button>
       </div>
       <noscript><p>JavaScript is required to edit and autosave this draft. <Link href="/post/drafts">Return to drafts</Link>.</p></noscript>

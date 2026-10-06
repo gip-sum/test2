@@ -54,6 +54,8 @@ export type PropertyMedia = {
   alt: string
   /** Explicitly mark generated development imagery, never real seller media. */
   isSample?: boolean
+  /** Cookie-authenticated private preview; must bypass shared image optimization. */
+  authenticated?: boolean
 }
 
 export type PropertySummary = {

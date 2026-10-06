@@ -15,7 +15,7 @@ import { formatPostedAt } from '@/lib/format/date'
  * controlled phone access with OTP and an audit trail; a masked number
  * shipped now would have to be unshipped then.
  */
-export function SellerBlock({ property }: { property: PropertyDetail }) {
+export function SellerBlock({ property }: { property: Pick<PropertyDetail, 'sellerType' | 'sellerName'> & { postedAt?: string } }) {
   return (
     <div className="rounded-lg border border-border-subtle bg-surface-000 p-4">
       <div className="flex items-start gap-3">
@@ -29,13 +29,13 @@ export function SellerBlock({ property }: { property: PropertyDetail }) {
           </svg>
         </span>
         <div className="min-w-0">
-          <p className="text-body font-semibold text-ink-900">
+          <p className="break-words text-body font-semibold text-ink-900">
             {property.sellerName ?? SELLER_LABEL[property.sellerType]}
           </p>
           <p className="mt-0.5 text-body-sm text-ink-500">
             {/* formatPostedAt already reads "Posted last week" — prefixing
                 it with "Listed" produced "Listed posted last week". */}
-            {SELLER_LABEL[property.sellerType]} · {formatPostedAt(property.postedAt)}
+            {SELLER_LABEL[property.sellerType]} · {property.postedAt ? formatPostedAt(property.postedAt) : 'Not published'}
           </p>
         </div>
       </div>

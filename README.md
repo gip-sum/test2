@@ -243,7 +243,25 @@ draft deletion or automatic retention cleanup.
 
 `npm run draft-db-check` verifies actual PostgreSQL policies and revisions.
 `npm run draft-check` uses the same local Auth simulator settings and Chromium
-setup as `photo-check`. Both are included in CI. Phase 16 is not deployed:
-local lint/typecheck/unit/database/build checks pass, but browser verification is
-blocked by this execution environment's socket policy. Its migration has not
-been applied live; browser and live database verification remain release gates.
+setup as `photo-check`. Phase 16 was deployed at `7738dca`; full CI passed,
+including draft/photo browser checks. Its migration and live owner/revision
+checks passed. Real-account production draft verification remains outstanding.
+
+## Phase 17: private property preview
+
+**Preview property** in the draft editor saves pending answers before opening
+`/post/drafts/[id]/preview`. My drafts also links to the saved preview. The page
+uses the buyer gallery, price, details, area and seller components, with private
+photo delivery and explicit missing-information warnings. No email, phone,
+public sharing, contact action or publishing action is added.
+
+A valid preview with completed seller name and photos can be confirmed after an
+explicit acknowledgement. The review record is bound to the draft revision,
+photo records/order and display name; changes require another review. This is
+an accuracy acknowledgement, never a verification badge or permission to skip
+Phase 18 publishing validation. Phase 18 must revalidate stored image bytes.
+
+Migration `20261006151400_phase_17_draft_reviews.sql` is applied live; rollback-only live access and revision checks passed. `preview-db-check` checks PostgreSQL policies; `preview-check`
+uses the existing port 3101/3300 simulator setup and is included in CI. Local
+browser execution remains blocked by the environment's network-interface
+restriction. Release push and CI/deployment checks are in progress.

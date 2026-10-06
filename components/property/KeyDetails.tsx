@@ -19,15 +19,15 @@ import {
  * nothing and implies the seller answered when they did not; an absent row
  * is honest and shorter.
  */
-export function KeyDetails({ property }: { property: PropertyDetail }) {
+export function KeyDetails({ property }: { property: Partial<PropertyDetail> }) {
   const rows: Array<{ label: string; value: React.ReactNode }> = []
   const add = (label: string, value: React.ReactNode | undefined | null) => {
     if (value !== undefined && value !== null && value !== '') rows.push({ label, value })
   }
 
-  add('Property type', PROPERTY_TYPE_LABEL[property.propertyType])
-  add('Construction', CONSTRUCTION_LABEL[property.constructionStatus])
-  add('Furnishing', FURNISHING_LABEL[property.furnishing])
+  add('Property type', property.propertyType ? PROPERTY_TYPE_LABEL[property.propertyType] : undefined)
+  add('Construction', property.constructionStatus ? CONSTRUCTION_LABEL[property.constructionStatus] : undefined)
+  add('Furnishing', property.furnishing ? FURNISHING_LABEL[property.furnishing] : undefined)
   add('Bedrooms', property.propertyType === 'STUDIO' ? 'Studio' : property.bedrooms)
   add('Bathrooms', property.bathrooms)
   add('Balconies', property.balconies)
@@ -40,7 +40,7 @@ export function KeyDetails({ property }: { property: PropertyDetail }) {
   add('Facing', property.facing ? FACING_LABEL[property.facing] : undefined)
   add(
     'Carpet area',
-    <AreaDisplay value={property.carpetArea} unit={property.areaUnit} basis="carpet" />,
+    property.carpetArea != null ? <AreaDisplay value={property.carpetArea} unit={property.areaUnit} basis="carpet" /> : undefined,
   )
   add(
     'Built-up area',
@@ -62,8 +62,8 @@ export function KeyDetails({ property }: { property: PropertyDetail }) {
         : `${property.ageYears} ${property.ageYears === 1 ? 'year' : 'years'}`
       : undefined,
   )
-  add('Parking', property.parkingSpaces === 0 ? 'None' : `${property.parkingSpaces} covered`)
-  add('Ownership', OWNERSHIP_LABEL[property.ownershipType])
+  add('Parking', property.parkingSpaces == null ? undefined : property.parkingSpaces === 0 ? 'None' : `${property.parkingSpaces} covered`)
+  add('Ownership', property.ownershipType ? OWNERSHIP_LABEL[property.ownershipType] : undefined)
   add(
     'Available from',
     property.availableFrom

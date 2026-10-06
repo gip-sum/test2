@@ -188,7 +188,7 @@ function MediaPhoto({ media, failed, onError, sizes, priority, compact, contain,
   }
   return (
     <>
-      <Image src={media.url} alt={decorative ? '' : media.alt} fill sizes={sizes} priority={priority} loading={priority ? 'eager' : 'lazy'} onError={onError} className={contain ? 'object-contain' : 'object-cover'} />
+      <Image unoptimized={media.authenticated} src={media.url} alt={decorative ? '' : media.alt} fill sizes={sizes} priority={priority} loading={priority ? 'eager' : 'lazy'} onError={onError} className={contain ? 'object-contain' : 'object-cover'} />
       {media.isSample && <span className={cn('absolute left-2 top-2 rounded-sm bg-ink-900/85 font-semibold text-ink-inverse', compact ? 'px-1 py-0.5 text-[10px]' : 'px-2 py-1 text-caption')}>{compact ? 'Sample' : 'Sample image — not a real property'}</span>}
     </>
   )

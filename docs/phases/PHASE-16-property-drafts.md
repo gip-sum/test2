@@ -36,3 +36,11 @@ Migration and live owner-policy checks required before release. App deployment i
 
 ### Interaction contract
 Choose **Save as draft** once to create the private draft (sign-in required). From that point, partial changes autosave. Ordinary URL-only posting remains available and does not claim to be account-saved. The draft list is available from the posting toolbar; **Save & exit** waits for confirmed persistence.
+
+### Release verification — 2026-10-04
+Deployed at `7738dcad7ae5f4c11cdc37f1dcc3b3b746c52662`.
+GitHub Actions run `37178550353` passed every step, including draft-check,
+photo-check and existing browser gates. Live migration owner/revision checks
+passed with all test rows rolled back. Production posting page and guest API
+protection passed smoke checks. Real-account production draft flow remains
+unverified. This supersedes the earlier local-browser block for this release.

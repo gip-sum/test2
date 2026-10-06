@@ -12,7 +12,7 @@ import type { PropertyDetail } from '@/lib/property/types'
  * and stating which the rate uses is how a buyer compares two listings
  * honestly.
  */
-export function AreaBreakdown({ property }: { property: PropertyDetail }) {
+export function AreaBreakdown({ property }: { property: Pick<PropertyDetail, 'carpetArea' | 'builtUpArea' | 'superArea' | 'areaUnit' | 'price'> & Partial<Pick<PropertyDetail, 'intent'>> }) {
   const bases = [
     { basis: 'carpet' as const, label: 'Carpet', value: property.carpetArea },
     { basis: 'builtup' as const, label: 'Built-up', value: property.builtUpArea },
@@ -32,10 +32,10 @@ export function AreaBreakdown({ property }: { property: PropertyDetail }) {
         ))}
       </ul>
       <p className="mt-3 text-body-sm text-ink-700">
-        The rate shown on this page —{' '}
+        {property.intent === 'rent' ? 'The monthly rent rate' : 'The rate shown on this page'} —{' '}
         <span className="font-semibold tabular">
-          {formatPricePerArea(property.price, property.carpetArea)}
-        </span>{' '}
+          {formatPricePerArea(property.price, property.carpetArea * (property.areaUnit === 'sqm' ? 10.7639 : property.areaUnit === 'sqyd' ? 9 : 1))}
+        </span>{property.intent === 'rent' ? ' per month' : ''}{' '}
         — is calculated on <strong className="font-semibold">carpet area</strong>, the space you can
         actually use.
         {bases.length > 1
