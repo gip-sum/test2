@@ -44,6 +44,8 @@ try{
  await page.getByRole('heading',{name:/2 BHK/}).waitFor();check('sale price shown',await page.getByText('₹60 L',{exact:true}).count()===1)
  check('seller name shown',await page.getByText('Test Seller',{exact:true}).count()===1)
  check('private profile phone not exposed',!(await page.locator('article').innerText()).includes('9999999999'))
+ const imageResponse=await owner.request.get(BASE+`/api/posting/photos/${photoId}`);check('private image endpoint responds',imageResponse.status()===200);check('private image bytes decode',(await sharp(await imageResponse.body()).metadata()).width===640)
+ console.log('preview image diagnostics',await page.locator('section[aria-label="Property photos"]').evaluate(e=>({width:e.getBoundingClientRect().width,height:e.getBoundingClientRect().height,images:[...e.querySelectorAll('img')].map(i=>({src:i.getAttribute('src'),width:i.getBoundingClientRect().width,height:i.getBoundingClientRect().height,naturalWidth:i.naturalWidth})),text:e.textContent})))
  const img=page.locator(`img[src="/api/posting/photos/${photoId}"]`).first();await img.waitFor();await page.waitForFunction(id=>{const img=document.querySelector(`img[src="/api/posting/photos/${id}"]`);return img?.complete&&img.naturalWidth>0},photoId)
  check('private image loaded without optimizer',await img.evaluate(e=>e.naturalWidth===640))
  await page.getByRole('button',{name:'View full-screen gallery'}).click();await page.getByRole('dialog').waitFor();await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});check('gallery closes',await page.getByRole('dialog').count()===0)
