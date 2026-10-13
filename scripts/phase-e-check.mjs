@@ -8,6 +8,20 @@ mkdirSync(out, { recursive: true })
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
 let passed = 0
 function check(label, ok) { if (!ok) throw new Error(`FAIL ${label}`); passed++; console.log(`ok ${label}`) }
+async function waitFilterFocus(page) {
+  try { await page.waitForFunction(() => document.activeElement?.textContent?.includes('More filters')) }
+  catch (error) {
+      console.log('focus restoration diagnostics', await page.evaluate(() => ({
+        tag: document.activeElement?.tagName,
+        role: document.activeElement?.getAttribute('role'),
+        label: document.activeElement?.getAttribute('aria-label'),
+        text: document.activeElement?.textContent?.slice(0, 120),
+        inertAncestor: Boolean(document.activeElement?.closest('[inert]')),
+        dialogs: [...document.querySelectorAll('[role="dialog"]')].map(e => ({ title: document.getElementById(e.getAttribute('aria-labelledby'))?.textContent, state: e.getAttribute('data-state') })),
+      })))
+      throw error
+    }
+}
 try {
   for (const width of [360, 390, 412, 768, 1280]) {
     const page = await browser.newPage({ viewport: { width, height: 844 }, reducedMotion: 'reduce' })
@@ -34,18 +48,7 @@ try {
     })
     await page.keyboard.press('Escape')
     await page.getByRole('dialog', { name: 'More filters' }).waitFor({ state: 'hidden' })
-    try { await page.waitForFunction(() => document.activeElement?.textContent?.includes('More filters')) }
-    catch (error) {
-      console.log('focus restoration diagnostics', await page.evaluate(() => ({
-        tag: document.activeElement?.tagName,
-        role: document.activeElement?.getAttribute('role'),
-        label: document.activeElement?.getAttribute('aria-label'),
-        text: document.activeElement?.textContent?.slice(0, 120),
-        inertAncestor: Boolean(document.activeElement?.closest('[inert]')),
-        dialogs: [...document.querySelectorAll('[role="dialog"]')].map(e => ({ title: document.getElementById(e.getAttribute('aria-labelledby'))?.textContent, state: e.getAttribute('data-state') })),
-      })))
-      throw error
-    }
+    await waitFilterFocus(page)
     check(`${width}: closing child keeps background inert`, await page.locator('[data-app-root]').evaluate(e => e.inert))
     await page.keyboard.press('Escape')
     await page.waitForFunction(() => !document.querySelector('[data-app-root]').inert)
@@ -62,7 +65,7 @@ try {
       })
       await page.keyboard.press('Escape')
       await page.getByRole('dialog', { name: 'More filters' }).waitFor({ state: 'hidden' })
-      await page.waitForFunction(() => document.activeElement?.textContent?.includes('More filters'))
+      await waitFilterFocus(page)
       await page.keyboard.press('Escape')
       await page.waitForFunction(() => document.activeElement === document.querySelector('.reference-search-trigger'))
       check(`${width}: nested focus restored after reopen ${cycle + 1}`, await page.locator('.reference-search-trigger').evaluate(e => e === document.activeElement))

@@ -64,6 +64,17 @@ export function Sheet({
         <Dialog.Overlay className="fixed inset-0 z-50 bg-overlay" />
         <Dialog.Content
           aria-modal="true"
+          // Radix updates its document Escape listener in an effect. A fast
+          // keypress after opening a child can still reach the parent's old
+          // listener. Disable that default and close only the DOM scope that
+          // receives Escape; React portals also bubble through parent scopes.
+          onEscapeKeyDown={(event) => event.preventDefault()}
+          onKeyDown={(event) => {
+            if (event.key !== 'Escape' || !(event.target instanceof Node) || !event.currentTarget.contains(event.target)) return
+            event.preventDefault()
+            event.stopPropagation()
+            onOpenChange(false)
+          }}
           onOpenAutoFocus={() => {
             returnTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
             const root = appRoot()
