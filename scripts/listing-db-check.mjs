@@ -1,0 +1,68 @@
+import { PGlite } from '@electric-sql/pglite'
+import { readFileSync,readdirSync } from 'node:fs'
+const db=new PGlite(),owner='a9140f33-a429-46f3-9514-3e8f32f18189',foreign='b9140f33-a429-46f3-9514-3e8f32f18189',draft='c9140f33-a429-46f3-9514-3e8f32f18189',listing='d9140f33-a429-46f3-9514-3e8f32f18189',photo='e9140f33-a429-46f3-9514-3e8f32f18189',collection='f9140f33-a429-46f3-9514-3e8f32f18189'
+let count=0
+const check=(label,ok)=>{if(!ok)throw Error(label);count++;console.log('ok',label)}
+async function denied(label,sql){let failed=false;try{await db.exec(sql)}catch{failed=true}check(label,failed)}
+const request=n=>`19140f33-a429-46f3-9514-3e8f32f1818${n}`
+const snapshot={draft_revision:1,preview_hash:'a'.repeat(64),title:'2 BHK for sale',seller_name:'Test Seller',seller_type:'OWNER',intent:'buy',property_type:'APARTMENT',bedrooms:2,bathrooms:2,area_unit:'sqft',carpet_area:1000,furnishing:'UNFURNISHED',floor:3,total_floors:8,construction_status:'READY',age_years:4,city_name:'Kolkata',locality_name:'New Town',city_id:'kolkata',locality_id:'new-town',address:'Test building address',price:6000000,maintenance_status:'none',negotiable:true}
+const manifest=n=>[{id:photo,source_id:photo,object_path:`${request(n)}/${photo}.jpg`,position:0,width:640,height:480,bytes:1000,sha256:'a'.repeat(64)}]
+const submit=(n,version,who=owner)=>`select * from public.submit_property_listing('${who}','${draft}','${listing}','${request(n)}',${version},'${JSON.stringify(snapshot)}','${JSON.stringify(manifest(n))}')`
+try{
+ await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create schema storage;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema auth,storage to anon,authenticated,service_role;create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);create table storage.objects(id uuid default gen_random_uuid(),bucket_id text,name text);alter table storage.objects enable row level security;grant select,insert,update,delete on storage.objects to authenticated,service_role;grant select on storage.objects to anon;`)
+ for(const suffix of ['_phase_15_private_property_photos.sql','_phase_16_property_drafts.sql','_phase_17_draft_reviews.sql','_phase_18_property_lifecycle.sql'])await db.exec(readFileSync('supabase/migrations/'+readdirSync('supabase/migrations').find(f=>f.endsWith(suffix)),'utf8'))
+ await db.exec(`insert into auth.users values('${owner}'),('${foreign}');set role authenticated;set request.jwt.claim.sub='${owner}';insert into public.property_drafts(id,owner_id,collection_id,page_path)values('${draft}','${owner}','${collection}','/post');insert into public.media_assets(id,owner_id,collection_id,original_name,sha256,status,width,height,bytes)values('${photo}','${owner}','${collection}','private.jpg','${'a'.repeat(64)}','ready',640,480,1000);insert into public.property_draft_reviews(draft_id,owner_id,draft_revision,content_hash)values('${draft}','${owner}',1,'${'a'.repeat(64)}');reset role;set role service_role;`)
+ check('submission is private under review',(await db.query(submit(1,0))).rows[0].status==='UNDER_REVIEW')
+ check('lost response retry does not duplicate',(await db.query(submit(1,0))).rows[0].version===1)
+ await denied('stale status cannot overwrite',submit(2,0))
+ await denied('foreign owner rejected',submit(2,1,foreign))
+ await db.exec(`reset role;insert into storage.objects(bucket_id,name)values('listing-photos','${request(1)}/${photo}.jpg');set role anon;`)
+ check('under review listing hidden',(await db.query('select id from public.property_listings')).rows.length===0)
+ check('under review copies hidden',(await db.query('select * from storage.objects')).rows.length===0)
+ await denied('anonymous cannot read private listing identity','select owner_id from public.property_listings')
+ await denied('anonymous cannot submit',submit(2,1))
+ await db.exec(`reset role;set role authenticated;set request.jwt.claim.sub='${owner}'`)
+ check('owner sees submitted copies',(await db.query("select * from storage.objects where bucket_id='listing-photos'")).rows.length===1)
+ check('owner sees submission',(await db.query('select title from public.property_listing_submissions')).rows.length===1)
+ await denied('seller cannot approve',`select public.moderate_property_listing('${listing}',1,'ACTIVE')`)
+ await denied('seller cannot directly change status',`update public.property_listings set status='ACTIVE'`)
+ await db.exec(`set request.jwt.claim.sub='${foreign}'`)
+ check('foreign submitted copies hidden',(await db.query("select * from storage.objects where bucket_id='listing-photos'")).rows.length===0)
+ check('foreign history hidden',(await db.query('select * from public.property_listing_events')).rows.length===0)
+ check('foreign submission hidden',(await db.query('select * from public.property_listing_submissions')).rows.length===0)
+ await db.exec('reset role;set role service_role')
+ await denied('rejection reason required',`select public.moderate_property_listing('${listing}',1,'REJECTED')`)
+ check('trusted rejection recorded',(await db.query(`select * from public.moderate_property_listing('${listing}',1,'REJECTED','Please supply clear photos')`)).rows[0].status==='REJECTED')
+ check('retry cannot reset rejection',(await db.query(submit(1,0))).rows[0].status==='REJECTED')
+ check('re-submit enters review',(await db.query(submit(2,2))).rows[0].status==='UNDER_REVIEW')
+ check('approval activates',(await db.query(`select * from public.moderate_property_listing('${listing}',3,'ACTIVE')`)).rows[0].status==='ACTIVE')
+ await denied('old moderation decision rejected',`select public.moderate_property_listing('${listing}',3,'REJECTED','Old review decision')`)
+ await denied('submission facts immutable',`update public.property_listing_submissions set price=1`)
+ await denied('submitted photo immutable',`update public.property_listing_photos set object_path='other.jpg'`)
+ await denied('history immutable','delete from public.property_listing_events')
+ await db.exec(`reset role;insert into storage.objects(bucket_id,name)values('listing-photos','${request(2)}/${photo}.jpg');set role anon`)
+ check('active listing public',(await db.query('select id from public.property_listings')).rows.length===1)
+ check('only current submission public',(await db.query('select price from public.property_listing_submissions')).rows.length===1)
+ check('only current photo public',(await db.query('select * from storage.objects')).rows.length===1)
+ await db.exec(`reset role;set role authenticated;set request.jwt.claim.sub='${owner}';update public.property_drafts set carpet='1200' where id='${draft}';reset role;set role anon`)
+ check('draft edit leaves submitted facts unchanged',Number((await db.query('select carpet_area from public.property_listing_submissions')).rows[0].carpet_area)===1000)
+ await db.exec(`reset role;set role service_role;update public.property_listings set activated_at=now()-interval '2 days',expires_at=now()-interval '1 day'`)
+ await db.exec('reset role;set role anon')
+ check('expired listing hidden before maintenance',(await db.query('select id from public.property_listings')).rows.length===0)
+ check('expired objects hidden before maintenance',(await db.query('select * from storage.objects')).rows.length===0)
+ await db.exec('reset role;set role service_role')
+ check('expiry records transition',(await db.query('select public.expire_property_listings() as count')).rows[0].count===1)
+ await denied('stale review cannot renew',submit(3,5))
+ snapshot.draft_revision=2;snapshot.preview_hash='b'.repeat(64)
+ await db.exec(`reset role;set role authenticated;set request.jwt.claim.sub='${owner}';update public.property_draft_reviews set draft_revision=2,content_hash='${'b'.repeat(64)}';reset role;set role service_role`)
+ check('expired listing re-submitted',(await db.query(submit(3,5))).rows[0].status==='UNDER_REVIEW')
+ check('withdraw returns to draft',(await db.query(`select * from public.change_property_listing('${owner}','${listing}',6,'withdraw')`)).rows[0].status==='DRAFT')
+ check('withdraw retry is safe',(await db.query(`select * from public.change_property_listing('${owner}','${listing}',6,'withdraw')`)).rows[0].version===7)
+ await db.exec(submit(4,7))
+ check('delete is terminal',(await db.query(`select * from public.change_property_listing('${owner}','${listing}',8,'delete')`)).rows[0].status==='DELETED')
+ await denied('deleted cannot re-submit',submit(5,9))
+ await denied('deleted cannot withdraw',`select public.change_property_listing('${owner}','${listing}',9,'withdraw')`)
+ check('owner history identity recorded',(await db.query("select actor_id from public.property_listing_events where actor_type='OWNER' limit 1")).rows[0].actor_id===owner)
+ check('history retained',(await db.query('select * from public.property_listing_events')).rows.length>=10)
+ console.log(count+' lifecycle database checks passed')
+}catch(e){console.error(e.message,e.where??'');process.exitCode=1}finally{await db.close()}

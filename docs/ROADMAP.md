@@ -35,7 +35,8 @@ but its eight-phase build order is superseded.
 | 14 | Property pricing form | Complete and deployed |
 | 15 | Property photo upload | Deployed at 10ae47b; CI passed; real-account production upload verification pending |
 | 16 | Property draft and autosave | Deployed at 7738dca; full CI and live database checks passed |
-| 17 | Property preview | Implemented locally; browser and live migration verification pending |
+| 17 | Property preview | Deployed at d62a534; full CI and live migration checks passed |
+| 18 | Property publishing & lifecycle | Implemented locally; browser/live release checks and server credential setup pending |
 | E | 99acres interface redesign from client screenshots | Complete and deployed; green primary colour and header logo restored |
 | 40A | Home loan calculators | Implemented ahead of order at client request |
 
@@ -129,8 +130,11 @@ widening an existing table.
 | `buyer_profile` | 7 | A signed-in buyer saves contact details and preferences |
 | `media_assets` | 15 | Implemented: private owner-scoped upload metadata and storage; migration applied and live owner isolation verified |
 | `property_drafts` | 16 | Implemented locally: private drafts, revisioned autosave and resume; deployed with migration verified |
-| `property_draft_reviews` | 17 | Private confirmed draft revision/content signature; migration prepared |
-| `listing_status_history` | 18 | A listing can change state |
+| `property_draft_reviews` | 17 | Private confirmed draft revision/content signature; deployed and verified |
+| `property_listings` | 18 | Durable listing identity, owner, current submission, status and version |
+| `property_listing_submissions` | 18 | Immutable typed facts/pricing/location/seller snapshot |
+| `property_listing_photos` | 18 | Immutable copies referenced by submission |
+| `property_listing_events` | 18 | Status transition, date, owner/operator/system actor and rejection reason |
 | `listing_stat` | 20 | A seller is shown views and saves |
 | `moderation_action` | 22 | A human approves or rejects |
 | `report` | 24 | Content can be reported |
@@ -217,8 +221,9 @@ real listing, not from the first agent profile in Phase 41.
 
 Moderation, verification and every "why was this rejected" conversation
 need who-changed-what-when. History cannot be backfilled: a table added in
-Phase 27 knows nothing about what happened in Phase 18. State changes
-should be written as events from the moment a listing can change state.
+Phase 27 knows nothing about what happened in Phase 18. Phase 18 now writes state changes as events, retaining owner identity for owner
+actions and operator/system provenance for review and expiry. A trusted service
+review can carry an optional reviewer account ID; the admin UI is introduced later.
 
 **4. Contact reveals need an audit trail from day one.** *(Phase 10.)*
 

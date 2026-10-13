@@ -264,4 +264,38 @@ Phase 18 publishing validation. Phase 18 must revalidate stored image bytes.
 Migration `20261006151400_phase_17_draft_reviews.sql` is applied live; rollback-only live access and revision checks passed. `preview-db-check` checks PostgreSQL policies; `preview-check`
 uses the existing port 3101/3300 simulator setup and is included in CI. Local
 browser execution remains blocked by the environment's network-interface
-restriction. Release push and CI/deployment checks are in progress.
+restriction. Phase 17 was pushed and deployed at `d62a534`; full CI passed on 2026-10-07 (run 37643769146). Real-account production verification remains pending.
+
+
+### Phase 18 — publishing & lifecycle
+
+The reviewed working draft can be submitted from **Publishing status**. Submission
+pins typed property facts and separately validated photo copies. Owners can inspect
+the submitted copy independently of the working draft. It stays private
+as **Under review** until a trusted operator decision. Owners can withdraw, see
+rejection reasons, re-submit expired/rejected listings, or acknowledge permanent
+listing removal. Draft edits never change submitted facts/photos. Active listings
+have a shareable `/listing/:id` buyer page; existing demo search inventory has not
+been replaced. Seller dashboards (19) and admin review UI (21/22) remain separate.
+
+Publishing requires a server-only `SUPABASE_SERVICE_ROLE_KEY`. Missing configuration
+shows an unavailable state. Configure it directly in deployment settings; never
+paste it into chat, commit it, or add a `NEXT_PUBLIC_` prefix. Apply the Phase 18
+migration before releasing. Both lifecycle and hourly expiry migrations are now applied live. The publishing
+credential is awaiting secure dashboard sign-in (CAPTCHA). Public reads use publishable credentials and RLS, never the
+privileged key. Copies use the private `listing-photos` bucket with access gated
+on the current active, unexpired submission.
+
+Trusted operators use `moderate_property_listing(listing_id, expected_version,
+'ACTIVE' | 'REJECTED', rejection_reason, expires_at)` with the service role or SQL
+editor. Rejection needs a reason; approval defaults to 90 days (maximum 180).
+No browser user can invoke moderation. The hourly trusted job for `expire_property_listings()` is configured live. Public access expires at the timestamp even
+before the maintenance job records the Expired event. Keep unused private staged
+copies after an uncertain commit so retries cannot destroy committed media;
+operators can remove unreferenced copies after checking submission manifests.
+
+`npm run listing-db-check` exercises lifecycle transitions and actual PostgreSQL
+permissions. `npm run listing-check` uses the existing 3101/3300 simulator setup
+with `SUPABASE_SERVICE_ROLE_KEY=test-service-key` (test value only), and is added
+to CI. See [the phase specification](docs/phases/PHASE-18-property-publishing-lifecycle.md)
+for actual verification and release prerequisites.

@@ -34,3 +34,10 @@ Apply review migration and check live policies before deployment. Record tests a
 - Model/API/query/render tests cover incomplete data, rental zero deposit, unknown maintenance, area conversion, private gallery URLs, omitted unknown facts, stale draft/photo/name signatures, provider failure and confirmation persistence.
 - `preview-check` is added to CI with guest/foreign access, saving before preview, gallery, confirmation, changed-content rejection, missing-field warnings and four viewport sizes. It has not run successfully locally: starting the server fails at `uv_interface_addresses` because network-interface access is denied. The existing browser gates also remain pending for this commit. No visual screenshot review is claimed.
 - Migration `20261006151400_phase_17_draft_reviews.sql` was applied live on 2026-10-06. Rollback-only live owner, stale/current revision, foreign and anonymous checks passed. No new security-advisor findings. Application push/deployment checks are in progress; real-account production verification remains pending.
+
+
+### Release verification — 2026-10-07
+- Pushed to main and deployed to production at `d62a534`.
+- Full CI run 37643769146 passed, including preview-check and existing browser gates.
+- The first browser failure came from matching a relative image URL against an absolute browser-resolved URL. Diagnostics proved the JPEG loaded at 640px; the corrected check validates URL origin/path and decoded pixels.
+- Live rollback-only access/revision checks passed; no new database advisor warnings. Production runtime error scan was empty. A real-account publishing flow was not part of Phase 17.

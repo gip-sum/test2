@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 export function ConfirmPreview({id,signature,canConfirm,confirmed}:{id:string;signature:string;canConfirm:boolean;confirmed:boolean}) {
   const router=useRouter(),[accepted,setAccepted]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[done,setDone]=useState(confirmed)
@@ -19,7 +20,8 @@ export function ConfirmPreview({id,signature,canConfirm,confirmed}:{id:string;si
       <button type="button" disabled={!canConfirm||!accepted||busy} onClick={confirm} className="mt-4 min-h-11 w-full rounded-md bg-brand-600 px-4 font-semibold text-on-brand disabled:opacity-50">{busy?'Confirming…':'Confirm review'}</button>
       {!canConfirm&&<p className="mt-3 text-body-sm text-ink-700">Resolve the warnings before confirming.</p>}
     </>}
-    <p className="mt-3 text-caption text-ink-500">Changes to saved details, photos or your display name require a new review. Publishing is not available in this step.</p>
+    <p className="mt-3 text-caption text-ink-500">Changes to saved details, photos or your display name require a new review. Submit the confirmed preview from the publishing status page.</p>
+    <Link href={`/post/drafts/${id}/lifecycle`} className="mt-3 inline-flex min-h-11 items-center font-semibold text-brand-700 underline">Publishing status →</Link>
     {error&&<div role="alert" className="mt-3 text-body-sm text-danger-600"><p>{error}</p><button type="button" onClick={()=>window.location.reload()} className="min-h-11 underline">Reload preview</button></div>}
   </section>
 }
