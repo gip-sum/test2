@@ -1,7 +1,7 @@
 'use client'
 
 import * as Dialog from '@radix-ui/react-dialog'
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode, type RefObject } from 'react'
 import { cn } from '@/lib/cn'
 
 // Nested location/filter sheets must not release the parent sheet's inert lock.
@@ -23,6 +23,7 @@ export function Sheet({
   children,
   footer,
   size = 'default',
+  returnFocusRef,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -32,6 +33,8 @@ export function Sheet({
   footer?: ReactNode
   /** 'wide' for a sheet whose content is laid out in columns from 768px (the marketplace menu). */
   size?: 'default' | 'wide' | 'marketplace' | 'search'
+  /** Controlled openers can lose activeElement while nested focus effects mount. */
+  returnFocusRef?: RefObject<HTMLElement | null>
 }) {
   // Radix hands focus back only to its own Dialog.Trigger, and every sheet
   // here is opened by an ordinary button beside it (a controlled `open`).
@@ -71,7 +74,7 @@ export function Sheet({
             const root = appRoot()
             openSheets.delete(lock.current)
             if (root) root.inert = openSheets.size > 0
-            const target = returnTo.current
+            const target = returnFocusRef?.current ?? returnTo.current
             if (target?.isConnected) {
               event.preventDefault()
               target.focus()

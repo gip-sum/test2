@@ -34,6 +34,7 @@ export function HomeSearch() {
   const [open, setOpen] = useState(false)
   const [stuck, setStuck] = useState(false)
   const marker = useRef<HTMLSpanElement>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry) setStuck(!entry.isIntersecting && entry.boundingClientRect.top < 64)
@@ -42,8 +43,8 @@ export function HomeSearch() {
     return () => observer.disconnect()
   }, [])
   return <><span ref={marker} className="search-marker" aria-hidden="true" /><div className="reference-search" data-stuck={stuck || undefined}>
-    <button type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" className="reference-search-trigger"><SearchIcon className="size-6" /><span>Search a locality in Kolkata</span></button>
-    <Sheet open={open} onOpenChange={setOpen} size="search" title="Find your home" description="Choose buy or rent, a locality and your filters.">
+    <button ref={trigger} type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" className="reference-search-trigger"><SearchIcon className="size-6" /><span>Search a locality in Kolkata</span></button>
+    <Sheet returnFocusRef={trigger} open={open} onOpenChange={setOpen} size="search" title="Find your home" description="Choose buy or rent, a locality and your filters.">
       <div className="p-4"><SearchPanel /></div>
     </Sheet>
   </div></>

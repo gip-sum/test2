@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, type ReactNode } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { IntentTabs } from './IntentTabs'
 import { LocationField } from './LocationField'
@@ -38,6 +38,7 @@ export function SearchPanel() {
   const [bandIndex, setBandIndex] = useState<number | null>(null)
   const [bedrooms, setBedrooms] = useState<number[]>([])
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const filtersTrigger = useRef<HTMLButtonElement>(null)
 
   const bands = intent === 'buy' ? BUY_BUDGET_BANDS : RENT_BUDGET_BANDS
   const band = bandIndex === null ? undefined : bands[bandIndex]
@@ -102,6 +103,7 @@ export function SearchPanel() {
         <div className="flex gap-2.5">
           <button
             type="button"
+            ref={filtersTrigger}
             onClick={() => setFiltersOpen(true)}
             aria-haspopup="dialog"
             className={cn(
@@ -151,6 +153,7 @@ export function SearchPanel() {
       )}
 
       <Sheet
+        returnFocusRef={filtersTrigger}
         open={filtersOpen}
         onOpenChange={setFiltersOpen}
         title="More filters"
