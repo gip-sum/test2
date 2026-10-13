@@ -17,7 +17,7 @@ export const BOTTOM_NAV_ITEMS: Item[] = [
     label: 'Activity',
     Icon: HeartIcon,
     // Everything the hub leads to is "in" Activity.
-    current: (p) => ['/account/activity', '/account/saved', '/account/enquiries', '/dashboard/enquiries'].some((prefix) => under(p, prefix)),
+    current: (p) => ['/account/activity', '/account/saved', '/account/enquiries', '/dashboard'].some((prefix) => under(p, prefix)),
   },
 ]
 

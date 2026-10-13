@@ -37,6 +37,7 @@ but its eight-phase build order is superseded.
 | 16 | Property draft and autosave | Deployed at 7738dca; full CI and live database checks passed |
 | 17 | Property preview | Deployed at d62a534; full CI and live migration checks passed |
 | 18 | Property publishing & lifecycle | Implemented locally; browser/live release checks and server credential setup pending |
+| 19 | Seller dashboard | Implemented; enquiry migration not yet applied live; real-account verification pending |
 | E | 99acres interface redesign from client screenshots | Complete and deployed; green primary colour and header logo restored |
 | 40A | Home loan calculators | Implemented ahead of order at client request |
 
@@ -96,7 +97,6 @@ can use, and a row they cannot use would be the one false thing in it.
 | Property comparison | No comparison page or shortlist-to-compare flow | 40 |
 | Buying, renting and locality guides | No editorial content; the discovery hub's Resources group is absent until there is | 54 |
 | FAQs | No FAQ content | 53 |
-| My properties (a seller's own listings) | No seller dashboard; the hub offers the enquiries on an advertiser's listings, which exist | 19 |
 
 ## Activity sections waiting on their phase
 

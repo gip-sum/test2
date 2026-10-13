@@ -8,7 +8,7 @@ let passed = 0
 function check(label, ok, detail = '') { if (!ok) throw new Error(`FAIL ${label}: ${detail}`); passed++; console.log(`ok ${label}`) }
 const links = new Set()
 const errors = []
-const FUTURE = /\b(commercial|plots?|land|projects?|agents?|builders?(?! floors?)|insights?|price trends?|compare|comparison|guides?|faqs?|my properties)\b/i
+const FUTURE = /\b(commercial|plots?|land|projects?|agents?|builders?(?! floors?)|insights?|price trends?|compare|comparison|guides?|faqs?)\b/i
 async function open(width, height, path) {
   const context = await browser.newContext({ viewport: { width, height } })
   const page = await context.newPage()
@@ -216,7 +216,7 @@ try {
   }
 
   const page = await browser.newPage()
-  for (const path of ['/account', '/account/saved', '/account/enquiries', '/dashboard/enquiries', '/account/activity/private']) {
+  for (const path of ['/account', '/account/saved', '/account/enquiries', '/dashboard', '/dashboard/enquiries', '/account/activity/private']) {
     await page.goto(base + path)
     const u = new URL(page.url())
     check(`${path} stays protected`, u.pathname === '/login' && u.searchParams.get('next') === path)

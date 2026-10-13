@@ -28,6 +28,7 @@ jobs:
       - run: npm run draft-db-check
       - run: npm run preview-db-check
       - run: npm run listing-db-check
+      - run: npm run enquiry-db-check
       - run: npm run build
       - name: Install browser for layout checks
         run: |
@@ -43,6 +44,10 @@ jobs:
           SUPABASE_URL=http://127.0.0.1:3300 SUPABASE_PUBLISHABLE_KEY=test-public-key AUTH_SITE_URL=http://localhost:3101 SUPABASE_SERVICE_ROLE_KEY=test-service-key PORT=3101 npm run start > /tmp/gharbazaar-auth-server.log 2>&1 &
           curl --fail --silent --show-error --output /dev/null --retry 30 --retry-connrefused --retry-delay 2 http://127.0.0.1:3101/post
       - run: npm run listing-check
+        env:
+          BASE_URL: http://localhost:3101
+      # Phase 19: the seller dashboard and enquiries on real listings.
+      - run: npm run dashboard-check
         env:
           BASE_URL: http://localhost:3101
       - run: npm run preview-check

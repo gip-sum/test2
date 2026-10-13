@@ -33,7 +33,9 @@
     "preview-db-check": "node scripts/preview-db-check.mjs",
     "preview-check": "node scripts/preview-check.mjs",
     "listing-db-check": "node scripts/listing-db-check.mjs",
-    "listing-check": "node scripts/listing-check.mjs"
+    "listing-check": "node scripts/listing-check.mjs",
+    "enquiry-db-check": "node scripts/enquiry-db-check.mjs",
+    "dashboard-check": "node scripts/dashboard-check.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

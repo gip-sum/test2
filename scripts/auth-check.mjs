@@ -144,7 +144,7 @@ try {
   check('signed-in Activity opens the activity hub, marked current in the bar', await page.getByRole('heading', { level: 1, name: 'Your activity' }).isVisible() &&
     await bar.getByRole('link', { name: 'Activity' }).getAttribute('aria-current') === 'page')
   const hubLinks = await page.locator('main a').evaluateAll((els) => els.map((e) => ({ href: e.getAttribute('href'), h: e.getBoundingClientRect().height, text: e.textContent })))
-  check('the hub reaches saved homes, your enquiries and enquiries on your listings, each 44px or more', JSON.stringify(hubLinks.map((l) => l.href)) === JSON.stringify(['/account/saved', '/account/enquiries', '/dashboard/enquiries']) &&
+  check('the hub reaches saved homes, your enquiries, your properties and enquiries on your listings, each 44px or more', JSON.stringify(hubLinks.map((l) => l.href)) === JSON.stringify(['/account/saved', '/account/enquiries', '/dashboard', '/dashboard/enquiries']) &&
     hubLinks.every((l) => l.h >= 44), JSON.stringify(hubLinks))
   check('the hub never shows a guessed count: a figure appears only where its query answered', hubLinks.every((l) => !/\b0\b/.test(l.text)))
   for (const [name, path] of [['Saved homes', '/account/saved'], ['Your enquiries', '/account/enquiries']]) {

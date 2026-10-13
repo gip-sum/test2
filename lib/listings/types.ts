@@ -12,6 +12,8 @@ export function canWithdraw(status:ListingStatus){return ['UNDER_REVIEW','ACTIVE
 export type Submission = {id:string;listing_id:string;draft_revision:number;preview_hash:string;title:string;seller_name:string;seller_type:'OWNER'|'AGENT'|'BUILDER';intent:'buy'|'rent';property_type:NonNullable<PreviewModel['entry']['type']>;bedrooms:number|null;bathrooms:number;area_unit:'sqft'|'sqm'|'sqyd';carpet_area:number;built_up_area:number|null;super_area:number|null;furnishing:NonNullable<PreviewModel['facts']>['furnishing'];floor:number|null;total_floors:number;construction_status:'READY'|'UNDER_CONSTRUCTION';age_years:number|null;possession_by:string|null;available_from:string|null;city_name:string;locality_name:string;city_id:string;locality_id:string;sub_locality_id:string|null;society_name:string|null;address:string;latitude:number|null;longitude:number|null;price:number;deposit:number|null;maintenance_status:'none'|'unknown'|'included'|'separate';maintenance_monthly:number|null;negotiable:boolean;created_at:string}
 export type ListingPhoto = {id:string;submission_id:string;source_id:string;object_path:string;position:number;width:number;height:number;bytes:number;sha256:string}
 export type PublicSubmission = Omit<Submission,'draft_revision'|'preview_hash'>
+/** What the seller dashboard shows of a submitted copy. */
+export type SubmissionSummary = Pick<PublicSubmission,'id'|'listing_id'|'title'|'intent'|'price'|'city_name'|'locality_name'>
 export type PublicListingPhoto = Pick<ListingPhoto,'id'|'submission_id'|'object_path'|'position'|'width'|'height'|'bytes'>
 export function submissionOf(model:PreviewModel,revision:number,signature:string) {
  const {facts:f,pricing:p,location:l}=model

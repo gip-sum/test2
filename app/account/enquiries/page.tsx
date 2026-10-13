@@ -21,10 +21,13 @@ export default async function MyEnquiries() {
     {!result.ok ? <p role="alert" className="glass-panel mt-7 rounded-lg p-6">Your enquiries are temporarily unavailable. Please refresh this page.</p> :
       result.rows.length === 0 ? <div className="glass-panel mt-7 rounded-lg p-6"><h2 className="font-display text-heading-3">No enquiries yet</h2><p className="mt-2">Explore homes and contact a seller when you find one you like.</p><Link href="/buy/kolkata" className="mt-4 inline-flex min-h-11 items-center text-brand-700 underline">Browse properties</Link></div> :
         <div className="mt-7 grid gap-4 sm:grid-cols-2">{result.rows.map((lead) => {
-          const property = getPropertySummary(lead.listing_public_id)
+          const property = lead.listing_public_id ? getPropertySummary(lead.listing_public_id) : null
+          // A real listing links to its public page; if it has since left
+          // public view, that page says so honestly.
+          const href = property ? propertyPath(property.slug, property.publicId) : lead.listing_id ? `/listing/${lead.listing_id}` : null
           const history = events?.filter((event) => event.enquiry_id === lead.id)
           return <article key={lead.id} className="glass-card rounded-lg border border-border-subtle p-5 shadow-e1">
-            <h2 className="font-display text-heading-3 text-ink-900">{property ? <Link className="text-brand-700 underline underline-offset-4" href={propertyPath(property.slug, property.publicId)}>{property.society ?? property.title}</Link> : lead.listing_title}</h2>
+            <h2 className="font-display text-heading-3 text-ink-900">{href ? <Link className="text-brand-700 underline underline-offset-4" href={href}>{property ? property.society ?? property.title : lead.listing_title}</Link> : lead.listing_title}</h2>
             <p className="mt-2 text-body-sm text-ink-700">Sent {new Intl.DateTimeFormat('en-IN', { dateStyle: 'medium', timeZone: 'Asia/Kolkata' }).format(new Date(lead.created_at))} · Status: {lead.status}</p>
             {lead.duplicate_of && <p className="mt-2 text-body-sm text-ink-700">Follow-up enquiry</p>}
             {lead.message && <p className="mt-3 whitespace-pre-wrap text-body-sm text-ink-900">{lead.message}</p>}

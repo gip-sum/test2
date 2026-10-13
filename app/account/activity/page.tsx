@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { GuestActivity } from '@/components/home/GuestActivity'
 import { PageShell } from '@/components/layout/PageShell'
-import { ChevronRightIcon, HeartIcon, MailIcon } from '@/components/ui/icons'
+import { ChevronRightIcon, HeartIcon, HomeIcon, MailIcon } from '@/components/ui/icons'
 import { getVerifiedUser } from '@/lib/auth/session'
 import { countUnreadNotifications, listLeads } from '@/lib/enquiry/queries'
 import { listSaved } from '@/lib/saved/queries'
@@ -54,6 +54,9 @@ export default async function ActivityPage() {
     },
   ]
   const listing: Row[] = [
+    // No count: the dashboard's figures need its full set of reads, and a
+    // cheaper partial count here could disagree with the page it opens.
+    { href: '/dashboard', title: 'My properties', body: 'Drafts and listings you have posted, with their status.', Icon: HomeIcon, supply: true, status: null },
     {
       href: '/dashboard/enquiries', title: 'Enquiries on your listings', body: 'Buyers and tenants who got in touch about a home you listed.', Icon: MailIcon, supply: true,
       // Unread only: the inbox's own "new" figure. Nothing unread says nothing.

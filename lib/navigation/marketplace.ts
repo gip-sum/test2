@@ -223,9 +223,12 @@ export function getDiscoveryHub(city: string = LAUNCH_CITY.slug, options?: Optio
 
     sell: {
       post: { id: 'post', label: 'Post a property', href: '/post', hint: 'List a home for sale or to rent' },
-      // What an advertiser has today. The seller dashboard with their own
-      // listings ("My properties") is Phase 19.
-      more: [{ id: 'seller-enquiries', label: 'Enquiries on your listings', href: '/dashboard/enquiries', hint: 'Buyers and tenants who got in touch' }],
+      // What an advertiser has: their own properties (Phase 19) and the
+      // enquiries on them.
+      more: [
+        { id: 'my-properties', label: 'My properties', href: '/dashboard', hint: 'Your drafts and listings, with their status' },
+        { id: 'seller-enquiries', label: 'Enquiries on your listings', href: '/dashboard/enquiries', hint: 'Buyers and tenants who got in touch' },
+      ],
     },
   }
 }

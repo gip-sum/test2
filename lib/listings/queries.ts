@@ -7,7 +7,8 @@ import { DraftError } from '@/lib/drafts/queries'
 import { getPreview } from '@/lib/preview/queries'
 import { listPhotos, readPhoto } from '@/lib/media/queries'
 import { validateStoredPhoto } from './image'
-import { canSubmit, effectiveStatus, publishedModel, submissionOf, type Listing, type ListingEvent, type ListingPhoto, type PublicSubmission, type PublicListingPhoto } from './types'
+import { UUID } from '@/lib/media/types'
+import { canSubmit, effectiveStatus, publishedModel, submissionOf, type Listing, type ListingEvent, type ListingPhoto, type PublicSubmission, type PublicListingPhoto, type SubmissionSummary } from './types'
 export function publishingConfigured(){return Boolean(authConfig()&&process.env.SUPABASE_SERVICE_ROLE_KEY)}
 async function request(path:string,mode:'owner'|'public'|'service',method='GET',body?:BodyInit,contentType='application/json') {
  const config=authConfig(),token=mode==='service'?process.env.SUPABASE_SERVICE_ROLE_KEY:mode==='owner'?(await cookies()).get(ACCESS_COOKIE)?.value:config?.key
@@ -120,4 +121,27 @@ export async function readSubmittedPhoto(user:AuthUser,id:string,photoId:string)
  const r=await request(`/storage/v1/object/authenticated/listing-photos/${photo.object_path}`,'owner')
  if(!r.ok)throw new DraftError('Photo could not be loaded.',r.status===404||r.status===403?404:503)
  return r
+}
+
+// ── Seller dashboard reads (Phase 19) ────────────────────────────────────
+// Owner session only: row policies scope every read, and the service key is
+// never used to discover what a seller owns.
+const ids=(values:readonly string[])=>{const valid=values.filter(v=>UUID.test(v));return valid.length?`(${valid.join(',')})`:null}
+export async function listOwnerListings(user:AuthUser){
+ // One listing per draft and at most 50 drafts per account, so 100 is never reached.
+ return rows<Listing>(`property_listings?${ownerFilter(user)}&order=updated_at.desc&limit=100`)
+}
+/** Latest-first DRAFT transitions, from which "Withdrawn" is derived. */
+export async function listDraftEvents(user:AuthUser,listingIds:readonly string[]){
+ const list=ids(listingIds);if(!list)return []
+ return rows<Pick<ListingEvent,'listing_id'|'from_status'|'to_status'|'created_at'>>(`property_listing_events?listing_id=in.${list}&to_status=eq.DRAFT&select=listing_id,from_status,to_status,created_at&order=id.desc&limit=500`)
+}
+export async function listSubmissionSummaries(user:AuthUser,submissionIds:readonly string[]){
+ const list=ids(submissionIds);if(!list)return []
+ return rows<SubmissionSummary>(`property_listing_submissions?id=in.${list}&select=id,listing_id,title,intent,price,city_name,locality_name`)
+}
+/** Whether the signed-in user owns this listing; false on any failure, so the buyer form is the default. */
+export async function ownsListing(user:AuthUser,id:string){
+ if(!UUID.test(id))return false
+ try{return (await rows<Pick<Listing,'id'>>(`property_listings?${ownerFilter(user)}&id=eq.${id}&select=id`)).length===1}catch{return false}
 }

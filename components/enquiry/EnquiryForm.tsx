@@ -27,13 +27,17 @@ const EMPTY_ENQUIRY_STATE: EnquiryFormState = { status: 'idle' }
  */
 export function EnquiryForm({
   listingPublicId,
+  listingId,
   sellerLabel,
   compact,
 }: {
-  listingPublicId: string
   sellerLabel: string
   compact?: boolean
-}) {
+} & (
+  // A demo fixture (Phase 4) or a real Phase 18 listing; never both.
+  | { listingPublicId: string; listingId?: undefined }
+  | { listingId: string; listingPublicId?: undefined }
+)) {
   const [state, formAction, pending] = useActionState<EnquiryFormState, FormData>(
     submitEnquiry,
     EMPTY_ENQUIRY_STATE,
@@ -57,7 +61,9 @@ export function EnquiryForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-3">
-      <input type="hidden" name="listingPublicId" value={listingPublicId} />
+      {listingId
+        ? <input type="hidden" name="listingId" value={listingId} />
+        : <input type="hidden" name="listingPublicId" value={listingPublicId} />}
 
       {Object.keys(errors).length > 0 && (
         <div

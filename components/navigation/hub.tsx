@@ -51,6 +51,7 @@ const ICON: Record<string, Icon> = {
   enquiries: MailIcon,
   account: UserIcon,
   post: PlusIcon,
+  'my-properties': HomeIcon,
   'seller-enquiries': MailIcon,
 }
 

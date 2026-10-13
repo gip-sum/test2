@@ -9,7 +9,7 @@ describe('bottomBarShown', () => {
   })
 
   it('hides it in focused flows and where the property page has its own contact bar', () => {
-    for (const path of ['/post', '/login', '/admin', '/property/2-bhk-flat-p1']) expect(bottomBarShown(path), path).toBe(false)
+    for (const path of ['/post', '/login', '/admin', '/property/2-bhk-flat-p1', '/listing/d9140f33-a429-46f3-9514-3e8f32f18189']) expect(bottomBarShown(path), path).toBe(false)
   })
 
   it('matches whole segments, not any path that merely starts with the same letters', () => {

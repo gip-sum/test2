@@ -40,6 +40,7 @@ export default async function AccountPage() {
           <p className="mt-2 text-body-sm text-ink-700">Review enquiries sent while signed in, or open a seller inbox for assigned listings.</p>
           <Link href="/account/enquiries" className="mt-3 inline-flex min-h-11 items-center text-label text-brand-700 underline">My enquiries</Link>
           <Link href="/dashboard/enquiries" className="ml-4 inline-flex min-h-11 items-center text-label text-brand-700 underline">Seller inbox</Link>
+          <Link href="/dashboard" className="ml-4 inline-flex min-h-11 items-center text-label text-brand-700 underline">My properties</Link>
         </section>
         <section className="glass-card rounded-lg border border-border-subtle p-5 shadow-e1">
           <h2 className="font-display text-heading-3 text-ink-900">Your shortlist</h2>

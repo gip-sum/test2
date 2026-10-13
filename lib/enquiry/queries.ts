@@ -5,10 +5,13 @@ import { ACCESS_COOKIE } from '@/lib/auth/session'
 import { getPropertyDetail } from '@/lib/property/queries'
 import { validateEnquiry } from './validate'
 import type { EnquiryInput, EnquiryFieldError } from './types'
+import { UUID } from '@/lib/media/types'
 
 export type Lead = {
   id: string
-  listing_public_id: string
+  /** Exactly one of these is set: a demo fixture's public id, or a Phase 18 listing. */
+  listing_public_id: string | null
+  listing_id: string | null
   listing_title: string
   buyer_name: string
   buyer_phone: string
@@ -61,18 +64,86 @@ export async function recordLead(input: EnquiryInput, user: AuthUser | null): Pr
 function validLead(row: unknown): row is Lead {
   if (!row || typeof row !== 'object') return false
   const lead = row as Partial<Lead>
-  return typeof lead.id === 'string' && typeof lead.listing_public_id === 'string' &&
+  return typeof lead.id === 'string' &&
+    (typeof lead.listing_public_id === 'string' || typeof lead.listing_id === 'string') &&
     typeof lead.listing_title === 'string' && typeof lead.buyer_name === 'string' &&
     typeof lead.buyer_phone === 'string' && ['new', 'contacted', 'closed'].includes(lead.status ?? '') &&
     typeof lead.created_at === 'string'
 }
 
-export async function listLeads(user: AuthUser, view: 'buyer' | 'seller'): Promise<LeadList> {
+const LEAD_COLUMNS = 'id,listing_public_id,listing_title,buyer_name,buyer_phone,message,duplicate_of,status,created_at'
+
+export async function listLeads(user: AuthUser, view: 'buyer' | 'seller', options: { listingId?: string } = {}): Promise<LeadList> {
   const field = view === 'buyer' ? 'buyer_id' : 'seller_id'
-  const response = await request(`enquiries?select=id,listing_public_id,listing_title,buyer_name,buyer_phone,message,duplicate_of,status,created_at&${field}=eq.${encodeURIComponent(user.id)}&order=created_at.desc&limit=100`, {}, user)
+  if (options.listingId !== undefined && !UUID.test(options.listingId)) return { ok: false }
+  const scope = `${field}=eq.${encodeURIComponent(user.id)}${options.listingId ? `&listing_id=eq.${options.listingId}` : ''}&order=created_at.desc&limit=100`
+  let response = await request(`enquiries?select=${LEAD_COLUMNS},listing_id&${scope}`, {}, user)
+  // ROLLOUT BRIDGE (Phase 19). Until the Phase 19 migration is applied live,
+  // `listing_id` does not exist and PostgREST answers 400. The unfiltered
+  // inbox then falls back to the Phase 9 columns so it keeps working; a
+  // listing filter cannot be honoured without the column and reports
+  // unavailable. Remove once the migration is confirmed live
+  // (docs/phases/PHASE-19-seller-dashboard.md §9).
+  if (response?.status === 400 && !options.listingId) response = await request(`enquiries?select=${LEAD_COLUMNS}&${scope}`, {}, user)
   if (!response?.ok) return { ok: false }
-  try { const rows: unknown = await response.json(); return Array.isArray(rows) && rows.every(validLead) ? { ok: true, rows } : { ok: false } }
-  catch { return { ok: false } }
+  try {
+    const rows: unknown = await response.json()
+    if (!Array.isArray(rows)) return { ok: false }
+    const leads: unknown[] = rows.map((row: unknown) => (row && typeof row === 'object' ? { listing_id: null, ...row } : row))
+    return leads.every(validLead) ? { ok: true, rows: leads } : { ok: false }
+  } catch { return { ok: false } }
+}
+
+export type ListingEnquiryCount = { listing_id: string; total: number; new_count: number; latest_at: string }
+
+/** Per-listing totals for the signed-in seller; null when they could not be read (never zero by default). */
+export async function listingEnquiryCounts(user: AuthUser): Promise<ListingEnquiryCount[] | null> {
+  const response = await request('rpc/seller_listing_enquiry_counts', { method: 'POST', body: {} }, user)
+  if (!response?.ok) return null
+  try {
+    const rows: unknown = await response.json()
+    return Array.isArray(rows) && rows.every((r) => typeof r?.listing_id === 'string' && Number.isSafeInteger(r.total) && Number.isSafeInteger(r.new_count)) ? rows as ListingEnquiryCount[] : null
+  } catch { return null }
+}
+
+/**
+ * An enquiry about a real (Phase 18) listing.
+ *
+ * The client names only the listing and the buyer's own details. Whether
+ * the listing is public, who the seller is and what it is called are all
+ * decided by `submit_listing_enquiry` inside the database transaction, so
+ * nothing here can route a lead to the wrong person or reach a listing that
+ * is not live.
+ */
+export async function recordListingLead(input: { listingId: string; name: string; phone: string; message?: string }, user: AuthUser | null): Promise<
+  { ok: true; duplicate: boolean; sellerNotified: boolean } |
+  { ok: false; errors: Partial<Record<EnquiryFieldError, string>> }
+> {
+  const { errors, name, phone, message } = validateEnquiry({ ...input, listingPublicId: input.listingId })
+  if (!UUID.test(input.listingId)) errors.listing = 'This property could not be identified.'
+  if (Object.keys(errors).length) return { ok: false, errors }
+  const response = await request('rpc/submit_listing_enquiry', {
+    method: 'POST', body: { p_listing: input.listingId, p_name: name, p_phone: phone, p_message: message ?? null },
+  }, user)
+  if (!response?.ok) return { ok: false, errors: { listing: listingFailure(response?.status) } }
+  try {
+    const rows: unknown = await response.json()
+    if (!Array.isArray(rows) || rows.length !== 1 || typeof rows[0]?.repeated !== 'boolean' || typeof rows[0]?.seller_notified !== 'boolean') throw new Error('Invalid response')
+    return { ok: true, duplicate: rows[0].repeated, sellerNotified: rows[0].seller_notified }
+  } catch { return { ok: false, errors: { listing: 'Your enquiry could not be confirmed. Please try again.' } } }
+}
+
+/** The database's PTxxx codes, in words; see the Phase 19 migration. */
+function listingFailure(status: number | undefined): string {
+  switch (status) {
+    case 410: return 'This listing is no longer available, so it cannot receive enquiries.'
+    case 429: return 'Too many recent enquiries for this number. Please try again later.'
+    case 403: return 'This is your own listing. Enquiries from buyers appear in your seller inbox.'
+    case 400: return 'Please check your details and try again.'
+    // The function does not exist yet: the migration has not been applied.
+    case 404: return 'Enquiries for this listing are not available yet. Please try again later.'
+    default: return 'Your enquiry could not be saved. Please try again.'
+  }
 }
 
 export async function listLeadEvents(user: AuthUser, ids: string[]): Promise<LeadEvent[] | null> {

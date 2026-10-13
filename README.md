@@ -299,3 +299,28 @@ permissions. `npm run listing-check` uses the existing 3101/3300 simulator setup
 with `SUPABASE_SERVICE_ROLE_KEY=test-service-key` (test value only), and is added
 to CI. See [the phase specification](docs/phases/PHASE-18-property-publishing-lifecycle.md)
 for actual verification and release prerequisites.
+
+### Phase 19 — seller dashboard
+
+`/dashboard` (**My properties**) shows one card per property: a working
+draft and, once submitted, its listing. Status filters, sort and page live in
+the URL. **Withdrawn** is derived from status history, because Phase 18
+withdrawal returns a listing to Draft. Removed listings sit in a collapsed
+group and are excluded from every count. Active listings within 7 days of
+expiry are flagged. Withdraw uses the Phase 18 lifecycle endpoint;
+submitting and removing stay on the publishing page.
+
+Active public listings at `/listing/:id` now take enquiries.
+`submit_listing_enquiry` checks inside the database that the listing is
+active and unexpired. It also takes the seller from the listing owner and
+refuses an enquiry from the owner. Each listing's enquiry count comes from
+`seller_listing_enquiry_counts()` and links to
+`/dashboard/enquiries?listing=<id>`.
+
+Apply `supabase/migrations/20261013192641_phase_19_listing_enquiries.sql`
+before relying on listing enquiries. Until it is applied, the inbox falls
+back to its Phase 9 columns, and enquiry counts and the listing form say
+they are unavailable. Remove that fallback in `lib/enquiry/queries.ts` once
+the migration is live. `npm run enquiry-db-check` exercises the migration in
+PGlite. `npm run dashboard-check` uses the 3101/3300 simulator setup. See
+[the phase specification](docs/phases/PHASE-19-seller-dashboard.md).

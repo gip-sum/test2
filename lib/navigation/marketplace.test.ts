@@ -23,12 +23,12 @@ const ROUTES = [
   /^\/(buy|rent)\/kolkata(\/[a-z0-9-]+){0,2}$/,
   /^\/calculators\/(emi|budget)$/,
   /^\/account(\/saved|\/enquiries)?$/,
-  /^\/dashboard\/enquiries$/,
+  /^\/dashboard(\/enquiries)?$/,
   /^\/post$/,
 ]
 
 // Destinations the product has not built. "Builder floors" is a property type.
-const FUTURE = /\b(commercial|plots?|land|projects?|agents?|builders?(?! floors?)|insights?|price trends?|compare|comparison|guides?|faqs?|my properties)\b/i
+const FUTURE = /\b(commercial|plots?|land|projects?|agents?|builders?(?! floors?)|insights?|price trends?|compare|comparison|guides?|faqs?)\b/i
 
 describe('discovery hub', () => {
   const hub = getDiscoveryHub()
@@ -74,7 +74,7 @@ describe('discovery hub', () => {
   })
 
   it('reaches the account and posting destinations the bottom bar has', () => {
-    expect(hrefs(hub)).toEqual(expect.arrayContaining(['/account/saved', '/account/enquiries', '/account', '/post', '/dashboard/enquiries']))
+    expect(hrefs(hub)).toEqual(expect.arrayContaining(['/account/saved', '/account/enquiries', '/account', '/post', '/dashboard', '/dashboard/enquiries']))
   })
 
   it('is the hub the shared navigation model carries, so the header and the menu agree', () => {
