@@ -19,7 +19,7 @@ const mock=http.createServer(async(req,res)=>{
  if(unavailable)return send(503,{})
  if(url.pathname==='/rest/v1/saved_properties')return send(200,[])
  if(url.pathname==='/rest/v1/property_drafts')return send(200,user===owner?[draft]:[])
- if(url.pathname==='/rest/v1/buyer_profiles')return send(200,user===owner?[{id:owner,full_name:'Test Seller',contact_phone:'9999999999',preferred_intent:'both',email_updates:false}]:[])
+ if(url.pathname==='/rest/v1/buyer_profiles')return send(200,user===owner?[{id:owner,full_name:'Test Seller',contact_phone:'9999999999',preferred_intent:'both',preferred_locality:null,email_updates:false,updated_at:'2026-10-13T12:00:00Z'}]:[])
  if(url.pathname==='/rest/v1/media_assets')return send(200,user===owner?photos:[])
  if(url.pathname==='/rest/v1/property_draft_reviews'){if(req.method==='POST'&&user===owner)review=JSON.parse(body);return send(200,user===owner&&review?[review]:[])}
  if(url.pathname==='/rest/v1/property_listings')return send(200,listing&&(user===owner||publicRead&&active())?[listing]:[])
