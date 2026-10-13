@@ -236,8 +236,8 @@ Migration `20261013192641_phase_19_listing_enquiries.sql`:
   on inactive listings; counts visible to the seller and not to a foreign
   user.
 - Once the migration is confirmed live, remove the inbox fallback.
-- Phase 18 release items still apply: the service key must be set before
-  withdraw or submit work in production, and a real-account
+- Phase 18 release items still apply. Its notes record the publishing key
+  as configured in production (Vercel). A real-account
   submit→approve→active→expire pass is still outstanding.
 - Then verify the dashboard with a real seller account in each status.
 - No Phase 20 work.
@@ -267,11 +267,17 @@ Migration `20261013192641_phase_19_listing_enquiries.sql`:
     46, post-check 87, notfound-check 36;
   - shell-check 355, after removing "my properties" from its
     not-yet-built guard.
-- **Failing before this phase:** `phase-e-check` (homepage search-sheet
-  reopen loop, line 70) and `home-check` (homepage locality search
-  button). Both fail identically on the untouched base commit `cc44439`,
-  built and run in a separate worktree. They are not caused by Phase 19
-  and were not changed here.
+- **Failing before this phase:**
+  - `phase-e-check` (homepage search-sheet reopen loop) and `home-check`
+    (homepage locality search button) both failed identically on the
+    untouched base commit `cc44439`, built and run in a separate worktree.
+  - After merging main's sheet-focus fixes (`bd27162`), `phase-e-check`
+    passes (64).
+  - `home-check` still fails at the same assertion as on the base commit.
+    It is not caused by Phase 19 and was not changed here.
+- **Re-run after merging main:** verify (436), build, dashboard-check 47,
+  listing-check 23, preview-check 24, lead-check 15, shell-check 355,
+  shots, light-check, search-check 64.
 - **States checked by provoking them in the simulator:** provider outage
   (page-level alert, not an empty dashboard), missing enquiry-counts
   function (cards say counts are unavailable), and a foreign account (empty
@@ -280,8 +286,8 @@ Migration `20261013192641_phase_19_listing_enquiries.sql`:
   - The migration was not applied live: no database credential or
     Supabase connector was available. The inbox fallback stays until it
     is.
-  - No real-account production verification. The Phase 18 publishing
-    credential is still pending, so production withdraw shows its
-    unavailable state.
+  - No real-account production verification. Production withdraw
+    depends on the Phase 18 publishing key, which its notes record as
+    configured.
   - Screenshots in `/tmp/phase19-shots` were looked at for obvious layout
     faults only; they are not counted as verification.
