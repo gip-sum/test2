@@ -9,7 +9,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH 
 let passed = 0
 function check(label, ok) { if (!ok) throw new Error(`FAIL ${label}`); passed++; console.log(`ok ${label}`) }
 async function waitFilterFocus(page) {
-  try { await page.waitForFunction(() => document.activeElement?.textContent?.includes('More filters')) }
+  try { await page.waitForFunction(() => document.activeElement?.tagName === 'BUTTON' && document.activeElement?.textContent?.trim() === 'More filters') }
   catch (error) {
       console.log('focus restoration diagnostics', await page.evaluate(() => ({
         tag: document.activeElement?.tagName,

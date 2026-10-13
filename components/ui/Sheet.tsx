@@ -68,7 +68,10 @@ export function Sheet({
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return
       const top = [...document.querySelectorAll('[data-sheet][data-state="open"]')].at(-1)
-      if (top !== content.current || !(event.target instanceof Node) || !content.current?.contains(event.target)) return
+      if (top !== content.current || !(event.target instanceof Node)) return
+      // A removed child can briefly leave focus on body before its parent's
+      // autofocus runs. Escape should still close the current sheet then.
+      if (event.target !== document.body && !content.current?.contains(event.target)) return
       event.preventDefault()
       event.stopImmediatePropagation()
       onOpenChange(false)
