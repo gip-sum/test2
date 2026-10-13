@@ -9,7 +9,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH 
 let passed = 0
 function check(label, ok) { if (!ok) throw new Error(`FAIL ${label}`); passed++; console.log(`ok ${label}`) }
 async function waitFilterFocus(page) {
-  try { await page.waitForFunction(() => document.activeElement?.textContent?.includes('More filters')) }
+  try { await page.waitForFunction(() => document.activeElement?.tagName === 'BUTTON' && document.activeElement?.textContent?.trim() === 'More filters') }
   catch (error) {
       console.log('focus restoration diagnostics', await page.evaluate(() => ({
         tag: document.activeElement?.tagName,
@@ -21,6 +21,17 @@ async function waitFilterFocus(page) {
       })))
       throw error
     }
+}
+async function waitSearchFocus(page) {
+  try { await page.waitForFunction(() => document.activeElement === document.querySelector('.reference-search-trigger')) }
+  catch (error) {
+    console.log('search close diagnostics', await page.evaluate(() => ({
+      active: document.activeElement?.outerHTML?.slice(0, 500),
+      inert: document.querySelector('[data-app-root]')?.inert,
+      dialogs: [...document.querySelectorAll('[role="dialog"]')].map(e => ({ title: document.getElementById(e.getAttribute('aria-labelledby'))?.textContent, state: e.getAttribute('data-state') })),
+    })))
+    throw error
+  }
 }
 try {
   for (const width of [360, 390, 412, 768, 1280]) {
@@ -51,8 +62,8 @@ try {
     await waitFilterFocus(page)
     check(`${width}: closing child keeps background inert`, await page.locator('[data-app-root]').evaluate(e => e.inert))
     await page.keyboard.press('Escape')
-    await page.waitForFunction(() => !document.querySelector('[data-app-root]').inert)
-    await page.waitForFunction(() => document.activeElement === document.querySelector('.reference-search-trigger'))
+    await waitSearchFocus(page)
+    check(`${width}: closing search releases background`, await page.locator('[data-app-root]').evaluate(e => !e.inert))
     check(`${width}: closing search returns focus`, await page.locator('.reference-search-trigger').evaluate(e => e === document.activeElement))
     // Repeat fast reopen/close to exercise delayed nested FocusScope cleanup.
     for (let cycle = 0; cycle < 3; cycle++) {
@@ -67,7 +78,7 @@ try {
       await page.getByRole('dialog', { name: 'More filters' }).waitFor({ state: 'hidden' })
       await waitFilterFocus(page)
       await page.keyboard.press('Escape')
-      await page.waitForFunction(() => document.activeElement === document.querySelector('.reference-search-trigger'))
+      await waitSearchFocus(page)
       check(`${width}: nested focus restored after reopen ${cycle + 1}`, await page.locator('.reference-search-trigger').evaluate(e => e === document.activeElement))
     }
     await page.locator('.reference-search-trigger').blur()

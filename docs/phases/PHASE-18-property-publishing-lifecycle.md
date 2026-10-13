@@ -42,5 +42,7 @@ Apply reviewed migration, configure SUPABASE_SERVICE_ROLE_KEY server-side, run a
 - Applied expiry scheduler migration as `20261013175718_phase_18_listing_expiry_job.sql`; hourly job settings verified read-only.
 - Live rollback-only owner/foreign/moderation/public/deletion checks passed; no test data retained. No new security-advisor findings.
 - Manual immediate production expiry invocation was rejected by automatic approval review; no retry or indirect execution was performed. Scheduler verification uses a read-only cron.job query.
-- Publishing credential setup is awaiting secure Supabase dashboard sign-in, which currently presents a CAPTCHA. No credential value was exposed or committed. Missing credential keeps submission honestly unavailable.
+- Publishing credential setup completed: Vercel metadata confirms `SUPABASE_SERVICE_ROLE_KEY` is sensitive and Production only. The production deployment was created after the variable was saved. No credential value was exposed or committed. A real-account publishing flow remains unverified.
+- The expiry job's first normal scheduled run at 18:00 UTC succeeded, verified through read-only cron job history.
+- Publishing simulator browser checks passed in CI after correcting the profile fixture. Nested sheet regression checks now wait for the actual opener button, rather than any focused container containing its text; three reopen cycles per viewport cover fast Escape and focus restoration. Escape reads the current DOM sheet layer synchronously and inert locks follow controlled open state.
 - Push/deployment and CI checks are in progress; real-account production publishing flow remains unverified.

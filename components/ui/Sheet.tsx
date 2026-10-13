@@ -1,7 +1,7 @@
 'use client'
 
 import * as Dialog from '@radix-ui/react-dialog'
-import { useEffect, useRef, type ReactNode, type RefObject } from 'react'
+import { useLayoutEffect, useRef, type ReactNode, type RefObject } from 'react'
 import { cn } from '@/lib/cn'
 
 // Nested location/filter sheets must not release the parent sheet's inert lock.
@@ -42,6 +42,7 @@ export function Sheet({
   // user started again from the top of the page. So: remember what had
   // focus as the sheet opened, and return there as it closes.
   const returnTo = useRef<HTMLElement | null>(null)
+  const content = useRef<HTMLDivElement | null>(null)
   const lock = useRef(Symbol('sheet'))
 
   // Radix hides the rest of the page from assistive technology with
@@ -53,38 +54,51 @@ export function Sheet({
   // the sheet (portalled outside it) stays live. Lifted before focus is
   // handed back, since an inert element cannot take focus.
   const appRoot = () => document.querySelector<HTMLElement>('[data-app-root]')
-  useEffect(() => {
+  useLayoutEffect(() => {
     const id = lock.current
+    // Capture before making the page inert: inert can move focus to body.
+    // Keep the first capture during Strict Mode's effect replay.
+    if (open && document.activeElement instanceof HTMLElement && document.activeElement !== document.body) {
+      returnTo.current = document.activeElement
+    }
+    if (open) openSheets.add(id)
+    else openSheets.delete(id)
+    const root = appRoot()
+    if (root) root.inert = openSheets.size > 0
     return () => { openSheets.delete(id); const root = appRoot(); if (root) root.inert = openSheets.size > 0 }
-  }, [])
+  }, [open])
+
+  useLayoutEffect(() => {
+    if (!open) return
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      const top = [...document.querySelectorAll('[data-sheet][data-state="open"]')].at(-1)
+      if (top !== content.current || !(event.target instanceof Node)) return
+      // A removed child can briefly leave focus on body before its parent's
+      // autofocus runs. Escape should still close the current sheet then.
+      if (event.target !== document.body && !content.current?.contains(event.target)) return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      onOpenChange(false)
+    }
+    document.addEventListener('keydown', handleEscape, true)
+    return () => document.removeEventListener('keydown', handleEscape, true)
+  }, [open, onOpenChange])
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-overlay" />
         <Dialog.Content
+          ref={content}
+          data-sheet=""
           aria-modal="true"
           // Radix updates its document Escape listener in an effect. A fast
           // keypress after opening a child can still reach the parent's old
-          // listener. Disable that default and close only the DOM scope that
-          // receives Escape; React portals also bubble through parent scopes.
+          // listener. Disable that default; the layout-effect listener above
+          // reads the current DOM layer before handling each keypress.
           onEscapeKeyDown={(event) => event.preventDefault()}
-          onKeyDown={(event) => {
-            if (event.key !== 'Escape' || !(event.target instanceof Node) || !event.currentTarget.contains(event.target)) return
-            event.preventDefault()
-            event.stopPropagation()
-            onOpenChange(false)
-          }}
-          onOpenAutoFocus={() => {
-            returnTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
-            const root = appRoot()
-            openSheets.add(lock.current)
-            if (root) root.inert = true
-          }}
           onCloseAutoFocus={(event) => {
-            const root = appRoot()
-            openSheets.delete(lock.current)
-            if (root) root.inert = openSheets.size > 0
             const target = returnFocusRef?.current ?? returnTo.current
             if (target?.isConnected) {
               event.preventDefault()
