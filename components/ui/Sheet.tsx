@@ -77,7 +77,11 @@ export function Sheet({
             const target = returnFocusRef?.current ?? returnTo.current
             if (target?.isConnected) {
               event.preventDefault()
-              target.focus()
+              // Radix resumes the parent focus scope after this callback.
+              // Restore on the next frame so its cleanup cannot steal focus.
+              requestAnimationFrame(() => {
+                if (target.isConnected && !target.closest('[inert]')) target.focus({ preventScroll: true })
+              })
             }
           }}
           // From 640px the sheet is a centred dialog sized by its content.

@@ -37,6 +37,7 @@ jobs:
         run: |
           npm run start > /tmp/gharbazaar-server.log 2>&1 &
           curl --fail --silent --show-error --output /dev/null --retry 30 --retry-connrefused --retry-delay 2 http://127.0.0.1:3100/post
+      - run: npm run phase-e-check
       - name: Start a second app against the Auth API simulator
         run: |
           SUPABASE_URL=http://127.0.0.1:3300 SUPABASE_PUBLISHABLE_KEY=test-public-key AUTH_SITE_URL=http://localhost:3101 SUPABASE_SERVICE_ROLE_KEY=test-service-key PORT=3101 npm run start > /tmp/gharbazaar-auth-server.log 2>&1 &
@@ -63,7 +64,6 @@ jobs:
       # Phase E: the reference menu, guest Activity and six-item phone bar,
       # with page clearance (auth-check covers Activity signed in).
       - run: npm run shell-check
-      - run: npm run phase-e-check
       - run: npm run pricing-check
       - run: npm run post-check
       - run: npm run notfound-check

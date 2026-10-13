@@ -34,12 +34,39 @@ try {
     })
     await page.keyboard.press('Escape')
     await page.getByRole('dialog', { name: 'More filters' }).waitFor({ state: 'hidden' })
-    await page.waitForFunction(() => document.activeElement?.textContent?.includes('More filters'))
+    try { await page.waitForFunction(() => document.activeElement?.textContent?.includes('More filters')) }
+    catch (error) {
+      console.log('focus restoration diagnostics', await page.evaluate(() => ({
+        tag: document.activeElement?.tagName,
+        role: document.activeElement?.getAttribute('role'),
+        label: document.activeElement?.getAttribute('aria-label'),
+        text: document.activeElement?.textContent?.slice(0, 120),
+        inertAncestor: Boolean(document.activeElement?.closest('[inert]')),
+        dialogs: [...document.querySelectorAll('[role="dialog"]')].map(e => ({ title: document.getElementById(e.getAttribute('aria-labelledby'))?.textContent, state: e.getAttribute('data-state') })),
+      })))
+      throw error
+    }
     check(`${width}: closing child keeps background inert`, await page.locator('[data-app-root]').evaluate(e => e.inert))
     await page.keyboard.press('Escape')
     await page.waitForFunction(() => !document.querySelector('[data-app-root]').inert)
     await page.waitForFunction(() => document.activeElement === document.querySelector('.reference-search-trigger'))
     check(`${width}: closing search returns focus`, await page.locator('.reference-search-trigger').evaluate(e => e === document.activeElement))
+    // Repeat fast reopen/close to exercise delayed nested FocusScope cleanup.
+    for (let cycle = 0; cycle < 3; cycle++) {
+      await page.locator('.reference-search-trigger').click()
+      await page.waitForFunction(() => document.activeElement?.closest('[role="dialog"]')?.getAttribute('data-state') === 'open')
+      await page.getByRole('button', { name: /^More filters/ }).click()
+      await page.waitForFunction(() => {
+        const dialog = document.activeElement?.closest('[role="dialog"]')
+        return document.getElementById(dialog?.getAttribute('aria-labelledby'))?.textContent === 'More filters'
+      })
+      await page.keyboard.press('Escape')
+      await page.getByRole('dialog', { name: 'More filters' }).waitFor({ state: 'hidden' })
+      await page.waitForFunction(() => document.activeElement?.textContent?.includes('More filters'))
+      await page.keyboard.press('Escape')
+      await page.waitForFunction(() => document.activeElement === document.querySelector('.reference-search-trigger'))
+      check(`${width}: nested focus restored after reopen ${cycle + 1}`, await page.locator('.reference-search-trigger').evaluate(e => e === document.activeElement))
+    }
     await page.locator('.reference-search-trigger').blur()
     for (const [name, selector] of [['discovery', '.discovery-band'], ['localities', '#localities'], ['tools', '.reference-tools']]) {
       await page.locator(selector).first().evaluate(el => window.scrollTo(0, scrollY + el.getBoundingClientRect().top - 90))
