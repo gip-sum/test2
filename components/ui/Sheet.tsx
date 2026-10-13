@@ -56,6 +56,11 @@ export function Sheet({
   const appRoot = () => document.querySelector<HTMLElement>('[data-app-root]')
   useLayoutEffect(() => {
     const id = lock.current
+    // Capture before making the page inert: inert can move focus to body.
+    // Keep the first capture during Strict Mode's effect replay.
+    if (open && document.activeElement instanceof HTMLElement && document.activeElement !== document.body) {
+      returnTo.current = document.activeElement
+    }
     if (open) openSheets.add(id)
     else openSheets.delete(id)
     const root = appRoot()
@@ -93,9 +98,6 @@ export function Sheet({
           // listener. Disable that default; the layout-effect listener above
           // reads the current DOM layer before handling each keypress.
           onEscapeKeyDown={(event) => event.preventDefault()}
-          onOpenAutoFocus={() => {
-            returnTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
-          }}
           onCloseAutoFocus={(event) => {
             const target = returnFocusRef?.current ?? returnTo.current
             if (target?.isConnected) {
