@@ -1,7 +1,7 @@
 'use client'
 
 import * as Dialog from '@radix-ui/react-dialog'
-import { useEffect, useRef, type ReactNode, type RefObject } from 'react'
+import { useLayoutEffect, useRef, type ReactNode, type RefObject } from 'react'
 import { cn } from '@/lib/cn'
 
 // Nested location/filter sheets must not release the parent sheet's inert lock.
@@ -53,10 +53,14 @@ export function Sheet({
   // the sheet (portalled outside it) stays live. Lifted before focus is
   // handed back, since an inert element cannot take focus.
   const appRoot = () => document.querySelector<HTMLElement>('[data-app-root]')
-  useEffect(() => {
+  useLayoutEffect(() => {
     const id = lock.current
+    if (open) openSheets.add(id)
+    else openSheets.delete(id)
+    const root = appRoot()
+    if (root) root.inert = openSheets.size > 0
     return () => { openSheets.delete(id); const root = appRoot(); if (root) root.inert = openSheets.size > 0 }
-  }, [])
+  }, [open])
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -77,14 +81,8 @@ export function Sheet({
           }}
           onOpenAutoFocus={() => {
             returnTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
-            const root = appRoot()
-            openSheets.add(lock.current)
-            if (root) root.inert = true
           }}
           onCloseAutoFocus={(event) => {
-            const root = appRoot()
-            openSheets.delete(lock.current)
-            if (root) root.inert = openSheets.size > 0
             const target = returnFocusRef?.current ?? returnTo.current
             if (target?.isConnected) {
               event.preventDefault()
