@@ -62,8 +62,8 @@ try {
     await waitFilterFocus(page)
     check(`${width}: closing child keeps background inert`, await page.locator('[data-app-root]').evaluate(e => e.inert))
     await page.keyboard.press('Escape')
-    await page.waitForFunction(() => !document.querySelector('[data-app-root]').inert)
     await waitSearchFocus(page)
+    check(`${width}: closing search releases background`, await page.locator('[data-app-root]').evaluate(e => !e.inert))
     check(`${width}: closing search returns focus`, await page.locator('.reference-search-trigger').evaluate(e => e === document.activeElement))
     // Repeat fast reopen/close to exercise delayed nested FocusScope cleanup.
     for (let cycle = 0; cycle < 3; cycle++) {

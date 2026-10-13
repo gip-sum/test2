@@ -42,6 +42,7 @@ export function Sheet({
   // user started again from the top of the page. So: remember what had
   // focus as the sheet opened, and return there as it closes.
   const returnTo = useRef<HTMLElement | null>(null)
+  const content = useRef<HTMLDivElement | null>(null)
   const lock = useRef(Symbol('sheet'))
 
   // Radix hides the rest of the page from assistive technology with
@@ -62,23 +63,33 @@ export function Sheet({
     return () => { openSheets.delete(id); const root = appRoot(); if (root) root.inert = openSheets.size > 0 }
   }, [open])
 
+  useLayoutEffect(() => {
+    if (!open) return
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      const top = [...document.querySelectorAll('[data-sheet][data-state="open"]')].at(-1)
+      if (top !== content.current || !(event.target instanceof Node) || !content.current?.contains(event.target)) return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      onOpenChange(false)
+    }
+    document.addEventListener('keydown', handleEscape, true)
+    return () => document.removeEventListener('keydown', handleEscape, true)
+  }, [open, onOpenChange])
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-overlay" />
         <Dialog.Content
+          ref={content}
+          data-sheet=""
           aria-modal="true"
           // Radix updates its document Escape listener in an effect. A fast
           // keypress after opening a child can still reach the parent's old
-          // listener. Disable that default and close only the DOM scope that
-          // receives Escape; React portals also bubble through parent scopes.
+          // listener. Disable that default; the layout-effect listener above
+          // reads the current DOM layer before handling each keypress.
           onEscapeKeyDown={(event) => event.preventDefault()}
-          onKeyDown={(event) => {
-            if (event.key !== 'Escape' || !(event.target instanceof Node) || !event.currentTarget.contains(event.target)) return
-            event.preventDefault()
-            event.stopPropagation()
-            onOpenChange(false)
-          }}
           onOpenAutoFocus={() => {
             returnTo.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
           }}
