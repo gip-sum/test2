@@ -359,3 +359,33 @@ after the Phase 19 migration. Until it is applied:
 Checks: `npm run analytics-db-check` (PGlite) and `npm run
 performance-check` (the 3101/3300 simulator). See
 [the phase specification](docs/phases/PHASE-20-seller-listing-analytics.md).
+
+### Phase 21 — admin dashboard
+
+`/admin` is a read-only control centre for platform staff:
+- **Overview:** listings by status, the review queue, and lead and user
+  counts. These are aggregates only; no one's contact details are shown.
+- **Listings** and **Moderation:** the queue oldest first, with waits over
+  48 hours flagged.
+- **System status:** server settings (present or missing, never values),
+  the sign-in provider, database response time, recorded migrations,
+  the expiry job and backlog, and the review queue. Anything that cannot be
+  checked reads "Unknown", never OK.
+
+Staff are rows in `staff_members` (role `ADMIN`), granted only by a
+trusted operator. A signed-in account that is not staff gets the ordinary
+404. Every admin database function checks staff membership again itself.
+Approving and rejecting arrive in Phase 22, user management in Phase 23,
+and reports in Phase 24.
+
+Apply `supabase/migrations/20261014044042_phase_21_admin_console.sql`
+after the Phase 19 and 20 migrations. Then grant the first admin in the
+SQL editor:
+
+```sql
+insert into public.staff_members (user_id, role) values ('<auth user uuid>', 'ADMIN');
+```
+
+`npm run admin-db-check` (PGlite) and `npm run admin-check` (3101/3300
+simulator) cover the staff gate, figures and system checks. See
+[the phase specification](docs/phases/PHASE-21-admin-dashboard.md).

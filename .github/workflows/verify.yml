@@ -30,6 +30,7 @@ jobs:
       - run: npm run listing-db-check
       - run: npm run enquiry-db-check
       - run: npm run analytics-db-check
+      - run: npm run admin-db-check
       - run: npm run build
       - name: Install browser for layout checks
         run: |
@@ -53,6 +54,10 @@ jobs:
           BASE_URL: http://localhost:3101
       # Phase 20: view counting, saving real listings, performance pages.
       - run: npm run performance-check
+        env:
+          BASE_URL: http://localhost:3101
+      # Phase 21: the admin console (staff gate, figures, listings, system).
+      - run: npm run admin-check
         env:
           BASE_URL: http://localhost:3101
       - run: npm run preview-check

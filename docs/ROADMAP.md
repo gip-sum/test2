@@ -39,6 +39,7 @@ but its eight-phase build order is superseded.
 | 18 | Property publishing & lifecycle | Implemented locally; browser/live release checks and server credential setup pending |
 | 19 | Seller dashboard | Implemented; enquiry migration not yet applied live; real-account verification pending |
 | 20 | Seller listing analytics | Implemented; analytics migration not yet applied live; contact reveals deferred to Phase 10 |
+| 21 | Admin dashboard | Implemented (read-only console); migration not yet applied live; first admin to be granted by an operator |
 | E | 99acres interface redesign from client screenshots | Complete and deployed; green primary colour and header logo restored |
 | 40A | Home loan calculators | Implemented ahead of order at client request |
 
@@ -138,6 +139,7 @@ widening an existing table.
 | `property_listing_events` | 18 | Status transition, date, owner/operator/system actor and rejection reason |
 | `listing_stat` | 20 | Implemented as `property_listing_daily_stats` (views per listing per India day) with same-day `property_listing_view_marks` |
 | `saved_listings` | 20 | A buyer can save a real listing; sellers see aggregate counts only |
+| `staff_members` | 21 | Implemented: who is platform staff, role, grant and revocation; operator-granted only |
 | `moderation_action` | 22 | A human approves or rejects |
 | `report` | 24 | Content can be reported |
 | `audit_log` | 27 | Actions must be reconstructable |

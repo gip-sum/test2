@@ -32,7 +32,7 @@ const CITY_SLUGS = new Set(KOLKATA_LOCATIONS.filter((l) => l.type === 'CITY').ma
  * literal segments, so Next 404s it without help.
  */
 export const config = {
-  matcher: ['/listing/:id', '/buy/:path+', '/rent/:path+', '/property/:handle', '/account/:path*', '/dashboard/:path*', '/login', '/api/auth/state', '/post/photos', '/post/drafts/:path*', '/api/posting/drafts', '/api/posting/preview', '/api/posting/lifecycle', '/api/posting/submissions/:path*', '/api/posting/photos/:path*'],
+  matcher: ['/admin/:path*', '/listing/:id', '/buy/:path+', '/rent/:path+', '/property/:handle', '/account/:path*', '/dashboard/:path*', '/login', '/api/auth/state', '/post/photos', '/post/drafts/:path*', '/api/posting/drafts', '/api/posting/preview', '/api/posting/lifecycle', '/api/posting/submissions/:path*', '/api/posting/photos/:path*'],
 }
 
 /**
@@ -75,7 +75,7 @@ function handleProperty(request: NextRequest): NextResponse | undefined {
 }
 
 async function accountGuard(request: NextRequest) {
-  const isAccount = (request.nextUrl.pathname.startsWith('/account') && request.nextUrl.pathname !== '/account/activity') || request.nextUrl.pathname.startsWith('/dashboard')
+  const isAccount = (request.nextUrl.pathname.startsWith('/account') && request.nextUrl.pathname !== '/account/activity') || request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/admin')
   const access = request.cookies.get('gb-access')?.value
   const refresh = request.cookies.get('gb-refresh')?.value
   let verified = false
@@ -122,7 +122,7 @@ function withVisitor(request: NextRequest) {
 export async function proxy(request: NextRequest) {
   const [, first, second] = request.nextUrl.pathname.split('/')
 
-  if (first === 'account' || first === 'dashboard' || first === 'login' || request.nextUrl.pathname === '/api/auth/state' || request.nextUrl.pathname.startsWith('/post/drafts') || request.nextUrl.pathname === '/api/posting/drafts' || request.nextUrl.pathname === '/api/posting/preview' || request.nextUrl.pathname === '/api/posting/lifecycle' || request.nextUrl.pathname.startsWith('/api/posting/submissions/') || request.nextUrl.pathname === '/post/photos' || request.nextUrl.pathname.startsWith('/api/posting/photos')) return accountGuard(request)
+  if (first === 'admin' || first === 'account' || first === 'dashboard' || first === 'login' || request.nextUrl.pathname === '/api/auth/state' || request.nextUrl.pathname.startsWith('/post/drafts') || request.nextUrl.pathname === '/api/posting/drafts' || request.nextUrl.pathname === '/api/posting/preview' || request.nextUrl.pathname === '/api/posting/lifecycle' || request.nextUrl.pathname.startsWith('/api/posting/submissions/') || request.nextUrl.pathname === '/post/photos' || request.nextUrl.pathname.startsWith('/api/posting/photos')) return accountGuard(request)
 
   if (first === 'property') {
     return handleProperty(request) ?? NextResponse.next()
