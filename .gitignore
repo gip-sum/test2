@@ -17,3 +17,4 @@ __pycache__/
 *.py[cod]
 .venv/
 python/.reports/
+python/.inbox/

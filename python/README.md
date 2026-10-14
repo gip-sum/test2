@@ -53,6 +53,54 @@ Put pure processing functions in `gharbazaar_processing/`, with contract and CLI
 
 Acceptance scope: [Python addon specification](../docs/phases/ADDON-PYTHON-data-processing.md).
 
+## Local automatic import checks
+
+The inbox worker reuses the audit above and needs only Python 3.12+. It makes no
+network, AI or database requests and does not use the hosted queue. It runs while
+your computer is on and the terminal command is running. Ctrl+C stops it.
+
+On Windows, from the repository folder in PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force python\.inbox
+py -3.12 -I python\run.py audit-inbox python\.inbox --reports python\.reports
+```
+
+On macOS/Linux:
+
+```bash
+mkdir -p python/.inbox
+python3 -I python/run.py audit-inbox python/.inbox --reports python/.reports
+```
+
+Write/copy new files with a `.part` extension and rename them to `.jsonl` only after
+the copy finishes. The worker polls every ten seconds; `--interval 1` through `60`
+changes the interval. Only top-level regular `.jsonl` files are checked. The inbox
+and report folders must be separate and cannot be nested. Both default example
+folders are ignored by git.
+
+Add `--once` to check the inbox once and exit. Exit 0 means passed/empty, 2 means
+review required, and 1 means task failure, a changing input or filesystem error.
+JSON terminal events show real counts and job IDs; inspect each `.json` report for
+its source filename, normalized records, row diagnostics or safe task error.
+
+Completed reports are published atomically and never overwritten. A restart skips
+identical filename/content versions after verifying the existing report; a running
+watcher caches unchanged files to avoid repeatedly reading them. Editing an input
+creates a new report. Input files are never moved, deleted, imported or published.
+There is no cross-file duplicate analysis. Reports marked `needs_review` require
+human review, and all audits keep `ready_for_publication: false`.
+
+Keep at most 500 ready files per inbox. The existing per-file bounds still apply.
+Remove old inputs/reports manually when appropriate; reports can contain property
+data. Use a private local folder. New report files are mode 0600 on POSIX; Windows
+privacy relies on your folder's ACLs. Atomic publication requires a filesystem
+supporting hard links (for example, NTFS); unsupported filesystem failures produce
+an honest error and leave no partial report. An existing corrupt/conflicting
+report is preserved for review. No automatic startup task is installed.
+
+Acceptance scope: [Local jobs specification](../docs/phases/ADDON-PYTHON-local-jobs.md).
+
 
 ## Private AI description worker
 
@@ -86,6 +134,10 @@ PYTHONPATH=python python/.venv/bin/python -c 'import gharbazaar_processing.descr
 ```
 
 ### Activation
+
+**Current decision: no AI spending. Keep production generation disabled.**
+The manual editor and local import worker work without model requests. The steps
+below apply only if the operator later explicitly approves AI activation and cost.
 
 1. Apply the additive `python_ai_descriptions` migration and check RLS/advisors.
 2. Deploy both services and verify the private queue subscriber was built.

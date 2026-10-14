@@ -1,12 +1,57 @@
-"""A manual batch entrypoint, also usable by a future authorized job runner."""
+"""Manual audits and explicit local background jobs, without paid services."""
 
 import argparse
 import json
 import os
 from pathlib import Path
 import sys
+from threading import Event
 
 from .import_audit import TaskError, audit_stream
+from .local_jobs import pass_exit_code, prepare_folders, scan_inbox
+
+
+def _interval(value: str) -> int:
+    try:
+        seconds = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError("Use an integer interval from 1 to 60 seconds.") from None
+    if not 1 <= seconds <= 60:
+        raise argparse.ArgumentTypeError("Use an integer interval from 1 to 60 seconds.")
+    return seconds
+
+
+def _event(value: dict) -> None:
+    print(json.dumps(value, ensure_ascii=True), flush=True)
+
+
+def _inbox(args: argparse.Namespace) -> int:
+    inbox, reports = prepare_folders(args.input, args.reports)
+    stop = Event()
+    cache = {}
+    try:
+        if not args.once:
+            _event({"event": "watching", "interval_seconds": args.interval})
+        while True:
+            try:
+                result = scan_inbox(inbox, reports, cache)
+            except (OSError, TaskError):
+                # Directory failures remain fatal for --once, but a watcher can
+                # recover if a removable drive or report folder returns.
+                if args.once:
+                    raise
+                _event({"event": "scan_error", "code": "scan_unavailable"})
+            else:
+                for event in result["events"]:
+                    _event(event)
+                if args.once or result["summary"]["processed"] or result["summary"]["failed"]:
+                    _event({"event": "scan_complete", **result["summary"]})
+                if args.once:
+                    return pass_exit_code(result)
+            stop.wait(args.interval)
+    except KeyboardInterrupt:
+        _event({"event": "stopped"})
+        return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -15,8 +60,15 @@ def main(argv: list[str] | None = None) -> int:
     audit = commands.add_parser("check-import", help="Normalize basic facts and flag invalid/duplicate staging rows.")
     audit.add_argument("input", help="UTF-8 JSONL file, or - to read stdin.")
     audit.add_argument("--output", type=Path, help="Create a private JSON report; existing files are never overwritten.")
+    inbox = commands.add_parser("audit-inbox", help="Automatically audit ready local JSONL files; no network or AI calls.")
+    inbox.add_argument("input", type=Path, help="Existing inbox. Rename completed .part files to .jsonl.")
+    inbox.add_argument("--reports", type=Path, required=True, help="Separate, non-nested report folder; no overwrite.")
+    inbox.add_argument("--once", action="store_true", help="Run one pass and exit instead of watching.")
+    inbox.add_argument("--interval", type=_interval, default=10, help="Polling interval in seconds, 1–60 (default: 10).")
     args = parser.parse_args(argv)
     try:
+        if args.command == "audit-inbox":
+            return _inbox(args)
         if args.input == "-":
             report = audit_stream(sys.stdin.buffer)
         else:

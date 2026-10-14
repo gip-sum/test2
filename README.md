@@ -56,7 +56,7 @@ npm run dev          # http://localhost:3000
 | `npm run dev` | Development server |
 | `npm run build` | Production build |
 | `npm run verify` | **lint + typecheck + test** — run before every commit |
-| `npm run python-check` | Python import-audit tests; requires Python 3.12+ |
+| `npm run python-check` | Python import, local job and description-worker tests; requires Python 3.12+ |
 | `npm run shots -- /` | Render routes at 390/412/768/1280, fail on horizontal overflow |
 | `npm run light-check` | Check theme surfaces under a dark-mode browser |
 | `npm run search-check` | Browser assertions for search |
@@ -145,7 +145,12 @@ lead checks; the current repo suite passed 173/173 tests.
 
 ## Architecture
 
-Python is available for specific data-processing tasks alongside the application. Start with the read-only import audit described in [python/README.md](python/README.md). It needs no credentials or Python dependencies and does not replace the main backend. Python verification runs separately in CI. AI providers and scheduled job infrastructure are not configured by this addon.
+Python handles specific tasks alongside the main backend. The read-only import
+audit and automatic local inbox worker need no credentials, dependencies or hosted
+service. See [python/README.md](python/README.md#local-automatic-import-checks) for
+Windows and Linux commands. Python verification runs separately in CI. The optional
+private AI description worker is described below; paid generation remains disabled
+by the client's no-spending decision.
 
 One Next.js application, modular inside, single deployable.
 

@@ -75,10 +75,14 @@ Add Python alongside the existing Next.js/TypeScript backend for specific
 AI, data-processing or background workloads when each task is defined.
 First task: read-only audit of supplied property-import JSONL files,
 with normalized records, invalid-field diagnostics and duplicate review.
-No main-backend replacement, live importer, AI provider, persistent queue
-or scheduled job is introduced. Phase 19 is not started by this addon;
-Phase 72 remains the background-infrastructure milestone.
+The addon now also includes a local inbox worker for automatic import audits
+and an optional private queued AI-description worker. Paid description generation
+is disabled by client decision. Local audits use no AI or hosted service.
+No main-backend replacement or live importer is introduced. This addon does not
+start a numbered phase; Phase 72 remains the wider background-infrastructure milestone.
 Acceptance criteria: docs/phases/ADDON-PYTHON-data-processing.md
+Additional criteria: docs/phases/ADDON-PYTHON-local-jobs.md,
+docs/phases/ADDON-PYTHON-AI-descriptions.md
 
 
 ==================================================
