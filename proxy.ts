@@ -122,7 +122,7 @@ function withVisitor(request: NextRequest) {
 export async function proxy(request: NextRequest) {
   const [, first, second] = request.nextUrl.pathname.split('/')
 
-  if (first === 'admin' || first === 'account' || first === 'dashboard' || first === 'login' || request.nextUrl.pathname === '/api/auth/state' || request.nextUrl.pathname.startsWith('/post/drafts') || request.nextUrl.pathname === '/api/posting/drafts' || request.nextUrl.pathname === '/api/posting/preview' || request.nextUrl.pathname === '/api/posting/lifecycle' || request.nextUrl.pathname.startsWith('/api/posting/submissions/') || request.nextUrl.pathname === '/post/photos' || request.nextUrl.pathname.startsWith('/api/posting/photos')) return accountGuard(request)
+  if (first === 'admin' || first === 'account' || first === 'dashboard' || first === 'login' || request.nextUrl.pathname === '/api/auth/state' || request.nextUrl.pathname.startsWith('/post/drafts') || request.nextUrl.pathname === '/api/posting/drafts' || request.nextUrl.pathname === '/api/posting/preview' || request.nextUrl.pathname === '/api/posting/description' || request.nextUrl.pathname.startsWith('/api/posting/description/') || request.nextUrl.pathname === '/api/posting/lifecycle' || request.nextUrl.pathname.startsWith('/api/posting/submissions/') || request.nextUrl.pathname === '/post/photos' || request.nextUrl.pathname.startsWith('/api/posting/photos')) return accountGuard(request)
 
   if (first === 'property') {
     return handleProperty(request) ?? NextResponse.next()

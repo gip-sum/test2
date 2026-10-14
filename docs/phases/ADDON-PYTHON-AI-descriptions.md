@@ -29,7 +29,7 @@ Apply tested additive migration, verify security advisors, deploy both services 
 
 ### Implementation verification record
 
-- `verify`: lint/typecheck and 500 TypeScript tests passed.
+- `verify`: lint/typecheck and 503 TypeScript tests passed.
 - `build`: production Next.js build passed.
 - Python: 34 tests passed; the installed queue SDK registers the private subscriber.
 - Database: 27 description checks and 41 lifecycle checks passed; existing media, draft, preview, enquiry, analytics and admin SQL checks passed.
