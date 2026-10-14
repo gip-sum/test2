@@ -89,6 +89,8 @@ until an authorised staff account exists. No migration test may publish real dat
 
 - Application verify: lint, TypeScript and 520 tests across 50 suites passed.
   Python: 55 tests passed. The production webpack build passed.
+  The default production build uses Webpack after CI caught a Turbopack Google-font
+  import-map resolver failure; the typography and all verification gates remain.
 - PGlite: 49 moderation checks passed, including concurrent decisions, independent
   reviewers, moderator/admin boundaries, private photographs, append-only audit,
   three outcomes, identical retries, stale copies, immediate revocation and fresh
