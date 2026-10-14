@@ -95,7 +95,7 @@ try {
   // Listings: filter, order, pages — all in the URL.
   await page.getByRole('navigation', { name: 'Admin sections' }).getByRole('link', { name: 'Listings' }).click()
   await page.getByRole('heading', { level: 2, name: /All submitted listings/ }).waitFor()
-  check('every status has a real count', (await page.getByRole('navigation', { name: 'Filter by status' }).innerText()).replace(/\s+/g, ' ').includes('All 36 Under review 2 Active 30 Expired 1 Rejected 1 Withdrawn 1 Removed 1'))
+  check('every status has a real count', (await page.getByRole('navigation', { name: 'Filter by status' }).innerText()).replace(/\s+/g, ' ').includes('All 36 Under review 2 Active 30 Expired 1 Rejected 1 Corrections requested 0 Withdrawn 1 Removed 1'))
   await page.getByRole('link', { name: /^Under review/ }).click(); await page.waitForURL('**/admin/listings?status=review')
   await page.getByRole('heading', { level: 2, name: /Under review/ }).waitFor()
   const queueRows = page.locator('table tbody tr')

@@ -53,6 +53,9 @@ jobs:
         run: |
           SUPABASE_URL=http://127.0.0.1:3300 SUPABASE_PUBLISHABLE_KEY=test-public-key AUTH_SITE_URL=http://localhost:3101 SUPABASE_SERVICE_ROLE_KEY=test-service-key PORT=3101 npm run start > /tmp/gharbazaar-auth-server.log 2>&1 &
           curl --fail --silent --show-error --output /dev/null --retry 30 --retry-connrefused --retry-delay 2 http://127.0.0.1:3101/post
+      - run: npm run moderation-check
+        env:
+          BASE_URL: http://localhost:3101
       - run: npm run listing-check
         env:
           BASE_URL: http://localhost:3101
@@ -66,9 +69,6 @@ jobs:
           BASE_URL: http://localhost:3101
       # Phase 21: the admin console (staff gate, figures, listings, system).
       - run: npm run admin-check
-        env:
-          BASE_URL: http://localhost:3101
-      - run: npm run moderation-check
         env:
           BASE_URL: http://localhost:3101
       - run: npm run description-check

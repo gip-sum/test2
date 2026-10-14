@@ -120,7 +120,7 @@ try {
   page.on('pageerror', (e) => errors.push(e.message))
   await page.goto(BASE + '/dashboard')
   await page.getByRole('heading', { level: 1, name: 'My properties' }).waitFor()
-  check('summary counts each property once and leaves Removed out', JSON.stringify(await filterCounts(page)) === JSON.stringify({ All: 7, Drafts: 1, 'Under review': 1, Active: 2, Expired: 1, Rejected: 1, Withdrawn: 1 }), JSON.stringify(await filterCounts(page)))
+  check('summary counts each property once and leaves Removed out', JSON.stringify(await filterCounts(page)) === JSON.stringify({ All: 7, Drafts: 1, 'Under review': 1, Active: 2, Expired: 1, Rejected: 1, 'Corrections requested': 0, Withdrawn: 1 }), JSON.stringify(await filterCounts(page)))
   check('one card per property', await cards(page).count() === 7)
   const removed = page.locator('details')
   check('Removed is a collapsed group outside the list', await removed.count() === 1 && !(await removed.evaluate((d) => d.open)) && (await removed.locator('summary').innerText()).includes('Removed (1)'))
@@ -174,7 +174,7 @@ try {
   await review.getByRole('button', { name: 'Yes, withdraw' }).click()
   await page.getByText('No properties have this status.').waitFor()
   check('withdraw sends the card version through the lifecycle endpoint', serviceCalls.length === 1 && serviceCalls[0].p_action === 'withdraw' && serviceCalls[0].p_version === 2)
-  check('counts follow the withdrawal', JSON.stringify(await filterCounts(page)) === JSON.stringify({ All: 7, Drafts: 1, 'Under review': 0, Active: 2, Expired: 1, Rejected: 1, Withdrawn: 2 }))
+  check('counts follow the withdrawal', JSON.stringify(await filterCounts(page)) === JSON.stringify({ All: 7, Drafts: 1, 'Under review': 0, Active: 2, Expired: 1, Rejected: 1, 'Corrections requested': 0, Withdrawn: 2 }))
 
   // Public enquiry on a real listing reaches the owner's inbox.
   const buyer = await context(), bp = await buyer.newPage()
