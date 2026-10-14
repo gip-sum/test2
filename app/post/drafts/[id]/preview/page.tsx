@@ -14,6 +14,8 @@ import { SellerBlock } from '@/components/property/SellerBlock'
 import { PriceDisplay } from '@/components/property/PriceDisplay'
 import { PropertyDisclaimer } from '@/components/property/PropertyDisclaimer'
 import { ConfirmPreview } from '@/components/preview/ConfirmPreview'
+import { DescriptionAssistant } from '@/components/preview/DescriptionAssistant'
+import { descriptionAIAvailable, latestDescriptionJob } from '@/lib/descriptions/queries'
 import { formatAmount } from '@/lib/format/price'
 export const metadata:Metadata={title:'Private property preview',robots:{index:false,follow:false},referrer:'no-referrer'}
 export const dynamic='force-dynamic'
@@ -26,6 +28,8 @@ export default async function PreviewPage({params}:{params:Promise<{id:string}>}
     return <PageShell><section className="mx-auto max-w-3xl p-6"><h1 className="text-heading-2">Preview unavailable</h1><p role="alert" className="mt-4">We could not load all your saved information. Your draft is unchanged.</p><ReloadDraft/><Link href={`/post/drafts/${id}`} className="ml-4 inline-flex min-h-11 items-center text-brand-700">Back to draft</Link></section></PageShell>
   }
   const {model:m,signature,confirmed}=result,edit=`/post/drafts/${id}`
+  let job=null,jobError=''
+  try {job=await latestDescriptionJob(user,id)} catch {jobError='Background job status is unavailable. You can still edit your description.'}
   const amount=m.pricing?(m.pricing.intent==='buy'?m.pricing.price:m.pricing.monthlyRent):undefined
   return <PageShell><article className="mx-auto max-w-[1320px] px-4 pb-28 pt-5 lg:px-8">
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-brand-100 p-4"><div><p className="font-semibold text-brand-700">Private preview · Not published</p><p className="text-body-sm text-ink-700">Only you can open this preview. It shows your saved information.</p></div><Link href={edit} className="inline-flex min-h-11 items-center px-3 font-semibold text-brand-700">Edit draft</Link></div>
@@ -43,6 +47,7 @@ export default async function PreviewPage({params}:{params:Promise<{id:string}>}
           <h1 className="mt-3 break-words font-display text-heading-2 text-ink-900 lg:text-heading-1">{m.title}</h1>
           {m.locality&&<p className="mt-1 text-body text-ink-700">{m.locality}, {m.city}</p>}
         </header>
+        <DescriptionAssistant key={`${id}:${result.draft.revision}`} id={id} revision={result.draft.revision} signature={signature} description={m.description??null} available={descriptionAIAvailable()} complete={m.canConfirm} initialJob={job} initialError={jobError}/>
         <section className="mt-8" aria-labelledby="facts-heading"><h2 id="facts-heading" className="text-heading-3 font-display text-ink-900">Property details</h2>
           {m.facts?<div className="mt-3"><KeyDetails property={{...m.facts,propertyType:m.entry.type,availableFrom:typeof m.facts.availableFrom==='object'?m.facts.availableFrom.from:undefined}}/>{m.facts.possessionBy&&<p className="mt-3 text-body-sm text-ink-700">Expected possession: {m.facts.possessionBy}</p>}{m.facts.availableFrom==='now'&&<p className="mt-3 text-body-sm text-ink-700">Available now</p>}</div>:<p className="mt-3 text-ink-500">Complete the property details to preview this section.</p>}
         </section>

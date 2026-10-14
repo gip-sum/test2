@@ -29,7 +29,7 @@ describe('database checks', () => {
   it('flags missing migrations as a warning that names them', () => {
     const c = state({ migrations: base.migrations!.slice(0, -1) }, 'migrations')
     expect(c.state).toBe('warning')
-    expect(c.detail).toContain('20261014044042_phase_21_admin_console')
+    expect(c.detail).toContain(EXPECTED_MIGRATIONS.at(-1))
   })
   it('judges the expiry job by schedule, last result and age', () => {
     expect(state({ expiry_job: { scheduled: false } }, 'expiry-job').state).toBe('problem')

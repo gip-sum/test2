@@ -5,7 +5,7 @@ import { PRICING_KEYS } from '@/lib/posting/pricing'
 export const DRAFT_KEYS = ['role', 'intent', 'type', ...DETAIL_KEYS, ...LOCATION_KEYS, ...PRICING_KEYS, 'edit', 'step'] as const
 export type DraftKey = typeof DRAFT_KEYS[number]
 export type Snapshot = { path: '/post' | '/post/photos'; input: Partial<Record<DraftKey, string>> }
-export type Draft = { id: string; owner_id: string; collection_id: string; revision: number; created_at: string; updated_at: string; page_path: Snapshot['path'] } & Partial<Record<DraftKey, string | null>>
+export type Draft = { id: string; owner_id: string; collection_id: string; revision: number; created_at: string; updated_at: string; page_path: Snapshot['path']; description?: string | null } & Partial<Record<DraftKey, string | null>>
 export function parseSnapshot(value: unknown): Snapshot | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
   const v = value as Record<string, unknown>

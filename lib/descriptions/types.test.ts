@@ -1,0 +1,12 @@
+import {it,expect} from 'vitest'
+import {buildPreview} from '@/lib/preview/model'
+import {getPostingLocations} from '@/lib/location/queries'
+import {submissionOf,publishedModel} from '@/lib/listings/types'
+import {snapshotOf} from '@/lib/drafts/types'
+import {descriptionFacts,validDescription,visibleJob,type DescriptionJob} from './types'
+const draft={id:'draft',owner_id:'owner',collection_id:'collection',revision:1,created_at:'2026-10-14',updated_at:'2026-10-14',page_path:'/post' as const,role:'OWNER',intent:'buy',type:'APARTMENT',bhk:'2',baths:'2',unit:'sqft',carpet:'1000',furnishing:'UNFURNISHED',floor:'3',floors:'8',status:'READY',age:'4',city:'kolkata',locality:'new-town',address:'Private address',saleprice:'6000000',maintenance:'none',negotiable:'yes',description:'A seller-written paragraph.'}
+const model=()=>buildPreview(draft,[{id:'photo',collection_id:'collection',original_name:'private.jpg',status:'ready',position:0,width:640,height:480,bytes:1000}],'Private Seller',getPostingLocations(),'2026-10-14')
+it('projects only coarse facts, with integer rupees and explicit units',()=>{const f=descriptionFacts(model());expect(f).toMatchObject({price_rupees:6000000,carpet_area:1000,area_unit:'sqft',city:'Kolkata'});expect(JSON.stringify(f)).not.toMatch(/Private|paragraph|photo|owner|collection/);expect(Object.keys(f)).toHaveLength(13)})
+it('description is reviewed and submitted, but excluded from URL snapshots',()=>{const m=model(),s=submissionOf(m,1,'a'.repeat(64));expect(s.description).toBe(draft.description);expect(publishedModel({...s,id:'sub',listing_id:'listing',created_at:'2026-10-14'},[],'listing').description).toBe(draft.description);expect(snapshotOf(draft).input).not.toHaveProperty('description')})
+it('bounds Unicode characters and rejects controls, not ordinary text',()=>{expect(validDescription('🏠'.repeat(2000))).toBe(true);expect(validDescription('a'.repeat(2001))).toBe(false);expect(validDescription('a\nparagraph')).toBe(false);expect(validDescription('a\u0080b')).toBe(false);expect(validDescription('')).toBe(true)})
+it('expired unfinished jobs become an honest failure',()=>{const j={status:'RUNNING',created_at:'2026-10-14T00:00:00Z'} as DescriptionJob;expect(visibleJob(j,Date.parse('2026-10-14T02:00:00Z'))).toMatchObject({status:'FAILED',error_code:'EXPIRED'});expect(visibleJob({...j,status:'SUCCEEDED'})).toMatchObject({status:'SUCCEEDED'})})

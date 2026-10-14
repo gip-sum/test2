@@ -1,6 +1,6 @@
 # GharBazaar Python processing
 
-Python handles bounded data-processing tasks alongside the Next.js application. The first command audits a supplied property-import file. It does not connect to Supabase, import records, approve a listing, schedule work or use an AI model. The existing application remains responsible for full property validation, ownership and publishing.
+Python handles bounded data-processing tasks alongside the Next.js application. The import command audits a supplied property-import file. It does not connect to Supabase, import records, approve a listing, schedule work or use an AI model. The existing application remains responsible for full property validation, ownership and publishing.
 
 Use Python **3.12 or newer**. This task needs no third-party packages, environment variables, credentials or package installation.
 
@@ -49,6 +49,66 @@ Limits are 16 MiB total input, 5,000 nonblank records and 32 KiB per physical li
 
 ## Adding future tasks
 
-Put pure processing functions in `gharbazaar_processing/`, with contract and CLI tests under `tests/`. Introduce third-party dependencies in this project's `pyproject.toml` and lock them when a real task needs them. Keep data access in a dedicated adapter module if future tasks require it. Provider secrets, durable queues, retries, scheduling and production authorization belong to a specified workload; this addon does not configure them.
+Put pure processing functions in `gharbazaar_processing/`, with contract and CLI tests under `tests/`. Introduce third-party dependencies in this project's `pyproject.toml` and lock them when a real task needs them. Keep data access in a dedicated adapter module if future tasks require it. Provider secrets, durable queues, retries, scheduling and production authorization belong to a specified workload; the description worker below configures them for its specified workload.
 
 Acceptance scope: [Python addon specification](../docs/phases/ADDON-PYTHON-data-processing.md).
+
+
+## Private AI description worker
+
+The saved property preview has an optional description editor. Sellers may request
+an AI suggestion from validated saved facts, edit it and explicitly save it.
+Saving invalidates the earlier preview confirmation. Submitted descriptions are
+immutable snapshots; generating never publishes a property.
+
+`gharbazaar_processing.description_worker:describe_property` is a native Vercel
+Queues subscriber in the private `processor` service. Queue messages contain just
+a job UUID. Supabase stores the owner-only job lifecycle and input facts. The
+Python worker claims a five-minute fenced lease, calls AI Gateway with a 45-second
+HTTP timeout and saves plain-text output. Queue delivery retries at most 20 times
+(including busy leases); database claims permit at most 3 provider attempts. New
+jobs are limited to 5 per owner and 100 globally per UTC day. Unfinished jobs older
+than an hour are shown as expired. A crash after provider billing may lead to a
+repeat charge on recovery; there is no claim of exactly-once billing.
+
+No public rewrite exposes the Python service. `vercel.json` routes public traffic
+only to Next.js. Vercel Services and Queues are beta. `python/uv.lock` locks the
+service build; `requirements.lock` supports reproducible pip-based CI/local setup.
+
+From the repo root:
+
+```bash
+python3 -m venv python/.venv
+python/.venv/bin/python -m pip install -r python/requirements.lock
+npm run python-check
+npm run description-db-check
+PYTHONPATH=python python/.venv/bin/python -c 'import gharbazaar_processing.description_worker'
+```
+
+### Activation
+
+1. Apply the additive `python_ai_descriptions` migration and check RLS/advisors.
+2. Deploy both services and verify the private queue subscriber was built.
+3. Choose an exact currently supported text model using the complete live catalog
+   at `https://ai-gateway.vercel.sh/v1/models`. No model is silently defaulted.
+4. Configure a finite AI Gateway budget before enabling generation. Suggested
+   initial allowance: **USD 5 per month**, subject to the operator's approval.
+   Project budgets cover Vercel OIDC calls; API-key authentication needs a budget
+   covering that key or the team. Gateway budgets are soft caps: the request that
+   crosses the limit can complete. They do not cap Vercel compute/queue charges.
+   Do not use BYOK as a substitute for a budget (BYOK spend is excluded from these
+   Gateway caps). No automatic top-up is configured by this addon.
+5. Set server-only `AI_GATEWAY_MODEL`, `AI_DESCRIPTION_ENABLED=true` and
+   `SUPABASE_SERVICE_ROLE_KEY`. On Vercel the worker obtains its runtime OIDC token;
+   outside Vercel an `AI_GATEWAY_API_KEY` may be configured privately. Never paste
+   a credential into chat, git, a browser form visible to other users or a
+   `NEXT_PUBLIC_` variable.
+6. Test a real owner through generate → review/edit → save → confirm → submit.
+   Inspect queue redelivery and Gateway cost/logs. Never auto-approve the listing.
+
+Keep `AI_DESCRIPTION_ENABLED=false` (or unset) until activation. Disabling the
+flag prevents new generation and causes queued jobs to fail without AI calls.
+Manual descriptions and existing published descriptions keep working. Production
+activation and real model quality are not proven by mocked tests.
+
+Acceptance scope: [AI addon specification](../docs/phases/ADDON-PYTHON-AI-descriptions.md).

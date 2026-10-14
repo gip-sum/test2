@@ -1,3 +1,4 @@
+import { validDescription } from '@/lib/descriptions/types'
 import { parsePostingEntry } from '@/lib/posting/entry'
 import { readDetailInput, validateDetails } from '@/lib/posting/details'
 import { readLocationInput, validateLocation } from '@/lib/posting/location'
@@ -6,9 +7,11 @@ import { PROPERTY_TYPE_LABEL, type PropertyMedia } from '@/lib/property/types'
 import type { Location } from '@/lib/location/types'
 import { snapshotOf, type Draft } from '@/lib/drafts/types'
 import type { Photo } from '@/lib/media/types'
-export type PreviewWarning = { section: 'entry' | 'details' | 'location' | 'pricing' | 'photos' | 'seller'; message: string }
+export type PreviewWarning = { section: 'entry' | 'details' | 'location' | 'pricing' | 'photos' | 'seller' | 'description'; message: string }
 export function buildPreview(draft: Draft, photos: Photo[], sellerName: string | null, places: readonly Location[], today: string) {
+  const description = draft.description?.trim() || null
   const input = snapshotOf(draft).input, entry = parsePostingEntry(input), warnings: PreviewWarning[] = []
+  if (description && !validDescription(description)) warnings.push({section:'description',message:'Use plain text, up to 2,000 characters, for your description.'})
   const add = (section: PreviewWarning['section'], errors: Record<string, string | undefined>) => {
     for (const message of Object.values(errors)) if (message) warnings.push({ section, message })
   }
@@ -31,6 +34,6 @@ export function buildPreview(draft: Draft, photos: Photo[], sellerName: string |
   const title = [entry.type === 'STUDIO' ? 'Studio' : facts?.bedrooms ? `${facts.bedrooms} BHK` : null, entry.type ? PROPERTY_TYPE_LABEL[entry.type].toLowerCase() : 'Property', entry.intent === 'buy' ? 'for sale' : entry.intent === 'rent' ? 'for rent' : null, locality ? `in ${locality}` : null].filter(Boolean).join(' ')
   const media: PropertyMedia[] = ready.map((p,i) => ({ id:p.id, url:`/api/posting/photos/${p.id}`, alt:`Property photo ${i+1} — ${title}`, authenticated:true }))
   const carpetSqft = facts ? facts.carpetArea * (facts.areaUnit === 'sqm' ? 10.7639 : facts.areaUnit === 'sqyd' ? 9 : 1) : undefined
-  return { entry, facts, pricing, location, locality, city, title, media, sellerName:name, carpetSqft, warnings, canConfirm:warnings.length===0 }
+  return { description, entry, facts, pricing, location, locality, city, title, media, sellerName:name, carpetSqft, warnings, canConfirm:warnings.length===0 }
 }
-export type PreviewModel = ReturnType<typeof buildPreview>
+export type PreviewModel = Omit<ReturnType<typeof buildPreview>, 'description'> & {description?: string | null}

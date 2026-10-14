@@ -40,10 +40,13 @@
     "analytics-db-check": "node scripts/analytics-db-check.mjs",
     "performance-check": "node scripts/performance-check.mjs",
     "admin-db-check": "node scripts/admin-db-check.mjs",
-    "admin-check": "node scripts/admin-check.mjs"
+    "admin-check": "node scripts/admin-check.mjs",
+    "description-db-check": "node scripts/description-db-check.mjs",
+    "description-check": "node scripts/description-check.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",
+    "@vercel/queue": "0.8.0",
     "next": "^16.3.5",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

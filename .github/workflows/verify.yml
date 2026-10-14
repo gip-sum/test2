@@ -26,7 +26,9 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
+      - run: python -m pip install -r python/requirements.lock
       - run: npm run python-check
+      - run: PYTHONPATH=python python -c "from vercel.queue import get_subscriptions; import gharbazaar_processing.description_worker; assert len(get_subscriptions()) == 1"
       - run: npm run verify
       - run: npm run media-db-check
       - run: npm run draft-db-check
@@ -35,6 +37,7 @@ jobs:
       - run: npm run enquiry-db-check
       - run: npm run analytics-db-check
       - run: npm run admin-db-check
+      - run: npm run description-db-check
       - run: npm run build
       - name: Install browser for layout checks
         run: |
@@ -62,6 +65,9 @@ jobs:
           BASE_URL: http://localhost:3101
       # Phase 21: the admin console (staff gate, figures, listings, system).
       - run: npm run admin-check
+        env:
+          BASE_URL: http://localhost:3101
+      - run: npm run description-check
         env:
           BASE_URL: http://localhost:3101
       - run: npm run preview-check

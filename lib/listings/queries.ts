@@ -83,7 +83,7 @@ export async function changeListing(user:AuthUser,draftId:string,action:'withdra
  if(!result||result.owner_id!==user.id||result.draft_id!==draftId)throw new DraftError('Listing confirmation was invalid.')
  return result
 }
-const publicSubmissionFields='id,listing_id,title,seller_name,seller_type,intent,property_type,bedrooms,bathrooms,area_unit,carpet_area,built_up_area,super_area,furnishing,floor,total_floors,construction_status,age_years,possession_by,available_from,city_name,locality_name,city_id,locality_id,sub_locality_id,society_name,address,latitude,longitude,price,deposit,maintenance_status,maintenance_monthly,negotiable,created_at'
+const publicSubmissionFields='description,id,listing_id,title,seller_name,seller_type,intent,property_type,bedrooms,bathrooms,area_unit,carpet_area,built_up_area,super_area,furnishing,floor,total_floors,construction_status,age_years,possession_by,available_from,city_name,locality_name,city_id,locality_id,sub_locality_id,society_name,address,latitude,longitude,price,deposit,maintenance_status,maintenance_monthly,negotiable,created_at'
 export async function getPublishedListing(id:string){
  if(!authConfig())return null
  const listing=(await rows<Pick<Listing,'id'|'status'|'current_submission_id'|'activated_at'|'expires_at'>>(`property_listings?id=eq.${id}&select=id,status,current_submission_id,activated_at,expires_at`,'public'))[0]

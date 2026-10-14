@@ -392,3 +392,12 @@ insert into public.staff_members (user_id, role) values ('<auth user uuid>', 'AD
 `npm run admin-db-check` (PGlite) and `npm run admin-check` (3101/3300
 simulator) cover the staff gate, figures and system checks. See
 [the phase specification](docs/phases/PHASE-21-admin-dashboard.md).
+
+## Python AI description addon
+
+Saved property previews support optional seller descriptions and an AI suggestion
+workflow backed by private Python queue jobs. Sellers review and save suggestions
+explicitly; publication still follows the existing preview and approval flow.
+AI generation stays disabled until provider/model and finite spending controls
+are configured. See [the worker setup](python/README.md#private-ai-description-worker)
+and [the acceptance scope](docs/phases/ADDON-PYTHON-AI-descriptions.md).

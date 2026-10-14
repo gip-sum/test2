@@ -32,7 +32,7 @@ const CITY_SLUGS = new Set(KOLKATA_LOCATIONS.filter((l) => l.type === 'CITY').ma
  * literal segments, so Next 404s it without help.
  */
 export const config = {
-  matcher: ['/admin/:path*', '/listing/:id', '/buy/:path+', '/rent/:path+', '/property/:handle', '/account/:path*', '/dashboard/:path*', '/login', '/api/auth/state', '/post/photos', '/post/drafts/:path*', '/api/posting/drafts', '/api/posting/preview', '/api/posting/lifecycle', '/api/posting/submissions/:path*', '/api/posting/photos/:path*'],
+  matcher: ['/admin/:path*', '/listing/:id', '/buy/:path+', '/rent/:path+', '/property/:handle', '/account/:path*', '/dashboard/:path*', '/login', '/api/auth/state', '/post/photos', '/post/drafts/:path*', '/api/posting/drafts', '/api/posting/preview', '/api/posting/description/:path*', '/api/posting/lifecycle', '/api/posting/submissions/:path*', '/api/posting/photos/:path*'],
 }
 
 /**

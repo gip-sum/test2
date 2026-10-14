@@ -1,0 +1,2 @@
+# Exact transitive versions for the deployed worker.
+-r requirements.lock
