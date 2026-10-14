@@ -23,6 +23,10 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: npm run python-check
       - run: npm run verify
       - run: npm run media-db-check
       - run: npm run draft-db-check

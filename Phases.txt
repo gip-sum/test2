@@ -69,6 +69,17 @@ Key focus:
 Reference details and acceptance criteria:
 docs/phases/PHASE-E-99acres-interface-redesign.md
 
+PYTHON DATA-PROCESSING ADDON — CLIENT REQUEST, 14 OCTOBER 2026
+
+Add Python alongside the existing Next.js/TypeScript backend for specific
+AI, data-processing or background workloads when each task is defined.
+First task: read-only audit of supplied property-import JSONL files,
+with normalized records, invalid-field diagnostics and duplicate review.
+No main-backend replacement, live importer, AI provider, persistent queue
+or scheduled job is introduced. Phase 19 is not started by this addon;
+Phase 72 remains the background-infrastructure milestone.
+Acceptance criteria: docs/phases/ADDON-PYTHON-data-processing.md
+
 
 ==================================================
 FOUNDATION & CORE MARKETPLACE

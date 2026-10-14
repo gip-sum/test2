@@ -56,6 +56,7 @@ npm run dev          # http://localhost:3000
 | `npm run dev` | Development server |
 | `npm run build` | Production build |
 | `npm run verify` | **lint + typecheck + test** — run before every commit |
+| `npm run python-check` | Python import-audit tests; requires Python 3.12+ |
 | `npm run shots -- /` | Render routes at 390/412/768/1280, fail on horizontal overflow |
 | `npm run light-check` | Check theme surfaces under a dark-mode browser |
 | `npm run search-check` | Browser assertions for search |
@@ -143,6 +144,8 @@ phone delivery are not enabled. The simulated browser suite passed 15/15
 lead checks; the current repo suite passed 173/173 tests.
 
 ## Architecture
+
+Python is available for specific data-processing tasks alongside the application. Start with the read-only import audit described in [python/README.md](python/README.md). It needs no credentials or Python dependencies and does not replace the main backend. Python verification runs separately in CI. AI providers and scheduled job infrastructure are not configured by this addon.
 
 One Next.js application, modular inside, single deployable.
 

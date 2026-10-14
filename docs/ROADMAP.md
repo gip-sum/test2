@@ -40,6 +40,7 @@ but its eight-phase build order is superseded.
 | 19 | Seller dashboard | Implemented; enquiry migration not yet applied live; real-account verification pending |
 | 20 | Seller listing analytics | Implemented; analytics migration not yet applied live; contact reveals deferred to Phase 10 |
 | 21 | Admin dashboard | Implemented (read-only console); migration not yet applied live; first admin to be granted by an operator |
+| Python addon | Read-only import audit and independent processing tests | Integrated with Phase 21 main; 25 Python tests, app verify and build passed; independent Python checks added to CI; no live importer, AI provider or scheduling |
 | E | 99acres interface redesign from client screenshots | Complete and deployed; green primary colour and header logo restored |
 | 40A | Home loan calculators | Implemented ahead of order at client request |
 

@@ -11,3 +11,9 @@ coverage/
 .shots/
 
 supabase/.temp/
+
+# Python processing has its own environment; never commit job outputs or caches.
+__pycache__/
+*.py[cod]
+.venv/
+python/.reports/

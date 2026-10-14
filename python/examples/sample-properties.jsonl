@@ -1,0 +1,2 @@
+{"source_id":"sample-buy-001","intent":"buy","property_type":"APARTMENT","title":"SAMPLE import — 2 BHK apartment","city":"Kolkata","locality":"New Town","price_rupees":7500000,"carpet_area":900,"area_unit":"sqft"}
+{"source_id":"sample-rent-001","intent":"rent","property_type":"STUDIO","title":"SAMPLE import — studio for rent","city":"Kolkata","locality":"Salt Lake","price_rupees":15000,"carpet_area":400,"area_unit":"sqft"}

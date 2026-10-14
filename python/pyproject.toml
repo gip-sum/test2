@@ -1,0 +1,9 @@
+[project]
+name = "gharbazaar-processing"
+version = "0.1.0"
+description = "Bounded, read-only property data processing alongside GharBazaar"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.gharbazaar]
+contract-version = 1
