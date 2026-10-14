@@ -38,6 +38,7 @@ jobs:
       - run: npm run analytics-db-check
       - run: npm run admin-db-check
       - run: npm run description-db-check
+      - run: npm run moderation-db-check
       - run: npm run build
       - name: Install browser for layout checks
         run: |
@@ -65,6 +66,9 @@ jobs:
           BASE_URL: http://localhost:3101
       # Phase 21: the admin console (staff gate, figures, listings, system).
       - run: npm run admin-check
+        env:
+          BASE_URL: http://localhost:3101
+      - run: npm run moderation-check
         env:
           BASE_URL: http://localhost:3101
       - run: npm run description-check

@@ -13,6 +13,12 @@ afterEach(() => vi.unstubAllGlobals())
 const overview = { listings: { ACTIVE: 2, UNDER_REVIEW: 1 }, drafts_never_submitted: 0, queue: { waiting: 1, oldest_since: '2026-10-13T00:00:00Z' }, leads: { last_7_days: 1, last_30_days: 2, real_listings_30_days: 1, no_seller_30_days: 0, untouched_over_2_days: 0 }, users: { total: 3, new_7_days: 1, with_listings: 1, staff: 1 } }
 
 describe('the staff gate', () => {
+  it('moderators can review but cannot enter the admin console', async () => {
+    reply = () => Response.json('MODERATOR')
+    expect(await staffRole()).toBe('MODERATOR')
+    await expect(requireStaff('/admin')).rejects.toThrow('not found')
+    expect(await requireStaff('/admin/moderation', ['ADMIN', 'MODERATOR'])).toMatchObject({ role: 'MODERATOR' })
+  })
   it('a signed-out visitor is sent to log in and back', async () => {
     m.user = null
     await expect(requireStaff('/admin/listings?status=review')).rejects.toMatchObject({ to: '/login?next=%2Fadmin%2Flistings%3Fstatus%3Dreview' })

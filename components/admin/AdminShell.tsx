@@ -17,7 +17,7 @@ export function AdminShell({ current, title, role, children }: { current: typeof
     <p className="text-overline uppercase tracking-widest text-ink-700">Staff only · signed in as {role === 'ADMIN' ? 'admin' : role.toLowerCase()}</p>
     <h1 className="mt-2 break-words font-display text-heading-1 text-ink-900">{title}</h1>
     <nav aria-label="Admin sections" className="mt-5">
-      <ul className="flex flex-wrap gap-2">{SECTIONS.map((s) => <li key={s.key}>
+      <ul className="flex flex-wrap gap-2">{SECTIONS.filter(s => role === 'ADMIN' || s.key === 'moderation').map((s) => <li key={s.key}>
         <Link href={s.href} aria-current={s.key === current ? 'page' : undefined}
           className={cn('inline-flex min-h-11 items-center rounded-md border px-4 text-label font-semibold', s.key === current ? 'border-ink-900 bg-ink-900 text-ink-inverse' : 'border-border-subtle bg-surface-000 text-ink-900 hover:border-border-strong')}>{s.label}</Link>
       </li>)}</ul>

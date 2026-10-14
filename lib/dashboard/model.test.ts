@@ -15,6 +15,12 @@ const input = (over: Partial<DashboardInput>): DashboardInput => ({ drafts: [], 
 const withdrawEvent = (n: number, from: ListingEvent['from_status'], at = iso(-1)) => ({ listing_id: uuid(100 + n), from_status: from, to_status: 'DRAFT' as const, created_at: at })
 
 describe('displayStatus', () => {
+  it('preserves correction requests as a distinct private seller state', () => {
+    expect(displayStatus({ status: 'CHANGES_REQUESTED', expires_at: null }, undefined, NOW)).toBe('CHANGES_REQUESTED')
+    const cards = buildCards(input({ listings: [listing(1, { status: 'CHANGES_REQUESTED', rejection_reason: 'Please replace the unclear photos' })] }))
+    expect(cards[0]).toMatchObject({ status: 'CHANGES_REQUESTED', rejectionReason: 'Please replace the unclear photos' })
+    expect(arrange(cards, { status: 'corrections', sort: 'recent', page: 1 }).counts.corrections).toBe(1)
+  })
   it('a draft with no listing row is a draft', () => expect(displayStatus(null, undefined, NOW)).toBe('DRAFT'))
   it('derives Withdrawn from a DRAFT event that came from another status', () => {
     expect(displayStatus({ status: 'DRAFT', expires_at: null }, { from_status: 'ACTIVE' }, NOW)).toBe('WITHDRAWN')
@@ -88,7 +94,7 @@ describe('arrange', () => {
 
   it('counts each property once and leaves Removed out of every count', () => {
     const view = arrange(cards, parseQuery({}))
-    expect(view.counts).toEqual({ all: 5, draft: 1, review: 1, active: 2, expired: 0, rejected: 0, withdrawn: 1 })
+    expect(view.counts).toEqual({ all: 5, draft: 1, review: 1, active: 2, expired: 0, rejected: 0, corrections: 0, withdrawn: 1 })
     expect(view.removed.map((c) => c.draftId)).toEqual([uuid(5)])
     expect(view.visible.some((c) => c.status === 'REMOVED')).toBe(false)
     expect(view.expiringSoon).toBe(1)

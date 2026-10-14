@@ -8,6 +8,7 @@ const TONE: Record<DashboardStatus, string> = {
   ACTIVE: 'bg-trust-100 text-trust-600',
   EXPIRED: 'bg-neutral-100 text-neutral-600',
   REJECTED: 'bg-danger-100 text-danger-600',
+  CHANGES_REQUESTED: 'bg-warn-100 text-warn-600',
   WITHDRAWN: 'bg-neutral-100 text-neutral-600',
   REMOVED: 'bg-neutral-100 text-neutral-600',
 }

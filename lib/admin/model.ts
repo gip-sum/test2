@@ -7,7 +7,7 @@
  *   person's contact details pass through here.
  */
 
-export const ADMIN_STATUSES = ['DRAFT', 'UNDER_REVIEW', 'ACTIVE', 'EXPIRED', 'REJECTED', 'WITHDRAWN', 'REMOVED'] as const
+export const ADMIN_STATUSES = ['DRAFT', 'UNDER_REVIEW', 'ACTIVE', 'EXPIRED', 'REJECTED', 'CHANGES_REQUESTED', 'WITHDRAWN', 'REMOVED'] as const
 export type AdminStatus = typeof ADMIN_STATUSES[number]
 export const ADMIN_FILTERS = [
   { key: 'all', label: 'All', status: null },
@@ -15,6 +15,7 @@ export const ADMIN_FILTERS = [
   { key: 'active', label: 'Active', status: 'ACTIVE' },
   { key: 'expired', label: 'Expired', status: 'EXPIRED' },
   { key: 'rejected', label: 'Rejected', status: 'REJECTED' },
+  { key: 'corrections', label: 'Corrections requested', status: 'CHANGES_REQUESTED' },
   { key: 'withdrawn', label: 'Withdrawn', status: 'WITHDRAWN' },
   { key: 'removed', label: 'Removed', status: 'REMOVED' },
 ] as const satisfies ReadonlyArray<{ key: string; label: string; status: AdminStatus | null }>
@@ -43,6 +44,7 @@ export const EXPECTED_MIGRATIONS = [
   '20261014032608_phase_20_listing_analytics',
   '20261014044042_phase_21_admin_console',
   '20261014092721_python_ai_descriptions',
+  '20261014142159_phase_22_listing_moderation',
 ] as const
 
 export type AdminListing = {

@@ -408,6 +408,8 @@ Key focus:
 
 
 PHASE 22 — LISTING MODERATION
+Status: IMPLEMENTED (migration applied; first staff account and real-account verification pending)
+Spec: docs/phases/PHASE-22-listing-moderation.md
 
 Build the human moderation workflow.
 

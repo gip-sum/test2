@@ -10,7 +10,7 @@ const moment = (iso: string) => `${new Date(iso).toLocaleString('en-IN', { timeZ
 
 const SINCE_LABEL: Record<Card['status'], string> = {
   DRAFT: 'Last saved', UNDER_REVIEW: 'Submitted', ACTIVE: 'Live since', EXPIRED: 'Expired',
-  REJECTED: 'Rejected', WITHDRAWN: 'Withdrawn', REMOVED: 'Removed',
+  REJECTED: 'Rejected', CHANGES_REQUESTED: 'Corrections requested', WITHDRAWN: 'Withdrawn', REMOVED: 'Removed',
 }
 
 const action = 'inline-flex min-h-11 items-center font-semibold text-brand-700 underline underline-offset-4'
@@ -63,7 +63,7 @@ export function PropertyCard({ card, publishing }: { card: Card; publishing: boo
         <Link href={`${base}/lifecycle`} className={action}>{named('Review & re-submit')}</Link>
         <Link href={`${base}/submitted`} className={action}>{named('View submitted copy')}</Link>
       </>}
-      {status === 'REJECTED' && <>
+      {(status === 'REJECTED' || status === 'CHANGES_REQUESTED') && <>
         <Link href={base} className={action}>{named('Edit draft')}</Link>
         <Link href={`${base}/lifecycle`} className={action}>{named('Review & re-submit')}</Link>
       </>}

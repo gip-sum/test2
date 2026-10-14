@@ -42,7 +42,9 @@
     "admin-db-check": "node scripts/admin-db-check.mjs",
     "admin-check": "node scripts/admin-check.mjs",
     "description-db-check": "node scripts/description-db-check.mjs",
-    "description-check": "node scripts/description-check.mjs"
+    "description-check": "node scripts/description-check.mjs",
+    "moderation-db-check": "node scripts/moderation-db-check.mjs",
+    "moderation-check": "node scripts/moderation-check.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

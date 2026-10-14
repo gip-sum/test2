@@ -40,6 +40,7 @@ but its eight-phase build order is superseded.
 | 19 | Seller dashboard | Implemented; enquiry migration not yet applied live; real-account verification pending |
 | 20 | Seller listing analytics | Implemented; analytics migration not yet applied live; contact reveals deferred to Phase 10 |
 | 21 | Admin dashboard | Implemented (read-only console); migration not yet applied live; first admin to be granted by an operator |
+| 22 | Listing moderation | Implemented: private review, approval, rejection, correction requests and immutable decisions. Migration applied and live rollback-only checks passed; first staff account and real-account workflow verification pending. |
 | Python addon | Import audit, local inbox worker and private AI description jobs | Import audit integrated; local automatic inbox audits added without hosted services. Description editor, immutable snapshots and private Python queue worker implemented; paid generation remains disabled by client decision. See the three ADDON-PYTHON specifications. |
 | E | 99acres interface redesign from client screenshots | Complete and deployed; green primary colour and header logo restored |
 | 40A | Home loan calculators | Implemented ahead of order at client request |
@@ -141,7 +142,7 @@ widening an existing table.
 | `listing_stat` | 20 | Implemented as `property_listing_daily_stats` (views per listing per India day) with same-day `property_listing_view_marks` |
 | `saved_listings` | 20 | A buyer can save a real listing; sellers see aggregate counts only |
 | `staff_members` | 21 | Implemented: who is platform staff, role, grant and revocation; operator-granted only |
-| `moderation_action` | 22 | A human approves or rejects |
+| `moderation_actions` | 22 | Implemented: immutable staff decision, reviewed submission, reason, validity, reviewer and version-bound retry identity |
 | `report` | 24 | Content can be reported |
 | `audit_log` | 27 | Actions must be reconstructable |
 | `location` with stable IDs | 28 | Places outlive their slugs |

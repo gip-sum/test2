@@ -42,6 +42,11 @@ const mock = http.createServer(async (req, res) => {
     case '/rest/v1/rpc/my_staff_role': return send(200, staff ? 'ADMIN' : null)
     case '/rest/v1/rpc/admin_overview': return !staff ? send(403, {}) : overviewDown ? send(503, {}) : send(200, overview())
     case '/rest/v1/rpc/admin_system_status': return staff ? send(200, system()) : send(403, {})
+    case '/rest/v1/rpc/moderation_queue': {
+      if (!staff) return send(403, {})
+      const rows = listings.filter(l => l.status === 'UNDER_REVIEW').sort((a,b) => a.submitted_at.localeCompare(b.submitted_at))
+      return send(200, { rows: rows.slice(body.p_offset, body.p_offset + body.p_limit), total: rows.length })
+    }
     case '/rest/v1/rpc/admin_listings': {
       if (!staff) return send(403, {})
       const rows = listings.filter((l) => !body.p_status || l.status === body.p_status)
@@ -107,7 +112,7 @@ try {
 
   // Moderation queue.
   await page.goto(BASE + '/admin/moderation')
-  check('the queue explains that decisions arrive in Phase 22', await page.getByText(/Reviewing, approving and rejecting from this console arrive in Phase 22/).isVisible())
+  check('the queue opens immutable copies for staff decisions', await page.getByText(/Open a submitted copy to review its facts and photos/).isVisible())
   check('the queue lists both waiting listings, oldest first', (await page.locator('table tbody tr').allInnerTexts()).map((t) => t.includes('Listing 1') ? 1 : t.includes('Listing 2') ? 2 : 0).join() === '1,2')
 
   // System status.

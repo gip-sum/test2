@@ -57,6 +57,8 @@ npm run dev          # http://localhost:3000
 | `npm run build` | Production build |
 | `npm run verify` | **lint + typecheck + test** — run before every commit |
 | `npm run python-check` | Python import, local job and description-worker tests; requires Python 3.12+ |
+| `npm run moderation-db-check` | Phase 22 decisions, roles, RLS, retry fencing and correction recovery against PGlite |
+| `npm run moderation-check` | Private staff review and seller recovery against an isolated browser simulator |
 | `npm run shots -- /` | Render routes at 390/412/768/1280, fail on horizontal overflow |
 | `npm run light-check` | Check theme surfaces under a dark-mode browser |
 | `npm run search-check` | Browser assertions for search |
@@ -406,3 +408,28 @@ explicitly; publication still follows the existing preview and approval flow.
 AI generation stays disabled until provider/model and finite spending controls
 are configured. See [the worker setup](python/README.md#private-ai-description-worker)
 and [the acceptance scope](docs/phases/ADDON-PYTHON-AI-descriptions.md).
+
+## Phase 22: listing moderation
+
+Active ADMIN and MODERATOR accounts can open `/admin/moderation`, inspect the
+immutable submitted copy and private photos, and explicitly approve, reject or
+request corrections. Moderators can use moderation only; other admin sections are
+restricted to ADMIN. No account can review its own listing.
+
+Every decision records the staff account, submitted copy, reason, expiry and
+listing versions. Identical request retries are safe; stale versions or copies
+must refresh. Approval makes the copy public for the chosen 1–180 days. Rejection
+and corrections keep it private and clear the previous preview confirmation.
+Sellers see a separate “Corrections requested” status and must review/confirm
+before re-submitting.
+
+`supabase/migrations/20261014142159_phase_22_listing_moderation.sql` introduces the
+workflow and was applied live. Staff grants remain a trusted operator's task;
+production currently has no active staff account. Choose the intended existing
+account explicitly and grant ADMIN or MODERATOR through the existing
+`staff_members` entity. Never put a staff-grant endpoint in the public app.
+
+See [Phase 22](docs/phases/PHASE-22-listing-moderation.md) for scope and verification.
+The optional `scripts/moderation-live-check.sql` is a trusted SQL-operator check
+that uses synthetic records and always rolls them back. It never assigns a real
+staff account or publishes real inventory. Paid AI remains disabled.

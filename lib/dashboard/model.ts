@@ -19,11 +19,11 @@ import type { Location } from '@/lib/location/types'
  * listing row at all.
  */
 
-export const DASHBOARD_STATUSES = ['DRAFT', 'UNDER_REVIEW', 'ACTIVE', 'EXPIRED', 'REJECTED', 'WITHDRAWN', 'REMOVED'] as const
+export const DASHBOARD_STATUSES = ['DRAFT', 'UNDER_REVIEW', 'ACTIVE', 'EXPIRED', 'REJECTED', 'CHANGES_REQUESTED', 'WITHDRAWN', 'REMOVED'] as const
 export type DashboardStatus = typeof DASHBOARD_STATUSES[number]
 export const DASHBOARD_LABEL: Record<DashboardStatus, string> = {
   DRAFT: 'Draft', UNDER_REVIEW: 'Under review', ACTIVE: 'Active', EXPIRED: 'Expired',
-  REJECTED: 'Rejected', WITHDRAWN: 'Withdrawn', REMOVED: 'Removed',
+  REJECTED: 'Rejected', CHANGES_REQUESTED: 'Corrections requested', WITHDRAWN: 'Withdrawn', REMOVED: 'Removed',
 }
 
 /** URL filter keys, in display order. Removed is not a filter: it has its own collapsed group. */
@@ -34,6 +34,7 @@ export const FILTERS = [
   { key: 'active', label: 'Active', status: 'ACTIVE' },
   { key: 'expired', label: 'Expired', status: 'EXPIRED' },
   { key: 'rejected', label: 'Rejected', status: 'REJECTED' },
+  { key: 'corrections', label: 'Corrections requested', status: 'CHANGES_REQUESTED' },
   { key: 'withdrawn', label: 'Withdrawn', status: 'WITHDRAWN' },
 ] as const satisfies ReadonlyArray<{ key: string; label: string; status: DashboardStatus | null }>
 export type FilterKey = typeof FILTERS[number]['key']
@@ -170,7 +171,7 @@ export function buildCards(input: DashboardInput): PropertyCard[] {
       status, title, intent, price, place, since, expiresAt,
       daysLeft: msLeft === null ? null : Math.max(0, Math.ceil(msLeft / DAY)),
       expiringSoon: msLeft !== null && msLeft <= EXPIRY_WARNING_DAYS * DAY,
-      rejectionReason: status === 'REJECTED' ? listing!.rejection_reason : null,
+      rejectionReason: (status === 'REJECTED' || status === 'CHANGES_REQUESTED') ? listing!.rejection_reason : null,
       progress: status === 'DRAFT' && !listing ? fromDraft?.progress ?? null : null,
       detailsUnavailable,
       enquiries: !listing || status === 'REMOVED' && !count ? null : input.enquiryCounts === null ? 'unavailable' : { total: count?.total ?? 0, newCount: count?.new_count ?? 0 },

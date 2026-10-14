@@ -25,11 +25,11 @@ async function json(response: Response | null): Promise<unknown> {
   try { return await response.json() } catch { return undefined }
 }
 
-export type StaffRole = 'ADMIN'
+export type StaffRole = 'ADMIN' | 'MODERATOR'
 /** The caller's active staff role, or null — including when it cannot be read. */
 export async function staffRole(): Promise<StaffRole | null> {
   const role = await json(await rpc('my_staff_role'))
-  return role === 'ADMIN' ? role : null
+  return role === 'ADMIN' || role === 'MODERATOR' ? role : null
 }
 
 /**
@@ -38,11 +38,11 @@ export async function staffRole(): Promise<StaffRole | null> {
  * so the console is not advertised to anyone who cannot use it.
  */
 /** `now` is the request's reference time, so every wait on a page is measured from one instant. */
-export async function requireStaff(path: string): Promise<{ user: AuthUser; role: StaffRole; now: number }> {
+export async function requireStaff(path: string, allowed: readonly StaffRole[] = ['ADMIN']): Promise<{ user: AuthUser; role: StaffRole; now: number }> {
   const user = await getVerifiedUser()
   if (!user) redirect(`/login?next=${encodeURIComponent(path)}`)
   const role = await staffRole()
-  if (!role) notFound()
+  if (!role || !allowed.includes(role)) notFound()
   return { user, role, now: Date.now() }
 }
 

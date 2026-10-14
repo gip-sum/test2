@@ -15,7 +15,7 @@ export function ListingRows({ rows, queue = false, now }: { rows: AdminListing[]
     const ms = now - Date.parse(r.submitted_at)
     return `${formatWait(ms)}${ms > REVIEW_OVERDUE_MS ? ' — over 2 days' : ''}`
   }
-  const title = (r: AdminListing) => r.status === 'ACTIVE' ? <Link href={`/listing/${r.id}`} className="inline-flex min-h-11 items-center break-words font-semibold text-brand-700 underline underline-offset-4">{r.title}</Link> : <span className="break-words font-semibold text-ink-900">{r.title}</span>
+  const title = (r: AdminListing) => <Link href={`/admin/moderation/${r.id}`} className="inline-flex min-h-11 items-center break-words font-semibold text-brand-700 underline underline-offset-4">{r.title}</Link>
   return <>
     <table className="hidden w-full border-collapse text-left text-body-sm md:table">
       <thead><tr className="border-b border-border-strong text-ink-700">

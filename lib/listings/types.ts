@@ -1,14 +1,14 @@
 import type { PreviewModel } from '@/lib/preview/model'
-export const LISTING_STATUS = ['DRAFT','UNDER_REVIEW','ACTIVE','REJECTED','EXPIRED','DELETED'] as const
+export const LISTING_STATUS = ['DRAFT','UNDER_REVIEW','ACTIVE','REJECTED','CHANGES_REQUESTED','EXPIRED','DELETED'] as const
 export type ListingStatus = typeof LISTING_STATUS[number]
-export const STATUS_LABEL: Record<ListingStatus,string> = {DRAFT:'Draft',UNDER_REVIEW:'Under review',ACTIVE:'Active',REJECTED:'Rejected',EXPIRED:'Expired',DELETED:'Deleted'}
+export const STATUS_LABEL: Record<ListingStatus,string> = {DRAFT:'Draft',UNDER_REVIEW:'Under review',ACTIVE:'Active',REJECTED:'Rejected',CHANGES_REQUESTED:'Corrections requested',EXPIRED:'Expired',DELETED:'Deleted'}
 export type Listing = {id:string;owner_id:string;draft_id:string;current_submission_id:string|null;status:ListingStatus;version:number;created_at:string;updated_at:string;activated_at:string|null;expires_at:string|null;rejection_reason:string|null}
 export type ListingEvent = {id:number;listing_id:string;from_status:ListingStatus|null;to_status:ListingStatus;reason:string|null;actor_type:'OWNER'|'OPERATOR'|'SYSTEM';actor_id:string|null;created_at:string}
 export function effectiveStatus(listing:Pick<Listing,'status'|'expires_at'>,now=Date.now()):ListingStatus {
  return listing.status==='ACTIVE'&&listing.expires_at&&Date.parse(listing.expires_at)<=now?'EXPIRED':listing.status
 }
-export function canSubmit(status:ListingStatus){return ['DRAFT','REJECTED','EXPIRED'].includes(status)}
-export function canWithdraw(status:ListingStatus){return ['UNDER_REVIEW','ACTIVE','REJECTED','EXPIRED'].includes(status)}
+export function canSubmit(status:ListingStatus){return ['DRAFT','REJECTED','CHANGES_REQUESTED','EXPIRED'].includes(status)}
+export function canWithdraw(status:ListingStatus){return ['UNDER_REVIEW','ACTIVE','REJECTED','CHANGES_REQUESTED','EXPIRED'].includes(status)}
 export type Submission = {description?:string|null;id:string;listing_id:string;draft_revision:number;preview_hash:string;title:string;seller_name:string;seller_type:'OWNER'|'AGENT'|'BUILDER';intent:'buy'|'rent';property_type:NonNullable<PreviewModel['entry']['type']>;bedrooms:number|null;bathrooms:number;area_unit:'sqft'|'sqm'|'sqyd';carpet_area:number;built_up_area:number|null;super_area:number|null;furnishing:NonNullable<PreviewModel['facts']>['furnishing'];floor:number|null;total_floors:number;construction_status:'READY'|'UNDER_CONSTRUCTION';age_years:number|null;possession_by:string|null;available_from:string|null;city_name:string;locality_name:string;city_id:string;locality_id:string;sub_locality_id:string|null;society_name:string|null;address:string;latitude:number|null;longitude:number|null;price:number;deposit:number|null;maintenance_status:'none'|'unknown'|'included'|'separate';maintenance_monthly:number|null;negotiable:boolean;created_at:string}
 export type ListingPhoto = {id:string;submission_id:string;source_id:string;object_path:string;position:number;width:number;height:number;bytes:number;sha256:string}
 export type PublicSubmission = Omit<Submission,'draft_revision'|'preview_hash'>
