@@ -85,7 +85,7 @@ export function CompactPropertyCard({ property, priority }: { property: Property
       {/* Last in the DOM, drawn on the photo: keyboard and screen-reader
           order is the listing, then its save action. */}
       <div className="absolute right-2 top-2 z-10">
-        <SaveButton publicId={publicId} title={society ?? title} className="shadow-e1" />
+        <SaveButton id={publicId} title={society ?? title} className="shadow-e1" />
       </div>
     </article>
   )

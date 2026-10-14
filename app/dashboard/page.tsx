@@ -40,6 +40,7 @@ export default async function SellerDashboard({ searchParams }: { searchParams: 
     <p className="mt-1 text-body-sm">
       <Link href="/dashboard/enquiries" className="inline-flex min-h-11 items-center font-semibold text-brand-700 underline underline-offset-4">Enquiries inbox</Link>
       {unread ? <span className="ml-2 text-ink-700">{unread >= 100 ? '100 or more' : unread} unread {unread === 1 ? 'notification' : 'notifications'}</span> : null}
+      <Link href="/dashboard/performance" className="ml-5 inline-flex min-h-11 items-center font-semibold text-brand-700 underline underline-offset-4">Performance</Link>
     </p>
 
     {!result.ok ? <div role="alert" className="mt-8 rounded-lg border border-border-strong bg-surface-000 p-6">

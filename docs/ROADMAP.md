@@ -38,6 +38,7 @@ but its eight-phase build order is superseded.
 | 17 | Property preview | Deployed at d62a534; full CI and live migration checks passed |
 | 18 | Property publishing & lifecycle | Implemented locally; browser/live release checks and server credential setup pending |
 | 19 | Seller dashboard | Implemented; enquiry migration not yet applied live; real-account verification pending |
+| 20 | Seller listing analytics | Implemented; analytics migration not yet applied live; contact reveals deferred to Phase 10 |
 | E | 99acres interface redesign from client screenshots | Complete and deployed; green primary colour and header logo restored |
 | 40A | Home loan calculators | Implemented ahead of order at client request |
 
@@ -135,7 +136,8 @@ widening an existing table.
 | `property_listing_submissions` | 18 | Immutable typed facts/pricing/location/seller snapshot |
 | `property_listing_photos` | 18 | Immutable copies referenced by submission |
 | `property_listing_events` | 18 | Status transition, date, owner/operator/system actor and rejection reason |
-| `listing_stat` | 20 | A seller is shown views and saves |
+| `listing_stat` | 20 | Implemented as `property_listing_daily_stats` (views per listing per India day) with same-day `property_listing_view_marks` |
+| `saved_listings` | 20 | A buyer can save a real listing; sellers see aggregate counts only |
 | `moderation_action` | 22 | A human approves or rejects |
 | `report` | 24 | Content can be reported |
 | `audit_log` | 27 | Actions must be reconstructable |

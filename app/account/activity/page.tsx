@@ -6,7 +6,7 @@ import { PageShell } from '@/components/layout/PageShell'
 import { ChevronRightIcon, HeartIcon, HomeIcon, MailIcon } from '@/components/ui/icons'
 import { getVerifiedUser } from '@/lib/auth/session'
 import { countUnreadNotifications, listLeads } from '@/lib/enquiry/queries'
-import { listSaved } from '@/lib/saved/queries'
+import { listSaved, listSavedListings } from '@/lib/saved/queries'
 
 export const metadata: Metadata = { title: 'Your activity', robots: { index: false, follow: false } }
 
@@ -41,12 +41,15 @@ export default async function ActivityPage() {
   const user = await getVerifiedUser()
   if (!user) return <GuestActivity />
 
-  const [saved, sent, unread] = await Promise.all([listSaved(user), listLeads(user, 'buyer'), countUnreadNotifications(user)])
+  const [saved, savedListings, sent, unread] = await Promise.all([listSaved(user), listSavedListings(user), listLeads(user, 'buyer'), countUnreadNotifications(user)])
+  // Demo saves and real-listing saves (Phase 20) are one shortlist; the
+  // count is known only when both reads answered (a missing table is none).
+  const listingSaves = savedListings.ok ? savedListings.rows.length : savedListings.missing ? 0 : null
 
   const buying: Row[] = [
     {
       href: '/account/saved', title: 'Saved homes', body: 'The homes you tapped the heart on.', Icon: HeartIcon,
-      status: describe(saved.ok ? saved.rows.length : null, 'saved home', 'saved homes'),
+      status: describe(saved.ok && listingSaves !== null ? saved.rows.length + listingSaves : null, 'saved home', 'saved homes'),
     },
     {
       href: '/account/enquiries', title: 'Your enquiries', body: 'Every listing you have asked about while signed in.', Icon: MailIcon,

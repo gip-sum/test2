@@ -7,10 +7,10 @@ import { AreaBreakdown } from '@/components/property/AreaBreakdown'
 import { SellerBlock } from '@/components/property/SellerBlock'
 import { PropertyDisclaimer } from '@/components/property/PropertyDisclaimer'
 import { formatAmount } from '@/lib/format/price'
-export function PublishedProperty({model:m,postedAt,contact}:{model:PreviewModel;postedAt?:string;contact?:ReactNode}){
+export function PublishedProperty({model:m,postedAt,contact,save}:{model:PreviewModel;postedAt?:string;contact?:ReactNode;save?:ReactNode}){
  const f=m.facts!,p=m.pricing!,amount=p.intent==='buy'?p.price:p.monthlyRent
  return <article className="mx-auto max-w-[1320px] px-4 pb-28 pt-6 lg:px-8"><div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
-  <div className="min-w-0"><Gallery photos={m.media} title={m.title}/><header className="mt-5"><PriceDisplay amount={amount} intent={p.intent} size="detail" areaForRate={p.intent==='buy'?m.carpetSqft:undefined}/>
+  <div className="min-w-0"><Gallery photos={m.media} title={m.title}/><header className="mt-5"><div className="flex items-start justify-between gap-3"><PriceDisplay amount={amount} intent={p.intent} size="detail" areaForRate={p.intent==='buy'?m.carpetSqft:undefined}/>{save}</div>
    <p className="mt-2 flex flex-wrap gap-3 text-body-sm text-ink-700">{p.intent==='rent'&&<span>Deposit {formatAmount(p.deposit)}</span>}<span>{p.maintenance.status==='separate'?`Maintenance ${formatAmount(p.maintenance.monthly)}/mo`:p.maintenance.status==='none'?'No maintenance charge':p.maintenance.status==='included'?'Maintenance included in rent':'Maintenance not specified'}</span><span>{p.negotiable?'Negotiable':'Non-negotiable'}</span></p>
    <h1 className="mt-3 break-words font-display text-heading-1 text-ink-900">{m.title}</h1><p className="mt-2 text-ink-700">{m.locality}, {m.city}</p>
   </header><section className="mt-8" aria-labelledby="details-heading"><h2 id="details-heading" className="mb-3 font-display text-heading-3">Property details</h2><KeyDetails property={{...f,propertyType:m.entry.type,availableFrom:typeof f.availableFrom==='object'?f.availableFrom.from:undefined}}/>{f.availableFrom==='now'&&<p className="mt-3">Available now</p>}{f.possessionBy&&<p className="mt-3">Expected possession: {f.possessionBy}</p>}</section>

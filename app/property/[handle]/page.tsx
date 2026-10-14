@@ -157,7 +157,7 @@ export default async function PropertyPage(props: Props) {
                     </Link>
                   )}
                 </div>
-                <SaveButton publicId={property.publicId} title={title} className="shrink-0" />
+                <SaveButton id={property.publicId} title={title} className="shrink-0" />
               </div>
 
               <h1 className="mt-3 font-display text-heading-2 text-ink-900 lg:text-heading-1">

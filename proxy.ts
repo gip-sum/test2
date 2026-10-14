@@ -5,6 +5,7 @@ import { parsePropertyHandle, propertyPath } from '@/lib/property/public-id'
 import { authConfig, authRequest, validSession, type AuthSession, type AuthUser } from '@/lib/auth/provider'
 import { safeReturnPath } from '@/lib/auth/validation'
 import { cookieOptions } from '@/lib/auth/cookies'
+import { VISITOR_COOKIE, VISITOR_ID, VISITOR_MAX_AGE } from '@/lib/analytics/visitor'
 
 /**
  * Validates the shape of a results URL before the route renders.
@@ -31,7 +32,7 @@ const CITY_SLUGS = new Set(KOLKATA_LOCATIONS.filter((l) => l.type === 'CITY').ma
  * literal segments, so Next 404s it without help.
  */
 export const config = {
-  matcher: ['/buy/:path+', '/rent/:path+', '/property/:handle', '/account/:path*', '/dashboard/:path*', '/login', '/api/auth/state', '/post/photos', '/post/drafts/:path*', '/api/posting/drafts', '/api/posting/preview', '/api/posting/lifecycle', '/api/posting/submissions/:path*', '/api/posting/photos/:path*'],
+  matcher: ['/listing/:id', '/buy/:path+', '/rent/:path+', '/property/:handle', '/account/:path*', '/dashboard/:path*', '/login', '/api/auth/state', '/post/photos', '/post/drafts/:path*', '/api/posting/drafts', '/api/posting/preview', '/api/posting/lifecycle', '/api/posting/submissions/:path*', '/api/posting/photos/:path*'],
 }
 
 /**
@@ -105,6 +106,19 @@ async function accountGuard(request: NextRequest) {
   return response
 }
 
+/**
+ * The view-counting cookie (Phase 20), issued with the public listing page
+ * so the page's own beacon can present it. Issued here rather than by the
+ * beacon: a browser that refuses cookies then has none to present and is
+ * not counted, instead of being counted afresh on every visit.
+ */
+function withVisitor(request: NextRequest) {
+  const response = NextResponse.next()
+  const current = request.cookies.get(VISITOR_COOKIE)?.value
+  if (!current || !VISITOR_ID.test(current)) response.cookies.set(VISITOR_COOKIE, crypto.randomUUID(), { ...cookieOptions, maxAge: VISITOR_MAX_AGE })
+  return response
+}
+
 export async function proxy(request: NextRequest) {
   const [, first, second] = request.nextUrl.pathname.split('/')
 
@@ -113,6 +127,8 @@ export async function proxy(request: NextRequest) {
   if (first === 'property') {
     return handleProperty(request) ?? NextResponse.next()
   }
+
+  if (first === 'listing') return withVisitor(request)
 
   if (second && !CITY_SLUGS.has(second)) {
     return NextResponse.rewrite(new URL('/_gharbazaar_not_found', request.url))

@@ -67,6 +67,11 @@
   --color-brand-100: #d1fae5;        /* selected chips, tinted rows */
   --color-on-brand: #ffffff;
 
+  /* Data marks (Phase 20 charts). Its own token, not brand-600, because a
+     chart step is validated against the chart surface for lightness band
+     and contrast (dataviz validate_palette.js), and the dark step differs. */
+  --color-chart-1: #117744;
+
   /* ---- Supply: the SELLER's action. Orange, a different hue on purpose.
      TWO steps because one orange cannot do both jobs: 600 is bright
      enough to read as orange under white text (4.51:1, the ceiling for
@@ -189,6 +194,7 @@
   --color-brand-700: #bbf7d0;
   --color-brand-100: #123522;
   --color-on-brand: #064e3b;
+  --color-chart-1: #34a96b;
   --color-supply-600: #f59b55;
   --color-supply-700: #f9b782;
   --color-supply-100: #3a2210;

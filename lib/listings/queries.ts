@@ -145,3 +145,17 @@ export async function ownsListing(user:AuthUser,id:string){
  if(!UUID.test(id))return false
  try{return (await rows<Pick<Listing,'id'>>(`property_listings?${ownerFilter(user)}&id=eq.${id}&select=id`)).length===1}catch{return false}
 }
+
+/**
+ * What a buyer's saved list shows of real listings (Phase 20): only those
+ * that are public right now, read with the publishable key under the public
+ * row policies. An id missing from the result is no longer public, which the
+ * caller says in words rather than dropping the save.
+ */
+export async function getPublishedSummaries(listingIds:readonly string[]):Promise<Map<string,SubmissionSummary>>{
+ const list=ids(listingIds);if(!list||!authConfig())return new Map()
+ const listings=(await rows<Pick<Listing,'id'|'status'|'current_submission_id'|'expires_at'>>(`property_listings?id=in.${list}&select=id,status,current_submission_id,expires_at`,'public')).filter(l=>effectiveStatus(l)==='ACTIVE'&&l.current_submission_id)
+ const current=ids(listings.map(l=>l.current_submission_id!));if(!current)return new Map()
+ const submissions=await rows<SubmissionSummary>(`property_listing_submissions?id=in.${current}&select=id,listing_id,title,intent,price,city_name,locality_name`,'public')
+ return new Map(submissions.filter(s=>listings.some(l=>l.id===s.listing_id&&l.current_submission_id===s.id)).map(s=>[s.listing_id,s]))
+}

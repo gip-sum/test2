@@ -4,12 +4,13 @@ import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/cn'
 import { useSaved } from './SavedProvider'
 
-export function SaveButton({ publicId, title, className }: { publicId: string; title: string; className?: string }) {
+/** `id` is a demo fixture's public id (`p_…`) or a real listing's id; the saved list holds both. */
+export function SaveButton({ id, title, className }: { id: string; title: string; className?: string }) {
   const router = useRouter()
   const pathname = usePathname()
   const { state, ids, busy, toggle, retry } = useSaved()
-  const saved = ids.has(publicId)
-  const pending = busy.has(publicId)
+  const saved = ids.has(id)
+  const pending = busy.has(id)
 
   async function click(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault()
@@ -20,7 +21,7 @@ export function SaveButton({ publicId, title, className }: { publicId: string; t
     }
     if (state === 'error') { retry(); return }
     if (state !== 'ready' || pending) return
-    const result = await toggle(publicId, !saved)
+    const result = await toggle(id, !saved)
     if (result === 'signed-out') router.push(`/login?next=${encodeURIComponent(pathname)}`)
     if (result === 'ok' && pathname === '/account/saved') router.refresh()
   }

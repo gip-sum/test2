@@ -324,3 +324,38 @@ they are unavailable. Remove that fallback in `lib/enquiry/queries.ts` once
 the migration is live. `npm run enquiry-db-check` exercises the migration in
 PGlite. `npm run dashboard-check` uses the 3101/3300 simulator setup. See
 [the phase specification](docs/phases/PHASE-19-seller-dashboard.md).
+
+### Phase 20 — seller listing analytics
+
+`/dashboard/performance` shows every submitted listing's views, enquiries
+and current saves for the last 7, 30 or 90 days. `?listing=<id>` adds daily
+charts, the previous period as plain figures, and an enquiry rate once the
+period has at least 20 views. The period and listing live in the URL.
+
+**What counts as a view:** one browser opening a listing's public page on
+one India day.
+- Only while the listing is public.
+- Never the owner's own visits, and never known crawlers.
+- The browser is identified by a random first-party `gb-visitor` cookie,
+  issued with the listing page. The database stores only a hash of that id,
+  the listing and the day, purged after a day.
+- Recording goes through the service-only `record_listing_view`, so it
+  needs `SUPABASE_SERVICE_ROLE_KEY`.
+- Days before counting began read "not tracked", never zero.
+
+**Saving real listings:** buyers can now save them (`saved_listings`,
+through `save_listing`). Sellers see how many buyers currently have each
+listing saved, never who.
+
+**Contact reveals** are not measured: Phase 10 is postponed, so no reveal
+exists.
+
+Apply `supabase/migrations/20261014032608_phase_20_listing_analytics.sql`
+after the Phase 19 migration. Until it is applied:
+- the performance page says data is not available yet;
+- saving a real listing reports that it is unavailable;
+- demo saves are unaffected.
+
+Checks: `npm run analytics-db-check` (PGlite) and `npm run
+performance-check` (the 3101/3300 simulator). See
+[the phase specification](docs/phases/PHASE-20-seller-listing-analytics.md).

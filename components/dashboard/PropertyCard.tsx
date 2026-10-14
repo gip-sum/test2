@@ -73,6 +73,7 @@ export function PropertyCard({ card, publishing }: { card: Card; publishing: boo
         <Link href={`${base}/lifecycle#remove-listing`} className={action}>{named('Remove listing…')}</Link>
       </>}
       {status === 'REMOVED' && <Link href={`${base}/lifecycle`} className={action}>{named('Status history')}</Link>}
+      {listing && status !== 'REMOVED' && <Link href={`/dashboard/performance?listing=${listing.id}`} className={action}>{named('Performance')}</Link>}
       {(status === 'UNDER_REVIEW' || status === 'ACTIVE') && listing && <WithdrawAction draftId={draftId} version={listing.version} title={title} configured={publishing} />}
     </div>
   </article>

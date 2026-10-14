@@ -48,7 +48,8 @@ export function SavedProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/api/saved', {
         method: save ? 'POST' : 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ publicId: id }),
+        // Demo fixtures are `p_…`; anything else is a real listing id.
+        body: JSON.stringify(id.startsWith('p_') ? { publicId: id } : { listingId: id }),
         cache: 'no-store',
       })
       if (response.status === 401) { setState('signed-out'); return 'signed-out' as const }
