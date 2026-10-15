@@ -10,6 +10,7 @@ import http from 'node:http'
 import sharp from 'sharp'
 import { chromium } from 'playwright-core'
 import { mkdirSync } from 'node:fs'
+import { assertWorkspace } from './workspace-assertions.mjs'
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:3101'
 const owner = 'a9140f33-a429-46f3-9514-3e8f32f18189', foreign = 'b9140f33-a429-46f3-9514-3e8f32f18189'
@@ -217,7 +218,7 @@ try {
   for (const width of [390, 412, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 }); await page.goto(BASE + '/dashboard')
     await page.locator('details summary').click()
-    check(`dashboard has no horizontal overflow at ${width}`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+    await assertWorkspace(page, { area: 'owner', check, compactRow: card(page, '2 BHK flat for sale in New Town'), maxRowHeight: 224 })
     const small = await page.locator('main a, main button, main summary').evaluateAll((els) => els.map((e) => ({ text: e.textContent.trim().slice(0, 40), height: e.getBoundingClientRect().height })).filter((e) => e.height > 0 && e.height < 44))
     check(`dashboard controls are at least 44px at ${width}`, small.length === 0, JSON.stringify(small))
     await page.screenshot({ path: `/tmp/phase19-shots/dashboard-${width}.png`, fullPage: true })

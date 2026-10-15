@@ -16,10 +16,12 @@ export default async function ModerationPage({ searchParams }: { searchParams: P
   const result = await moderationQueue(page).catch(() => null)
   const pageCount = result ? Math.max(1, Math.ceil(result.total / ADMIN_PAGE_SIZE)) : 1
   return <AdminShell current="moderation" title="Moderation queue" role={role}>
-    <p className="max-w-3xl rounded-md bg-surface-200 p-4 text-body-sm text-ink-900">Open a submitted copy to review its facts and photos, then approve, reject or request corrections. Listings stay private while they wait.</p>
-    <h2 className="mt-6 font-display text-heading-2 text-ink-900">Waiting for review{result && <span className="tabular text-ink-500"> ({result.total})</span>}</h2>
-    <p className="mt-1 text-body-sm text-ink-700">Oldest submission first. Waits over 2 days are marked.</p>
-    <div className="mt-4">{!result ? <Unreadable what="The queue" /> : result.rows.length === 0 ? <p className="rounded-lg border border-border-subtle bg-surface-000 p-5 text-body-sm text-ink-700">Nothing is waiting for review.</p> : <ListingRows rows={result.rows} queue now={now} />}</div>
+    <p className="max-w-3xl text-body-sm text-ink-700">Open a submitted copy to review its facts and photos, then approve, reject or request corrections. Listings stay private while they wait.</p>
+    <div className="workspace-toolbar mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-border-subtle py-4">
+      <h2 className="font-display text-heading-3 text-ink-900">Waiting for review{result && <span className="tabular font-normal text-ink-500"> ({result.total})</span>}</h2>
+      <p className="text-caption text-ink-700">Oldest submission first. Waits over 2 days are marked.</p>
+    </div>
+    <div className="workspace-panel overflow-hidden rounded-lg border border-border-subtle bg-surface-000">{!result ? <div className="p-4"><Unreadable what="The queue" /></div> : result.rows.length === 0 ? <p className="workspace-empty p-6 text-body-sm text-ink-700">Nothing is waiting for review.</p> : <ListingRows rows={result.rows} queue now={now} />}</div>
     {result && <Pagination page={Math.min(page, pageCount)} pageCount={pageCount} hrefForPage={(p) => p > 1 ? `/admin/moderation?page=${p}` : '/admin/moderation'} />}
   </AdminShell>
 }

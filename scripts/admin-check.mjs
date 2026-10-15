@@ -8,6 +8,7 @@
 import http from 'node:http'
 import { chromium } from 'playwright-core'
 import { mkdirSync } from 'node:fs'
+import { assertWorkspace } from './workspace-assertions.mjs'
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:3101'
 const admin = 'b9140f33-a429-46f3-9514-3e8f32f18189', seller = 'a9140f33-a429-46f3-9514-3e8f32f18189'
@@ -118,7 +119,7 @@ try {
 
   // System status.
   await page.goto(BASE + '/admin/system')
-  const checks = (await page.locator('main ul').last().locator('li').allInnerTexts()).join(' | ')
+  const checks = (await page.locator('section').filter({ has: page.getByRole('heading', { name: 'Data and jobs', exact: true }) }).getByRole('listitem').allInnerTexts()).join(' | ')
   check('a scheduler it cannot see reads Unknown, never OK', /Unknown\s+Listing expiry job\s+The scheduler cannot be inspected from here\./.test(checks), checks)
   check('missing migrations are named', checks.includes('20261014044042_phase_21_admin_console'))
   check('expiry backlog is a problem in words', /Problem\s+Expired listings marked\s+1 active listing is more than 2 hours past expiry/.test(checks))
@@ -135,7 +136,7 @@ try {
     await page.setViewportSize({ width, height: 900 })
     for (const path of ['/admin', '/admin/listings?status=review', '/admin/system']) {
       await page.goto(BASE + path)
-      check(`no horizontal overflow at ${width} on ${path}`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+      await assertWorkspace(page, { area: 'admin', check, ...(path.startsWith('/admin/listings') ? { compactRow: page.locator('table tbody tr').first(), maxRowHeight: 160 } : {}) })
       const small = await page.locator('main a, main button').evaluateAll((els) => els.map((e) => ({ text: e.textContent.trim().slice(0, 40), height: e.getBoundingClientRect().height })).filter((e) => e.height > 0 && e.height < 44))
       check(`controls are at least 44px at ${width} on ${path}`, small.length === 0, JSON.stringify(small))
       await page.screenshot({ path: `/tmp/phase21-shots/${path.split('?')[0].replaceAll('/', '_')}-${width}.png`, fullPage: true })

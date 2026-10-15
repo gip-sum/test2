@@ -14,7 +14,7 @@ const TONE: Record<DashboardStatus, string> = {
 }
 
 export function StatusBadge({ status }: { status: DashboardStatus }) {
-  return <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-caption font-semibold', TONE[status])}>
+  return <span className={cn('inline-flex max-w-full items-center rounded-md px-2 py-1 text-caption font-semibold', TONE[status])}>
     <span className="sr-only">Status: </span>{DASHBOARD_LABEL[status]}
   </span>
 }
