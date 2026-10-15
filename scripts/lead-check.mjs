@@ -23,6 +23,7 @@ const mock = http.createServer(async (request, response) => {
   const user = users[request.headers.authorization?.slice(7)] ?? null
   const send = (status, data) => { response.writeHead(status, { 'Content-Type': 'application/json' }); response.end(JSON.stringify(data)) }
   if (url.pathname === '/auth/v1/user') return send(user ? 200 : 401, user ?? {})
+  if (url.pathname === '/rest/v1/rpc/my_account_access') return send(200, true)
   if (url.pathname === '/rest/v1/saved_properties') return send(user ? 200 : 401, [])
   if (url.pathname === '/rest/v1/rpc/submit_enquiry') {
     if (failing) return send(503, {})

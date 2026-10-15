@@ -17,6 +17,7 @@ const mock=http.createServer(async(req,res)=>{
  const body=Buffer.concat(chunks),url=new URL(req.url,'http://localhost'),token=req.headers.authorization?.slice(7),user={['a'.repeat(48)]:owner,['b'.repeat(48)]:admin,['c'.repeat(48)]:mod,['d'.repeat(48)]:foreign}[token],service=token==='test-service-key',reviewer=user===admin||user===mod&&!revoked
  const send=(status,value)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(value))},b=body.length&&req.headers['content-type']?.includes('application/json')?JSON.parse(body.toString()):{}
  if(url.pathname==='/auth/v1/user')return user?send(200,{id:user,email:'sample@example.com'}):send(401,{})
+  if (url.pathname === '/rest/v1/rpc/my_account_access') return send(200, true)
  if(url.pathname==='/rest/v1/rpc/my_staff_role')return send(200,user===admin?'ADMIN':user===mod&&!revoked?'MODERATOR':null)
  if(url.pathname==='/rest/v1/rpc/moderation_queue')return reviewer?send(200,{total:listing.status==='UNDER_REVIEW'?1:0,rows:listing.status==='UNDER_REVIEW'?[{...submission,...listing,title:submission.title,submitted_at:submission.created_at,total:1}]:[]}):send(403,{code:'42501'})
  if(url.pathname==='/rest/v1/rpc/moderation_review'){if(!reviewer)return send(403,{code:'42501'});if(down)return send(503,{});if(b.p_listing!==listingId)return send(404,{code:'P0002'});return send(200,{listing,submission,photos:manifest,history:actions})}

@@ -2,6 +2,7 @@ import 'server-only'
 import { cookies } from 'next/headers'
 import { ACCESS_COOKIE, REFRESH_COOKIE, cookieOptions } from './cookies'
 import { authRequest, validUser, type AuthUser, type AuthSession } from './provider'
+import { marketplaceAccess } from './access'
 
 export { ACCESS_COOKIE, REFRESH_COOKIE, cookieOptions }
 
@@ -24,5 +25,5 @@ export async function getVerifiedUser(): Promise<AuthUser | null> {
   const token = (await cookies()).get(ACCESS_COOKIE)?.value
   if (!token) return null
   const response = await authRequest<AuthUser>('/user', 'GET', undefined, token)
-  return response.ok && validUser(response.data) ? response.data : null
+  return response.ok && validUser(response.data) && await marketplaceAccess(token) === 'active' ? response.data : null
 }

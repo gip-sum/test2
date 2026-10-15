@@ -45,6 +45,7 @@ export const EXPECTED_MIGRATIONS = [
   '20261014044042_phase_21_admin_console',
   '20261014092721_python_ai_descriptions',
   '20261014142159_phase_22_listing_moderation',
+  '20261015062324_phase_23_user_seller_management',
 ] as const
 
 export type AdminListing = {

@@ -2,6 +2,7 @@ import { beforeEach, expect, it, vi } from 'vitest'
 import { NextRequest } from 'next/server'
 const m = vi.hoisted(() => ({ request: vi.fn() }))
 vi.mock('@/lib/auth/provider', () => ({ authConfig: () => ({ base: 'https://test.invalid', key: 'public-key' }), authRequest: m.request, validSession: () => false }))
+vi.mock('@/lib/auth/access', () => ({ marketplaceAccess: async () => 'active' }))
 import { proxy } from '@/proxy'
 beforeEach(() => { vi.clearAllMocks(); m.request.mockResolvedValue({ ok: true, data: { id: 'staff' } }) })
 it('moderation mutations and photos use the auth guard rather than the city parser', async () => {

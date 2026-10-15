@@ -51,6 +51,7 @@ const mock = http.createServer(async (req, res) => {
   const service = token === 'test-service-key', publicRead = token === 'test-public-key'
   const send = (status, data) => { res.writeHead(status, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(data)) }
   if (url.pathname === '/auth/v1/user') return user ? send(200, { id: user, email: 'private@example.com' }) : send(401, {})
+  if (url.pathname === '/rest/v1/rpc/my_account_access') return send(200, true)
   if (!user && !service && !publicRead) return send(401, {})
   if (unavailable) return send(503, {})
   const mine = (rows) => rows.filter((r) => r.owner_id === user)

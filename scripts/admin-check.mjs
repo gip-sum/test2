@@ -35,6 +35,7 @@ const mock = http.createServer(async (req, res) => {
   const send = (status, data) => { res.writeHead(status, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(data)) }
   if (url.pathname === '/auth/v1/health') return send(200, { version: 'test' })
   if (url.pathname === '/auth/v1/user') return user ? send(200, { id: user, email: 'private@example.com' }) : send(401, {})
+  if (url.pathname === '/rest/v1/rpc/my_account_access') return send(200, true)
   if (!user) return send(401, {})
   if (unavailable) return send(503, {})
   const staff = user === admin

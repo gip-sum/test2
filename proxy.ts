@@ -6,6 +6,7 @@ import { authConfig, authRequest, validSession, type AuthSession, type AuthUser 
 import { safeReturnPath } from '@/lib/auth/validation'
 import { cookieOptions } from '@/lib/auth/cookies'
 import { VISITOR_COOKIE, VISITOR_ID, VISITOR_MAX_AGE } from '@/lib/analytics/visitor'
+import { marketplaceAccess } from '@/lib/auth/access'
 
 /**
  * Validates the shape of a results URL before the route renders.
@@ -32,7 +33,7 @@ const CITY_SLUGS = new Set(KOLKATA_LOCATIONS.filter((l) => l.type === 'CITY').ma
  * literal segments, so Next 404s it without help.
  */
 export const config = {
-  matcher: ['/api/admin/moderation/:path*', '/admin/:path*', '/listing/:id', '/buy/:path+', '/rent/:path+', '/property/:handle', '/account/:path*', '/dashboard/:path*', '/login', '/api/auth/state', '/post/photos', '/post/drafts/:path*', '/api/posting/drafts', '/api/posting/preview', '/api/posting/description/:path*', '/api/posting/lifecycle', '/api/posting/submissions/:path*', '/api/posting/photos/:path*'],
+  matcher: ['/api/admin/users/:path*', '/api/admin/moderation/:path*', '/admin/:path*', '/listing/:id', '/buy/:path+', '/rent/:path+', '/property/:handle', '/account/:path*', '/dashboard/:path*', '/login', '/api/auth/state', '/post/photos', '/post/drafts/:path*', '/api/posting/drafts', '/api/posting/preview', '/api/posting/description/:path*', '/api/posting/lifecycle', '/api/posting/submissions/:path*', '/api/posting/photos/:path*'],
 }
 
 /**
@@ -75,11 +76,20 @@ function handleProperty(request: NextRequest): NextResponse | undefined {
 }
 
 async function accountGuard(request: NextRequest) {
-  const isAccount = (request.nextUrl.pathname.startsWith('/account') && request.nextUrl.pathname !== '/account/activity') || request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/admin')
+  const path = request.nextUrl.pathname
+  const isAccount = (path.startsWith('/account') && !['/account/activity', '/account/access'].includes(path)) || path.startsWith('/dashboard') || path.startsWith('/admin')
   const access = request.cookies.get('gb-access')?.value
   const refresh = request.cookies.get('gb-refresh')?.value
   let verified = false
   let nextSession: AuthSession | null = null
+  const finish = (response: NextResponse) => {
+    if (nextSession) {
+      response.cookies.set('gb-access', nextSession.access_token, { ...cookieOptions, maxAge: Math.min(nextSession.expires_in, 3600) })
+      response.cookies.set('gb-refresh', nextSession.refresh_token, { ...cookieOptions, maxAge: 60 * 60 * 24 * 30 })
+    }
+    if (isAccount || path.startsWith('/api/') || nextSession || path === '/account/access') response.headers.set('Cache-Control', 'private, no-store')
+    return response
+  }
   if (authConfig() && access) {
     const user = await authRequest<AuthUser>('/user', 'GET', undefined, access)
     verified = user.ok && typeof user.data?.id === 'string'
@@ -93,17 +103,19 @@ async function accountGuard(request: NextRequest) {
       request.cookies.set('gb-refresh', nextSession.refresh_token)
     }
   }
+  // Access remains readable and logout remains possible for a suspended user.
+  if (verified && !['/login', '/account/access'].includes(path)) {
+    const state = await marketplaceAccess(nextSession?.access_token ?? access!)
+    if (state !== 'active') {
+      if (path.startsWith('/api/')) return finish(NextResponse.json({ error: state === 'suspended' ? 'Your marketplace account is suspended.' : 'Account access could not be checked. Please retry.' }, { status: state === 'suspended' ? 403 : 503 }))
+      return finish(NextResponse.redirect(new URL('/account/access', request.url)))
+    }
+  }
   const response = isAccount && !verified
     ? NextResponse.redirect(new URL(`/login?next=${encodeURIComponent(safeReturnPath(request.nextUrl.pathname + request.nextUrl.search))}`, request.url))
     : NextResponse.next({ request })
-  if (nextSession) {
-    // The same attributes sign-in uses, so a refresh replaces the session
-    // cookies rather than adding second copies logout cannot clear.
-    response.cookies.set('gb-access', nextSession.access_token, { ...cookieOptions, maxAge: Math.min(nextSession.expires_in, 3600) })
-    response.cookies.set('gb-refresh', nextSession.refresh_token, { ...cookieOptions, maxAge: 60 * 60 * 24 * 30 })
-    response.headers.set('Cache-Control', 'private, no-store')
-  }
-  return response
+  // A refresh must reach the browser even when access was suspended.
+  return finish(response)
 }
 
 /**
@@ -122,7 +134,7 @@ function withVisitor(request: NextRequest) {
 export async function proxy(request: NextRequest) {
   const [, first, second] = request.nextUrl.pathname.split('/')
 
-  if (request.nextUrl.pathname === '/api/admin/moderation' || request.nextUrl.pathname.startsWith('/api/admin/moderation/') || first === 'admin' || first === 'account' || first === 'dashboard' || first === 'login' || request.nextUrl.pathname === '/api/auth/state' || request.nextUrl.pathname.startsWith('/post/drafts') || request.nextUrl.pathname === '/api/posting/drafts' || request.nextUrl.pathname === '/api/posting/preview' || request.nextUrl.pathname === '/api/posting/description' || request.nextUrl.pathname.startsWith('/api/posting/description/') || request.nextUrl.pathname === '/api/posting/lifecycle' || request.nextUrl.pathname.startsWith('/api/posting/submissions/') || request.nextUrl.pathname === '/post/photos' || request.nextUrl.pathname.startsWith('/api/posting/photos')) return accountGuard(request)
+  if (request.nextUrl.pathname.startsWith('/api/admin/users') || request.nextUrl.pathname === '/api/admin/moderation' || request.nextUrl.pathname.startsWith('/api/admin/moderation/') || first === 'admin' || first === 'account' || first === 'dashboard' || first === 'login' || request.nextUrl.pathname === '/api/auth/state' || request.nextUrl.pathname.startsWith('/post/drafts') || request.nextUrl.pathname === '/api/posting/drafts' || request.nextUrl.pathname === '/api/posting/preview' || request.nextUrl.pathname === '/api/posting/description' || request.nextUrl.pathname.startsWith('/api/posting/description/') || request.nextUrl.pathname === '/api/posting/lifecycle' || request.nextUrl.pathname.startsWith('/api/posting/submissions/') || request.nextUrl.pathname === '/post/photos' || request.nextUrl.pathname.startsWith('/api/posting/photos')) return accountGuard(request)
 
   if (first === 'property') {
     return handleProperty(request) ?? NextResponse.next()

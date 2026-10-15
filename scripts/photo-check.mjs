@@ -14,6 +14,7 @@ const mock = http.createServer(async (request,response) => {
   const token=request.headers.authorization?.slice(7), owner=token==='a'.repeat(48)?A:token==='b'.repeat(48)?B:null
   const send=(status,data)=>{response.writeHead(status,{'Content-Type':'application/json'});response.end(JSON.stringify(data))}
   if(url.pathname==='/auth/v1/user')return owner?send(200,{id:owner,email:'seller@example.com'}):send(401,{})
+  if (url.pathname === '/rest/v1/rpc/my_account_access') return send(200, true)
   if(!owner)return send(401,{})
   if(url.pathname==='/rest/v1/saved_properties'&&request.method==='GET')return send(200,[])
   if(unavailable)return send(503,{})

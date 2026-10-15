@@ -145,6 +145,36 @@ until a trusted operator links an actual seller to a listing. Email and
 phone delivery are not enabled. The simulated browser suite passed 15/15
 lead checks; the current repo suite passed 173/173 tests.
 
+## Phase 23: users and sellers
+
+`/admin/users` is an ADMIN-only account directory with literal name/email search,
+exact account-ID lookup, seller-role/status filters and URL pagination. Account
+pages show the subject's profile, submitted listings, sent/received lead activity
+and immutable admin change history. Other people's lead contact details and
+messages are excluded. Accounts without a saved profile are included.
+
+Admins may assign OWNER/AGENT/BUILDER classifications or suspend/restore ordinary
+marketplace accounts with a reason and explicit confirmation. Classification is
+not verification or staff access; listing seller types remain unchanged. Own and
+staff accounts are protected and remain operator-managed. Suspension blocks
+protected actions immediately, even with existing tokens, while existing public
+listings and provider sign-in remain available. `/account/access` explains the
+restriction and supports checking access again or signing out.
+
+Apply `supabase/migrations/20261015062324_phase_23_user_seller_management.sql`
+before deploying this application version: the new live access check deliberately
+fails closed if its migration is missing. The migration is prepared and locally
+verified; it has **not** been applied to production. A trusted operator must still
+assign the intended first ADMIN; no account is automatically elevated. Verify
+real-account search, suspension and restoration on a designated test account
+before declaring production acceptance complete. Phase 24 has not started.
+
+`npm run users-db-check` tests PostgreSQL access, RLS, histories, atomic versioned
+changes, retry safety and immediate suspension/restoration. `npm run users-check`
+tests the browser flow against the local Auth/REST simulator used by other phase
+checks. Both are included in CI. The Phase 22 database regression also applies
+the Phase 23 migration to protect correction/re-submit and moderator behavior.
+
 ## Architecture
 
 Python handles specific tasks alongside the main backend. The read-only import
