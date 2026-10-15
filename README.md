@@ -161,19 +161,26 @@ protected actions immediately, even with existing tokens, while existing public
 listings and provider sign-in remain available. `/account/access` explains the
 restriction and supports checking access again or signing out.
 
-Apply `supabase/migrations/20261015062324_phase_23_user_seller_management.sql`
-before deploying this application version: the new live access check deliberately
-fails closed if its migration is missing. The migration is prepared and locally
-verified; it has **not** been applied to production. A trusted operator must still
-assign the intended first ADMIN; no account is automatically elevated. Verify
-real-account search, suspension and restoration on a designated test account
-before declaring production acceptance complete. Phase 24 has not started.
+Phase 23 is deployed at `4a7bd08` on
+[the production site](https://gharbazaar-topaz.vercel.app). The migration
+`supabase/migrations/20261015062324_phase_23_user_seller_management.sql` was
+applied before release (recorded live by name at version `20261015071931`).
+For another environment, apply it before deploying this version: access checks
+deliberately fail closed if it is missing. The user explicitly identified the
+first ADMIN, who was granted access and signed in for real browser verification.
+Account search, seller classification, suspension/restoration, same-session
+access changes and immutable history passed against a disposable test account.
+Its sessions were revoked and its sign-in disabled afterward, with history kept.
+Phase 24 has not started.
 
 `npm run users-db-check` tests PostgreSQL access, RLS, histories, atomic versioned
 changes, retry safety and immediate suspension/restoration. `npm run users-check`
 tests the browser flow against the local Auth/REST simulator used by other phase
 checks. Both are included in CI. The Phase 22 database regression also applies
 the Phase 23 migration to protect correction/re-submit and moderator behavior.
+`scripts/users-live-check.sql` provides rollback-only operator checks against a
+real database; configure `phase23.acceptance_admin` with an explicitly authorised
+existing admin ID before running it. It does not change real accounts.
 
 ## Architecture
 
@@ -454,10 +461,11 @@ Sellers see a separate “Corrections requested” status and must review/confir
 before re-submitting.
 
 `supabase/migrations/20261014142159_phase_22_listing_moderation.sql` introduces the
-workflow and was applied live. Staff grants remain a trusted operator's task;
-production currently has no active staff account. Choose the intended existing
-account explicitly and grant ADMIN or MODERATOR through the existing
-`staff_members` entity. Never put a staff-grant endpoint in the public app.
+workflow and was applied live. The client-designated first ADMIN was granted
+through the existing `staff_members` entity during Phase 23 production acceptance.
+Further staff grants remain a trusted operator's task. Never put a staff-grant
+endpoint in the public app. Real-account listing approval and seller correction /
+re-submit remain a separate Phase 22 acceptance item.
 
 See [Phase 22](docs/phases/PHASE-22-listing-moderation.md) for scope and verification.
 The optional `scripts/moderation-live-check.sql` is a trusted SQL-operator check

@@ -408,7 +408,7 @@ Key focus:
 
 
 PHASE 22 — LISTING MODERATION
-Status: IMPLEMENTED (migration applied; first staff account and real-account verification pending)
+Status: IMPLEMENTED (migration applied; first ADMIN granted in Phase 23; real-account listing workflow verification pending)
 Spec: docs/phases/PHASE-22-listing-moderation.md
 
 Build the human moderation workflow.
@@ -423,7 +423,7 @@ Key focus:
 
 
 PHASE 23 — USER & SELLER MANAGEMENT
-Status: IMPLEMENTED (local verification passed; production migration and real-admin acceptance pending)
+Status: COMPLETE AND DEPLOYED (production migration applied; designated ADMIN and live suspension/restoration verified 15 October 2026)
 Spec: docs/phases/PHASE-23-user-seller-management.md
 
 Build admin-side account management.

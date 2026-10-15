@@ -1,5 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "images": {
+    "sizes": [96, 160, 200, 256, 320, 390, 412, 480, 640, 768, 1024, 1280, 1440],
+    "formats": ["image/avif", "image/webp"],
+    "qualities": [75]
+  },
   "services": {
     "frontend": {"root": ".", "framework": "nextjs"},
     "processor": {"root": "python", "framework": "fastapi", "entrypoint": "server:app"}

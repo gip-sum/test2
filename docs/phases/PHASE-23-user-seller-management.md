@@ -1,5 +1,8 @@
 # Phase 23 — User & seller management
 
+**Status: Complete and deployed.** Production release and real-account acceptance
+verified on 15 October 2026; see the release record below.
+
 ## 1. Scope
 Admin-only account search and detail pages, seller role assignment, reversible
 marketplace suspension, submitted listing history, lead activity, and an immutable
@@ -111,8 +114,8 @@ Phase 23, with Phase 24 proposed separately.
   55 discovered, 5 failures, 1 error and 3 skipped on the bundled Windows Python.
   Unix permission bits and file identity/snapshot behavior cause these failures.
   Python code is unchanged. Linux CI remains the full Python release gate.
-- Production migration, CI for this branch, deployment and real-admin acceptance
-  are pending. No production user or staff role has been changed.
+- At the end of local verification, production activation remained pending. The
+  production release and real-account evidence are recorded separately below.
 
 ### Verification report: account management
 
@@ -124,11 +127,61 @@ immediately observes a suspension or restoration.
 |---|---|---|
 | UI renders | Passed | Directory/details and long-content screenshots at 390/412/768/1280; labelled controls and 44px targets |
 | Client → API | Passed | Browser asserts confirmed POST, same request ID after lost response, 409 refresh recovery; API tests cover origin/identity/body bounds |
-| API → data | Passed locally | 78 PGlite checks over actual migrations and caller roles; production migration pending |
+| API → data | Passed | 78 PGlite checks, production rollback-only checks and real signed-in admin changes through the deployed app |
 | Data → response | Passed | Exact UUID/version confirmation, explicit projection, truthful independent history totals; no unrelated lead contacts |
 | Response → UI | Passed | Browser confirms change history, immediate suspension recovery and restoration with the same token |
-| Environment | Local simulator only | Production build served on 3100/3101 with test-only provider configuration; no production credentials used |
+| Environment | Local and production | Local simulator plus deployed production app, live database, designated admin and disposable authenticated subject |
 
 The source review checked native controls, server-rendered identity/history,
 minimal client props, independent server work, confirmation reset on edits,
 retained retry IDs and refresh recovery. No new runtime or paid service is needed.
+
+### Production release and real-account acceptance — 15 October 2026
+
+- PR [#5](https://github.com/gip-sum/test2/pull/5) merged as `4a7bd08` after
+  [full CI passed](https://github.com/gip-sum/test2/actions/runs/38694792782).
+  This includes 551 application tests, 55 Python tests, 78 account database
+  checks, 52 account browser checks and every retained regression gate.
+- The production migration was applied first, recorded as
+  `20261015071931_phase_23_user_seller_management`. Matching by name is expected:
+  the migration tool assigned its application timestamp. Earlier externally
+  applied migrations were not duplicated.
+- Vercel production deployment `dpl_5W9DY5EKgbope5NbqintYVGRzCpv` is READY,
+  serves the merged release commit and is assigned to
+  [gharbazaar-topaz.vercel.app](https://gharbazaar-topaz.vercel.app).
+- The [merged release workflow](https://github.com/gip-sum/test2/actions/runs/38698179137)
+  also passed in full. Final visual acceptance found the Services deployment's
+  `/_next/image` endpoint returning frontend HTML 404s while source assets were
+  available. Follow-up [#6](https://github.com/gip-sum/test2/pull/6) declares the
+  public deployment image settings, matching Next.js sizes/formats and quality 75.
+  Its deployed preview returned 200 `image/png`, a resized 160px logo (2,899 bytes,
+  versus the 69,735-byte source). Image optimization remains enabled, and the
+  processor remains private. Local lint, type checking, 551 tests and build pass.
+- A real existing user, explicitly designated by the client, was granted ADMIN.
+  The client signed into the production browser. That session searched for the
+  labelled test account, opened its details, assigned AGENT and suspended it,
+  then restored ACTIVE and cleared the test classification. Both confirmed
+  actions appeared in immutable history with that admin as actor, versions 1/2.
+- A separate, explicitly authorised synthetic account used a real provider login
+  and the same access/refresh tokens throughout: before suspension `/account`
+  returned 200, access was true and its profile was readable; while suspended
+  `/account` redirected 307 to `/account/access`, the protected state API returned
+  403, access was false and profile RLS returned zero rows; restoration returned
+  200/true/one owned profile again without sign-in or token renewal.
+- The test session was globally signed out, zero remaining sessions confirmed,
+  its sign-in disabled and its generated credential replaced. Temporary local
+  credentials/session were removed. The labelled test row and two audit entries
+  remain intentionally; no real buyer/seller was suspended or reclassified.
+- `scripts/users-live-check.sql` passed in production with all synthetic fixtures
+  rolled back: ordinary-account denial, live admin role/search, history totals,
+  idempotent retry, changed/stale request rejection, self protection, immediate
+  suspension/restoration, RLS, privileged mutation denial and audit immutability.
+- Security advisors introduced no new WARN findings. The three earlier public
+  admin-definer warnings and Auth password setting remain the recorded baseline.
+  The new `account_actions` INFO has no direct client grant/policy deliberately:
+  approved admin reads and writes go through checked private RPC implementations.
+  See [RLS advisor guidance](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy)
+  and [definer guidance](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).
+
+Phase 23 has no remaining release or real-account acceptance tasks. Phase 24
+(report property/user) is the next proposed phase and requires separate approval.

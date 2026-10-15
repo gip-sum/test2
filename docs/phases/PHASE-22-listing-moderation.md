@@ -107,6 +107,13 @@ until an authorised staff account exists. No migration test may publish real dat
   remain server-rendered. Confirmation resets on edits, identical retries keep the
   request UUID, controls are native/labelled, and client pending states prevent
   repeated submissions. Staff checks precede reads and repeat in PostgreSQL.
-- Production currently has zero active staff accounts. No account was elevated.
+- At this release on 14 October, production had zero active staff accounts. No account was elevated.
   A trusted operator must grant the intended account ADMIN or MODERATOR before
   real-account moderation can be verified. Paid AI remains disabled.
+
+### Staff activation update — 15 October 2026
+
+The client-designated first ADMIN was granted and signed into production during
+Phase 23 acceptance. The account-management workflow was verified with that
+session. Real-account listing approval and seller correction / re-submit are
+separate Phase 22 acceptance items and are not claimed by those account tests.
