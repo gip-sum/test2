@@ -42,7 +42,8 @@ export type AccountDetail = {
   listings: PageOf<UserListing>; leads: PageOf<UserLead>; changes: PageOf<AccountChange>
 }
 export type AccountInput = { user: string; version: number; status: AccountStatus; role: SellerRole | null; reason: string; request: string; accepted: true }
-export const MAX_ACCOUNT_BYTES = 8192
+// 2,000 four-byte Unicode characters plus the fixed request envelope fit.
+export const MAX_ACCOUNT_BYTES = 12288
 export function accountInput(value: unknown): AccountInput | null {
   if (!value || typeof value !== 'object') return null
   const v = value as Record<string, unknown>

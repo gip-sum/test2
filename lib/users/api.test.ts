@@ -14,7 +14,7 @@ it('checks origin and ADMIN before touching account data', async () => {
   expect((await POST(request())).status).toBe(404); expect(m.manage).not.toHaveBeenCalled()
 })
 it('bounds actual bytes, refuses invalid JSON and requires confirmation', async () => {
-  expect((await POST(request('a'.repeat(8193)))).status).toBe(413)
+  expect((await POST(request('a'.repeat(12289)))).status).toBe(413)
   expect((await POST(request('{'))).status).toBe(400)
   expect((await POST(request(JSON.stringify({ ...value, accepted: false })))).status).toBe(400)
   expect(m.manage).not.toHaveBeenCalled()
@@ -23,6 +23,7 @@ it('records a validated change privately', async () => {
   const response = await POST(request())
   expect(response.status).toBe(200); expect(await response.json()).toEqual({ saved: true })
   expect(response.headers.get('cache-control')).toBe('private, no-store'); expect(m.manage).toHaveBeenCalledWith(value)
+  expect((await POST(request(JSON.stringify({ ...value, reason: '🙂'.repeat(2000) })))).status).toBe(200)
 })
 it('preserves conflict recovery and never exposes unexpected database errors', async () => {
   m.manage.mockRejectedValue(new AccountError('Refresh the account', 409))
