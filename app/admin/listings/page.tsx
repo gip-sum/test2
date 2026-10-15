@@ -19,15 +19,18 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
   const filter = ADMIN_FILTERS.find((f) => f.key === query.status)!
   const countOf = (status: (typeof ADMIN_FILTERS)[number]['status']) => overview ? (status ? overview.listings[status] ?? 0 : Object.entries(overview.listings).filter(([k]) => k !== 'DRAFT').reduce((sum, [, n]) => sum + (n ?? 0), 0)) : null
   return <AdminShell current="listings" title="Listings" role={role}>
-    <nav aria-label="Filter by status"><ul className="flex flex-wrap gap-2">{ADMIN_FILTERS.map((f) => {
+    <nav aria-label="Filter by status" className="workspace-tabs border-b border-border-subtle"><ul className="flex flex-wrap gap-x-4 gap-y-1">{ADMIN_FILTERS.map((f) => {
       const current = f.key === query.status, n = countOf(f.status)
       return <li key={f.key}><Link href={listingsHref({ status: f.key })} aria-current={current ? 'page' : undefined}
-        className={cn('inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-label font-semibold', current ? 'border-brand-600 bg-brand-600 text-on-brand' : 'border-border-subtle bg-surface-000 text-ink-900 hover:border-border-strong')}>
-        {f.label}{n !== null && <span className="tabular">{n}</span>}</Link></li>
+        className={cn('inline-flex min-h-11 items-center gap-2 border-b-2 px-1 text-label font-semibold', current ? 'border-brand-600 text-brand-700' : 'border-transparent text-ink-700 hover:border-border-strong hover:text-ink-900')}>
+        {f.label}{n !== null && <span className={cn('tabular rounded-md px-1.5 py-0.5 text-caption', current ? 'bg-brand-100 text-brand-700' : 'bg-surface-200 text-ink-700')}>{n}</span>}</Link></li>
     })}</ul></nav>
-    <h2 className="mt-6 font-display text-heading-2 text-ink-900">{filter.key === 'all' ? 'All submitted listings' : filter.label}{result && <span className="tabular text-ink-500"> ({result.total})</span>}</h2>
-    <p className="mt-1 text-body-sm text-ink-700">{filter.key === 'review' ? 'Oldest submission first.' : 'Most recently changed first.'} Private drafts that were never submitted are not listed.</p>
-    <div className="mt-4">{!result ? <Unreadable what="Listings" /> : result.rows.length === 0 ? <p className="rounded-lg border border-border-subtle bg-surface-000 p-5 text-body-sm text-ink-700">No listings have this status.</p> : <ListingRows rows={result.rows} queue={filter.key === 'review'} now={now} />}</div>
+    <div className="workspace-toolbar flex flex-wrap items-center justify-between gap-x-6 gap-y-2 py-4">
+      <h2 className="font-display text-heading-3 text-ink-900">{filter.key === 'all' ? 'All submitted listings' : filter.label}{result && <span className="tabular font-normal text-ink-500"> ({result.total})</span>}</h2>
+      <p className="text-caption text-ink-700">{filter.key === 'review' ? 'Oldest submission first.' : 'Most recently changed first.'}</p>
+    </div>
+    <div className="workspace-panel overflow-hidden rounded-lg border border-border-subtle bg-surface-000">{!result ? <div className="p-4"><Unreadable what="Listings" /></div> : result.rows.length === 0 ? <p className="workspace-empty p-6 text-body-sm text-ink-700">No listings have this status.</p> : <ListingRows rows={result.rows} queue={filter.key === 'review'} now={now} />}</div>
+    <p className="mt-3 text-caption text-ink-500">Private drafts that were never submitted are not listed.</p>
     {result && <Pagination page={Math.min(query.page, pageCount)} pageCount={pageCount} hrefForPage={(page) => listingsHref({ ...query, page })} />}
   </AdminShell>
 }

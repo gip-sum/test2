@@ -2,6 +2,7 @@
 import http from 'node:http'
 import { chromium } from 'playwright-core'
 import { mkdirSync } from 'node:fs'
+import { assertWorkspace } from './workspace-assertions.mjs'
 const BASE=process.env.BASE_URL??'http://localhost:3101',id=(k,n=1)=>`${k}9140f33-a429-46f3-9514-${String(n).padStart(12,'0')}`
 const admin=id('b'),seller=id('a'),moderator=id('b',2),at=()=>new Date().toISOString()
 const accounts=Array.from({length:30},(_,i)=>({id:i===0?seller:id('7',i),email:`sample${i}@example.test`,full_name:i===0?'SAMPLE Seller':null,created_at:at(),last_sign_in_at:null,status:'ACTIVE',seller_role:null,version:0,staff_role:null,operator_managed:i===1}))
@@ -91,8 +92,7 @@ try{
   await p.setViewportSize({width,height:900})
   for(const path of ['/admin/users', '/admin/users/'+seller]){
    await p.goto(BASE+path)
-   check('no overflow '+width+path,await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth))
-   check('one h1 '+width+path,await p.locator('h1').count()===1)
+   await assertWorkspace(p,{area:'admin',check})
    const short=await p.locator('main button, main select, main input:not([type=checkbox]), main a').evaluateAll(nodes=>nodes.filter(n=>n.getBoundingClientRect().height>0&&n.getBoundingClientRect().height<43.5).map(n=>n.textContent))
    check('44px controls '+width+path,short.length===0)
   }

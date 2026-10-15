@@ -10,6 +10,7 @@ import http from 'node:http'
 import sharp from 'sharp'
 import { chromium } from 'playwright-core'
 import { mkdirSync } from 'node:fs'
+import { assertWorkspace } from './workspace-assertions.mjs'
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:3101'
 const owner = 'a9140f33-a429-46f3-9514-3e8f32f18189', foreign = 'b9140f33-a429-46f3-9514-3e8f32f18189', buyer = '29140f33-a429-46f3-9514-3e8f32f18189'
@@ -158,7 +159,7 @@ try {
   // ── Performance pages ───────────────────────────────────────────────────
   await seller.goto(BASE + '/dashboard')
   check('dashboard cards link to each listing’s performance', await seller.getByRole('link', { name: 'Performance 2 BHK flat for sale in New Town' }).getAttribute('href') === `/dashboard/performance?listing=${id('d', 1)}`)
-  await seller.getByRole('link', { name: 'Performance', exact: true }).click(); await seller.waitForURL('**/dashboard/performance')
+  await seller.getByRole('navigation', { name: 'Seller sections', exact: true }).getByRole('link', { name: 'Performance', exact: true }).click(); await seller.waitForURL('**/dashboard/performance')
   const rows = seller.locator('table tbody tr')
   check('the overview shows submitted listings only, busiest first', await rows.count() === 2 && (await rows.first().innerText()).includes('3 BHK flat for sale in Salt Lake'))
   check('overview figures come from the database', (await rows.nth(0).innerText()).replace(/\s+/g, ' ').includes('40 2 0') && (await rows.nth(1).innerText()).replace(/\s+/g, ' ').includes(`${todayViews(1)} 0 1`), (await rows.allInnerTexts()).join(' | '))
@@ -169,17 +170,17 @@ try {
 
   await seller.goto(BASE + `/dashboard/performance?listing=${id('d', 1)}`)
   await seller.getByRole('heading', { level: 1, name: '2 BHK flat for sale in New Town' }).waitFor()
-  const tiles = (await seller.locator('dl').innerText()).replace(/\s+/g, ' ')
+  const tiles = (await seller.getByRole('region', { name: 'Totals for the last 7 days', exact: true }).locator('dl').innerText()).replace(/\s+/g, ' ')
   check('detail totals: views, enquiries and saves now', tiles.includes(`Views, last 7 days ${todayViews(1)}`) && tiles.includes('Enquiries, last 7 days 0') && tiles.includes('Saved now 1') && tiles.includes('1 buyer has it saved'), tiles)
   check('no enquiry rate below 20 views', await seller.getByText('Enquiry rate appears once the period has at least 20 views.').isVisible())
   check('days before counting began are explained, not shown as zero', await seller.getByText(/Views are counted from .* Earlier days in this period show as not tracked, not as zero\./).isVisible())
   await seller.getByText('Daily figures').click()
-  check('the table marks untracked days in words', await seller.locator('details table').getByText('Not tracked').count() === 3)
+  check('the table marks untracked days in words', await seller.locator('details').filter({ has: seller.getByText('Daily figures', { exact: true }) }).getByRole('table').getByText('Not tracked').count() === 3)
   check('the chart is hidden from assistive technology; the table carries the figures', await seller.locator('figure > div[aria-hidden="true"]').count() === 2)
 
   await seller.goto(BASE + `/dashboard/performance?listing=${id('d', 2)}`)
   check('the enquiry rate appears from 20 views', await seller.getByText('5 enquiries per 100 views').isVisible())
-  check('previous period stated as a plain figure', (await seller.locator('dl').innerText()).includes('Previous 7 days: not tracked'))
+  check('previous period stated as a plain figure', (await seller.getByRole('region', { name: 'Totals for the last 7 days', exact: true }).locator('dl').innerText()).includes('Previous 7 days: not tracked'))
   await seller.goto(BASE + `/dashboard/performance?listing=${id('d', 9)}`)
   check('a listing that is not yours is not shown', await seller.getByRole('heading', { name: 'This listing is not available here' }).isVisible())
 
@@ -206,7 +207,7 @@ try {
     for (const path of ['/dashboard/performance', `/dashboard/performance?listing=${id('d', 2)}&range=30`]) {
       await seller.goto(BASE + path)
       if (path.includes('listing')) await seller.getByText('Daily figures').click()
-      check(`no horizontal overflow at ${width} on ${path}`, await seller.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+      await assertWorkspace(seller, { area: 'owner', check, ...(!path.includes('listing') ? { compactRow: seller.locator('table tbody tr').first(), maxRowHeight: 96 } : {}) })
       const small = await seller.locator('main a, main button, main summary').evaluateAll((els) => els.map((e) => ({ text: e.textContent.trim().slice(0, 40), height: e.getBoundingClientRect().height })).filter((e) => e.height > 0 && e.height < 44))
       check(`controls are at least 44px at ${width} on ${path}`, small.length === 0, JSON.stringify(small))
       await seller.screenshot({ path: `/tmp/phase20-shots/${path.includes('listing') ? 'detail' : 'overview'}-${width}.png`, fullPage: true })

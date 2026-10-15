@@ -45,6 +45,7 @@ but its eight-phase build order is superseded.
 | Python addon | Import audit, local inbox worker and private AI description jobs | Import audit integrated; local automatic inbox audits added without hosted services. Description editor, immutable snapshots and private Python queue worker implemented; paid generation remains disabled by client decision. See the three ADDON-PYTHON specifications. |
 | E | 99acres interface redesign from client screenshots | Complete and deployed; green primary colour and header logo restored |
 | 40A | Home loan calculators | Implemented ahead of order at client request |
+| Workspace addon | Compact admin and property-owner interface | Implemented and verified at client request after Phase 23; [specification and evidence](phases/ADDON-WORKSPACE-interface.md). Phase 24 remains unstarted. |
 
 Phase 0 (planning) and the GharBazaar rebrand plus light-first conversion
 sit outside the numbering; both are complete and are recorded in the git

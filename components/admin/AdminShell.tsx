@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
-import Link from 'next/link'
-import { PageShell } from '@/components/layout/PageShell'
+import { WorkspaceShell, type WorkspaceSection } from '@/components/workspace/WorkspaceShell'
 import { cn } from '@/lib/cn'
 import { CHECK_WORD, type CheckState } from '@/lib/admin/model'
 
@@ -10,21 +9,12 @@ const SECTIONS = [
   { key: 'moderation', label: 'Moderation', href: '/admin/moderation' },
   { key: 'users', label: 'Users & sellers', href: '/admin/users' },
   { key: 'system', label: 'System', href: '/admin/system' },
-] as const
+] as const satisfies readonly WorkspaceSection[]
 
 /** The admin console's frame: who is signed in as what, and where they are. */
 export function AdminShell({ current, title, role, children }: { current: typeof SECTIONS[number]['key']; title: string; role: string; children: ReactNode }) {
-  return <PageShell><div className="mx-auto max-w-6xl px-4 pb-16 pt-9 sm:pt-12">
-    <p className="text-overline uppercase tracking-widest text-ink-700">Staff only · signed in as {role === 'ADMIN' ? 'admin' : role.toLowerCase()}</p>
-    <h1 className="mt-2 break-words font-display text-heading-1 text-ink-900">{title}</h1>
-    <nav aria-label="Admin sections" className="mt-5">
-      <ul className="flex flex-wrap gap-2">{SECTIONS.filter(s => role === 'ADMIN' || s.key === 'moderation').map((s) => <li key={s.key}>
-        <Link href={s.href} aria-current={s.key === current ? 'page' : undefined}
-          className={cn('inline-flex min-h-11 items-center rounded-md border px-4 text-label font-semibold', s.key === current ? 'border-ink-900 bg-ink-900 text-ink-inverse' : 'border-border-subtle bg-surface-000 text-ink-900 hover:border-border-strong')}>{s.label}</Link>
-      </li>)}</ul>
-    </nav>
-    <div className="mt-8">{children}</div>
-  </div></PageShell>
+  return <WorkspaceShell area="admin" current={current} title={title} role={role}
+    sections={SECTIONS.filter(section => role === 'ADMIN' || section.key === 'moderation')}>{children}</WorkspaceShell>
 }
 
 const TONE: Record<CheckState, string> = {
