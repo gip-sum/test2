@@ -4,6 +4,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   images: {
+    // Keep these formats/widths in sync with vercel.json's public image endpoint.
+    // Services build the frontend separately from the deployment's image config.
     // Property photography is the heaviest payload on every page.
     formats: ['image/avif', 'image/webp'],
     // Widths match the card, gallery and hero slots we actually render.
