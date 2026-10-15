@@ -48,6 +48,7 @@ const mock = http.createServer(async (request, response) => {
     return response.end()
   }
   if (url.pathname === '/auth/v1/user') return sessions.has(request.headers.authorization?.slice(7)) ? send(200, USER) : send(401, {})
+  if (url.pathname === '/rest/v1/rpc/my_account_access') return send(200, true)
   if (url.pathname === '/rest/v1/buyer_profiles') {
     if (!sessions.has(request.headers.authorization?.slice(7))) return send(401, {})
     if (request.method === 'GET') return send(200, savedProfile ? [savedProfile] : [])

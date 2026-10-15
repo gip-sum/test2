@@ -39,6 +39,7 @@ jobs:
       - run: npm run admin-db-check
       - run: npm run description-db-check
       - run: npm run moderation-db-check
+      - run: npm run users-db-check
       - run: npm run build
       - name: Install browser for layout checks
         run: |
@@ -54,6 +55,9 @@ jobs:
           SUPABASE_URL=http://127.0.0.1:3300 SUPABASE_PUBLISHABLE_KEY=test-public-key AUTH_SITE_URL=http://localhost:3101 SUPABASE_SERVICE_ROLE_KEY=test-service-key PORT=3101 npm run start > /tmp/gharbazaar-auth-server.log 2>&1 &
           curl --fail --silent --show-error --output /dev/null --retry 30 --retry-connrefused --retry-delay 2 http://127.0.0.1:3101/post
       - run: npm run moderation-check
+        env:
+          BASE_URL: http://localhost:3101
+      - run: npm run users-check
         env:
           BASE_URL: http://localhost:3101
       - run: npm run listing-check

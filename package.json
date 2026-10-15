@@ -44,7 +44,9 @@
     "description-db-check": "node scripts/description-db-check.mjs",
     "description-check": "node scripts/description-check.mjs",
     "moderation-db-check": "node scripts/moderation-db-check.mjs",
-    "moderation-check": "node scripts/moderation-check.mjs"
+    "moderation-check": "node scripts/moderation-check.mjs",
+    "users-db-check": "node scripts/users-db-check.mjs",
+    "users-check": "node scripts/users-check.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

@@ -8,6 +8,7 @@ const SECTIONS = [
   { key: 'overview', label: 'Overview', href: '/admin' },
   { key: 'listings', label: 'Listings', href: '/admin/listings' },
   { key: 'moderation', label: 'Moderation', href: '/admin/moderation' },
+  { key: 'users', label: 'Users & sellers', href: '/admin/users' },
   { key: 'system', label: 'System', href: '/admin/system' },
 ] as const
 

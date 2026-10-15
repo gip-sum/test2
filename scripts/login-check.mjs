@@ -56,6 +56,7 @@ const mock = http.createServer(async (request, response) => {
     return send(200, { access_token: 'l'.repeat(48), refresh_token: 'm'.repeat(48), expires_in: 3600, user: USER })
   }
   if (url.pathname === '/auth/v1/user') return sessions.has(token) ? send(200, USER) : send(401, {})
+  if (url.pathname === '/rest/v1/rpc/my_account_access') return send(200, true)
   if (url.pathname === '/rest/v1/buyer_profiles') return sessions.has(token) ? send(200, []) : send(401, {})
   send(404, {})
 })

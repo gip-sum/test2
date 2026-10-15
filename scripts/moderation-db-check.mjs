@@ -9,12 +9,12 @@ const deny=async(name,sql,code)=>{let failed;try{await db.exec(sql)}catch(e){fai
 const decision=(n,action='APPROVE',reason='NULL',days='90',request=id('f',n),version=1,submission=id('e',n))=>`select to_jsonb(public.moderation_decide('${id('d',n)}','${submission}',${version},'${action}',${reason},${days},'${request}')) as decision`
 try {
  await db.exec(`create role anon;create role authenticated;create role service_role bypassrls;create schema auth;create schema storage;
-  create table auth.users(id uuid primary key,created_at timestamptz default now());create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+  create table auth.users(id uuid primary key,email text,last_sign_in_at timestamptz,created_at timestamptz default now());create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
   grant usage on schema auth,storage,public to anon,authenticated,service_role;grant execute on function auth.uid() to anon,authenticated,service_role;
   create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
   create table storage.objects(id uuid default gen_random_uuid(),bucket_id text,name text);alter table storage.objects enable row level security;grant select,insert,update,delete on storage.objects to authenticated,service_role;grant select on storage.objects to anon;`)
  const files=readdirSync('supabase/migrations').sort()
- for(const suffix of ['phase_09_enquiry_leads','phase_09_private_rpcs','phase_09_lead_indexes','phase_15_private_property_photos','phase_16_property_drafts','phase_17_draft_reviews','phase_18_property_lifecycle','phase_19_listing_enquiries','phase_20_listing_analytics','phase_21_admin_console','python_ai_descriptions','phase_22_listing_moderation']) await db.exec(readFileSync('supabase/migrations/'+files.find(f=>f.endsWith('_'+suffix+'.sql')),'utf8'))
+ for(const suffix of ['phase_07_buyer_profiles','phase_09_enquiry_leads','phase_09_private_rpcs','phase_09_lead_indexes','phase_15_private_property_photos','phase_16_property_drafts','phase_17_draft_reviews','phase_18_property_lifecycle','phase_19_listing_enquiries','phase_20_listing_analytics','phase_21_admin_console','python_ai_descriptions','phase_22_listing_moderation','phase_23_user_seller_management']) await db.exec(readFileSync('supabase/migrations/'+files.find(f=>f.endsWith('_'+suffix+'.sql')),'utf8'))
  await db.exec(`insert into auth.users(id) values('${owner}'),('${admin}'),('${moderator}'),('${revoked}'),('${buyer}');insert into public.staff_members(user_id,role) values('${admin}','ADMIN'),('${moderator}','MODERATOR'),('${revoked}','MODERATOR');update public.staff_members set revoked_at=now() where user_id='${revoked}';`)
  for(let n=1;n<=8;n++) {
   const seller=n===8?moderator:owner

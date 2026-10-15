@@ -22,3 +22,4 @@ it('invalid search cities still return the branded 404 rewrite',async()=>{
  const response=await proxy(new NextRequest('https://site.test/buy/unknown-city'))
  expect(response.headers.get('x-middleware-rewrite')).toContain('/_gharbazaar_not_found')
 })
+vi.mock('@/lib/auth/access', () => ({ marketplaceAccess: async () => 'active' }))

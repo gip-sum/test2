@@ -15,6 +15,7 @@ const mock=http.createServer(async(req,res)=>{
  const url=new URL(req.url,'http://localhost'),token=req.headers.authorization?.slice(7),user=token==='a'.repeat(48)?owner:token==='b'.repeat(48)?foreign:null,service=token==='test-service-key',publicRead=token==='test-public-key',body=Buffer.concat(chunks)
  const send=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(data))}
  if(url.pathname==='/auth/v1/user')return user?send(200,{id:user,email:'private@example.com'}):send(401,{})
+  if (url.pathname === '/rest/v1/rpc/my_account_access') return send(200, true)
  if(!user&&!service&&!publicRead)return send(401,{})
  if(unavailable)return send(503,{})
  if(url.pathname==='/rest/v1/saved_properties')return send(200,[])
