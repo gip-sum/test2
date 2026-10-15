@@ -41,8 +41,8 @@ function account(value: unknown): ManagedAccount {
   const v = value as ManagedAccount | null
   if (!v || !UUID.test(v.id) || !nullableText(v.email) || !nullableText(v.full_name) || typeof v.created_at !== 'string'
     || !nullableText(v.last_sign_in_at) || !ACCOUNT_STATUSES.includes(v.status) || !(v.seller_role === null || SELLER_ROLES.includes(v.seller_role))
-    || !Number.isSafeInteger(v.version) || v.version < 0 || !(v.staff_role === null || ['ADMIN', 'MODERATOR'].includes(v.staff_role))) throw new AccountError('Account details returned an invalid response.')
-  return { id: v.id, email: v.email, full_name: v.full_name, created_at: v.created_at, last_sign_in_at: v.last_sign_in_at, status: v.status, seller_role: v.seller_role, version: v.version, staff_role: v.staff_role }
+    || !Number.isSafeInteger(v.version) || v.version < 0 || typeof v.operator_managed !== 'boolean' || !(v.staff_role === null || ['ADMIN', 'MODERATOR'].includes(v.staff_role))) throw new AccountError('Account details returned an invalid response.')
+  return { id: v.id, email: v.email, full_name: v.full_name, created_at: v.created_at, last_sign_in_at: v.last_sign_in_at, status: v.status, seller_role: v.seller_role, version: v.version, staff_role: v.staff_role, operator_managed: v.operator_managed }
 }
 function page<T>(value: unknown, project: (r: T) => T): PageOf<T> {
   const v = value as PageOf<T> | null

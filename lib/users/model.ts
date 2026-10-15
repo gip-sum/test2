@@ -28,7 +28,7 @@ export function userHref(id: string, h: Partial<HistoryQuery> = {}) {
 }
 export type ManagedAccount = {
   id: string; email: string | null; full_name: string | null; created_at: string; last_sign_in_at: string | null
-  status: AccountStatus; seller_role: SellerRole | null; version: number; staff_role: string | null
+  status: AccountStatus; seller_role: SellerRole | null; version: number; staff_role: string | null; operator_managed: boolean
 }
 export type AccountChange = {
   id: string; actor_id: string; reason: string; status_before: AccountStatus; status_after: AccountStatus

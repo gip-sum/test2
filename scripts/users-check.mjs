@@ -4,8 +4,8 @@ import { chromium } from 'playwright-core'
 import { mkdirSync } from 'node:fs'
 const BASE=process.env.BASE_URL??'http://localhost:3101',id=(k,n=1)=>`${k}9140f33-a429-46f3-9514-${String(n).padStart(12,'0')}`
 const admin=id('b'),seller=id('a'),moderator=id('b',2),at=()=>new Date().toISOString()
-const accounts=Array.from({length:30},(_,i)=>({id:i===0?seller:id('7',i),email:`sample${i}@example.test`,full_name:i===0?'SAMPLE Seller':null,created_at:at(),last_sign_in_at:null,status:'ACTIVE',seller_role:null,version:0,staff_role:null}))
-accounts.push({id:admin,email:'sample_admin@example.test',full_name:'SAMPLE Admin',created_at:at(),last_sign_in_at:null,status:'ACTIVE',seller_role:null,version:0,staff_role:'ADMIN'})
+const accounts=Array.from({length:30},(_,i)=>({id:i===0?seller:id('7',i),email:`sample${i}@example.test`,full_name:i===0?'SAMPLE Seller':null,created_at:at(),last_sign_in_at:null,status:'ACTIVE',seller_role:null,version:0,staff_role:null,operator_managed:i===1}))
+accounts.push({id:admin,email:'sample_admin@example.test',full_name:'SAMPLE Admin',created_at:at(),last_sign_in_at:null,status:'ACTIVE',seller_role:null,version:0,staff_role:'ADMIN',operator_managed:true})
 const subject=accounts[0],changes=[],requests=[]
 let down=false,fail=false,lose=false,stale=false,delay=0,accessDown=false
 const mock=http.createServer(async(req,res)=>{
@@ -84,6 +84,7 @@ try{
  const missing=await p.goto(BASE+'/admin/users/'+id('0'));check('missing account is 404',missing.status()===404)
  await p.goto(BASE+'/admin/users/'+admin);check('self/staff management absent',await p.getByRole('heading',{name:'Manage account'}).count()===0)
  await p.goto(BASE+'/admin/users/'+id('7',1));check('empty account histories explicit',await p.getByText('No submitted listings.',{exact:true}).isVisible()&&await p.getByText('No lead activity.',{exact:true}).isVisible())
+ check('former staff remain protected in UI',await p.getByRole('heading',{name:'Manage account'}).count()===0&&await p.getByText('Your own account and current or former staff accounts are managed by a trusted operator.',{exact:true}).isVisible())
  mkdirSync('.shots/phase23',{recursive:true})
  subject.email='long.sample.account.'.repeat(10)+'@example.test';subject.full_name='SAMPLE '+ 'LongName'.repeat(25)
  for(const width of [390,412,768,1280]){

@@ -7,7 +7,7 @@ vi.mock('@/lib/auth/session', () => ({ ACCESS_COOKIE: 'gb-access', getVerifiedUs
 vi.mock('@/lib/admin/queries', () => ({ staffRole: m.role }))
 vi.mock('@/lib/auth/provider', () => ({ authConfig: () => ({ base: 'https://db.test/auth/v1', key: 'public-key' }) }))
 import { accountAdmin, searchAccounts, getAccount, manageAccount } from './queries'
-const account = { id, email: 'sample@example.test', full_name: null, created_at: '2026-10-15', last_sign_in_at: null, status: 'ACTIVE', seller_role: null, version: 0, staff_role: null }
+const account = { id, email: 'sample@example.test', full_name: null, created_at: '2026-10-15', last_sign_in_at: null, status: 'ACTIVE', seller_role: null, version: 0, staff_role: null, operator_managed: false }
 beforeEach(() => { vi.clearAllMocks(); vi.stubGlobal('fetch', m.fetch); m.user.mockResolvedValue({ id }); m.role.mockResolvedValue('ADMIN') })
 it('requires a verified ADMIN', async () => {
   m.role.mockResolvedValue('MODERATOR'); await expect(accountAdmin()).rejects.toMatchObject({ status: 404 })

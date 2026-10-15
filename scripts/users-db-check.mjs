@@ -55,6 +55,8 @@ try {
  check('buyer sees sent direction',(await read(`select public.admin_user('${buyer}') as v`)).leads.rows.every(l=>l.direction==='sent'))
  check('empty histories truthful',(await read(`select public.admin_user('${empty}') as v`)).listings.total===0)
  for(const u of [admin,moderator,revoked])await deny('self and all staff targets protected '+u,change(u),'42501')
+ const formerStaff=await read(`select public.admin_user('${revoked}') as v`)
+ check('revoked staff remain operator-managed without active staff claims',formerStaff.account.operator_managed===true&&formerStaff.account.staff_role===null)
  await deny('no-op not audited',change(seller,0,'ACTIVE',null),'22023')
  await deny('short reason',change(seller,0,'SUSPENDED','AGENT',id('f'),'bad'),'22023')
  await deny('invalid role',change(seller,0,'SUSPENDED','ADMIN'),'22023')

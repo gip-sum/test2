@@ -94,10 +94,10 @@ Phase 23, with Phase 24 proposed separately.
 
 - `npm run verify`: lint, strict TypeScript and 551 tests in 55 suites passed.
 - `npm run build`: production Webpack build passed with all new dynamic routes.
-- `npm run users-db-check`: 77 PostgreSQL checks passed, including direct API/RLS
+- `npm run users-db-check`: 78 PostgreSQL checks passed, including direct API/RLS
   bypass attempts, private storage, existing tokens, restoration, staff protection,
   immutable history, independent histories and concurrent optimistic versions.
-- `npm run users-check`: 51 browser checks passed, including forced saving, storage
+- `npm run users-check`: 52 browser checks passed, including forced saving, storage
   outage, lost response, identical retry, stale version and access-check outage.
   Native keyboard controls, 44px targets and overflow were checked at all four
   widths. Full-page captures were inspected; long names and emails wrap.
@@ -124,7 +124,7 @@ immediately observes a suspension or restoration.
 |---|---|---|
 | UI renders | Passed | Directory/details and long-content screenshots at 390/412/768/1280; labelled controls and 44px targets |
 | Client → API | Passed | Browser asserts confirmed POST, same request ID after lost response, 409 refresh recovery; API tests cover origin/identity/body bounds |
-| API → data | Passed locally | 77 PGlite checks over actual migrations and caller roles; production migration pending |
+| API → data | Passed locally | 78 PGlite checks over actual migrations and caller roles; production migration pending |
 | Data → response | Passed | Exact UUID/version confirmation, explicit projection, truthful independent history totals; no unrelated lead contacts |
 | Response → UI | Passed | Browser confirms change history, immediate suspension recovery and restoration with the same token |
 | Environment | Local simulator only | Production build served on 3100/3101 with test-only provider configuration; no production credentials used |

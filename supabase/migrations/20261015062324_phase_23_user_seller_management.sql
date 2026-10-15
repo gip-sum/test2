@@ -79,7 +79,7 @@ create function private.account_summary(p_user uuid) returns jsonb
 language sql stable security definer set search_path='' as $$
  select jsonb_build_object('id',u.id,'email',u.email,'full_name',p.full_name,'created_at',u.created_at,
   'last_sign_in_at',u.last_sign_in_at,'status',coalesce(c.status,'ACTIVE'),'seller_role',c.seller_role,
-  'version',coalesce(c.version,0),'staff_role',s.role)
+  'version',coalesce(c.version,0),'staff_role',s.role,'operator_managed',exists(select 1 from public.staff_members where user_id=u.id))
  from auth.users u left join public.buyer_profiles p on p.id=u.id
  left join public.account_controls c on c.user_id=u.id
  left join public.staff_members s on s.user_id=u.id and s.revoked_at is null where u.id=p_user;
