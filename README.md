@@ -461,10 +461,11 @@ Sellers see a separate “Corrections requested” status and must review/confir
 before re-submitting.
 
 `supabase/migrations/20261014142159_phase_22_listing_moderation.sql` introduces the
-workflow and was applied live. Staff grants remain a trusted operator's task;
-production currently has no active staff account. Choose the intended existing
-account explicitly and grant ADMIN or MODERATOR through the existing
-`staff_members` entity. Never put a staff-grant endpoint in the public app.
+workflow and was applied live. The client-designated first ADMIN was granted
+through the existing `staff_members` entity during Phase 23 production acceptance.
+Further staff grants remain a trusted operator's task. Never put a staff-grant
+endpoint in the public app. Real-account listing approval and seller correction /
+re-submit remain a separate Phase 22 acceptance item.
 
 See [Phase 22](docs/phases/PHASE-22-listing-moderation.md) for scope and verification.
 The optional `scripts/moderation-live-check.sql` is a trusted SQL-operator check

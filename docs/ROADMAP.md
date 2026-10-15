@@ -39,8 +39,8 @@ but its eight-phase build order is superseded.
 | 18 | Property publishing & lifecycle | Implemented locally; browser/live release checks and server credential setup pending |
 | 19 | Seller dashboard | Implemented; enquiry migration not yet applied live; real-account verification pending |
 | 20 | Seller listing analytics | Implemented; analytics migration not yet applied live; contact reveals deferred to Phase 10 |
-| 21 | Admin dashboard | Implemented (read-only console); migration not yet applied live; first admin to be granted by an operator |
-| 22 | Listing moderation | Implemented: private review, approval, rejection, correction requests and immutable decisions. Migration applied and live rollback-only checks passed; first staff account and real-account workflow verification pending. |
+| 21 | Admin dashboard | Deployed; live schema confirmed and client-designated first ADMIN granted during Phase 23 acceptance. |
+| 22 | Listing moderation | Implemented: private review, approval, rejection, correction requests and immutable decisions. Migration applied and live rollback-only checks passed; first ADMIN granted in Phase 23. Real-account listing approval and seller correction / re-submit verification remain pending. |
 | 23 | User & seller management | Complete and deployed at 4a7bd08. Production migration applied; explicitly designated ADMIN granted; real signed-in admin search, classification, suspension/restoration and immutable history verified with a disposable account on 15 October 2026. |
 | Python addon | Import audit, local inbox worker and private AI description jobs | Import audit integrated; local automatic inbox audits added without hosted services. Description editor, immutable snapshots and private Python queue worker implemented; paid generation remains disabled by client decision. See the three ADDON-PYTHON specifications. |
 | E | 99acres interface redesign from client screenshots | Complete and deployed; green primary colour and header logo restored |
