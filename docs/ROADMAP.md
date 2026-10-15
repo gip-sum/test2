@@ -41,7 +41,7 @@ but its eight-phase build order is superseded.
 | 20 | Seller listing analytics | Implemented; analytics migration not yet applied live; contact reveals deferred to Phase 10 |
 | 21 | Admin dashboard | Implemented (read-only console); migration not yet applied live; first admin to be granted by an operator |
 | 22 | Listing moderation | Implemented: private review, approval, rejection, correction requests and immutable decisions. Migration applied and live rollback-only checks passed; first staff account and real-account workflow verification pending. |
-| 23 | User & seller management | Implemented: admin account search/details, seller classifications, reversible marketplace suspension and immutable account changes. Local application/database/browser checks passed; production migration and real-admin acceptance pending. |
+| 23 | User & seller management | Complete and deployed at 4a7bd08. Production migration applied; explicitly designated ADMIN granted; real signed-in admin search, classification, suspension/restoration and immutable history verified with a disposable account on 15 October 2026. |
 | Python addon | Import audit, local inbox worker and private AI description jobs | Import audit integrated; local automatic inbox audits added without hosted services. Description editor, immutable snapshots and private Python queue worker implemented; paid generation remains disabled by client decision. See the three ADDON-PYTHON specifications. |
 | E | 99acres interface redesign from client screenshots | Complete and deployed; green primary colour and header logo restored |
 | 40A | Home loan calculators | Implemented ahead of order at client request |
