@@ -457,30 +457,58 @@ try {
     await page.addStyleTag({ content: 'body { padding-bottom: 150vh !important; }' })
     await page.mouse.move(195, 600)
     await page.waitForTimeout(600)
-    const scene = () => page.evaluate(() => {
-      const anims = document.getAnimations().filter((a) => a.effect?.target?.closest?.('.wh-scene'))
-      const times = anims.filter((a) => a.playState !== 'finished').map((a) => a.currentTime)
-      return { states: [...new Set(anims.map((a) => a.playState))], spread: Math.max(...times) - Math.min(...times), clock: document.getAnimations().find((a) => a.animationName === 'wh-p1')?.currentTime, paused: document.querySelector('.login-art').hasAttribute('data-scene-paused') }
-    })
-    const before = await scene()
-    await check('390px on screen the scene plays', !before.paused && before.states.includes('running') && !before.states.includes('paused'), JSON.stringify(before))
-    const artBottom = await page.evaluate(() => document.querySelector('.login-art').getBoundingClientRect().bottom + window.scrollY)
-    await page.mouse.wheel(0, artBottom + 40)
-    await page.waitForFunction(() => document.querySelector('.login-art').hasAttribute('data-scene-paused'), null, { timeout: 3000 })
-    const off = await page.evaluate(() => document.querySelector('.login-art').getBoundingClientRect().bottom)
-    const held = await scene()
-    await page.waitForTimeout(1200)
-    const stillHeld = await scene()
-    await check('390px scrolled out of view, every scene animation holds where it is',
-      off <= 0 && held.states.every((s) => s === 'paused' || s === 'finished') && held.clock === stillHeld.clock, JSON.stringify({ off, held, stillHeld }))
-    await page.mouse.wheel(0, -(artBottom + 400))
-    await page.waitForFunction(() => !document.querySelector('.login-art').hasAttribute('data-scene-paused'), null, { timeout: 3000 })
-    await page.waitForTimeout(500)
-    const after = await scene()
-    await check('390px back in view it resumes from where it stopped, every part in step',
-      after.states.includes('running') && !after.states.includes('paused') && after.clock > stillHeld.clock && after.clock < stillHeld.clock + 1500 && after.spread < 20,
-      JSON.stringify({ stillHeld, after }))
-    await page.close()
+    // Retain the same effects throughout. Finished intro effects can disappear
+    // from getAnimations(), and pausing changes their playState. Comparing an
+    // absolute spread over a changing set confuses their finite end times with
+    // drift. Each effect must instead hold, then advance by the scene clock's
+    // elapsed time, stopping at its own end when it is finite.
+    const sceneAnimations = await page.evaluateHandle(() => document.getAnimations().filter((a) => a.effect?.target?.closest?.('.wh-scene')))
+    try {
+      const scene = () => page.evaluate((anims) => {
+        const animations = anims.map((animation, index) => {
+          const endTime = animation.effect?.getComputedTiming().endTime
+          return {
+            index, name: `${animation.animationName} (${animation.effect?.target?.getAttribute('class') ?? ''})`,
+            time: animation.currentTime, state: animation.playState,
+            endTime: Number.isFinite(endTime) ? endTime : null, infinite: endTime === Infinity,
+          }
+        })
+        return { animations, states: [...new Set(animations.map((a) => a.state))], clock: anims.find((a) => a.animationName === 'wh-p1')?.currentTime, paused: document.querySelector('.login-art').hasAttribute('data-scene-paused') }
+      }, sceneAnimations)
+      const before = await scene()
+      await check('390px on screen the scene plays', !before.paused && Number.isFinite(before.clock) && before.states.includes('running') && !before.states.includes('paused'), JSON.stringify(before))
+      const artBottom = await page.evaluate(() => document.querySelector('.login-art').getBoundingClientRect().bottom + window.scrollY)
+      await page.mouse.wheel(0, artBottom + 40)
+      await page.waitForFunction(() => document.querySelector('.login-art').hasAttribute('data-scene-paused'), null, { timeout: 3000 })
+      const off = await page.evaluate(() => document.querySelector('.login-art').getBoundingClientRect().bottom)
+      const held = await scene()
+      await page.waitForTimeout(1200)
+      const stillHeld = await scene()
+      const holdErrors = held.animations.flatMap((animation, index) => {
+        const actual = stillHeld.animations[index]?.time
+        return Number.isFinite(animation.time) && actual === animation.time ? [] : [{ name: animation.name, expected: animation.time, actual }]
+      })
+      await check('390px scrolled out of view, every scene animation holds where it is',
+        off <= 0 && held.animations.length > 0 && held.states.every((s) => s === 'paused' || s === 'finished') && holdErrors.length === 0,
+        JSON.stringify({ off, heldClock: held.clock, stillHeldClock: stillHeld.clock, errors: holdErrors }))
+      await page.mouse.wheel(0, -(artBottom + 400))
+      await page.waitForFunction(() => !document.querySelector('.login-art').hasAttribute('data-scene-paused'), null, { timeout: 3000 })
+      await page.waitForTimeout(500)
+      const after = await scene(), elapsed = after.clock - stillHeld.clock
+      const resumeErrors = stillHeld.animations.flatMap((animation, index) => {
+        const actual = after.animations[index]?.time
+        const expected = animation.infinite ? animation.time + elapsed : Math.min(animation.endTime, animation.time + elapsed)
+        const valid = Number.isFinite(animation.time) && Number.isFinite(actual) && (animation.infinite || Number.isFinite(animation.endTime))
+        return valid && Math.abs(actual - expected) < 20 && (!animation.infinite || actual > animation.time)
+          ? [] : [{ name: animation.name, held: animation.time, actual, expected, endTime: animation.infinite ? 'infinite' : animation.endTime }]
+      })
+      await check('390px back in view it resumes from where it stopped, every part in step',
+        after.states.includes('running') && !after.states.includes('paused') && elapsed > 0 && elapsed < 1500 && resumeErrors.length === 0,
+        JSON.stringify({ heldClock: stillHeld.clock, resumedClock: after.clock, elapsed, errors: resumeErrors }))
+    } finally {
+      await sceneAnimations.dispose()
+      await page.close()
+    }
   }
 
   // ── Reduced motion: the finished picture, perfectly still ───────────
