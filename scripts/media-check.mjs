@@ -63,6 +63,9 @@ try {
   check('dialog arrow key advances and keeps focus', /^Full screen image 4 of 12/.test(await dialog.getByRole('status').innerText()) &&
     await dialog.getByRole('button', { name: 'Next full-screen photo' }).evaluate((el) => document.activeElement === el))
   await page.keyboard.press('Escape')
+  // The lightbox fades out over 150ms (UI-04) and Radix unmounts it when the
+  // fade ends; allow that, bounded, rather than reading the first frame.
+  await dialog.waitFor({ state: 'detached', timeout: 1000 }).catch(() => {})
   check('Escape closes dialog', await dialog.count() === 0)
   check('focus returns to selected tile', await tile.evaluate((el) => document.activeElement === el))
   await desktop.close()

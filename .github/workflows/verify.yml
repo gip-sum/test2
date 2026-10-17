@@ -97,6 +97,9 @@ jobs:
       # Phase E: the reference menu, guest Activity and six-item phone bar,
       # with page clearance (auth-check covers Activity signed in).
       - run: npm run shell-check
+      # UI-04: the motion layer — Sheet, header panels, card touch feedback,
+      # skeleton and photo fade, each also under prefers-reduced-motion.
+      - run: npm run motion-check
       - run: npm run pricing-check
       - run: npm run post-check
       - run: npm run notfound-check

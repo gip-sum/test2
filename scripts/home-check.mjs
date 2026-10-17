@@ -134,6 +134,9 @@ try {
   await more.click()
   let sheet = page.getByRole('dialog', { name: 'More filters' })
   await sheet.waitFor()
+  // The sheet rises 24px into place (UI-04 motion layer); measure where it
+  // rests, not a frame of its entrance.
+  await sheet.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)))
   const sheetBox = await sheet.boundingBox()
   await check('on a phone the filters open full screen', sheetBox.width === 390 && sheetBox.height === 844, JSON.stringify(sheetBox))
   const legends = await sheet.locator('legend').allInnerTexts()
