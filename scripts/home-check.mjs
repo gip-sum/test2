@@ -200,6 +200,9 @@ try {
   await picker.getByRole('textbox', { name: 'Search localities' }).fill('Salt')
   await picker.getByRole('option', { name: /Salt Lake/ }).first().click()
   await picker.getByRole('button', { name: /Done · 1 locality/ }).click()
+  // The picker plays a 200ms exit (UI-04) and, like any modal, keeps the page
+  // behind it aria-hidden until it unmounts; read the field once it has gone.
+  await picker.waitFor({ state: 'detached' })
   await check('the chosen locality shows in the search field', (await form.getByRole('button', { name: /Salt Lake/ }).count()) === 1)
   await form.getByRole('button', { name: 'Search properties for sale' }).click()
   await page.waitForURL((url) => url.pathname === '/buy/kolkata/salt-lake')
