@@ -13,6 +13,7 @@ import type { Intent, PropertyTypeCode } from '@/lib/property/types'
 import { PROPERTY_TYPE_LABEL, PROPERTY_TYPE_ORDER } from '@/lib/property/types'
 import { BUY_BUDGET_BANDS, RENT_BUDGET_BANDS, buildSearchUrl } from '@/lib/search/query'
 import { LAUNCH_CITY } from '@/lib/brand'
+import { Button } from '@/components/ui/Button'
 
 const BHK_OPTIONS = [1, 2, 3, 4] as const
 
@@ -133,7 +134,7 @@ export function SearchPanel() {
       </div>
 
       {filterCount > 0 && (
-        <ul aria-label="Selected filters" className="mt-3 flex flex-wrap gap-2">
+        <ul aria-label="Selected filters" className="mt-3 flex flex-wrap gap-x-2 gap-y-3">
           {propertyTypes.map((t) => (
             <li key={t}>
               <Chip label={PROPERTY_TYPE_LABEL[t]} onRemove={() => toggleType(t)} removeLabel={`Remove filter: ${PROPERTY_TYPE_LABEL[t]}`} />
@@ -168,16 +169,17 @@ export function SearchPanel() {
             >
               Clear all
             </button>
-            <button
+            <Button
               type="button"
+              size="lg"
+              className="flex-1 text-label"
               onClick={() => {
                 setFiltersOpen(false)
                 router.push(url)
               }}
-              className="h-12 flex-1 rounded-md bg-brand-600 text-label text-on-brand hover:bg-brand-700"
             >
               Show properties {scope}
-            </button>
+            </Button>
           </div>
         }
       >

@@ -97,7 +97,7 @@ export function SearchLayout({
       </header>
 
       {activeCount > 0 && (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-3">
           <h2 className="sr-only">Active filters</h2>
           {active.map((f) => (
             <Chip
@@ -107,12 +107,13 @@ export function SearchLayout({
               onRemove={() => apply(f.remove)}
             />
           ))}
+          {/* A 44px target around the 32px pill, as on the chips beside it. */}
           <button
             type="button"
             onClick={() => apply(clearAllPatch())}
-            className="h-8 rounded-full px-3 text-label text-brand-600 hover:bg-brand-100"
+            className="group -my-1.5 inline-flex h-11 items-center text-label text-brand-600 outline-none"
           >
-            Clear all
+            <span className="inline-flex h-8 items-center rounded-full px-3 group-hover:bg-brand-100 group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-focus-ring">Clear all</span>
           </button>
         </div>
       )}
@@ -211,7 +212,7 @@ export function SearchLayout({
               <button
                 type="button"
                 onClick={() => apply(clearAllPatch())}
-                className="h-9 rounded-md px-3 text-label text-brand-600 hover:bg-brand-100"
+                className="-my-1 h-11 rounded-md px-3 text-label text-brand-600 hover:bg-brand-100"
               >
                 Clear all
               </button>

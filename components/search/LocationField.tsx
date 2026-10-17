@@ -6,6 +6,8 @@ import type { Location } from '@/lib/location/types'
 import { useIsDesktop } from '@/lib/hooks/useMediaQuery'
 import { Sheet } from '@/components/ui/Sheet'
 import { cn } from '@/lib/cn'
+import { Button } from '@/components/ui/Button'
+import { Chip } from '@/components/ui/Chip'
 
 /**
  * Multi-select locality search.
@@ -76,15 +78,11 @@ export function LocationField({
         title="Where are you looking?"
         description="Search and select one or more localities in Kolkata"
         footer={
-          <button
-            type="button"
-            onClick={() => setOpen(false)}
-            className="h-12 w-full rounded-md bg-brand-600 text-label text-on-brand"
-          >
+          <Button type="button" size="lg" fullWidth className="text-label" onClick={() => setOpen(false)}>
             {selected.length === 0
               ? 'Search all of Kolkata'
               : `Done · ${selected.length} ${selected.length === 1 ? 'locality' : 'localities'}`}
-          </button>
+          </Button>
         }
       >
         <SheetPicker selected={selected} onAdd={add} onRemove={remove} />
@@ -107,22 +105,10 @@ function SearchGlyph() {
 function SelectedChips({ selected, onRemove }: { selected: Location[]; onRemove: (slug: string) => void }) {
   if (!selected.length) return null
   return (
-    <ul className="flex flex-wrap gap-2">
+    <ul className="flex flex-wrap gap-x-2 gap-y-3">
       {selected.map((s) => (
         <li key={s.slug}>
-          <span className="inline-flex h-8 items-center gap-1 rounded-full bg-brand-100 py-0 pl-3 pr-1 text-body-sm font-medium text-brand-600">
-            <span className="max-w-[12rem] truncate">{s.name}</span>
-            <button
-              type="button"
-              onClick={() => onRemove(s.slug)}
-              aria-label={`Remove ${s.name}`}
-              className="grid size-6 place-items-center rounded-full hover:bg-brand-600/15"
-            >
-              <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
-                <path d="M6 6l12 12M18 6L6 18" />
-              </svg>
-            </button>
-          </span>
+          <Chip label={s.name} labelClassName="max-w-[12rem]" onRemove={() => onRemove(s.slug)} removeLabel={`Remove ${s.name}`} />
         </li>
       ))}
     </ul>

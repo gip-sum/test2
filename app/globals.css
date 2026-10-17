@@ -894,7 +894,9 @@
 .calc-layout > * { min-width: 0; }
 .calc-form, .calc-result { border: 1px solid var(--color-border-subtle); border-radius: var(--radius-lg); background: var(--color-surface-000); padding: 16px; }
 .calc-form { display: grid; gap: 20px; }
-.calc-slider { height: 28px; accent-color: var(--color-brand-600); cursor: pointer; }
+/* The visible track sits where a 28px slider 8px below the field would; the
+   box is 44px for touch (UI-05) and gives the extra 8px back below. */
+.calc-slider { height: 44px; margin-block: 0 -8px; accent-color: var(--color-brand-600); cursor: pointer; }
 .calc-hero { margin-top: 6px; font-family: var(--font-display); font-size: 34px; line-height: 1.1; font-weight: 700; letter-spacing: -.02em; color: var(--color-ink-900); }
 .calc-hero-unit { font-family: var(--font-sans); font-size: 16px; font-weight: 500; letter-spacing: 0; color: var(--color-ink-700); }
 .calc-figures { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 16px; padding: 12px 0; border-block: 1px solid var(--color-border-subtle); }

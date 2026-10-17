@@ -14,12 +14,15 @@ export function Chip({
   onRemove,
   removeLabel,
   tone = 'brand',
+  labelClassName,
 }: {
   label: ReactNode
   onRemove?: () => void
   /** Full sentence for assistive tech: "Remove 2 BHK filter". */
   removeLabel?: string
   tone?: 'brand' | 'neutral'
+  /** Extra classes for the label, such as a narrower truncation width. */
+  labelClassName?: string
 }) {
   return (
     <span
@@ -29,17 +32,23 @@ export function Chip({
         tone === 'brand' ? 'bg-brand-100 text-brand-600' : 'bg-surface-200 text-ink-700',
       )}
     >
-      <span className="truncate">{label}</span>
+      <span className={cn('truncate', labelClassName)}>{label}</span>
       {onRemove && (
+        // The visible circle stays 24px; the button around it is 44×44 (the
+        // touch-target rule, UI-05), pulled back by negative margins so the
+        // chip keeps its 32px height and width. Lists of chips use a 12px
+        // row gap so wrapped rows' targets never overlap.
         <button
           type="button"
           onClick={onRemove}
           aria-label={removeLabel ?? `Remove ${typeof label === 'string' ? label : 'filter'}`}
-          className="grid size-6 shrink-0 place-items-center rounded-full hover:bg-brand-600/15"
+          className="group -mx-2.5 -my-1.5 grid size-11 shrink-0 place-items-center outline-none"
         >
-          <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg>
+          <span className="grid size-6 place-items-center rounded-full group-hover:bg-brand-600/15 group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-focus-ring">
+            <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </span>
         </button>
       )}
     </span>

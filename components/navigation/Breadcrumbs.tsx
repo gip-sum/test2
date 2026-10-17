@@ -19,7 +19,9 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
           return (
             <li key={`${item.label}-${i}`} className="flex min-w-0 items-center gap-1.5">
               {item.href && !last ? (
-                <Link href={item.href} className="truncate rounded-sm hover:text-brand-600 hover:underline">
+                // 44px tall to the finger (UI-05), 20px to the layout: the
+                // padding is handed back by equal negative margins.
+                <Link href={item.href} className="-my-3 block truncate rounded-sm py-3 hover:text-brand-600 hover:underline">
                   {item.label}
                 </Link>
               ) : (

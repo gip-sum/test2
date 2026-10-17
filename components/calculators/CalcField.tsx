@@ -65,7 +65,7 @@ export function CalcField({
           autoComplete="off"
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className="tabular min-w-0 flex-1 bg-transparent text-body-lg font-semibold text-ink-900 outline-none"
+          className="tabular min-w-0 flex-1 self-stretch bg-transparent text-body-lg font-semibold text-ink-900 outline-none"
         />
         {suffix && <span className="text-body text-ink-500" aria-hidden="true">{suffix}</span>}
       </div>
@@ -78,7 +78,7 @@ export function CalcField({
         step={slider.step}
         value={numeric ? Math.min(Math.max(value, slider.min), slider.max) : slider.min}
         onChange={(e) => onChange(formatForInput(spec, Number(e.target.value)))}
-        className="calc-slider mt-2 w-full"
+        className="calc-slider w-full"
       />
       {(hint || echo) && (
         <p id={hintId} className="sr-only">{[echo, hint].filter(Boolean).join('. ')}</p>
