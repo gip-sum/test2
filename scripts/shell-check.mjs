@@ -5,6 +5,10 @@ import { mkdirSync } from 'node:fs'
 const base = process.env.BASE_URL ?? 'http://127.0.0.1:3100'
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
 let passed = 0
+// UI-04: sheets rise (phones) or scale from 0.97 (640px+) for 300ms and header
+// panels drop 4px for 150ms. Geometry assertions are about where things rest,
+// so wait for an element's entrance to finish before measuring it.
+const settled = (locator) => locator.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished)))
 function check(label, ok, detail = '') { if (!ok) throw new Error(`FAIL ${label}: ${detail}`); passed++; console.log(`ok ${label}`) }
 const links = new Set()
 const errors = []
@@ -39,6 +43,7 @@ try {
       await trigger.click()
       const dialog = page.getByRole('dialog', { name: 'All Categories' })
       await dialog.waitFor()
+      await settled(dialog)
       await page.waitForFunction(() => document.querySelector('[data-app-root]')?.inert === true)
       check(`${width}: modal and inert background`, await page.locator('[data-app-root]').evaluate(e => e.inert) && await dialog.getAttribute('aria-modal') === 'true')
       check(`${width}: split menu proportions`, await dialog.locator('.reference-menu').evaluate(e => { const side = e.firstElementChild.getBoundingClientRect().width; return Math.abs(side / e.getBoundingClientRect().width - .29) < .02 }))
@@ -173,6 +178,7 @@ try {
     await toggle.focus()
     await page.keyboard.press('Enter')
     check(`${w} Enter opens it`, await toggle.getAttribute('aria-expanded') === 'true' && await panel.isVisible())
+    await settled(panel)
     const box = await panel.evaluate((el) => {
       const r = el.getBoundingClientRect()
       return {

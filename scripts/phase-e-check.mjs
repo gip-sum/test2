@@ -7,6 +7,10 @@ const out = process.env.PHASE_E_SHOTS ?? '/tmp/gharbazaar-phase-e'
 mkdirSync(out, { recursive: true })
 const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' })
 let passed = 0
+// UI-04: sheets rise (phones) or scale from 0.97 (640px+) for 300ms and header
+// panels drop 4px for 150ms. Geometry assertions are about where things rest,
+// so wait for an element's entrance to finish before measuring it.
+const settled = (locator) => locator.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished)))
 function check(label, ok) { if (!ok) throw new Error(`FAIL ${label}`); passed++; console.log(`ok ${label}`) }
 async function waitFilterFocus(page) {
   try { await page.waitForFunction(() => document.activeElement?.tagName === 'BUTTON' && document.activeElement?.textContent?.trim() === 'More filters') }
@@ -97,6 +101,8 @@ try {
       check(`${width}: scrolled header replaced by search`, !await page.locator('header.app-bar').isVisible())
       await page.getByRole('navigation', { name: 'Primary', exact: true }).getByRole('button', { name: 'Menu', exact: true }).click()
       const rail = page.locator('.reference-menu-categories')
+      await page.getByRole('dialog').waitFor()
+      await settled(page.getByRole('dialog'))
       const before = await rail.boundingBox()
       await page.locator('.reference-menu-content').evaluate(e => e.scrollTop = e.scrollHeight)
       check(`${width}: catalogue scroll keeps category rail in place`, Math.abs((await rail.boundingBox()).y - before.y) <= 1 && await page.locator('.reference-menu-content').evaluate(e => e.scrollTop > 0))

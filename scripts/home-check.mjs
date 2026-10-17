@@ -456,6 +456,8 @@ try {
   await desk.keyboard.press('Tab')
   await check('desktop: search keeps keyboard focus inside its dialog', await desk.evaluate(() => !!document.activeElement?.closest('[role="dialog"]')))
   await desk.getByRole('form', { name: 'Search properties' }).getByRole('button', { name: /^More filters/ }).click()
+  // Measure the dialog at rest, after its 0.97 → 1 entrance (UI-04).
+  await desk.getByRole('dialog', { name: 'More filters' }).evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)))
   const dialog = await desk.getByRole('dialog', { name: 'More filters' }).boundingBox()
   await check('desktop: More filters opens as a centred dialog, not a full-screen sheet', dialog.width < 600 && dialog.height < 900 && Math.abs(dialog.x + dialog.width / 2 - 640) <= 2, JSON.stringify(dialog))
   await desk.context().close()

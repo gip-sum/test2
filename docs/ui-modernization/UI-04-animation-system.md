@@ -287,8 +287,8 @@ cascade (the `(hover: none)` gate and the reduced-motion override).
 
 ### Existing checks adjusted for intentional animation timing
 
-Three assertions in two existing checks read the DOM on the first frame
-after an open or close, which UI-04 deliberately turned into a 150–300ms
+Assertions in four existing checks read the DOM on the first frame after
+an open or close, which UI-04 deliberately turned into a 150–300ms
 animation. Each was changed to **wait for that animation to finish, bounded,
 and then assert exactly what it asserted before**. None was loosened,
 skipped or given a tolerance:
@@ -298,12 +298,27 @@ skipped or given a tolerance:
 | `home-check` | on a phone the filters open full screen (390×844) | wait for the sheet's own animations to finish before `boundingBox()` | it measured a frame of the 24px rise (y=16.1) |
 | `home-check` | the chosen locality shows in the search field | `await picker.waitFor({ state: 'detached' })` after Done | during the picker's 200ms exit Radix keeps the page `aria-hidden`, so a non-waiting role query found nothing (CI run 75) |
 | `media-check` | Escape closes dialog (`count() === 0`) | wait up to 1s for the lightbox to detach | the lightbox now fades out over 150ms before Radix unmounts it |
+| `home-check` | desktop: More filters opens as a centred dialog | wait for the dialog's entrance before `boundingBox()` | it could measure the 0.97 scale |
+| `phase-e-check` | catalogue scroll keeps category rail in place | wait for the menu sheet's entrance before taking the rail's starting position | the starting position could be read mid-rise (CI run 77) |
+| `shell-check` | menu touch targets ≥ 44px; the hub panel fits under the header | wait for the menu's and the panel's entrance before measuring | at 768 the menu scales from 0.97 (44px reads 42.7); the panel's 4px drop would hide a real overflow |
+
+`phase-e-check` runs with reduced motion, and still failed once in CI (run
+77, a documentation-only commit after a green run 76). A CSS animation
+waiting for its first frame already applies its first keyframe, so even a
+0.01ms entrance shows the sheet 24px low until that frame; a read that lands
+there is wrong. CI's newer Chromium on a busy runner reaches that window;
+this container's did not in 24 replays at 1×, 4× and 6× CPU slowdown. The
+race was made deterministic by slowing animations to 10% with DevTools
+(`Animation.setPlaybackRate`): the old step fails (rail at 85.5 then 75.6),
+the new step passes (64.0 and 64.0). The checks share one helper,
+`settled(locator)`, which awaits every finite animation in the subtree.
 
 Controls: without the new wait, the locality assertion fails locally with
 the exact CI message; with it, all 122 home-check assertions pass (run with
 the pre-existing local-only Escape issue below bypassed in a scratch copy
 only). CI run 75 (1d77f00) failed on the locality assertion before this
-adjustment was made; it was fixed in cfc7662.
+adjustment was made; it was fixed in cfc7662 (run 76 green, including
+`motion-check`). The geometry waits followed run 77.
 
 ### Remaining failures (pre-existing, unchanged)
 
@@ -438,8 +453,9 @@ Login street and 404 scene, verified four ways:
   `lib/design/protected-scenes.test.ts`, `lib/motion/variants.test.ts`,
   `components/motion/Presence.test.ts`.
 - Scripts: new `scripts/motion-check.mjs`, `scripts/motion-perf.mjs`;
-  `scripts/style-diff.mjs`; `scripts/home-check.mjs` and
-  `scripts/media-check.mjs` (timing adjustments above).
+  `scripts/style-diff.mjs`; `scripts/home-check.mjs`,
+  `scripts/media-check.mjs`, `scripts/phase-e-check.mjs` and
+  `scripts/shell-check.mjs` (timing adjustments above).
 - CI: `motion-check` after `shell-check` in `.github/workflows/verify.yml`.
 
 ## Remaining risks
