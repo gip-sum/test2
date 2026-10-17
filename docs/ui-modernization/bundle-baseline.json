@@ -1,0 +1,279 @@
+{
+  "measuredAt": "2026-10-17T07:56:32.772Z",
+  "buildId": "gq9IBwckyQ6xbbb-gq0rH",
+  "base": "http://127.0.0.1:3100",
+  "routes": {
+    "Home": {
+      "path": "/",
+      "status": 200,
+      "method": "first load (HTML)",
+      "files": [
+        "static/chunks/2714-0d60f730024f57da.js",
+        "static/chunks/3794-a5847af9175ef2fe.js",
+        "static/chunks/4bd1b696-93bf506b236d6248.js",
+        "static/chunks/6187-f348bcea2b53f0a9.js",
+        "static/chunks/7765-94f70ea986be54c8.js",
+        "static/chunks/8437-916b1c40fd5ad932.js",
+        "static/chunks/8500-f4d7bfbe7500f274.js",
+        "static/chunks/app/page-b6658abe5149edd4.js",
+        "static/chunks/main-app-4a10ef9c7bbf39b5.js",
+        "static/chunks/webpack-705ab6699213f311.js"
+      ],
+      "raw": 562419,
+      "gzip": 169711,
+      "brotli": 143962
+    },
+    "Search (buy)": {
+      "path": "/buy/kolkata",
+      "status": 200,
+      "method": "first load (HTML)",
+      "files": [
+        "static/chunks/2714-0d60f730024f57da.js",
+        "static/chunks/3794-a5847af9175ef2fe.js",
+        "static/chunks/4109-4460539cea56b93f.js",
+        "static/chunks/4bd1b696-93bf506b236d6248.js",
+        "static/chunks/6187-f348bcea2b53f0a9.js",
+        "static/chunks/7765-94f70ea986be54c8.js",
+        "static/chunks/8437-916b1c40fd5ad932.js",
+        "static/chunks/8500-f4d7bfbe7500f274.js",
+        "static/chunks/app/buy/[city]/[[...rest]]/error-ce912c7ba293162b.js",
+        "static/chunks/app/buy/[city]/[[...rest]]/page-fbd9de9f472a8039.js",
+        "static/chunks/main-app-4a10ef9c7bbf39b5.js",
+        "static/chunks/webpack-705ab6699213f311.js"
+      ],
+      "raw": 568702,
+      "gzip": 171936,
+      "brotli": 145827
+    },
+    "Search (rent)": {
+      "path": "/rent/kolkata",
+      "status": 200,
+      "method": "first load (HTML)",
+      "files": [
+        "static/chunks/2714-0d60f730024f57da.js",
+        "static/chunks/3794-a5847af9175ef2fe.js",
+        "static/chunks/4109-4460539cea56b93f.js",
+        "static/chunks/4bd1b696-93bf506b236d6248.js",
+        "static/chunks/6187-f348bcea2b53f0a9.js",
+        "static/chunks/7765-94f70ea986be54c8.js",
+        "static/chunks/8437-916b1c40fd5ad932.js",
+        "static/chunks/8500-f4d7bfbe7500f274.js",
+        "static/chunks/app/rent/[city]/[[...rest]]/error-f53a90b171b536d4.js",
+        "static/chunks/app/rent/[city]/[[...rest]]/page-7119071e97021f65.js",
+        "static/chunks/main-app-4a10ef9c7bbf39b5.js",
+        "static/chunks/webpack-705ab6699213f311.js"
+      ],
+      "raw": 568704,
+      "gzip": 171935,
+      "brotli": 145833
+    },
+    "Search (filtered)": {
+      "path": "/buy/kolkata?loc=uttarpara-kotrung,ballygunge&bhk=2,3,4&type=APARTMENT&sort=price_desc",
+      "status": 200,
+      "method": "first load (HTML)",
+      "files": [
+        "static/chunks/2714-0d60f730024f57da.js",
+        "static/chunks/3794-a5847af9175ef2fe.js",
+        "static/chunks/4109-4460539cea56b93f.js",
+        "static/chunks/4bd1b696-93bf506b236d6248.js",
+        "static/chunks/6187-f348bcea2b53f0a9.js",
+        "static/chunks/7765-94f70ea986be54c8.js",
+        "static/chunks/8437-916b1c40fd5ad932.js",
+        "static/chunks/8500-f4d7bfbe7500f274.js",
+        "static/chunks/app/buy/[city]/[[...rest]]/error-ce912c7ba293162b.js",
+        "static/chunks/app/buy/[city]/[[...rest]]/page-fbd9de9f472a8039.js",
+        "static/chunks/main-app-4a10ef9c7bbf39b5.js",
+        "static/chunks/webpack-705ab6699213f311.js"
+      ],
+      "raw": 568702,
+      "gzip": 171936,
+      "brotli": 145827
+    },
+    "Property details": {
+      "path": "/property/4-bhk-flat-for-sale-in-ballygunge-p5d40ab",
+      "status": 200,
+      "method": "first load (HTML)",
+      "files": [
+        "static/chunks/2714-0d60f730024f57da.js",
+        "static/chunks/3794-a5847af9175ef2fe.js",
+        "static/chunks/4bd1b696-93bf506b236d6248.js",
+        "static/chunks/7765-94f70ea986be54c8.js",
+        "static/chunks/8437-916b1c40fd5ad932.js",
+        "static/chunks/8500-f4d7bfbe7500f274.js",
+        "static/chunks/9405-b93a973ca704c732.js",
+        "static/chunks/app/property/[handle]/error-bad8cea7607f67f5.js",
+        "static/chunks/app/property/[handle]/page-064b10dc2afcd124.js",
+        "static/chunks/main-app-4a10ef9c7bbf39b5.js",
+        "static/chunks/webpack-705ab6699213f311.js"
+      ],
+      "raw": 560262,
+      "gzip": 169987,
+      "brotli": 144058
+    },
+    "Login": {
+      "path": "/login",
+      "status": 200,
+      "method": "first load (HTML)",
+      "files": [
+        "static/chunks/2714-0d60f730024f57da.js",
+        "static/chunks/3794-a5847af9175ef2fe.js",
+        "static/chunks/4bd1b696-93bf506b236d6248.js",
+        "static/chunks/7765-94f70ea986be54c8.js",
+        "static/chunks/8437-916b1c40fd5ad932.js",
+        "static/chunks/8500-f4d7bfbe7500f274.js",
+        "static/chunks/app/login/page-fa5a765b449449ac.js",
+        "static/chunks/main-app-4a10ef9c7bbf39b5.js",
+        "static/chunks/webpack-705ab6699213f311.js"
+      ],
+      "raw": 542076,
+      "gzip": 163222,
+      "brotli": 138230
+    },
+    "Post property": {
+      "path": "/post",
+      "status": 200,
+      "method": "first load (HTML)",
+      "files": [
+        "static/chunks/2714-0d60f730024f57da.js",
+        "static/chunks/3794-a5847af9175ef2fe.js",
+        "static/chunks/4bd1b696-93bf506b236d6248.js",
+        "static/chunks/5845-7489bdd61626f60b.js",
+        "static/chunks/7765-94f70ea986be54c8.js",
+        "static/chunks/8437-916b1c40fd5ad932.js",
+        "static/chunks/8500-f4d7bfbe7500f274.js",
+        "static/chunks/app/post/page-eb3b8fe52ec2d4b8.js",
+        "static/chunks/main-app-4a10ef9c7bbf39b5.js",
+        "static/chunks/webpack-705ab6699213f311.js"
+      ],
+      "raw": 538679,
+      "gzip": 162930,
+      "brotli": 137919
+    },
+    "EMI calculator": {
+      "path": "/calculators/emi",
+      "status": 200,
+      "method": "first load (HTML)",
+      "files": [
+        "static/chunks/2714-0d60f730024f57da.js",
+        "static/chunks/3794-a5847af9175ef2fe.js",
+        "static/chunks/4bd1b696-93bf506b236d6248.js",
+        "static/chunks/7765-94f70ea986be54c8.js",
+        "static/chunks/7802-b3b43fa32bd457a9.js",
+        "static/chunks/8437-916b1c40fd5ad932.js",
+        "static/chunks/8500-f4d7bfbe7500f274.js",
+        "static/chunks/app/calculators/emi/page-57e237633c5470b5.js",
+        "static/chunks/main-app-4a10ef9c7bbf39b5.js",
+        "static/chunks/webpack-705ab6699213f311.js"
+      ],
+      "raw": 549046,
+      "gzip": 166137,
+      "brotli": 140859
+    },
+    "Activity (guest)": {
+      "path": "/account/activity",
+      "status": 200,
+      "method": "first load (HTML)",
+      "files": [
+        "static/chunks/2714-0d60f730024f57da.js",
+        "static/chunks/3794-a5847af9175ef2fe.js",
+        "static/chunks/4bd1b696-93bf506b236d6248.js",
+        "static/chunks/7765-94f70ea986be54c8.js",
+        "static/chunks/8437-916b1c40fd5ad932.js",
+        "static/chunks/8500-f4d7bfbe7500f274.js",
+        "static/chunks/app/account/activity/page-ec6812901fcea958.js",
+        "static/chunks/main-app-4a10ef9c7bbf39b5.js",
+        "static/chunks/webpack-705ab6699213f311.js"
+      ],
+      "raw": 536929,
+      "gzip": 161613,
+      "brotli": 136801
+    },
+    "Not found (404)": {
+      "path": "/this-page-does-not-exist",
+      "status": 404,
+      "method": "first load (HTML)",
+      "files": [
+        "static/chunks/2714-0d60f730024f57da.js",
+        "static/chunks/3794-a5847af9175ef2fe.js",
+        "static/chunks/4bd1b696-93bf506b236d6248.js",
+        "static/chunks/6187-f348bcea2b53f0a9.js",
+        "static/chunks/7765-94f70ea986be54c8.js",
+        "static/chunks/8437-916b1c40fd5ad932.js",
+        "static/chunks/8500-f4d7bfbe7500f274.js",
+        "static/chunks/app/page-b6658abe5149edd4.js",
+        "static/chunks/main-app-4a10ef9c7bbf39b5.js",
+        "static/chunks/webpack-705ab6699213f311.js"
+      ],
+      "raw": 562419,
+      "gzip": 169711,
+      "brotli": 143962
+    },
+    "Seller dashboard": {
+      "path": "/dashboard",
+      "status": 307,
+      "method": "manifest upper bound",
+      "files": [
+        "static/chunks/2714-0d60f730024f57da.js",
+        "static/chunks/3794-a5847af9175ef2fe.js",
+        "static/chunks/4bd1b696-93bf506b236d6248.js",
+        "static/chunks/6187-f348bcea2b53f0a9.js",
+        "static/chunks/7765-94f70ea986be54c8.js",
+        "static/chunks/8437-916b1c40fd5ad932.js",
+        "static/chunks/8500-f4d7bfbe7500f274.js",
+        "static/chunks/app/dashboard/page-2fe1f6be1779ef96.js",
+        "static/chunks/app/layout-06a7e79da6f208d0.js",
+        "static/chunks/app/page-b6658abe5149edd4.js",
+        "static/chunks/main-app-4a10ef9c7bbf39b5.js",
+        "static/chunks/webpack-705ab6699213f311.js"
+      ],
+      "raw": 569981,
+      "gzip": 172684,
+      "brotli": 146533
+    },
+    "Seller performance": {
+      "path": "/dashboard/performance",
+      "status": 307,
+      "method": "manifest upper bound",
+      "files": [
+        "static/chunks/2714-0d60f730024f57da.js",
+        "static/chunks/3794-a5847af9175ef2fe.js",
+        "static/chunks/4bd1b696-93bf506b236d6248.js",
+        "static/chunks/6187-f348bcea2b53f0a9.js",
+        "static/chunks/7765-94f70ea986be54c8.js",
+        "static/chunks/8437-916b1c40fd5ad932.js",
+        "static/chunks/8500-f4d7bfbe7500f274.js",
+        "static/chunks/app/dashboard/page-2fe1f6be1779ef96.js",
+        "static/chunks/app/dashboard/performance/page-27102e1d466a0520.js",
+        "static/chunks/app/layout-06a7e79da6f208d0.js",
+        "static/chunks/app/page-b6658abe5149edd4.js",
+        "static/chunks/main-app-4a10ef9c7bbf39b5.js",
+        "static/chunks/webpack-705ab6699213f311.js"
+      ],
+      "raw": 572807,
+      "gzip": 174041,
+      "brotli": 147709
+    },
+    "Admin overview": {
+      "path": "/admin",
+      "status": 307,
+      "method": "manifest upper bound",
+      "files": [
+        "static/chunks/2714-0d60f730024f57da.js",
+        "static/chunks/3794-a5847af9175ef2fe.js",
+        "static/chunks/4bd1b696-93bf506b236d6248.js",
+        "static/chunks/6187-f348bcea2b53f0a9.js",
+        "static/chunks/7765-94f70ea986be54c8.js",
+        "static/chunks/8437-916b1c40fd5ad932.js",
+        "static/chunks/8500-f4d7bfbe7500f274.js",
+        "static/chunks/app/admin/page-27102e1d466a0520.js",
+        "static/chunks/app/layout-06a7e79da6f208d0.js",
+        "static/chunks/app/page-b6658abe5149edd4.js",
+        "static/chunks/main-app-4a10ef9c7bbf39b5.js",
+        "static/chunks/webpack-705ab6699213f311.js"
+      ],
+      "raw": 565937,
+      "gzip": 171444,
+      "brotli": 145455
+    }
+  }
+}
