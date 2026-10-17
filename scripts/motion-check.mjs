@@ -7,6 +7,7 @@
 //   Header panels  short entrance, instant exit, focus back to the toggle
 //   Nested sheets  Escape during a child's exit reaches the parent
 //   Lightbox       fade in and out, focus in and back
+//   Tabs           indicator glides after a user change only (UI-05)
 //   Property card  no hover lift on touch (Android stuck hover), press
 //                  feedback, nothing left transformed after Back; lift kept
 //                  for a real mouse
@@ -95,6 +96,21 @@ async function provokeLoading(page) {
   if (!page.prefetched.has(path)) throw new Error(`FAIL ${path} was never prefetched, so its skeleton cannot be provoked`)
   await link.click()
 }
+// The Buy / Rent tabs (components/ui/SmoothTabs.tsx, UI-05) inside the home
+// search sheet, once the sheet has settled and the indicator is measured.
+async function intentTabs(page) {
+  await page.locator('.reference-search-trigger').click()
+  const dialog = page.getByRole('dialog', { name: 'Find your home' })
+  await dialog.waitFor()
+  await dialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)))
+  await page.waitForFunction(() => document.querySelector('[role=tablist][data-indicator]'))
+  return dialog.getByRole('tablist', { name: 'Search intent' })
+}
+// Which tab the indicator pill covers right now (-1 for none).
+const pillOver = (list) => list.evaluate((el) => {
+  const pill = el.querySelector('span[aria-hidden]').getBoundingClientRect()
+  return [...el.querySelectorAll('[role=tab]')].findIndex((t) => Math.abs(t.getBoundingClientRect().left - pill.left) < 1 && Math.abs(t.getBoundingClientRect().width - pill.width) < 1)
+})
 const focusInDialog = (page) => page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))
 
 try {
@@ -212,6 +228,19 @@ try {
     await page.locator('.lightbox-layer').first().waitFor({ state: 'detached' })
     await page.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === 'View full-screen gallery')
     check('lightbox: focus returns to the photo that opened it', true)
+    await page.context().close()
+  }
+
+  // ── Tabs ──────────────────────────────────────────────────────────────
+  {
+    const page = await open('/')
+    const list = await intentTabs(page)
+    check('tabs: the indicator does not animate into place on first paint', await list.evaluate((el) => el.querySelector('span[aria-hidden]').getAnimations().length === 0 && getComputedStyle(el.querySelector('span[aria-hidden]')).transitionProperty === 'all' && getComputedStyle(el.querySelector('span[aria-hidden]')).transitionDuration === '0s'))
+    await list.getByRole('tab', { name: 'Rent', exact: true }).click()
+    const glide = await list.evaluate((el) => el.querySelector('span[aria-hidden]').getAnimations().map((a) => ({ p: a.transitionProperty, d: a.effect.getTiming().duration, e: a.effect.getTiming().easing })))
+    check('tabs: a user change glides the indicator for 200ms on the standard curve', glide.some((a) => a.p === 'transform' && a.d === 200 && /0\.2, 0, 0, 1/.test(a.e)), JSON.stringify(glide))
+    await list.evaluate((el) => Promise.all(el.querySelectorAll('[aria-hidden]')[0].getAnimations().map((a) => a.finished)))
+    check('tabs: the indicator ends on Rent', await pillOver(list) === 1)
     await page.context().close()
   }
 
@@ -369,6 +398,21 @@ try {
     const t = await desk.locator('#nav-panel-buy').evaluate((el) => el.getAnimations().map((a) => a.effect.getTiming().duration))
     check('reduced: header panel opens without a perceptible transition', t.every((d) => d <= 0.01), JSON.stringify(t))
     await desk.context().close()
+
+    // The tabs: no glide, nothing waiting on motion, keyboard intact.
+    const tabsPage = await open('/', { context: reduced })
+    const list = await intentTabs(tabsPage)
+    check('reduced tabs: the active state is clear before any interaction', await list.getByRole('tab', { name: 'Buy', exact: true }).getAttribute('aria-selected') === 'true' && await pillOver(list) === 0)
+    await list.getByRole('tab', { name: 'Rent', exact: true }).click()
+    const moves = await list.evaluate((el) => [...el.querySelectorAll('[aria-hidden]')].flatMap((n) => n.getAnimations()).map((a) => a.effect.getTiming().duration))
+    check('reduced tabs: the indicator moves without a perceptible transition', moves.every((d) => d <= 0.01), JSON.stringify(moves))
+    await tabsPage.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
+    check('reduced tabs: the indicator is on Rent within two frames', await pillOver(list) === 1)
+    await list.getByRole('tab', { name: 'Rent', exact: true }).focus()
+    await tabsPage.keyboard.press('ArrowLeft')
+    check('reduced tabs: the keyboard still moves focus and selection', await list.getByRole('tab', { name: 'Buy', exact: true }).evaluate((el) => el === document.activeElement && el.getAttribute('aria-selected') === 'true'))
+    check('reduced tabs: the form behind the tabs is there and usable at once', await tabsPage.getByRole('dialog', { name: 'Find your home' }).getByRole('button', { name: /^Search properties for sale/ }).isEnabled())
+    await tabsPage.context().close()
 
     let release
     const held = new Promise((r) => { release = r })

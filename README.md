@@ -202,7 +202,7 @@ One Next.js application, modular inside, single deployable.
 ```
 app/          routes, layouts, server actions
 components/
-  ui/         no domain knowledge — Button, Badge, StatusPill, Skeleton
+  ui/         no domain knowledge — Button, Badge, StatusBadge, SmoothTabs, EmptyState, ErrorState, Skeleton
   property/   cards, gallery, price, area and property details
   navigation/ AppHeader, BottomNav, Wordmark
   layout/     PageShell

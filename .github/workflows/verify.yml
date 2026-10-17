@@ -100,6 +100,9 @@ jobs:
       # UI-04: the motion layer — Sheet, header panels, card touch feedback,
       # skeleton and photo fade, each also under prefers-reduced-motion.
       - run: npm run motion-check
+      # UI-05: the shared Buy / Rent tabs (fit, indicator, keyboard, touch),
+      # 44px touch targets by hit-testing, and the migrated Buttons.
+      - run: npm run ui-check
       - run: npm run pricing-check
       - run: npm run post-check
       - run: npm run notfound-check

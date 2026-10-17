@@ -28,6 +28,7 @@
     "calculator-check": "node scripts/calculator-check.mjs",
     "shell-check": "node scripts/shell-check.mjs",
     "motion-check": "node scripts/motion-check.mjs",
+    "ui-check": "node scripts/ui-check.mjs",
     "motion-perf": "node scripts/motion-perf.mjs",
     "pricing-check": "node scripts/pricing-check.mjs",
     "phase-e-check": "node scripts/phase-e-check.mjs",
