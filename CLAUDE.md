@@ -150,6 +150,15 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
    client leaf wrapped in `<MotionFeatures>`; timings from
    `lib/motion/tokens.ts`. Never turn a page into a client component to
    animate it, and never start above-the-fold content from invisible.
+   Radix dialogs, `hidden` panels, skeletons and images animate in the CSS
+   motion layer instead (`motion-*` keyframes, transform/opacity only,
+   `--duration-*` + `--ease-enter|exit|standard` by role, enforced by
+   `lib/design/motion-css.test.ts`); Motion is for content React mounts from
+   its own state, through `PRESETS` and `<Presence>`. Movement on hover goes
+   under `(hover: hover) and (pointer: fine)` — Android keeps `:hover` after
+   a tap. `npm run motion-check` (CI) covers motion, focus and reduced
+   motion; a browser check that reads the page right after a dialog opens or
+   closes waits for its animation or unmount instead of the first frame.
 4. **Anime.js** only for a genuine timeline or SVG sequence; it is installed
    with the first feature that needs one. CSS stays CSS (login, 404).
 5. **Bklit UI** for charts of real, measured data only — never decoration,
@@ -164,7 +173,8 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
 9. **Review visual change by measurement.** Any change to tokens or shared
    CSS runs `npm run style-diff` (capture before and after, compare) and
    explains every difference. The login street and 404 scenes are frozen:
-   their fingerprints must stay identical.
+   their fingerprints must stay identical (style-diff, and
+   `lib/design/protected-scenes.test.ts` for their files and CSS).
 
 ---
 

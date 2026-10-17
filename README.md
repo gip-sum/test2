@@ -28,7 +28,7 @@ An original property marketplace for Kolkata, built around one loop:
 | 14 | Property pricing form | Implemented; review pending |
 | E | 99acres interface redesign from client screenshots | Implemented and verified locally; publication pending |
 | Workspace addon | Compact admin and property-owner interface, selected concept 1 | Implemented and verified; see [specification and evidence](docs/phases/ADDON-WORKSPACE-interface.md) |
-| UI track | UI modernization UI-01 … UI-14, outside the 75-phase numbering | UI-01 audit, UI-02 foundation and UI-03 design-system cleanup complete; see [docs/ui-modernization](docs/ui-modernization/) |
+| UI track | UI modernization UI-01 … UI-14, outside the 75-phase numbering | UI-01 audit, UI-02 foundation, UI-03 design-system cleanup and UI-04 animation system complete; see [docs/ui-modernization](docs/ui-modernization/) |
 
 The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
 criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)
@@ -74,6 +74,8 @@ npm run dev          # http://localhost:3000
 | `npm run login-check` | Login screen: layout at four widths, controls reachable on phones, layout stability, the scene's story beats and reduced-motion picture; with the Auth API simulator environment below, every real sign-in state |
 | `npm run post-check` | Browser assertions for the seller posting flow |
 | `npm run notfound-check` | The animated 404: status codes, both actions, keyboard focus, motion and reduced motion |
+| `npm run motion-check` | The motion layer: Sheet enter/exit, focus and Escape (nested too), header panels, lightbox, card touch and hover, skeleton and photo fade, no-JS pages, and all of it under reduced motion |
+| `npm run motion-perf` | Frame intervals and long tasks for each animation at 390px on a 4× throttled CPU (`CPU=`, `RUNS=`, `OUT=`); a measurement to compare builds, not a gate |
 
 The browser checks need a server running (`npm run build && npm start -- -p 3100`).
 Set `CHROME_PATH` if Chromium is installed elsewhere. `shots` uses `BASE`;
@@ -250,6 +252,18 @@ configuration that knows the custom type, shadow and font tokens — extend it
 when you add a token, or its tests fail. Default-palette and literal colours
 in TS/TSX fail `lib/design/raw-colour.test.ts`. Details:
 [UI-02 foundation](docs/ui-modernization/UI-02-foundation.md).
+
+**Motion layer (UI-04).** Radix dialogs, `hidden` panels, skeletons and
+photos animate in CSS (the "Motion layer" section of `globals.css`): keyframes
+named `motion-*`, transform and opacity only, durations and curves from the
+tokens by role — `enter` arriving, `exit` (shorter) leaving, `standard` moving.
+`lib/design/motion-css.test.ts` enforces it. Motion is for content React
+mounts from its own state: use `PRESETS` and `<Presence>` (no consumer yet;
+the first one pays Motion's cost on its route — run `bundle-report`). Hover
+effects that move things go under `@media (hover: hover) and (pointer:
+fine)`. Browser checks that read the page right after a dialog opens or
+closes must wait for its animation or unmount. Details:
+[UI-04 animation system](docs/ui-modernization/UI-04-animation-system.md).
 
 **No "Verified" badge.** The platform performs no verification in V0, and an
 unearned trust badge is the one thing here that could do real harm.
