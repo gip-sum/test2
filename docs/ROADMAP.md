@@ -46,7 +46,7 @@ but its eight-phase build order is superseded.
 | E | 99acres interface redesign from client screenshots | Complete and deployed; green primary colour and header logo restored |
 | 40A | Home loan calculators | Implemented ahead of order at client request |
 | Workspace addon | Compact admin and property-owner interface | Implemented and verified at client request after Phase 23; [specification and evidence](phases/ADDON-WORKSPACE-interface.md). Phase 24 remains unstarted. |
-| UI track | UI modernization, UI-01 … UI-14 (Motion, Kokonut UI, Anime.js, Bklit UI), outside the numbering | UI-01 audit complete ([audit](ui-modernization/UI-01-audit.md)); UI-02 awaiting approval. No application code changed. |
+| UI track | UI modernization, UI-01 … UI-14 (Motion, Kokonut UI, Anime.js, Bklit UI), outside the numbering | UI-01 audit complete ([audit](ui-modernization/UI-01-audit.md)). UI-02 foundation complete ([record](ui-modernization/UI-02-foundation.md)): Motion 14.1.1 with reduced-motion provider, shared timing tokens, token-aware `cn()`, registry config, raw-colour guard, bundle baseline, search overflow fixes below 350px, `shots` at 320–1280. UI-03 awaiting approval. |
 
 Phase 0 (planning) and the GharBazaar rebrand plus light-first conversion
 sit outside the numbering; both are complete and are recorded in the git

@@ -43,7 +43,7 @@ nine sections:
 4. **Data requirements** — entities, fields, migrations, fixtures
 5. **Edge cases** — empty, long, missing, slow, broken, hostile
 6. **Accessibility requirements** — specific, testable, not "is accessible"
-7. **Responsive requirements** — 390 / 412 / 768 / 1280 minimum
+7. **Responsive requirements** — 320 / 360 / 375 / 390 / 412 / 430 / 768 / 1280 minimum
 8. **Verification** — the commands and assertions that prove it
 9. **Production readiness** — what would have to be true to ship it
 
@@ -102,7 +102,7 @@ Four commands. All must pass before a phase is reported complete.
 ```bash
 npm run verify        # lint, typecheck, unit tests
 npm run build         # production build
-npm run shots         # no horizontal overflow at 390/412/768/1280
+npm run shots         # no horizontal overflow at 320–430, 768 and 1280
 npm run light-check   # light theme holds under a dark-mode browser
 npm run search-check  # browser assertions over the search experience
 ```
@@ -135,6 +135,30 @@ explicit `data-theme="dark"`.
 Components never hardcode a colour. Every colour is a token, which is why a
 palette change is one file. `supply-600` is a fill only — `supply-700` is
 the orange that may be used as text.
+
+---
+
+## UI stack (UI modernization track, from UI-02)
+
+Every phase builds on this; `docs/ui-modernization/` holds the details.
+
+1. **Reuse first.** Existing components and tokens before anything new.
+2. **Kokonut UI** is a source, not a dependency: adapt a component from its
+   GitHub source at a pinned commit, re-tokenise it, convert `motion.*` to
+   `m.*`, pass an accessibility review, and record its provenance.
+3. **Motion** for React animation: `import * as m from 'motion/react-m'`, inside a small
+   client leaf wrapped in `<MotionFeatures>`; timings from
+   `lib/motion/tokens.ts`. Never turn a page into a client component to
+   animate it, and never start above-the-fold content from invisible.
+4. **Anime.js** only for a genuine timeline or SVG sequence; it is installed
+   with the first feature that needs one. CSS stays CSS (login, 404).
+5. **Bklit UI** for charts of real, measured data only — never decoration,
+   never a figure the platform has not measured.
+6. **Mobile is mandatory**: the widths above, 44px targets, no overflow.
+7. **No new dependency** without a reason recorded in the phase spec and a
+   `npm run bundle-report` comparison.
+8. **Green identity through tokens.** `lib/design/raw-colour.test.ts` fails
+   on default-palette and literal colours; `cn()` must know every new token.
 
 ---
 

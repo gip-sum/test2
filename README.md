@@ -28,6 +28,7 @@ An original property marketplace for Kolkata, built around one loop:
 | 14 | Property pricing form | Implemented; review pending |
 | E | 99acres interface redesign from client screenshots | Implemented and verified locally; publication pending |
 | Workspace addon | Compact admin and property-owner interface, selected concept 1 | Implemented and verified; see [specification and evidence](docs/phases/ADDON-WORKSPACE-interface.md) |
+| UI track | UI modernization UI-01 … UI-14, outside the 75-phase numbering | UI-01 audit and UI-02 foundation complete; see [docs/ui-modernization](docs/ui-modernization/) |
 
 The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
 criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)
@@ -60,7 +61,8 @@ npm run dev          # http://localhost:3000
 | `npm run python-check` | Python import, local job and description-worker tests; requires Python 3.12+ |
 | `npm run moderation-db-check` | Phase 22 decisions, roles, RLS, retry fencing and correction recovery against PGlite |
 | `npm run moderation-check` | Private staff review and seller recovery against an isolated browser simulator |
-| `npm run shots -- /` | Render routes at 390/412/768/1280, fail on horizontal overflow |
+| `npm run shots -- /` | Render routes at 320/360/375/390/412/430/768/1280 once streamed content has arrived; fail on horizontal overflow or a bottom bar outside the viewport |
+| `npm run bundle-report` | First-load client JavaScript per route; `-- --compare docs/ui-modernization/bundle-baseline.json` for the change since UI-01 |
 | `npm run light-check` | Check theme surfaces under a dark-mode browser |
 | `npm run search-check` | Browser assertions for search |
 | `npm run property-check` | Browser assertions for the property page, including a 360px stress width |
@@ -235,6 +237,19 @@ second config file to drift. Dark theme re-declares the same properties.
 **Area.** Carpet, built-up and super built-up are stored and displayed
 separately. Never collapse them into one "area" field.
 
+**Animation and classes (UI-02).** Motion (`motion`, pinned) is the React
+animation library: `import * as m from 'motion/react-m'` inside a small client leaf
+wrapped in `<MotionFeatures>`, with timings from `lib/motion/tokens.ts`
+(mirrored as `--duration-*` / `--ease-*` in `globals.css`). `MotionProvider`
+in the root layout applies the reduced-motion preference to every Motion
+component. ESLint rejects `framer-motion`, bare `motion`, `motion.*`
+components and Anime.js (approved, but installed only with the first feature
+that needs a timeline). `cn()` merges conflicting Tailwind classes with a
+configuration that knows the custom type, shadow and font tokens — extend it
+when you add a token, or its tests fail. Default-palette and literal colours
+in TS/TSX fail `lib/design/raw-colour.test.ts`. Details:
+[UI-02 foundation](docs/ui-modernization/UI-02-foundation.md).
+
 **No "Verified" badge.** The platform performs no verification in V0, and an
 unearned trust badge is the one thing here that could do real harm.
 
@@ -245,6 +260,7 @@ unearned trust badge is the one thing here that could do real harm.
 - `Phases.txt` — authoritative 75-phase roadmap
 - `docs/kolkata-marketplace-screen-spec.md` — screen-by-screen behaviour
 - `docs/design-system/` — tokens, brand book, component guidelines
+- `docs/ui-modernization/` — the UI modernization track: audit, stage specifications, bundle baseline
 - `docs/99acres-reverse-engineering-and-marketplace-spec.md` — the research
 
 ## Phase 15: private property photos
