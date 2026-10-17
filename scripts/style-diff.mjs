@@ -15,15 +15,16 @@
 //            add --expect-none to exit 1 on any difference (proving a
 //            refactor, such as removing dead CSS, changes nothing).
 //
-// Determinism: every CSS animation and transition is paused at t=0 before
-// reading, streamed Suspense content and fonts are awaited, and workspace
-// data is fixed. Capturing the same build twice must report no differences;
+// Determinism: UI animations and transitions are finished and every other
+// animation paused at t=0 before reading, streamed Suspense content, fonts and
+// network quiet are awaited, and workspace data is fixed. Capturing the same build twice must report no differences;
 // run that first whenever the tool changes.
 //
 // The protected scenes (the login street and the 404 lost-pin scene) are
 // additionally fingerprinted: a hash of their SVG markup, the text of every
-// @keyframes rule, and each element's animation timing, so "unchanged" is
-// a measurement, not an impression.
+// @keyframes rule outside the UI motion layer (motion-*, compared and
+// reported separately), and each element's animation timing, so
+// "unchanged" is a measurement, not an impression.
 import { chromium } from 'playwright-core'
 import { createHash } from 'node:crypto'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -117,8 +118,18 @@ async function settle(page, inflight) {
   await page.waitForFunction(() => !document.querySelector('div[hidden][id^="S:"], template[id^="B:"]'), null, { timeout: 15000 })
   await quiet(page, inflight)
   await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))))
-  // Freeze every animation and transition at its start so time cannot differ.
-  await page.evaluate(() => { for (const a of document.getAnimations()) { a.pause(); a.currentTime = 0 } })
+  // Make time irrelevant. UI animations (the `motion-*` keyframes, UI-04) and
+  // CSS transitions jump to their end, so a just-opened dialog is read at
+  // rest rather than mid-entrance; every other animation (the frozen login
+  // and 404 scenes' loops and intros) is paused at its start, as it was when
+  // the UI-03 baseline was captured, so their fingerprints stay comparable.
+  await page.evaluate(() => {
+    for (const a of document.getAnimations()) {
+      const name = a.animationName ?? ''
+      if (a.transitionProperty || (name.startsWith('motion-') && a.effect?.getTiming().iterations !== Infinity)) a.finish()
+      else { a.pause(); a.currentTime = 0 }
+    }
+  })
 }
 
 function readPage({ props, protectedSelectors }) {
@@ -213,6 +224,7 @@ function compare(beforeFile, afterFile, reportFile, expectNone) {
   const groups = new Map()   // "prop: from → to" → { count, scenarios:Set, labels:Set }
   const structure = []
   const protectedReport = []
+  const uiKeyframes = new Set()
   const perScenario = []
   const add = (key, scenario, label) => {
     const g = groups.get(key) ?? { count: 0, scenarios: new Set(), labels: new Set() }
@@ -238,7 +250,16 @@ function compare(beforeFile, afterFile, reportFile, expectNone) {
       if (differs) changed++
     }
     for (const path of Object.keys(after.elements)) if (!before.elements[path]) structure.push(`${scenario}: element added — ${after.elements[path].label}`)
-    if (before.keyframesHash !== after.keyframesHash) protectedReport.push(`${scenario}: @keyframes text CHANGED`)
+    // The UI motion layer's own keyframes (motion-*, UI-04) are reviewed as
+    // property changes, not as scene changes; every other @keyframes rule —
+    // the login street's and the 404 scene's among them — must stay
+    // byte-identical.
+    const split = (list) => [list.filter((k) => !/^@keyframes motion-/.test(k)).join('\n'), list.filter((k) => /^@keyframes motion-/.test(k))]
+    const [sceneBefore, uiBefore] = split(before.keyframes), [sceneAfter, uiAfter] = split(after.keyframes)
+    if (sceneBefore !== sceneAfter) protectedReport.push(`${scenario}: @keyframes text CHANGED`)
+    const name = (k) => k.match(/^@keyframes (\S+)/)[1]
+    for (const k of uiAfter) if (!uiBefore.includes(k)) uiKeyframes.add(`UI keyframes ${uiBefore.some((b) => name(b) === name(k)) ? 'changed' : 'added'} — ${name(k)}`)
+    for (const k of uiBefore) if (!uiAfter.some((a) => name(a) === name(k))) uiKeyframes.add(`UI keyframes removed — ${name(k)}`)
     for (const [sel, scene] of Object.entries(before.scenes)) {
       const other = after.scenes[sel]
       protectedReport.push(`${scenario}: ${sel} ${!other ? 'MISSING' : other.hash === scene.hash ? `markup identical (${scene.elements} elements)` : 'markup CHANGED'}`)
@@ -246,6 +267,7 @@ function compare(beforeFile, afterFile, reportFile, expectNone) {
     if (before.scrollWidth !== after.scrollWidth) structure.push(`${scenario}: document width ${before.scrollWidth} → ${after.scrollWidth}`)
     perScenario.push([scenario, Object.keys(before.elements).length, changed])
   }
+  structure.unshift(...uiKeyframes)
   const sorted = [...groups.entries()].sort((x, y) => y[1].count - x[1].count)
   const lines = [
     `# Style comparison`, '', `before: ${beforeFile} (${a.capturedAt})`, `after: ${afterFile} (${b.capturedAt})`, '',
