@@ -120,7 +120,10 @@ export function PropertyCard({
       <div className={cn("flex min-w-0 flex-1 flex-col gap-1.5", horizontal ? "p-3" : "p-5")}>
         <div className="flex items-start justify-between gap-2">
           <PriceDisplay amount={price} intent={intent} areaForRate={intent === 'buy' ? carpetArea : undefined} />
-          {horizontal && <SaveButton id={publicId} title={title} className="-mr-1 -mt-1 size-9 shrink-0 border-0 bg-transparent" />}
+          {/* No size override: SaveButton's own size-11 is the 44px touch target. A
+              size-9 here used to lose to it on stylesheet order; now that cn() merges,
+              it would win and shrink the target. */}
+          {horizontal && <SaveButton id={publicId} title={title} className="-mr-1 -mt-1 shrink-0 border-0 bg-transparent" />}
         </div>
 
         <p className="text-body-sm text-ink-700">

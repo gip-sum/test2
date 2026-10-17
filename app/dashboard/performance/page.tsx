@@ -66,7 +66,7 @@ function Overview({ listings, query }: { listings: ListingPerformance[]; query: 
         <th scope="col" className="py-2 pl-4 pr-3 font-semibold">Listing</th><th scope="col" className="px-3 py-2 text-right font-semibold">Views</th><th scope="col" className="px-3 py-2 text-right font-semibold">Enquiries</th><th scope="col" className="py-2 pl-3 pr-4 text-right font-semibold">Saved now</th>
       </tr></thead>
       <tbody>{listings.map((l) => <tr key={l.listingId} className="border-b border-border-subtle align-top">
-        <th scope="row" className="py-3 pl-4 pr-3 font-normal"><StatusBadge status={l.card.status} /><Link href={performanceHref({ range: query.range, listing: l.listingId })} className={cn(link, 'flex break-words')}>{l.card.title}</Link></th>
+        <th scope="row" className="py-3 pl-4 pr-3 font-normal"><StatusBadge status={l.card.status} /><Link href={performanceHref({ range: query.range, listing: l.listingId })} className={cn(link, 'break-words')}>{l.card.title}</Link></th>
         <td className="tabular px-3 py-3 text-right text-ink-900">{l.current.views ?? 'Not tracked'}</td>
         <td className="tabular px-3 py-3 text-right text-ink-900">{l.current.enquiries}</td>
         <td className="tabular py-3 pl-3 pr-4 text-right text-ink-900">{l.saves ?? 'Unavailable'}</td>
