@@ -165,7 +165,10 @@ for (const route of ROUTES) {
           'current page': bg(q('nav[aria-label="Pagination"] a[aria-current="page"]')),
           'search button': bg(form?.querySelector('button[type="submit"]')),
           'show properties': bg(byText('[role="dialog"] button', /^Show properties/)),
-          'active tab': bg(q('[role="tab"][aria-selected="true"]')),
+          // SmoothTabs (UI-05): once its indicator is measured, the pill
+          // under the selected tab paints the active colour and the tab
+          // itself is transparent; before that, the tab paints it.
+          'active tab': bg(q('[role="tablist"][data-indicator] > span[aria-hidden]') ?? q('[role="tab"][aria-selected="true"]')),
           'clear all filters': bg(
             [...document.querySelectorAll('section[aria-labelledby="zero-results"] button')]
               .find((b) => /Clear all filters/.test(b.textContent)),
