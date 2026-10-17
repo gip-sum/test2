@@ -36,12 +36,12 @@ export function PostingProgress({ view, photos = false }: { view: PostingView; p
             {index < active ? (
               <Link href={stageUrl(index, view)} className="post-progress-link group block min-h-11 rounded-sm" aria-label={`Return to ${stage.label}`}>
                 <span className="block h-1.5 rounded-full bg-brand-600 transition-colors group-hover:bg-brand-700" />
-                <span className="mt-2 block text-[11px] font-semibold text-brand-700 sm:text-caption">{stage.label}</span>
+                <span className="mt-2 block text-(length:--text-overline) font-semibold text-brand-700 sm:text-caption">{stage.label}</span>
               </Link>
             ) : (
               <span className="block">
                 <span className={`block h-1.5 rounded-full ${index === active ? 'bg-brand-600' : 'bg-surface-200'}`} />
-                <span className={`mt-2 block text-[11px] font-semibold sm:text-caption ${index === active ? 'text-ink-900' : 'text-ink-500'}`}>{stage.label}</span>
+                <span className={`mt-2 block text-(length:--text-overline) font-semibold sm:text-caption ${index === active ? 'text-ink-900' : 'text-ink-500'}`}>{stage.label}</span>
               </span>
             )}
           </li>

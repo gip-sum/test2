@@ -38,6 +38,13 @@ describe('custom tokens are never merged away', () => {
       }
     }
   })
+  it('treats a size-only token reference as a font size', () => {
+    // UI-03 uses text-(length:--text-overline) where only the size of a type
+    // token is wanted (a label with its own weight and tracking).
+    expect(cn('text-(length:--text-overline)', 'text-ink-700')).toBe('text-(length:--text-overline) text-ink-700')
+    expect(cn('text-(length:--text-overline)', 'sm:text-caption')).toBe('text-(length:--text-overline) sm:text-caption')
+    expect(cn('text-(length:--text-overline)', 'text-caption')).toBe('text-caption')
+  })
   it('keeps type tokens beside weight, family, leading, tracking and alignment', () => {
     expect(cn('text-label', 'font-normal')).toBe('text-label font-normal')
     expect(cn('font-display', 'text-heading-3')).toBe('font-display text-heading-3')

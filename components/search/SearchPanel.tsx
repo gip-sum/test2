@@ -87,7 +87,7 @@ export function SearchPanel() {
         router.push(url)
       }}
       aria-label="Search properties"
-      className="premium-search-panel relative rounded-[22px] border border-white/80 bg-surface-000 p-3 shadow-e2 sm:p-4 lg:p-5"
+      className="premium-search-panel relative rounded-lg border border-glass-edge bg-surface-000 p-3 shadow-e2 sm:p-4 lg:p-5"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <IntentTabs value={intent} onChange={handleIntentChange} fullWidth />

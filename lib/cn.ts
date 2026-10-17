@@ -17,8 +17,8 @@ export const TYPE_SCALE = [
   'price-lg', 'price', 'stat',
 ] as const
 
-/** The @theme elevation scale. Unlisted, `shadow-e2 shadow-none` would keep both. */
-export const SHADOW_SCALE = ['e0', 'e1', 'e2', 'e3'] as const
+/** The @theme elevation scale and role shadows. Unlisted, `shadow-e2 shadow-none` would keep both. */
+export const SHADOW_SCALE = ['e0', 'e1', 'e2', 'e3', 'float', 'panel', 'glass', 'tile', 'raised'] as const
 
 /** The @theme font families (`font-sans`, `font-display`). */
 export const FONT_FAMILIES = ['sans', 'display'] as const

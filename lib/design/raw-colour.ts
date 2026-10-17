@@ -1,3 +1,4 @@
+import { isProtected, walkCss } from './css-walk'
 /**
  * Finds colours that bypass the GharBazaar token layer in TS/TSX source.
  *
@@ -53,4 +54,27 @@ export function findRawColours(source: string, tokenColours: ReadonlySet<string>
   for (const m of text.matchAll(ARBITRARY)) found.push({ line: lineAt(m.index), match: m[1]!, reason: 'arbitrary colour value — add or use a token' })
   for (const m of text.matchAll(HEX_LITERAL)) found.push({ line: lineAt(m.index), match: m[2]!, reason: 'hex colour literal — use a token' })
   return found.sort((a, b) => a.line - b.line)
+}
+
+// ── CSS (UI-03) ──────────────────────────────────────────────────────────
+// Literal colours belong in custom-property declarations — the token layer
+// (@theme) and the scene palettes — never in an ordinary declaration, where
+// they bypass tokens exactly as a `bg-zinc-900` class does in TSX.
+
+const CSS_LITERAL = /#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/g
+const CSS_KEYWORD = /(?<![\w-])(white|black|gray|grey|silver|red|green|blue|yellow|orange|purple|pink|brown|navy|teal)(?![\w-])/g
+const CSS_PALETTE_VAR = new RegExp(String.raw`var\(--color-((?:${FAMILY})-(?:${STEP}))\)`, 'g')
+
+export function findRawCssColours(source: string, file: string, tokenColours: ReadonlySet<string>): RawColour[] {
+  const found: RawColour[] = []
+  for (const decl of walkCss(source)) {
+    if (decl.prop.startsWith('--') || isProtected(decl, file)) continue
+    // url() contents and font names are not colours.
+    const value = decl.value.replace(/url\([^)]*\)/g, '').replace(/"[^"]*"|'[^']*'/g, '')
+    if (/^font(-family)?$/.test(decl.prop)) continue
+    for (const m of value.matchAll(CSS_LITERAL)) found.push({ line: decl.line, match: `${decl.selector} { ${decl.prop}: ${m[0]} }`, reason: 'literal colour in a declaration — use a token' })
+    for (const m of value.matchAll(CSS_KEYWORD)) found.push({ line: decl.line, match: `${decl.selector} { ${decl.prop}: ${m[0]} }`, reason: 'colour keyword — use a token' })
+    for (const m of value.matchAll(CSS_PALETTE_VAR)) if (!tokenColours.has(m[1]!)) found.push({ line: decl.line, match: `${decl.selector} { ${decl.prop}: ${m[0]} }`, reason: 'Tailwind default palette variable — use a GharBazaar token' })
+  }
+  return found
 }

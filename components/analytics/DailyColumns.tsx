@@ -28,7 +28,7 @@ export function DailyColumns({ title, unit, points }: { title: string; unit: [st
         <div className="absolute inset-0 flex items-end justify-center gap-[2px]">
           {points.map((p) => <div key={p.day} title={`${short(p.day)}: ${p.value === null ? 'not tracked' : word(p.value)}`}
             className={cn('flex h-full min-w-0 max-w-6 flex-1 items-end', p.value === null && 'bg-neutral-100')}>
-            {p.value ? <div className="w-full rounded-t-[4px] bg-chart-1" style={{ height: `${(p.value / top) * 100}%` }} /> : null}
+            {p.value ? <div className="w-full rounded-t-sm bg-chart-1" style={{ height: `${(p.value / top) * 100}%` }} /> : null}
           </div>)}
         </div>
       </div>
