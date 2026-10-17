@@ -1,20 +1,10 @@
 import { cn } from '@/lib/cn'
 import { DASHBOARD_LABEL, type DashboardStatus } from '@/lib/dashboard/model'
+import { statusToneClass } from '@/lib/listings/status-tone'
 
-// The label carries the meaning; colour only reinforces it.
-const TONE: Record<DashboardStatus, string> = {
-  DRAFT: 'bg-neutral-100 text-neutral-600',
-  UNDER_REVIEW: 'bg-warn-100 text-warn-600',
-  ACTIVE: 'bg-trust-100 text-trust-600',
-  EXPIRED: 'bg-neutral-100 text-neutral-600',
-  REJECTED: 'bg-danger-100 text-danger-600',
-  CHANGES_REQUESTED: 'bg-warn-100 text-warn-600',
-  WITHDRAWN: 'bg-neutral-100 text-neutral-600',
-  REMOVED: 'bg-neutral-100 text-neutral-600',
-}
-
+// The label carries the meaning; the tone (lib/listings/status-tone.ts) only reinforces it.
 export function StatusBadge({ status }: { status: DashboardStatus }) {
-  return <span className={cn('inline-flex max-w-full items-center rounded-md px-2 py-1 text-caption font-semibold', TONE[status])}>
+  return <span className={cn('inline-flex max-w-full items-center rounded-md px-2 py-1 text-caption font-semibold', statusToneClass(status))}>
     <span className="sr-only">Status: </span>{DASHBOARD_LABEL[status]}
   </span>
 }
