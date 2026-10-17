@@ -4,13 +4,14 @@ import { notFound } from 'next/navigation'
 import { AdminShell, Unreadable } from '@/components/admin/AdminShell'
 import { ReviewDecision } from '@/components/admin/ReviewDecision'
 import { Gallery } from '@/components/property/Gallery'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import { KeyDetails } from '@/components/property/KeyDetails'
 import { AreaBreakdown } from '@/components/property/AreaBreakdown'
 import { PriceDisplay } from '@/components/property/PriceDisplay'
 import { requireStaff } from '@/lib/admin/queries'
 import { getReview, ModerationError } from '@/lib/moderation/queries'
 import { ACTION_LABEL, canDecide, type Review } from '@/lib/moderation/model'
-import { effectiveStatus, publishedModel, STATUS_LABEL } from '@/lib/listings/types'
+import { effectiveStatus, publishedModel } from '@/lib/listings/types'
 import { formatAmount } from '@/lib/format/price'
 import { SELLER_LABEL } from '@/lib/property/types'
 import { UUID } from '@/lib/media/types'
@@ -32,7 +33,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
   const photos = m.media.map(photo => ({ ...photo, url: `/api/admin/moderation/${id}/photos/${photo.id}?submission=${s.id}` }))
   return <AdminShell current="moderation" title="Review submitted listing" role={role}>
     <div className="flex flex-wrap items-center justify-between gap-3"><Link href="/admin/moderation" className="inline-flex min-h-11 items-center gap-2 text-body-sm font-semibold text-ink-700 hover:text-brand-700 hover:underline underline-offset-4"><span aria-hidden="true">←</span> Back to review queue</Link>
-    <p role="status" className="rounded-md bg-brand-100 px-3 py-1.5 text-caption font-semibold text-brand-700">{STATUS_LABEL[effectiveStatus(listing, now)]}</p></div>
+    <StatusBadge role="status" status={effectiveStatus(listing, now)} className="px-3 py-1.5" /></div>
     <div className="mt-3 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_21rem]">
       <section className="workspace-panel min-w-0 rounded-lg border border-border-subtle bg-surface-000" aria-labelledby="submitted-heading">
         <div className="border-b border-border-subtle p-5"><h2 id="submitted-heading" className="break-words font-display text-heading-2 text-ink-900">{s.title}</h2>

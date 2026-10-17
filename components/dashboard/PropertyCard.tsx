@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { PriceDisplay } from '@/components/property/PriceDisplay'
 import { BuildingIcon } from '@/components/ui/icons'
 import type { PropertyCard as Card } from '@/lib/dashboard/model'
-import { StatusBadge } from './StatusBadge'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import { WithdrawAction } from './WithdrawAction'
 import { CopyLink } from './CopyLink'
 

@@ -2,8 +2,9 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { ADMIN_STATUSES } from '@/lib/admin/model'
-import { DASHBOARD_STATUSES } from '@/lib/dashboard/model'
-import { LISTING_STATUS_TONE, STATUS_TONE_CLASS, statusToneClass } from './status-tone'
+import { DASHBOARD_LABEL, DASHBOARD_STATUSES } from '@/lib/dashboard/model'
+import { LISTING_STATUS, STATUS_LABEL } from '@/lib/listings/types'
+import { LISTING_STATUS_TONE, STATUS_BADGE_LABEL, STATUS_TONE_CLASS, statusToneClass } from './status-tone'
 
 // Resolve @theme colour tokens (following var() aliases) to their light values.
 const css = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8')
@@ -21,9 +22,17 @@ const pair = (cls: string) => {
 }
 
 describe('listing status tones', () => {
-  it('covers every status the owner and admin screens display', () => {
-    expect(Object.keys(LISTING_STATUS_TONE).sort()).toEqual([...DASHBOARD_STATUSES].sort())
+  it('covers every status the owner and admin screens display, and the stored lifecycle', () => {
+    const all = [...new Set([...DASHBOARD_STATUSES, ...LISTING_STATUS])].sort()
+    expect(Object.keys(LISTING_STATUS_TONE).sort()).toEqual(all)
+    expect(Object.keys(STATUS_BADGE_LABEL).sort()).toEqual(all)
     expect([...ADMIN_STATUSES].sort()).toEqual([...DASHBOARD_STATUSES].sort())
+  })
+
+  it('reads the same in both vocabularies wherever they share a status', () => {
+    for (const status of LISTING_STATUS) {
+      if (status in DASHBOARD_LABEL) expect(STATUS_LABEL[status], status).toBe(DASHBOARD_LABEL[status as keyof typeof DASHBOARD_LABEL])
+    }
   })
 
   it('uses only tone tokens defined in @theme', () => {

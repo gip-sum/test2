@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { PriceDisplay } from '@/components/property/PriceDisplay'
-import { StatusBadge } from '@/components/dashboard/StatusBadge'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import { formatWait, REVIEW_OVERDUE_MS, type AdminListing } from '@/lib/admin/model'
 import { SELLER_LABEL } from '@/lib/property/types'
 

@@ -1,4 +1,5 @@
-import type { DashboardStatus } from '@/lib/dashboard/model'
+import { DASHBOARD_LABEL, type DashboardStatus } from '@/lib/dashboard/model'
+import { type ListingStatus, STATUS_LABEL } from '@/lib/listings/types'
 
 /**
  * The one visual language for listing status (UI-03).
@@ -13,11 +14,19 @@ import type { DashboardStatus } from '@/lib/dashboard/model'
  * Each tone is a pair of @theme tokens (`--color-status-<tone>` and
  * `-bg`) aliasing the semantic colours, so a palette change or the dark
  * theme follows automatically. Status components use this map and never
- * pick colours themselves; UI-05 builds the single status badge on it.
+ * pick colours themselves; components/ui/StatusBadge.tsx (UI-05) is the one
+ * badge built on it.
+ *
+ * Two real vocabularies reach the screen: the stored lifecycle
+ * (`ListingStatus`, lib/listings/types — it has DELETED) and the seller's
+ * and staff's derived view (`DashboardStatus`, lib/dashboard/model — it
+ * splits deletion into WITHDRAWN and REMOVED). The badge accepts either; no
+ * status is invented here.
  */
 export type StatusTone = 'neutral' | 'pending' | 'live' | 'problem'
+export type BadgeStatus = DashboardStatus | ListingStatus
 
-export const LISTING_STATUS_TONE: Record<DashboardStatus, StatusTone> = {
+export const LISTING_STATUS_TONE: Record<BadgeStatus, StatusTone> = {
   DRAFT: 'neutral',
   UNDER_REVIEW: 'pending',
   ACTIVE: 'live',
@@ -26,7 +35,11 @@ export const LISTING_STATUS_TONE: Record<DashboardStatus, StatusTone> = {
   CHANGES_REQUESTED: 'pending',
   WITHDRAWN: 'neutral',
   REMOVED: 'neutral',
+  DELETED: 'neutral',
 }
+
+/** What each status reads as. The two vocabularies agree wherever they overlap (tested). */
+export const STATUS_BADGE_LABEL: Record<BadgeStatus, string> = { ...STATUS_LABEL, ...DASHBOARD_LABEL }
 
 /** Background and text utilities for a tone; full class names so Tailwind sees them. */
 export const STATUS_TONE_CLASS: Record<StatusTone, string> = {
@@ -36,4 +49,4 @@ export const STATUS_TONE_CLASS: Record<StatusTone, string> = {
   problem: 'bg-status-problem-bg text-status-problem',
 }
 
-export const statusToneClass = (status: DashboardStatus) => STATUS_TONE_CLASS[LISTING_STATUS_TONE[status]]
+export const statusToneClass = (status: BadgeStatus) => STATUS_TONE_CLASS[LISTING_STATUS_TONE[status]]

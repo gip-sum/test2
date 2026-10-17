@@ -1,4 +1,25 @@
-# StatusPill
+# StatusPill → StatusBadge
+
+> **Shipped as `components/ui/StatusBadge.tsx` (UI-05).** The Phase 0
+> `StatusPill` below was never imported and its status set had drifted; it
+> was removed. The badge reads labels from `STATUS_BADGE_LABEL` and tones
+> from `LISTING_STATUS_TONE` (`lib/listings/status-tone.ts`, UI-03), so a
+> status reads and looks the same on every screen:
+>
+> | Status | Label | Tone |
+> |---|---|---|
+> | `DRAFT` | Draft | neutral |
+> | `UNDER_REVIEW` | Under review | pending |
+> | `ACTIVE` | Active | live |
+> | `CHANGES_REQUESTED` | Corrections requested | pending |
+> | `REJECTED` | Rejected | problem |
+> | `EXPIRED` | Expired | neutral |
+> | `WITHDRAWN` | Withdrawn | neutral |
+> | `REMOVED` | Removed | neutral |
+> | `DELETED` (stored lifecycle) | Deleted | neutral |
+>
+> The Phase 0 design that follows is kept for its rules; its labels and
+> state names are historical.
 
 The listing lifecycle, in words a first-time seller understands.
 

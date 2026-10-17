@@ -3,11 +3,13 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { OwnerShell } from '@/components/workspace/OwnerShell'
 import { DailyColumns } from '@/components/analytics/DailyColumns'
-import { StatusBadge } from '@/components/dashboard/StatusBadge'
+import { StatusBadge } from '@/components/ui/StatusBadge'
 import { getVerifiedUser } from '@/lib/auth/session'
 import { buildPerformance, parseQuery, performanceHref, RANGES, RATE_MIN_VIEWS, type ListingPerformance, type PerformanceQuery, type Totals } from '@/lib/analytics/model'
 import { loadPerformance } from '@/lib/analytics/queries'
 import { cn } from '@/lib/cn'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 export const metadata: Metadata = { title: 'Listing performance', robots: { index: false, follow: false } }
 export const dynamic = 'force-dynamic'
@@ -41,15 +43,13 @@ export default async function PerformancePage({ searchParams }: { searchParams: 
     </nav>
     <details className="mb-4 text-body-sm text-ink-700"><summary className="inline-flex min-h-11 cursor-pointer items-center font-semibold text-brand-700">How these figures are counted</summary><p className="max-w-3xl pb-3">A view is one browser opening a listing’s public page on one day (India time). Your own visits and known crawlers are not counted, and a listing is counted only while it is public. Saves are buyers who have it saved right now.</p></details>
 
-    {!data.ok ? <div role="alert" className="workspace-panel workspace-empty">
-      <h2 className="font-display text-heading-3 text-ink-900">{data.reason === 'not-ready' ? 'Performance data is not available yet' : 'Performance could not be loaded'}</h2>
-      <p className="mt-2 text-body-sm text-ink-700">{data.reason === 'not-ready' ? 'View and save counting has not been switched on for this site yet. Your listings and enquiries are unaffected.' : 'Nothing has changed with your listings. Please try again.'}</p>
-      <Link href={performanceHref(query)} className={link}>Reload</Link>
-    </div> : listings.length === 0 ? <div className="workspace-panel workspace-empty">
-      <h2 className="font-display text-heading-3 text-ink-900">No listings to measure yet</h2>
-      <p className="mt-2 text-body-sm text-ink-700">Performance appears once a property has been submitted. Drafts are private and have no public page to view.</p>
-      <Link href="/dashboard" className={link}>Go to My properties</Link>
-    </div> : query.listing && !selected ? <div role="alert" className="workspace-panel workspace-empty">
+    {!data.ok ? <ErrorState surface="workspace" title={data.reason === 'not-ready' ? 'Performance data is not available yet' : 'Performance could not be loaded'}
+      action={<Link href={performanceHref(query)} className={link}>Reload</Link>}>
+      {data.reason === 'not-ready' ? 'View and save counting has not been switched on for this site yet. Your listings and enquiries are unaffected.' : 'Nothing has changed with your listings. Please try again.'}
+    </ErrorState> : listings.length === 0 ? <EmptyState surface="workspace" title="No listings to measure yet"
+      action={<Link href="/dashboard" className={link}>Go to My properties</Link>}>
+      Performance appears once a property has been submitted. Drafts are private and have no public page to view.
+    </EmptyState> : query.listing && !selected ? <div role="alert" className="workspace-panel workspace-empty">
       <h2 className="font-display text-heading-3 text-ink-900">This listing is not available here</h2>
       <p className="mt-2 text-body-sm text-ink-700">It may have been removed, or it belongs to another account.</p>
       <Link href={performanceHref({ range: query.range })} className={link}>See all your listings</Link>
