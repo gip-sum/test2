@@ -117,7 +117,14 @@ export function SearchLayout({
         </div>
       )}
 
-      <div className="mt-4 flex items-center justify-between gap-3">
+      {/* Wraps so the two controls never widen the page. A native select is as
+          wide as its LONGEST option ("Price per sqft: low to high"), whichever is
+          selected; beside the Filters button that needs ~333px, so below ~350px
+          viewports the old shrink-0 sort control pushed the document (and the
+          fixed bottom bar with it) sideways. Now it drops to its own line at
+          full width there, and min-w-0 lets it shrink rather than overflow if a
+          label ever grows. Do not reintroduce shrink-0 or a fixed width. */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <Button
           variant="secondary"
           className="lg:hidden"
@@ -133,13 +140,13 @@ export function SearchLayout({
           )}
         </Button>
 
-        <label className="ml-auto flex shrink-0 items-center gap-2 text-body-sm text-ink-700">
+        <label className="ml-auto flex min-w-0 max-w-full items-center gap-2 text-body-sm text-ink-700">
           <span className="hidden sm:inline">Sort by</span>
           <select
             value={query.sort}
             onChange={(e) => sortTo(e.target.value as SortKey)}
             aria-label="Sort results"
-            className="h-11 max-w-[14rem] rounded-md border border-border-subtle bg-surface-000 px-3 text-body-sm text-ink-900 hover:border-border-strong"
+            className="h-11 min-w-0 max-w-[14rem] rounded-md border border-border-subtle bg-surface-000 px-3 text-body-sm text-ink-900 hover:border-border-strong"
           >
             {SORT_ORDER.map((k) => (
               <option key={k} value={k}>

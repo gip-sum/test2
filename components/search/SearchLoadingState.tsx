@@ -21,9 +21,12 @@ export function SearchLoadingState() {
       <Skeleton className="h-8 w-3/4 max-w-lg" />
       <Skeleton className="mt-2 h-4 w-40" />
 
-      <div className="mt-4 flex items-center justify-between gap-3">
-        <Skeleton className="h-11 w-28 lg:hidden" />
-        <Skeleton className="ml-auto h-11 w-44" />
+      {/* Sized like the real Filters button (126px) and sort select (195px)
+          and wrapping like SearchLayout's toolbar, so on narrow phones the
+          results do not jump a row when they arrive. */}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <Skeleton className="h-11 w-32 lg:hidden" />
+        <Skeleton className="ml-auto h-11 w-48" />
       </div>
 
       <div className="mt-5 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-7">

@@ -15,7 +15,11 @@ export function ResultsList({ results }: { results: PropertySummary[] }) {
   return (
     <>
       <h2 className="sr-only">Results</h2>
-      <ul className="grid gap-3 md:hidden">
+      {/* grid-cols-1 is repeat(1, minmax(0, 1fr)). The implicit column it
+          replaces was `auto`, which never shrinks below a card's min-content:
+          at 320px a price row that cannot break further widened the column,
+          the page and the fixed bottom bar by 8px. */}
+      <ul className="grid grid-cols-1 gap-3 md:hidden">
         {results.map((p) => (
           <li key={p.id}>
             <PropertyCard property={p} layout="horizontal" />
