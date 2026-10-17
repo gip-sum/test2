@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { archivo, plex } from './fonts'
 import { BRAND } from '@/lib/brand'
+import { MotionProvider } from '@/components/motion/MotionProvider'
 import './globals.css'
 
 /**
@@ -45,7 +46,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-IN" className={`${archivo.variable} ${plex.variable}`}>
-      <body>{children}</body>
+      <body>
+        {/* Configuration only (reduced motion, default timing). Pages passed
+            through it stay server components; see MotionProvider. */}
+        <MotionProvider>{children}</MotionProvider>
+      </body>
     </html>
   )
 }

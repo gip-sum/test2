@@ -169,6 +169,27 @@
   --text-stat--font-weight: 600;
 }
 
+/* ---- Motion timings -------------------------------------------------
+   The one duration and easing scale, mirrored in lib/motion/tokens.ts for
+   Motion (lib/motion/tokens.test.ts keeps them identical). CSS uses
+   var(--duration-fast) var(--ease-standard); utilities are
+   duration-(--duration-fast) and ease-standard / ease-enter / ease-exit.
+   `static` keeps every variable in the output even before a rule uses it.
+   Reduced motion needs nothing here: the base-layer rule further down
+   collapses every CSS duration, and MotionProvider covers Motion.
+   Existing literal durations move onto this scale in UI-03.            */
+@theme static {
+  --duration-instant: 100ms;      /* press feedback */
+  --duration-fast: 150ms;         /* hover/focus colour, icon turns */
+  --duration-base: 200ms;         /* menus, dropdowns, tabs, list items */
+  --duration-slow: 300ms;         /* dialogs, drawers, sheets */
+  --duration-deliberate: 450ms;   /* the ceiling: image zoom, page entrance */
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);  /* moving while on screen */
+  --ease-enter: cubic-bezier(0, 0, 0.2, 1);     /* arriving: decelerate */
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);      /* leaving: accelerate */
+}
+
 /* ---- Dark theme: SECONDARY, opt-in only ---------------------------
    Applies solely when something sets data-theme="dark" on <html>.
    There is deliberately no prefers-color-scheme arm: a dark-OS visitor

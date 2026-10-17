@@ -2,8 +2,23 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 import nextVitals from 'eslint-config-next/core-web-vitals'
 import nextTs from 'eslint-config-next/typescript'
 
+// Animation imports (UI-02, docs/ui-modernization/UI-02-foundation.md).
+// One package, one entry point, lazily loaded features: these are the
+// mistakes registry code (Kokonut UI, Bklit UI) and habit most often bring in.
+const animationImports = {
+  paths: [
+    { name: 'framer-motion', message: 'Import from "motion/react". framer-motion is the legacy package name; the app pins `motion` only.' },
+    { name: 'motion', message: 'React code imports from "motion/react". The bare "motion" entry is the vanilla-JS API.' },
+    { name: 'motion/react', importNames: ['motion'], message: 'Use `m` inside <MotionFeatures> (components/motion). `motion.*` bundles every animation feature into the page.' },
+    { name: 'motion/react-client', message: 'Use `m` from "motion/react" inside a small client leaf wrapped in <MotionFeatures>.' },
+    { name: 'animejs', message: 'Anime.js is approved but not installed: add it with the first feature that needs a complex timeline (UI-02 decision).' },
+  ],
+  patterns: [{ group: ['framer-motion/*'], message: 'Import from "motion/react".' }],
+}
+
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
+  { rules: { 'no-restricted-imports': ['error', animationImports] } },
   globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', '.shots/**', 'tmp/**']),
 ])
