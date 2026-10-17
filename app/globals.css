@@ -248,9 +248,16 @@
   --ease-enter: cubic-bezier(0, 0, 0.2, 1);     /* arriving: decelerate */
   --ease-exit: cubic-bezier(0.4, 0, 1, 1);      /* leaving: accelerate */
 
-  /* Tailwind's own default for transition-colors and friends: the same
-     150ms it shipped with, now named by the scale (UI-03). */
+  /* Tailwind's own defaults for transition-colors and friends: the same
+     150ms it shipped with (UI-03), and the standard curve (UI-04) in place
+     of Tailwind's cubic-bezier(0.4, 0, 0.2, 1), so utility transitions and
+     CSS rules move alike. */
   --default-transition-duration: var(--duration-fast);
+  --default-transition-timing-function: var(--ease-standard);
+
+  /* A loop, not a transition, so it sits outside the 450ms transition
+     ceiling: one slow pass of the skeleton shimmer (UI-04). */
+  --loop-shimmer: 1600ms;
 }
 
 /* ---- Dark theme: SECONDARY, opt-in only ---------------------------
@@ -333,14 +340,14 @@
 }
 .bar-label { white-space: nowrap; }
 /* A 30px pill in a 40px slot, so all six labels share one baseline. */
-.bar-pill { display: grid; width: 48px; height: 30px; margin-block: 5px; place-items: center; border-radius: var(--radius-full); transition: background-color var(--duration-fast), transform var(--duration-instant); }
+.bar-pill { display: grid; width: 48px; height: 30px; margin-block: 5px; place-items: center; border-radius: var(--radius-full); transition: background-color var(--duration-fast) var(--ease-standard), transform var(--duration-instant) var(--ease-standard); }
 .bar-item:hover .bar-pill { background: var(--color-surface-100); }
 .bar-item:active .bar-pill { transform: scale(.92); }
 .bar-item[aria-current] .bar-label, .bar-item[aria-expanded='true'] .bar-label { font-weight: 700; }
 .bar-item-post { color: var(--color-supply-700); }
 .bar-item-post[aria-current] { color: var(--color-supply-700); }
 .bar-post {
-  display: grid; place-items: center; transition: transform var(--duration-instant);
+  display: grid; place-items: center; transition: transform var(--duration-instant) var(--ease-standard);
 }
 .bar-item-post:active .bar-post { transform: scale(.92); }
 .bar-item-post[aria-current] .bar-post { box-shadow: 0 0 0 3px var(--color-supply-700); }
@@ -377,7 +384,7 @@
    here rather than with a Tailwind variant, because this unlayered rule
    would outrank the utility layer's `max-lg:hidden`. */
 @media (max-width: 1023px) { .nav-toggle, .nav-panel { display: none; } }
-.nav-toggle svg { transition: transform var(--duration-fast); }
+.nav-toggle svg { transition: transform var(--duration-fast) var(--ease-standard); }
 .nav-panel {
   position: absolute; top: calc(100% + 10px); left: 0; z-index: 60;
   width: min(620px, calc(100vw - 64px)); padding: 16px;
@@ -495,7 +502,7 @@
 }
 .nav-hub-toggle:hover { border-color: var(--color-border-strong); color: var(--color-ink-900); }
 .nav-hub-toggle[aria-expanded='true'] { border-color: transparent; background: var(--color-brand-100); color: var(--color-brand-700); }
-.nav-hub-toggle svg:last-child { transition: transform var(--duration-fast); }
+.nav-hub-toggle svg:last-child { transition: transform var(--duration-fast) var(--ease-standard); }
 .nav-hub-toggle[aria-expanded='true'] svg:last-child { transform: rotate(180deg); }
 /* After the rule above, not in the panels' media query earlier in the
    file: an earlier `display: none` loses to this later `inline-flex`. */
@@ -650,10 +657,10 @@
      what keeps it on one. */
   display: flex; height: 100%; flex-direction: column; align-items: center; justify-content: flex-start;
   background: var(--color-surface-000); text-align: center; color: var(--color-ink-900);
-  transition: border-color var(--duration-base), box-shadow var(--duration-base);
+  transition: border-color var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
 }
 .quick-route:hover { border-color: var(--color-border-strong); }
-.quick-icon { display: grid; place-items: center; border-radius: var(--radius-md); transition: transform var(--duration-base); }
+.quick-icon { display: grid; place-items: center; border-radius: var(--radius-md); transition: transform var(--duration-base) var(--ease-standard); }
 .quick-route:active .quick-icon { transform: scale(.94); }
 .quick-label { font-weight: 600; text-wrap: balance; }
 .quick-hint { font-size: var(--text-caption); line-height: 15px; color: var(--color-ink-500); }
@@ -696,10 +703,10 @@
 @media (min-width: 640px) { .listing-rail-item { flex-basis: 264px; } .listing-rail-end { flex-basis: 176px; } }
 /* White, not mint: with four rails a tinted end card on each made the
    page read as blocks of green. The arrow keeps the brand. */
-.rail-end-card { display: flex; height: 100%; min-height: 160px; flex-direction: column; justify-content: center; gap: 4px; padding: 16px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-lg); background: var(--color-surface-000); transition: border-color var(--duration-base), box-shadow var(--duration-base); }
+.rail-end-card { display: flex; height: 100%; min-height: 160px; flex-direction: column; justify-content: center; gap: 4px; padding: 16px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-lg); background: var(--color-surface-000); transition: border-color var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard); }
 .rail-end-card:hover { border-color: var(--color-border-strong); box-shadow: var(--shadow-e2); }
-.rail-end-icon { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 8px; border-radius: var(--radius-full); background: var(--color-brand-600); color: var(--color-on-brand); transition: transform var(--duration-base); }
-.rail-end-card:hover .rail-end-icon { transform: translateX(3px); }
+.rail-end-icon { display: grid; place-items: center; width: 44px; height: 44px; margin-bottom: 8px; border-radius: var(--radius-full); background: var(--color-brand-600); color: var(--color-on-brand); transition: transform var(--duration-base) var(--ease-standard); }
+@media (hover: hover) and (pointer: fine) { .rail-end-card:hover .rail-end-icon { transform: translateX(3px); } }
 @media (min-width: 1024px) {
   .listing-rail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; margin: 20px 0 0; padding: 0; overflow: visible; }
   /* The row is the first four items: four cards when there are four or
@@ -708,9 +715,9 @@
   .listing-rail-item:nth-child(n + 5) { display: none; }
   .rail-end-card { padding: 24px; }
 }
-.compact-card { transition: box-shadow var(--duration-base), transform var(--duration-base); }
-.compact-card img { transition: transform var(--duration-deliberate); }
-@media (hover: hover) {
+.compact-card { transition: box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard); }
+.compact-card img { transition: transform var(--duration-deliberate) var(--ease-standard); }
+@media (hover: hover) and (pointer: fine) {
   .compact-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-e2); }
   .compact-card:hover img { transform: scale(1.03); }
 }
@@ -720,7 +727,7 @@
    its own 44px link — "5 for sale", "2 to rent" (Phase B). */
 .locality-tiles { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, auto); grid-auto-columns: min(52%, 188px); gap: 8px; scroll-snap-type: x proximity; }
 .locality-tiles > li { min-width: 0; scroll-snap-align: start; }
-.locality-tile { display: flex; height: 100%; flex-direction: column; justify-content: space-between; gap: 2px; padding: 10px 8px 4px 12px; border-radius: var(--radius-md); transition: box-shadow var(--duration-base); }
+.locality-tile { display: flex; height: 100%; flex-direction: column; justify-content: space-between; gap: 2px; padding: 10px 8px 4px 12px; border-radius: var(--radius-md); transition: box-shadow var(--duration-base) var(--ease-standard); }
 .locality-tile-name { display: flex; min-width: 0; align-items: center; gap: 6px; font-size: var(--text-body-sm); font-weight: 600; line-height: 20px; color: var(--color-ink-900); }
 .locality-tile-name svg { color: var(--color-brand-700); }
 .locality-tile-links { display: flex; flex-wrap: wrap; column-gap: 2px; margin-left: -8px; }
@@ -737,7 +744,7 @@
 .all-localities { margin-top: 4px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); background: var(--color-surface-000); }
 .all-localities summary { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px; border-radius: calc(var(--radius-md) - 1px); cursor: pointer; list-style: none; font-size: 14px; font-weight: 600; color: var(--color-brand-700); }
 .all-localities summary::-webkit-details-marker { display: none; }
-.all-localities-chevron { flex: none; transition: transform var(--duration-base); }
+.all-localities-chevron { flex: none; transition: transform var(--duration-base) var(--ease-standard); }
 .all-localities[open] .all-localities-chevron { transform: rotate(180deg); }
 .all-localities ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; padding: 4px 16px 10px; border-top: 1px solid var(--color-border-subtle); }
 .all-localities a { display: flex; min-height: 44px; align-items: center; font-size: 14px; color: var(--color-ink-900); }
@@ -749,7 +756,7 @@
    under it, what each holds for sale and to rent, each its own link. */
 .type-tiles { display: grid; grid-auto-flow: column; grid-auto-columns: min(52%, 196px); gap: 10px; margin-top: 16px; scroll-snap-type: x proximity; }
 .type-tiles > li { min-width: 0; scroll-snap-align: start; }
-.type-tile { display: flex; height: 100%; flex-direction: column; padding: 12px 8px 4px 12px; border-radius: 16px; transition: box-shadow var(--duration-base); }
+.type-tile { display: flex; height: 100%; flex-direction: column; padding: 12px 8px 4px 12px; border-radius: 16px; transition: box-shadow var(--duration-base) var(--ease-standard); }
 .type-tile-name { font-size: var(--text-body-sm); font-weight: 600; line-height: 20px; color: var(--color-ink-900); }
 .type-tile-links { display: flex; flex-wrap: wrap; column-gap: 2px; margin: auto 0 0 -6px; padding-top: 2px; }
 .type-count { display: inline-flex; min-height: 44px; align-items: center; gap: 3px; padding: 0 6px; border-radius: var(--radius-md); font-size: var(--text-body-sm); color: var(--color-ink-700); white-space: nowrap; }
@@ -787,25 +794,35 @@
 .count-tile {
   display: flex; height: 100%; min-height: 56px; flex-direction: column; justify-content: center; gap: 1px;
   padding: 8px 12px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); background: var(--color-surface-000);
-  transition: border-color var(--duration-base), box-shadow var(--duration-base);
+  transition: border-color var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard);
 }
 .count-tile:hover { border-color: var(--color-brand-600); box-shadow: var(--shadow-e1); }
 .count-tile-label { font-size: 14px; line-height: 19px; font-weight: 600; color: var(--color-ink-900); white-space: nowrap; }
 .count-tile-count { font-size: var(--text-body-sm); line-height: 17px; color: var(--color-ink-500); }
 .count-tiles-size .count-tile { align-items: center; padding: 8px 4px; text-align: center; }
 
-.property-card { transition: box-shadow var(--duration-base), transform var(--duration-base); }
-.property-card:hover { box-shadow: var(--shadow-e2); transform: translateY(-3px); }
-.property-card img { transition: transform var(--duration-deliberate); }
-.property-card:hover img { transform: scale(1.035); }
+.property-card { transition: box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard); }
+.property-card img { transition: transform var(--duration-deliberate) var(--ease-standard); }
+/* The lift and zoom are for pointers that can hover. On a phone a tap fires
+   :hover and Android keeps it until the next tap elsewhere, so the card used
+   to stay raised after a tap — and after Back, on the page you returned to.
+   Touch gets a press instead: a slight sink while the finger is down only,
+   gone on release, never a transform that outlives the gesture. */
+@media (hover: hover) and (pointer: fine) {
+  .property-card:hover { box-shadow: var(--shadow-e2); transform: translateY(-3px); }
+  .property-card:hover img { transform: scale(1.035); }
+}
+@media (hover: none) {
+  .property-card:active { transform: scale(0.985); transition-duration: var(--duration-instant); }
+}
 .property-card .aspect-\[4\/3\] { aspect-ratio: 1.55; }
 
 .seller-invitation { position: relative; overflow: hidden; border-radius: var(--radius-lg); background: var(--color-forest); color: var(--color-on-forest); padding: 26px 20px; }
 .seller-invitation h2 { font-size: 26px; line-height: 1.2; letter-spacing: -.03em; }
 .seller-invitation h2 em { font-family: Georgia, serif; font-weight: 400; color: var(--color-mint); }
 .seller-invitation p { color: var(--color-mint); }
-.seller-link { background: var(--color-mint); color: var(--color-forest); transition: transform var(--duration-base); }
-.seller-link:hover { transform: translateY(-2px); }
+.seller-link { background: var(--color-mint); color: var(--color-forest); transition: transform var(--duration-base) var(--ease-standard); }
+@media (hover: hover) and (pointer: fine) { .seller-link:hover { transform: translateY(-2px); } }
 .seller-orbit { position: absolute; right: -320px; top: -40px; width: 440px; height: 440px; border: 1px solid var(--color-forest-line); border-radius: var(--radius-full); display: grid; place-items: center; opacity: .3; }
 .seller-orbit::before, .seller-orbit::after { content: ''; position: absolute; inset: 40px; border: 1px solid var(--color-forest-line); border-radius: var(--radius-full); }
 .seller-orbit::after { inset: 90px; }
@@ -841,7 +858,7 @@
   .footer-intro p { font-size: 23px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .compact-card:hover, .seller-link:hover, .property-card:hover { transform: none; }
+  .compact-card:hover, .seller-link:hover, .property-card:hover, .property-card:active { transform: none; }
   .compact-card:hover img, .property-card:hover img { transform: none; }
 }
 
@@ -904,9 +921,9 @@
 .calc-cta:hover { background: var(--color-brand-700); }
 .calc-sibling { display: flex; align-items: center; gap: 12px; margin-top: 20px; padding: 14px 16px; border: 1px solid var(--color-border-subtle); border-radius: 16px; background: var(--color-tint-mint); }
 .calc-sibling:hover { border-color: var(--color-border-strong); }
-.calc-peek { position: fixed; inset-inline: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 76px); z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; border: 1px solid var(--color-border-strong); border-radius: 16px; background: var(--color-surface-000); box-shadow: var(--shadow-e3); transition: opacity var(--duration-base), transform var(--duration-base); }
+.calc-peek { position: fixed; inset-inline: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 76px); z-index: 40; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; border: 1px solid var(--color-border-strong); border-radius: 16px; background: var(--color-surface-000); box-shadow: var(--shadow-e3); transition: opacity var(--duration-base) var(--ease-enter), transform var(--duration-base) var(--ease-enter); }
 /* 76px: the bottom bar is 68px tall (its raised Post button included) plus an 8px gap. */
-.calc-peek[data-hidden] { opacity: 0; transform: translateY(8px); pointer-events: none; }
+.calc-peek[data-hidden] { opacity: 0; transform: translateY(8px); pointer-events: none; transition-timing-function: var(--ease-exit); }
 /* Room below the page for the pinned answer, so it never covers the last link. */
 @media (max-width: 1023px) { .calc-frame { padding-bottom: 88px; } }
 @media (min-width: 1024px) { .calc-peek { display: none; } }
@@ -1164,6 +1181,83 @@
   .nf-scene *, .nf-zero { animation: none !important; }
 }
 
+/* ── Motion layer (UI-04) ──────────────────────────────────────────────────
+   GharBazaar's CSS animation primitives. Same language as the Motion
+   presets in lib/motion: the --duration-* and --ease-* tokens by role —
+   arriving uses enter, leaving uses exit and is shorter, movement on screen
+   uses standard. Keyframes animate transform and opacity only, which the
+   compositor runs off the main thread (lib/design/motion-css.test.ts).
+
+   Why CSS for these surfaces and not Motion: Sheet and the header panels are
+   in every page's header, and measured in UI-04 a Motion-driven Sheet adds
+   16.6 KB gzip to EVERY route's first load. Radix Dialog already supports
+   exit animations natively — it keeps a closing dialog mounted until the
+   animation on data-state="closed" ends — so these need no JavaScript and
+   Radix keeps control of focus and unmounting.
+
+   Reduced motion: the base-layer rule collapses every duration here to
+   0.01ms; dialogs then appear and disappear at once and Radix still sees
+   its animationend. Nothing starts invisible in server HTML: entrances run
+   only on elements the user just opened. */
+@keyframes motion-fade-in { from { opacity: 0; } }
+@keyframes motion-fade-out { to { opacity: 0; } }
+@keyframes motion-sheet-in { from { opacity: 0; transform: translateY(24px); } }
+@keyframes motion-sheet-out { to { opacity: 0; transform: translateY(16px); } }
+@keyframes motion-pop-in { from { opacity: 0; transform: scale(0.97); } }
+@keyframes motion-pop-out { to { opacity: 0; transform: scale(0.98); } }
+@keyframes motion-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+/* Sheet (components/ui/Sheet.tsx): phones get a short rise from below — the
+   sheet is full screen there — and from 640px, where it is a centred dialog,
+   a small fade and scale. The scale composes with the dialog's centring,
+   which Tailwind v4 writes to the separate `translate` property. */
+.sheet-overlay[data-state='open'] { animation: motion-fade-in var(--duration-slow) var(--ease-enter); }
+.sheet-overlay[data-state='closed'] { animation: motion-fade-out var(--duration-base) var(--ease-exit); }
+[data-sheet][data-state='open'] { animation: motion-sheet-in var(--duration-slow) var(--ease-enter); }
+[data-sheet][data-state='closed'] { animation: motion-sheet-out var(--duration-base) var(--ease-exit); }
+@media (min-width: 640px) {
+  [data-sheet][data-state='open'] { animation-name: motion-pop-in; }
+  [data-sheet][data-state='closed'] { animation-name: motion-pop-out; }
+}
+/* A closing layer is already gone as far as the user is concerned: clicks go
+   through to the page, and Escape (Sheet's handler only looks at open
+   layers) reaches the next layer down. */
+.sheet-overlay[data-state='closed'], [data-sheet][data-state='closed'] { pointer-events: none; }
+
+/* The photo lightbox (components/property/Gallery.tsx): a plain fade; the
+   photo itself is the content, so it should not move. */
+.lightbox-layer[data-state='open'] { animation: motion-fade-in var(--duration-base) var(--ease-enter); }
+.lightbox-layer[data-state='closed'] { animation: motion-fade-out var(--duration-fast) var(--ease-exit); pointer-events: none; }
+
+/* Header panels (components/navigation/HeaderNav.tsx) are shown with the
+   `hidden` attribute. They arrive with a 150ms fade and a 4px drop —
+   @starting-style gives the first frame after `hidden` is removed — and they
+   leave at once. An exit transition (display … allow-discrete) was tried and
+   rejected: it keeps a dismissed panel on screen for 150ms after Escape or a
+   click elsewhere, which is exactly when a menu has to be gone, and it would let the outgoing panel overlap the next one when the
+   user moves from Buy to Rent. Browsers without @starting-style show the
+   panel instantly, as before. */
+.nav-panel { transition: opacity var(--duration-fast) var(--ease-enter), transform var(--duration-fast) var(--ease-enter); }
+@starting-style { .nav-panel { opacity: 0; transform: translateY(-4px); } }
+
+/* Skeletons (components/ui/Skeleton.tsx): one slow, low-contrast sweep. A
+   transformed pseudo-element, not an animated background, so it costs no
+   repaint; the box itself never changes size. Reduced motion leaves the
+   plain block. */
+.skeleton { position: relative; overflow: hidden; background: var(--color-surface-200); }
+.skeleton::after {
+  content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-surface-000) 55%, transparent), transparent);
+  animation: motion-shimmer var(--loop-shimmer) var(--ease-standard) infinite;
+}
+
+/* Photos (lib/motion/image-fade.ts): an image that is still loading when the
+   page becomes interactive is marked pending and fades into its already
+   reserved box when it arrives. Server HTML never carries the mark, so with
+   no JavaScript — or before it runs — photos show the moment they load. */
+img[data-fade='pending'] { opacity: 0; }
+img[data-fade='in'] { opacity: 1; transition: opacity var(--duration-base) var(--ease-enter); }
+
 /* Posting form (Phase 12).
    Radio chips are real radios, visually hidden inside a styled label, so
    arrow keys, form submission and screen readers behave natively. The
@@ -1184,7 +1278,7 @@
   color: var(--color-ink-900);
   font-size: var(--text-body-sm);
   cursor: pointer;
-  transition: border-color var(--duration-fast), background-color var(--duration-fast);
+  transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
 }
 .post-chip:hover { border-color: var(--color-brand-600); }
 .post-chip-tick { display: none; color: var(--color-brand-700); font-weight: 700; }

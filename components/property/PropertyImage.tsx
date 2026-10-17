@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import { cn } from '@/lib/cn'
+import { markPendingImage, revealImage } from '@/lib/motion/image-fade'
 
 /**
  * Listing photo, with a deliberate empty state.
@@ -51,7 +52,7 @@ export function PropertyImage({
     >
       {src && failedSrc !== src ? (
         <>
-          <Image src={src} alt={alt} fill sizes={sizes} priority={priority} onError={() => setFailedSrc(src)} className="object-cover" />
+          <Image ref={markPendingImage} onLoad={revealImage} src={src} alt={alt} fill sizes={sizes} priority={priority} onError={() => setFailedSrc(src)} className="object-cover" />
           {isSample && <span className={cn('absolute bottom-2 rounded-sm bg-ink-900/85 px-1.5 py-0.5 text-caption font-semibold text-ink-inverse', sampleTag === 'right' ? 'right-2' : 'left-2')}>Sample</span>}
         </>
       ) : src ? (

@@ -30,7 +30,12 @@ export const DURATION = {
   deliberate: 450,
 } as const
 
-/** Cubic-bezier control points. */
+/**
+ * Cubic-bezier control points, by role. There is deliberately no
+ * "emphasis" (overshoot) curve: nothing in the product bounces, and a curve
+ * with no user invites decoration. Add one with the first feature that
+ * genuinely needs to draw attention, not before.
+ */
 export const EASE = {
   /** Something moving or resizing while it stays on screen. */
   standard: [0.2, 0, 0, 1],

@@ -2,6 +2,7 @@
 
 import * as Dialog from '@radix-ui/react-dialog'
 import Image from 'next/image'
+import { markPendingImage, revealImage } from '@/lib/motion/image-fade'
 import { useRef, useState, type TouchEvent } from 'react'
 import { cn } from '@/lib/cn'
 import type { PropertyMedia } from '@/lib/property/types'
@@ -121,7 +122,7 @@ export function Gallery({ photos, title }: { photos: PropertyMedia[]; title: str
 
       <Dialog.Root open={open} onOpenChange={setOpen}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-[60] bg-overlay" />
+          <Dialog.Overlay className="lightbox-layer fixed inset-0 z-[60] bg-overlay" />
           <Dialog.Content
             onCloseAutoFocus={(event) => { event.preventDefault(); opener.current?.focus() }}
             onKeyDown={(event) => {
@@ -129,7 +130,7 @@ export function Gallery({ photos, title }: { photos: PropertyMedia[]; title: str
               if (event.key === 'ArrowRight') { event.preventDefault(); go(1) }
               if (event.key === 'ArrowLeft') { event.preventDefault(); go(-1) }
             }}
-            className="fixed inset-0 z-[61] flex flex-col bg-ink-900 text-ink-inverse"
+            className="lightbox-layer fixed inset-0 z-[61] flex flex-col bg-ink-900 text-ink-inverse"
           >
             <header className="flex min-h-16 items-center gap-3 px-4 pb-2" style={{ paddingTop: 'max(0.5rem, env(safe-area-inset-top, 0px))' }}>
               <Dialog.Title className="flex-1 truncate font-display text-heading-3">{title}</Dialog.Title>
@@ -188,7 +189,7 @@ function MediaPhoto({ media, failed, onError, sizes, priority, compact, contain,
   }
   return (
     <>
-      <Image unoptimized={media.authenticated} src={media.url} alt={decorative ? '' : media.alt} fill sizes={sizes} priority={priority} loading={priority ? 'eager' : 'lazy'} onError={onError} className={contain ? 'object-contain' : 'object-cover'} />
+      <Image ref={markPendingImage} onLoad={revealImage} unoptimized={media.authenticated} src={media.url} alt={decorative ? '' : media.alt} fill sizes={sizes} priority={priority} loading={priority ? 'eager' : 'lazy'} onError={onError} className={contain ? 'object-contain' : 'object-cover'} />
       {media.isSample && <span className={cn('absolute left-2 top-2 rounded-sm bg-ink-900/85 font-semibold text-ink-inverse', compact ? 'px-1 py-0.5 text-(length:--text-overline)' : 'px-2 py-1 text-caption')}>{compact ? 'Sample' : 'Sample image — not a real property'}</span>}
     </>
   )
