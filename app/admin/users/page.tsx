@@ -5,6 +5,7 @@ import { Pagination } from '@/components/ui/Pagination'
 import { requireStaff } from '@/lib/admin/queries'
 import { searchAccounts } from '@/lib/users/queries'
 import { ACCOUNT_STATUSES, SELLER_ROLES, USER_PAGE_SIZE, parseUserQuery, usersHref, userHref } from '@/lib/users/model'
+import { Button } from '@/components/ui/Button'
 
 export const metadata: Metadata = { title: 'Users & sellers', robots: { index: false, follow: false } }
 export const dynamic = 'force-dynamic'
@@ -22,7 +23,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
       <div className="md:col-span-2 xl:col-span-1"><label htmlFor="user-search" className="text-caption font-semibold text-ink-700">Search name, email or exact account ID</label><input id="user-search" name="q" defaultValue={q.q} maxLength={100} placeholder="Find an account…" className={field} /></div>
       <div><label htmlFor="user-status" className="text-caption font-semibold text-ink-700">Marketplace status</label><select id="user-status" name="status" defaultValue={q.status} className={field}><option value="">All statuses</option>{ACCOUNT_STATUSES.map(s => <option key={s} value={s}>{s === 'ACTIVE' ? 'Active' : 'Suspended'}</option>)}</select></div>
       <div><label htmlFor="user-role" className="text-caption font-semibold text-ink-700">Assigned seller role</label><select id="user-role" name="role" defaultValue={q.role} className={field}><option value="">All roles</option><option value="unassigned">Unassigned</option>{SELLER_ROLES.map(r => <option key={r} value={r}>{r === 'OWNER' ? 'Owner' : r === 'AGENT' ? 'Agent' : 'Builder'}</option>)}</select></div>
-      <div className="flex flex-wrap items-center gap-4 md:col-span-2 xl:contents"><button className="min-h-11 justify-self-start whitespace-nowrap rounded-md bg-brand-600 px-4 text-body-sm font-semibold text-on-brand hover:bg-brand-700">Search accounts</button>
+      <div className="flex flex-wrap items-center gap-4 md:col-span-2 xl:contents"><Button type="submit" className="justify-self-start whitespace-nowrap">Search accounts</Button>
       <Link href="/admin/users" className="inline-flex min-h-11 items-center justify-self-start whitespace-nowrap text-body-sm font-semibold text-ink-700 hover:text-ink-900 underline underline-offset-4">Clear filters</Link></div>
     </form>
     <div className="flex flex-wrap items-center justify-between gap-2 py-4"><h2 className="font-display text-heading-3 text-ink-900">Accounts{result && <span className="tabular font-normal text-ink-500"> ({result.total})</span>}</h2><p className="text-caption text-ink-700">Newest accounts first</p></div>

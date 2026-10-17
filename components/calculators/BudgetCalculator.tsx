@@ -10,6 +10,7 @@ import { BUDGET_FIELDS, parseBudget, toQuery, type BudgetKey, type RawValues } f
 import { formatAmount, groupIndian } from '@/lib/format/price'
 import { buildSearchUrl } from '@/lib/search/query'
 import { LAUNCH_CITY } from '@/lib/brand'
+import { Button } from '@/components/ui/Button'
 
 const PATH = '/calculators/budget'
 const SLIDERS: Record<BudgetKey, { min: number; max: number; step: number }> = {
@@ -59,7 +60,7 @@ export function BudgetCalculator({ initial }: { initial: RawValues<BudgetKey> })
         <CalcField name="share" spec={BUDGET_FIELDS.share} raw={raw.share} error={parsed.errors.share} onChange={set('share')} slider={SLIDERS.share}
           hint="Lenders usually keep all EMIs within about 40–50% of take-home pay; each sets its own limit." />
         <noscript>
-          <button type="submit" className="h-12 w-full rounded-md bg-brand-600 text-label text-on-brand">Work out my budget</button>
+          <Button type="submit" size="lg" fullWidth className="text-label">Work out my budget</Button>
         </noscript>
       </form>
 

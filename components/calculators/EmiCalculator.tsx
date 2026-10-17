@@ -11,6 +11,7 @@ import { EMI_FIELDS, parseEmi, toQuery, type EmiKey, type RawValues } from '@/li
 import { formatAmount, formatPriceExact, groupIndian } from '@/lib/format/price'
 import { buildSearchUrl } from '@/lib/search/query'
 import { LAUNCH_CITY } from '@/lib/brand'
+import { Button } from '@/components/ui/Button'
 
 const PATH = '/calculators/emi'
 const SLIDERS: Record<EmiKey, { min: number; max: number; step: number }> = {
@@ -48,7 +49,7 @@ export function EmiCalculator({ initial }: { initial: RawValues<EmiKey> }) {
           hint="An example rate. Use the rate your lender offers you." />
         <CalcField name="years" spec={EMI_FIELDS.years} raw={raw.years} error={parsed.errors.years} onChange={set('years')} slider={SLIDERS.years} />
         <noscript>
-          <button type="submit" className="h-12 w-full rounded-md bg-brand-600 text-label text-on-brand">Calculate EMI</button>
+          <Button type="submit" size="lg" fullWidth className="text-label">Calculate EMI</Button>
         </noscript>
       </form>
 

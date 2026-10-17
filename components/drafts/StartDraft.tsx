@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { snapshotFromUrl, snapshotUrl, DRAFT_KEYS, type DraftKey } from '@/lib/drafts/types'
 import { UUID } from '@/lib/media/types'
+import { Button } from '@/components/ui/Button'
 export function StartDraft() {
   const router = useRouter(), identity = useRef<{ id: string; collection: string } | null>(null)
   const [busy, setBusy] = useState(false), [error, setError] = useState(''), [login, setLogin] = useState('')
@@ -29,7 +30,7 @@ export function StartDraft() {
     finally { setBusy(false) }
   }
   return <div className="mx-auto flex max-w-[1320px] flex-wrap items-center gap-3 px-4 pt-5 text-body-sm lg:px-8">
-    <button type="button" onClick={start} disabled={busy} className="min-h-11 rounded-md bg-brand-600 px-4 font-semibold text-on-brand disabled:opacity-60">{busy ? 'Creating draft…' : 'Save as draft'}</button>
+    <Button type="button" onClick={start} disabled={busy}>{busy ? 'Creating draft…' : 'Save as draft'}</Button>
     <Link href="/post/drafts" className="inline-flex min-h-11 items-center px-2 font-semibold text-brand-700">My drafts</Link>
     <span className="text-ink-500">Enable autosave and resume later.</span>
     {error && <p role="alert" className="w-full text-danger-600">{error} {login && <Link href={login} className="underline">Login/Register</Link>}</p>}

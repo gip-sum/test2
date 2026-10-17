@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useId, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/Button'
 
 /**
  * Withdraw from the dashboard, through the Phase 18 lifecycle endpoint.
@@ -39,8 +40,8 @@ export function WithdrawAction({ draftId, version, title, configured }: { draftI
   return <div role="group" aria-labelledby={questionId} className="basis-full rounded-md border border-border-strong bg-surface-100 p-3">
     <p id={questionId} ref={questionRef} tabIndex={-1} className="break-words text-body-sm text-ink-900">Withdraw “{title}”? It leaves public view immediately and must be reviewed again before it can return.</p>
     <div className="mt-2 flex flex-wrap gap-3">
-      <button type="button" onClick={withdraw} disabled={busy} className="min-h-11 rounded-md bg-danger-600 px-4 font-semibold text-on-danger disabled:opacity-50">{busy ? 'Withdrawing…' : 'Yes, withdraw'}</button>
-      <button type="button" onClick={() => { setConfirming(false); setError('') }} disabled={busy} className="min-h-11 rounded-md border border-border-strong px-4 font-semibold text-ink-900 disabled:opacity-50">Cancel</button>
+      <Button type="button" variant="danger" onClick={withdraw} disabled={busy}>{busy ? 'Withdrawing…' : 'Yes, withdraw'}</Button>
+      <Button type="button" variant="secondary" onClick={() => { setConfirming(false); setError('') }} disabled={busy}>Cancel</Button>
     </div>
     {busy && <p role="status" className="mt-2 text-body-sm text-ink-700">Withdrawing…</p>}
     {error && <div role="alert" className="mt-2 text-body-sm text-danger-600"><p>{error}</p><button type="button" onClick={() => window.location.reload()} className="min-h-11 font-semibold underline">Reload dashboard</button></div>}

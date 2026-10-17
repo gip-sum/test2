@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { decisionInput, type ReviewAction } from '@/lib/moderation/model'
+import { Button } from '@/components/ui/Button'
 
 export function ReviewDecision({ listing, submission, version }: { listing: string; submission: string; version: number }) {
   const router = useRouter(), request = useRef<string | null>(null)
@@ -37,7 +38,7 @@ export function ReviewDecision({ listing, submission, version }: { listing: stri
       <p id="review-reason-help" className="mt-1 text-body-sm text-ink-700">Use 5–2,000 characters when giving a reason. The seller can read this note. {Array.from(reason.trim()).length}/2,000</p>
       <label className="mt-4 flex min-h-11 items-center gap-3 text-body-sm text-ink-900"><input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} className="size-5 shrink-0 accent-brand-600" />I confirm this decision for the submitted copy I reviewed.</label>
     </fieldset>
-    <button type="submit" disabled={!valid || !accepted || busy || saved} className="mt-3 min-h-11 rounded-md bg-brand-600 px-5 font-semibold text-on-brand disabled:opacity-50">{busy ? 'Saving decision…' : label}</button>
+    <Button type="submit" disabled={!valid || !accepted || busy || saved} className="mt-3 px-5">{busy ? 'Saving decision…' : label}</Button>
     {(busy || saved) && <p role="status" className="mt-3 text-body-sm text-ink-700">{saved ? 'Decision recorded. Refreshing the review.' : 'Saving the review decision.'}</p>}
     {error && <div role="alert" className="mt-3 text-body-sm text-danger-600"><p>{error}</p><button type="button" onClick={() => router.refresh()} className="min-h-11 font-semibold underline">Refresh review</button></div>}
   </form>

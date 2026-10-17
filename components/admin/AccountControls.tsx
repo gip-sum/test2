@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ACCOUNT_STATUSES, SELLER_ROLES, type AccountStatus, type SellerRole } from '@/lib/users/model'
+import { Button } from '@/components/ui/Button'
 
 export function AccountControls({ id, version, status: initialStatus, role: initialRole }: { id: string; version: number; status: AccountStatus; role: SellerRole | null }) {
   const router = useRouter(), request = useRef<string | null>(null)
@@ -43,7 +44,7 @@ export function AccountControls({ id, version, status: initialStatus, role: init
         <p id="account-reason-help" className="mt-1 text-body-sm text-ink-700">5–2,000 characters. Recorded in the private admin history. {length}/2,000</p></div>
       <label className="flex min-h-11 items-center gap-3 text-body-sm text-ink-900"><input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} className="size-5 shrink-0 accent-brand-600" />I confirm this change for this account.</label>
     </fieldset>
-    <button type="submit" disabled={!valid || !accepted || busy || saved || conflict} className="mt-4 min-h-11 rounded-md bg-brand-600 px-5 font-semibold text-on-brand disabled:opacity-50">{busy ? 'Saving change…' : 'Save account change'}</button>
+    <Button type="submit" disabled={!valid || !accepted || busy || saved || conflict} className="mt-4 px-5">{busy ? 'Saving change…' : 'Save account change'}</Button>
     <p role="status" className="mt-3 text-body-sm text-ink-700">{saved ? 'Account change recorded.' : busy ? 'Saving account change.' : ''}</p>
     {error && <div role="alert" className="mt-3 text-body-sm text-danger-600"><p>{error}</p></div>}
     {(error || saved) && <button type="button" onClick={() => window.location.reload()} className="min-h-11 font-semibold text-ink-900 underline">Refresh account</button>}

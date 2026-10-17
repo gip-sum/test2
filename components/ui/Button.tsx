@@ -27,9 +27,9 @@ const VARIANT: Record<Variant, string> = {
 
 // 44px minimum touch target on md and lg; sm is for dense desktop toolbars only.
 const SIZE: Record<Size, string> = {
-  sm: 'h-8 px-3 text-label',
-  md: 'h-11 px-4 text-label',
-  lg: 'h-12 px-6 text-body',
+  sm: 'min-h-8 px-3 text-label',
+  md: 'min-h-11 px-4 text-label',
+  lg: 'min-h-12 px-6 text-body',
 }
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {

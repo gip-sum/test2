@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/Button'
 export function ConfirmPreview({id,signature,canConfirm,confirmed}:{id:string;signature:string;canConfirm:boolean;confirmed:boolean}) {
   const router=useRouter(),[accepted,setAccepted]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[done,setDone]=useState(confirmed)
   async function confirm() {
@@ -17,7 +18,7 @@ export function ConfirmPreview({id,signature,canConfirm,confirmed}:{id:string;si
     <p className="mt-2 text-body-sm text-ink-700">Check the information and photos as a buyer would see them. Confirming this review does not publish your property.</p>
     {done ? <p role="status" className="mt-4 font-semibold text-brand-700">Review confirmed. Your property is still private and unpublished.</p> : <>
       <label className="mt-4 flex min-h-11 items-start gap-3 text-body-sm text-ink-900"><input type="checkbox" checked={accepted} disabled={!canConfirm||busy} onChange={e=>setAccepted(e.target.checked)} className="mt-1 size-5 shrink-0 accent-brand-600"/>I have checked the property details, pricing, seller name and photos.</label>
-      <button type="button" disabled={!canConfirm||!accepted||busy} onClick={confirm} className="mt-4 min-h-11 w-full rounded-md bg-brand-600 px-4 font-semibold text-on-brand disabled:opacity-50">{busy?'Confirming…':'Confirm review'}</button>
+      <Button type="button" disabled={!canConfirm||!accepted||busy} onClick={confirm} fullWidth className="mt-4">{busy?'Confirming…':'Confirm review'}</Button>
       {!canConfirm&&<p className="mt-3 text-body-sm text-ink-700">Resolve the warnings before confirming.</p>}
     </>}
     <p className="mt-3 text-caption text-ink-500">Changes to saved details, photos or your display name require a new review. Submit the confirmed preview from the publishing status page.</p>
