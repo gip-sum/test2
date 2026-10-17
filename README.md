@@ -28,7 +28,7 @@ An original property marketplace for Kolkata, built around one loop:
 | 14 | Property pricing form | Implemented; review pending |
 | E | 99acres interface redesign from client screenshots | Implemented and verified locally; publication pending |
 | Workspace addon | Compact admin and property-owner interface, selected concept 1 | Implemented and verified; see [specification and evidence](docs/phases/ADDON-WORKSPACE-interface.md) |
-| UI track | UI modernization UI-01 … UI-14, outside the 75-phase numbering | UI-01 audit and UI-02 foundation complete; see [docs/ui-modernization](docs/ui-modernization/) |
+| UI track | UI modernization UI-01 … UI-14, outside the 75-phase numbering | UI-01 audit, UI-02 foundation and UI-03 design-system cleanup complete; see [docs/ui-modernization](docs/ui-modernization/) |
 
 The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
 criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)
@@ -62,6 +62,7 @@ npm run dev          # http://localhost:3000
 | `npm run moderation-db-check` | Phase 22 decisions, roles, RLS, retry fencing and correction recovery against PGlite |
 | `npm run moderation-check` | Private staff review and seller recovery against an isolated browser simulator |
 | `npm run shots -- /` | Render routes at 320/360/375/390/412/430/768/1280 once streamed content has arrived; fail on horizontal overflow or a bottom bar outside the viewport |
+| `npm run style-diff -- capture <file>` / `compare <a> <b> [report]` | Computed styles of every element on 26 screens (signed-in ones against a fixture simulator); compare two builds and list each difference |
 | `npm run bundle-report` | First-load client JavaScript per route; `-- --compare docs/ui-modernization/bundle-baseline.json` for the change since UI-01 |
 | `npm run light-check` | Check theme surfaces under a dark-mode browser |
 | `npm run search-check` | Browser assertions for search |

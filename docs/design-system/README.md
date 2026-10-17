@@ -53,13 +53,13 @@ Prices and areas are what people actually compare, so they are typeset, not just
 
 Beyond that, the palette answers one question: *can the user tell, at a glance, what is theirs to act on?*
 
-- **`brand-600` (strong blue)** is the buyer's action. Search, Enquire, View Phone, Save. Exactly one filled `brand-600` button per surface.
+- **`brand-600` (GharBazaar green, `#117744`)** is the buyer's action and the brand: Search, Enquire, Save, links, focus rings and the selected state. Dark enough to carry white text. Exactly one filled `brand-600` button per surface. (The reference design system this began from used a blue; GharBazaar is green, as the client reconfirmed when Phase E restored the green primary colour, and the tokens, documents and checks now all say so.)
 - **`supply-600` (orange)** is the seller's action. Post Property, Publish, Renew. A different hue on purpose: in a two-sided marketplace the supply-side call to action must never be mistaken for the demand-side one. If both appear on a screen, they are distinguishable without reading them.
   - It ships in **two steps**, which is the one place this palette deviates from a flat 600/100 scale. `supply-600` is tuned as bright as an orange can be while still carrying white text (4.51:1 — the ceiling), which leaves it too light to *be* text. **`supply-700` is the foreground step.** Never set type in `supply-600`.
-- **`trust-600` (green)** means verified or active. It is never decorative.
+- **`trust-600` (status green)** means active or true of a listing. It is a separate token from `brand-600` even though both are green: one is an action, the other a fact, and they must be free to diverge. It is never decorative.
 - **`danger-600` (red)** means rejected, destructive or wrong.
 - **`warn-600` (amber)** is for caution, but warning *body copy* is set in `ink-900`. Amber text on an amber band reads brown and turns a light notice into a dark bar.
-- **Neutrals carry a cool navy-grey bias**, tuned to sit under the blue. A warm grey next to `brand-600` reads as unconsidered.
+- **Neutrals carry a cool navy-grey bias** (deep navy `ink-900` text), tuned to sit quietly under the green and the photography.
 
 Every pairing the components actually render is measured, not eyeballed — including the tight ones, `ink-500` on the sunken surface (4.86:1) and white on `supply-600` (4.51:1). Both sit just above AA, deliberately: they are the limit of what the hue allows while staying itself.
 
@@ -70,7 +70,7 @@ Every pairing the components actually render is measured, not eyeballed — incl
 Two families, three jobs.
 
 - **Archivo** (`display`) — headings, and every price. Sturdy, slightly condensed, with numerals that hold their width. Prices are set in the display face because the price is the loudest thing on a property card.
-- **Instrument Sans** (`sans`) — all UI text, labels and body copy. Clean at 13px, which is where most of this product lives.
+- **IBM Plex Sans** (`sans`) — all UI text, labels and body copy. Chosen over the reference system's Instrument Sans, which has no rupee glyph in any subset; Plex has uniform digit advances, so figures align in columns.
 
 Body copy never goes below `body` (15px). `body-sm` (13px) is for card attributes and meta. `caption` (12px) is the floor and is reserved for legal text and photo counters.
 
@@ -79,8 +79,18 @@ Both faces are loaded from Google Fonts with real fallback stacks. **Bengali scr
 ### Space, shape, depth
 
 - **Spacing is a 4px scale.** `space-4` (16px) is the page gutter on mobile and the default card padding. A value that is not on the scale is a bug.
-- **Radius by role**, not one value everywhere: `radius-sm` on inputs, `radius-md` on buttons, `radius-lg` on the property card, `radius-xl` on sheets, `radius-pill` on status pills.
-- **Borders beat shadows.** A result list can hold fifty cards; fifty shadows cost real paint time on a mid-range Android phone. Cards separate with `border-subtle` and `shadow-0`. Shadows are spent on things that genuinely float: dropdowns (`shadow-2`), sheets and the sticky contact bar (`shadow-3`).
+- **Radius by role, four steps**: `radius-sm` (4px) badges and small tags, `radius-md` (12px) buttons, inputs and cards, `radius-lg` (20px) property cards, images and sheets, `radius-full` pills, avatars and circles. Literals off the scale are listed, with the stage that resolves them, in `lib/design/scale-literals.test.ts`.
+- **Borders beat shadows.** A result list can hold fifty cards; fifty shadows cost real paint time on a mid-range Android phone. Cards separate with `border-subtle` and `shadow-e0`/`e1`. Shadows are spent on things that genuinely float: hover lift and dropdowns (`shadow-e2`), the phone's bottom bar (`shadow-e3`). A few role shadows serve the editorial surfaces (`float`, `panel`, `glass`, `tile`, `raised`); there are no one-off shadow values.
+
+### Tokens added in the UI modernization track (UI-02, UI-03)
+
+All in `app/globals.css`; components use them as Tailwind utilities or `var()`.
+
+- **Editorial surfaces**: `forest`, `mint`, `on-forest`, `forest-overlay`, `forest-line` (the deep-green bands), `glass*` (frosted panels), `cream`, `sand`, `brand-50`, `brand-200`, `graphite`, `graphite-muted`, `surface-grey` (Phase E reference surfaces), `tint-*` and `art-*` (discovery tiles and their drawings), `chart-interest`.
+- **Listing status tones**: `status-neutral`, `status-pending`, `status-live`, `status-problem`, each with a `-bg`. `lib/listings/status-tone.ts` maps every displayed status to a tone; the label always carries the meaning.
+- **Motion timing**: `--duration-instant|fast|base|slow|deliberate` (100–450ms) and `--ease-standard|enter|exit`, shared with Motion through `lib/motion/tokens.ts`.
+
+Guards: `lib/design/raw-colour.test.ts` (no literal or default-palette colour in TS/TSX or CSS), `lib/design/scale-literals.test.ts` (radius, type, timing and shadow on the scales), `lib/design/css-vars.test.ts` (no `var()` to an undefined property). The login street and the 404 scene are frozen and exempt.
 
 ### Iconography
 

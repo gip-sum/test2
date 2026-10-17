@@ -158,7 +158,13 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
 7. **No new dependency** without a reason recorded in the phase spec and a
    `npm run bundle-report` comparison.
 8. **Green identity through tokens.** `lib/design/raw-colour.test.ts` fails
-   on default-palette and literal colours; `cn()` must know every new token.
+   on default-palette and literal colours in TS/TSX and CSS;
+   `lib/design/scale-literals.test.ts` keeps radius, type, timing and shadow
+   on the scales; `cn()` must know every new token.
+9. **Review visual change by measurement.** Any change to tokens or shared
+   CSS runs `npm run style-diff` (capture before and after, compare) and
+   explains every difference. The login street and 404 scenes are frozen:
+   their fingerprints must stay identical.
 
 ---
 

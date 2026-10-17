@@ -1,4 +1,6 @@
-/* GharBazaar — compiled from tokens.json. Do not edit by hand. */
+/* GharBazaar — Phase 0 reference, compiled from tokens.json. NOT used by the
+   product: app/globals.css (@theme) is the source of truth. Brand values were
+   corrected to the shipped green in UI-03; others may predate later phases. */
 :root {
   --surface-000: #ffffff;
   --surface-100: #f7f9fc;
@@ -10,9 +12,9 @@
   --ink-inverse: #ffffff;
   --border-subtle: #e3e8ef;
   --border-strong: #cdd5e0;
-  --brand-600: #0b57d0;
-  --brand-700: #0a49ae;
-  --brand-100: #e8f0fe;
+  --brand-600: #117744;
+  --brand-700: #0f6a38;
+  --brand-100: #d1fae5;
   --on-brand: #ffffff;
   --supply-600: #cc4e00;
   --supply-700: #a8420a;
@@ -27,7 +29,7 @@
   --on-danger: #ffffff;
   --neutral-600: #5f6a7d;
   --neutral-100: #eef2f7;
-  --focus-ring: #0b57d0;
+  --focus-ring: #117744;
   --overlay: #0f1b2da6;
   --media-ground: #e7edf5;
   --shadow-0: none;
@@ -79,10 +81,10 @@
   --ink-inverse: #0d1520;
   --border-subtle: #25303f;
   --border-strong: #35414f;
-  --brand-600: #8ab4f8;
-  --brand-700: #a6c7fa;
-  --brand-100: #17304f;
-  --on-brand: #0a2647;
+  --brand-600: #86efac;
+  --brand-700: #bbf7d0;
+  --brand-100: #123522;
+  --on-brand: #064e3b;
   --supply-600: #f59b55;
   --supply-100: #3a2210;
   --on-supply: #3d1a00;
@@ -94,7 +96,7 @@
   --danger-100: #3b1a17;
   --neutral-600: #94a1b4;
   --neutral-100: #1a2534;
-  --focus-ring: #8ab4f8;
+  --focus-ring: #86efac;
   --overlay: #000000cc;
   --media-ground: #1c2736;
   --shadow-1: 0 1px 2px #00000066;
