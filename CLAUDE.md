@@ -159,11 +159,20 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
    a tap. `npm run motion-check` (CI) covers motion, focus and reduced
    motion; a browser check that reads the page right after a dialog opens or
    closes waits for its animation or unmount instead of the first frame.
+   Prefer a CSS transition to Motion unless Motion's capability is needed and
+   measured: Kokonut's tabs ship CSS-driven (`SmoothTabs`) because the Motion
+   version cost +20.5 KB gzip on Home for a spring we do not want.
 4. **Anime.js** only for a genuine timeline or SVG sequence; it is installed
    with the first feature that needs one. CSS stays CSS (login, 404).
 5. **Bklit UI** for charts of real, measured data only — never decoration,
    never a figure the platform has not measured.
 6. **Mobile is mandatory**: the widths above, 44px targets, no overflow.
+   A small control keeps its look and grows its hit area: a square element
+   of at least 44px with negative margins handing the space back (Chrome
+   hit-tests follow border-radius), proven by hit-testing in `ui-check`.
+   Listing status renders through `components/ui/StatusBadge`; empty and
+   failed sections through `EmptyState` / `ErrorState` (copy only, never
+   technical detail).
 7. **No new dependency** without a reason recorded in the phase spec and a
    `npm run bundle-report` comparison.
 8. **Green identity through tokens.** `lib/design/raw-colour.test.ts` fails

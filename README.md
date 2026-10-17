@@ -28,7 +28,7 @@ An original property marketplace for Kolkata, built around one loop:
 | 14 | Property pricing form | Implemented; review pending |
 | E | 99acres interface redesign from client screenshots | Implemented and verified locally; publication pending |
 | Workspace addon | Compact admin and property-owner interface, selected concept 1 | Implemented and verified; see [specification and evidence](docs/phases/ADDON-WORKSPACE-interface.md) |
-| UI track | UI modernization UI-01 … UI-14, outside the 75-phase numbering | UI-01 audit, UI-02 foundation, UI-03 design-system cleanup and UI-04 animation system complete; see [docs/ui-modernization](docs/ui-modernization/) |
+| UI track | UI modernization UI-01 … UI-14, outside the 75-phase numbering | UI-01 audit, UI-02 foundation, UI-03 design-system cleanup, UI-04 animation system and UI-05 core components complete; see [docs/ui-modernization](docs/ui-modernization/) |
 
 The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
 criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)
@@ -75,6 +75,7 @@ npm run dev          # http://localhost:3000
 | `npm run post-check` | Browser assertions for the seller posting flow |
 | `npm run notfound-check` | The animated 404: status codes, both actions, keyboard focus, motion and reduced motion |
 | `npm run motion-check` | The motion layer: Sheet enter/exit, focus and Escape (nested too), header panels, lightbox, card touch and hover, skeleton and photo fade, no-JS pages, and all of it under reduced motion |
+| `npm run ui-check` | Shared components: the Buy / Rent tabs at eight widths, by keyboard and touch; 44px touch targets by hit-testing; the migrated Buttons |
 | `npm run motion-perf` | Frame intervals and long tasks for each animation at 390px on a 4× throttled CPU (`CPU=`, `RUNS=`, `OUT=`); a measurement to compare builds, not a gate |
 
 The browser checks need a server running (`npm run build && npm start -- -p 3100`).
