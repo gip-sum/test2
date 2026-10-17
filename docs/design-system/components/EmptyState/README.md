@@ -2,6 +2,13 @@
 
 What a screen shows when there is nothing to show — never a dead end.
 
+> **Shipped as `components/ui/EmptyState.tsx` (UI-05)**, with
+> `components/ui/ErrorState.tsx` for a section that could not load. Both
+> take a heading, a short explanation, an optional action and (EmptyState)
+> an optional decorative icon, on the `glass` (buyer account) or
+> `workspace` (seller and staff) surface. Search's zero-result screen keeps
+> its own richer component (`components/search/ZeroResults.tsx`).
+
 Every empty state does three things: **name the situation, explain it in one line, offer the single most useful next action.**
 
 **The zero-result case is the important one.** Property searches are over-constrained constantly, so the empty search state does real work: it names the most restrictive filter, offers to relax it, and shows what *is* nearby. A blank "No results" screen sends the user to a competitor.

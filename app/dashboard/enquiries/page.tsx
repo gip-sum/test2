@@ -9,6 +9,8 @@ import { getPropertySummary } from '@/lib/property/queries'
 import { propertyPath } from '@/lib/property/public-id'
 import { UUID } from '@/lib/media/types'
 import { setLeadStatus, acknowledgeNotifications } from './actions'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 export const metadata: Metadata = { title: 'Seller enquiries', robots: { index: false, follow: false } }
 
@@ -38,8 +40,8 @@ export default async function SellerEnquiries({ searchParams }: { searchParams: 
       </div>
       {unread !== null && <div className="flex flex-wrap items-center gap-x-4"><p className="text-body-sm text-ink-700">{unread} unread {unread === 1 ? 'notification' : 'notifications'}</p>{unread > 0 && <form action={acknowledgeNotifications}><button type="submit" className="min-h-11 text-label font-semibold text-brand-700 underline">Mark notifications read</button></form>}</div>}
     </div>
-    {!result.ok ? <p role="alert" className="workspace-panel workspace-empty">{listingId ? 'Enquiries for this listing are temporarily unavailable. Please refresh this page.' : 'Your leads are temporarily unavailable. Please refresh this page.'}</p> :
-      result.rows.length === 0 ? <div className="workspace-panel workspace-empty"><MailIcon className="mb-3 size-8 text-brand-700" /><h2 className="font-display text-heading-3">No enquiries received</h2><p className="mt-2 text-body-sm text-ink-700">{listingId ? 'Enquiries about this listing appear here when buyers get in touch.' : 'Enquiries appear here when buyers contact you about your active listings.'}</p></div> :
+    {!result.ok ? <ErrorState surface="workspace">{listingId ? 'Enquiries for this listing are temporarily unavailable. Please refresh this page.' : 'Your leads are temporarily unavailable. Please refresh this page.'}</ErrorState> :
+      result.rows.length === 0 ? <EmptyState surface="workspace" icon={<MailIcon />} title="No enquiries received">{listingId ? 'Enquiries about this listing appear here when buyers get in touch.' : 'Enquiries appear here when buyers contact you about your active listings.'}</EmptyState> :
         <section aria-label="Received enquiries" className="workspace-panel overflow-hidden">
           <div aria-hidden="true" className="hidden grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1.2fr)] gap-5 border-b border-border-subtle bg-surface-100 px-4 py-3 text-caption font-semibold text-ink-700 lg:grid"><span>Buyer</span><span>Property / message</span><span>Follow-up</span></div>
           {result.rows.map((lead) => <LeadCard key={lead.id} lead={lead} filtered={Boolean(listingId)} />)}

@@ -6,6 +6,8 @@ import { getVerifiedUser } from '@/lib/auth/session'
 import { listLeads, listLeadEvents } from '@/lib/enquiry/queries'
 import { getPropertySummary } from '@/lib/property/queries'
 import { propertyPath } from '@/lib/property/public-id'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 export const metadata: Metadata = { title: 'My enquiries', robots: { index: false, follow: false } }
 
@@ -18,8 +20,11 @@ export default async function MyEnquiries() {
     <p className="text-overline uppercase tracking-widest text-brand-700">Your space</p>
     <h1 className="mt-2 font-display text-heading-1 text-ink-900">My enquiries</h1>
     <p className="mt-2 text-body text-ink-700">Enquiries you sent while signed in.</p>
-    {!result.ok ? <p role="alert" className="glass-panel mt-7 rounded-lg p-6">Your enquiries are temporarily unavailable. Please refresh this page.</p> :
-      result.rows.length === 0 ? <div className="glass-panel mt-7 rounded-lg p-6"><h2 className="font-display text-heading-3">No enquiries yet</h2><p className="mt-2">Explore homes and contact a seller when you find one you like.</p><Link href="/buy/kolkata" className="mt-4 inline-flex min-h-11 items-center text-brand-700 underline">Browse properties</Link></div> :
+    {!result.ok ? <ErrorState className="mt-7">Your enquiries are temporarily unavailable. Please refresh this page.</ErrorState> :
+      result.rows.length === 0 ? <EmptyState className="mt-7" title="No enquiries yet"
+        action={<Link href="/buy/kolkata" className="inline-flex min-h-11 items-center text-brand-700 underline">Browse properties</Link>}>
+        Explore homes and contact a seller when you find one you like.
+      </EmptyState> :
         <div className="mt-7 grid gap-4 sm:grid-cols-2">{result.rows.map((lead) => {
           const property = lead.listing_public_id ? getPropertySummary(lead.listing_public_id) : null
           // A real listing links to its public page; if it has since left

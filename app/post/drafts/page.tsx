@@ -6,6 +6,9 @@ import { PageShell } from '@/components/layout/PageShell'
 import { getVerifiedUser } from '@/lib/auth/session'
 import { listDrafts } from '@/lib/drafts/queries'
 import { draftTitle, type Draft } from '@/lib/drafts/types'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { buttonClassName } from '@/components/ui/Button'
 export const metadata: Metadata = { title: 'My property drafts', robots: { index: false, follow: false } }
 export default async function DraftsPage() {
   const user = await getVerifiedUser()
@@ -16,7 +19,8 @@ export default async function DraftsPage() {
     <div className="flex flex-wrap items-center justify-between gap-4"><h1 className="text-heading-1 font-display text-ink-900">My drafts</h1><Link href="/post" className="inline-flex min-h-11 items-center rounded-md bg-brand-600 px-4 font-semibold text-on-brand">New property</Link></div>
     <p className="mt-3 text-body text-ink-700">Private working drafts. Resume editing on any device. Publishing status shows whether a submitted copy is public.</p>
     <Link href="/dashboard" className="mt-2 inline-flex min-h-11 items-center font-semibold text-brand-700 underline underline-offset-4">See every property and listing status in My properties</Link>
-    {drafts === null ? <div role="alert" className="mt-8 rounded-lg border border-border-strong p-5"><p>Your drafts could not be loaded.</p><ReloadDraft /></div> : drafts.length === 0 ? <p className="mt-8 rounded-lg bg-brand-100 p-6">No drafts yet. Start a property and choose Save as draft.</p> : <ul className="mt-8 grid gap-4 sm:grid-cols-2">{drafts.map(draft => <li key={draft.id} className="min-w-0 rounded-lg border border-border-subtle bg-surface-000 p-5 shadow-e1">
+    {drafts === null ? <ErrorState surface="inline" className="mt-8" action={<ReloadDraft />}>Your drafts could not be loaded.</ErrorState> : drafts.length === 0 ? <EmptyState className="mt-8" title="No drafts yet"
+      action={<Link href="/post" className={buttonClassName({ variant: 'supply' })}>Post a property</Link>}>Start a property and choose Save as draft.</EmptyState> : <ul className="mt-8 grid gap-4 sm:grid-cols-2">{drafts.map(draft => <li key={draft.id} className="min-w-0 rounded-lg border border-border-subtle bg-surface-000 p-5 shadow-e1">
       <h2 className="break-words text-heading-3 font-display text-ink-900">{draftTitle(draft)}</h2>
       <p className="mt-2 text-body-sm text-ink-500">Saved {new Date(draft.updated_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })} IST</p>
       <Link href={`/post/drafts/${draft.id}`} className="mt-3 inline-flex min-h-11 items-center font-semibold text-brand-700">Resume draft →<span className="sr-only"> {draftTitle(draft)}</span></Link>

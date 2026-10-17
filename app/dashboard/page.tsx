@@ -12,6 +12,8 @@ import { arrange, dashboardHref, parseQuery, EXPIRY_WARNING_DAYS, FILTERS, SORTS
 import { countUnreadNotifications } from '@/lib/enquiry/queries'
 import { publishingConfigured } from '@/lib/listings/queries'
 import { cn } from '@/lib/cn'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 export const metadata: Metadata = { title: 'My properties', robots: { index: false, follow: false } }
 export const dynamic = 'force-dynamic'
@@ -33,16 +35,13 @@ export default async function SellerDashboard({ searchParams }: { searchParams: 
 
   return <OwnerShell current="properties" title="My properties" description="Manage your listings, drafts and next steps." unread={unread}
     actions={<Link href="/post" className={buttonClassName({ variant: 'primary' })}><PlusIcon className="size-4" />Post a property</Link>}>
-    {!result.ok ? <div role="alert" className="workspace-panel workspace-empty">
-      <h2 className="font-display text-heading-3 text-ink-900">Your properties could not be loaded</h2>
-      <p className="mt-2 text-body-sm text-ink-700">Nothing has changed with your drafts or listings. Please try again.</p>
-      <Link href={dashboardHref(query)} className="mt-3 inline-flex min-h-11 items-center font-semibold text-brand-700 underline">Reload</Link>
-    </div> : result.cards.length === 0 ? <div className="workspace-panel workspace-empty">
-      <BuildingIcon className="mb-3 size-8 text-brand-700" />
-      <h2 className="font-display text-heading-3 text-ink-900">You have not posted a property yet</h2>
-      <p className="mt-2 text-body-sm text-ink-700">Start with the basics. Your draft saves as you go and stays private until you submit it for review.</p>
-      <Link href="/post" className={cn(buttonClassName({ variant: 'primary' }), 'mt-4')}>Post your first property</Link>
-    </div> : <Workspace cards={result.cards} query={query} publishing={publishing} />}
+    {!result.ok ? <ErrorState surface="workspace" title="Your properties could not be loaded"
+      action={<Link href={dashboardHref(query)} className="inline-flex min-h-11 items-center font-semibold text-brand-700 underline">Reload</Link>}>
+      Nothing has changed with your drafts or listings. Please try again.
+    </ErrorState> : result.cards.length === 0 ? <EmptyState surface="workspace" icon={<BuildingIcon />} title="You have not posted a property yet"
+      action={<Link href="/post" className={buttonClassName({ variant: 'primary' })}>Post your first property</Link>}>
+      Start with the basics. Your draft saves as you go and stays private until you submit it for review.
+    </EmptyState> : <Workspace cards={result.cards} query={query} publishing={publishing} />}
   </OwnerShell>
 }
 

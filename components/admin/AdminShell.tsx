@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { WorkspaceShell, type WorkspaceSection } from '@/components/workspace/WorkspaceShell'
 import { cn } from '@/lib/cn'
 import { CHECK_WORD, type CheckState } from '@/lib/admin/model'
+import { ErrorState } from '@/components/ui/ErrorState'
 
 const SECTIONS = [
   { key: 'overview', label: 'Overview', href: '/admin' },
@@ -26,5 +27,5 @@ export function CheckBadge({ state }: { state: CheckState }) {
 }
 
 export function Unreadable({ what }: { what: string }) {
-  return <p role="alert" className="rounded-md border border-border-strong bg-surface-000 p-4 text-body-sm text-ink-900">{what} could not be loaded. Please reload this page.</p>
+  return <ErrorState surface="inline">{what} could not be loaded. Please reload this page.</ErrorState>
 }

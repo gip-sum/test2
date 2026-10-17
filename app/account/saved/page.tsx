@@ -10,6 +10,9 @@ import { getPublishedSummaries } from '@/lib/listings/queries'
 import type { SubmissionSummary } from '@/lib/listings/types'
 import { listSaved, listSavedListings } from '@/lib/saved/queries'
 import { getPropertySummary } from '@/lib/property/queries'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { ErrorState } from '@/components/ui/ErrorState'
+import { buttonClassName } from '@/components/ui/Button'
 
 export const metadata: Metadata = { title: 'Saved properties', robots: { index: false, follow: false } }
 
@@ -28,14 +31,12 @@ export default async function SavedPage() {
     <p className="text-overline uppercase tracking-widest text-brand-700">Your space</p>
     <h1 className="mt-2 font-display text-heading-1 text-ink-900">Saved properties</h1>
     <p className="mt-2 text-body text-ink-700">Homes you want to look at again, all in one place.</p>
-    {!result.ok || savedListings === null ? <div role="alert" className="glass-panel mt-8 rounded-lg border border-border-subtle p-6">
-      <h2 className="font-display text-heading-3">Your saved properties are temporarily unavailable</h2>
-      <p className="mt-2 text-body-sm">Please try refreshing this page in a moment.</p>
-    </div> : total === 0 ? <div className="glass-panel mt-8 rounded-lg border border-border-subtle p-7 sm:p-10">
-      <h2 className="font-display text-heading-3 text-ink-900">Your shortlist is empty</h2>
-      <p className="mt-2 text-body text-ink-700">Tap the heart on a property to keep it here.</p>
-      <Link href="/buy/kolkata" className="mt-6 inline-flex min-h-11 items-center rounded-md bg-brand-700 px-5 font-semibold text-on-brand focus-visible:outline-2 focus-visible:outline-focus-ring">Browse properties</Link>
-    </div> : <>
+    {!result.ok || savedListings === null ? <ErrorState className="mt-8" title="Your saved properties are temporarily unavailable">
+      Please try refreshing this page in a moment.
+    </ErrorState> : total === 0 ? <EmptyState className="mt-8" title="Your shortlist is empty"
+      action={<Link href="/buy/kolkata" className={buttonClassName({ variant: 'primary' })}>Browse properties</Link>}>
+      Tap the heart on a property to keep it here.
+    </EmptyState> : <>
       <p className="mt-6 text-body-sm text-ink-700">{total} saved {total === 1 ? 'property' : 'properties'}</p>
       <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {savedListings.map((row) => {
