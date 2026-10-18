@@ -258,6 +258,10 @@
   /* A loop, not a transition, so it sits outside the 450ms transition
      ceiling: one slow pass of the skeleton shimmer (UI-04). */
   --loop-shimmer: 1600ms;
+
+  /* The gap between one list item's entrance and the next (UI-06), capped by
+     each rule so a long list never makes its tail wait. */
+  --stagger-step: 30ms;
 }
 
 /* ---- Dark theme: SECONDARY, opt-in only ---------------------------
@@ -815,7 +819,6 @@
 @media (hover: none) {
   .property-card:active { transform: scale(0.985); transition-duration: var(--duration-instant); }
 }
-.property-card .aspect-\[4\/3\] { aspect-ratio: 1.55; }
 
 .seller-invitation { position: relative; overflow: hidden; border-radius: var(--radius-lg); background: var(--color-forest); color: var(--color-on-forest); padding: 26px 20px; }
 .seller-invitation h2 { font-size: 26px; line-height: 1.2; letter-spacing: -.03em; }
@@ -1262,6 +1265,29 @@
    no JavaScript — or before it runs — photos show the moment they load. */
 img[data-fade='pending'] { opacity: 0; }
 img[data-fade='in'] { opacity: 1; transition: opacity var(--duration-base) var(--ease-enter); }
+
+/* Search results and filter chips that arrive after the page is
+   interactive (UI-06): a short fade with a 6px rise, results staggered by
+   --stagger-step for at most six items. `data-enter` is set on the search
+   frame only after hydration (useHydrated), and @starting-style applies
+   only to elements first rendered after that, so server-rendered results
+   never start invisible; a filter change, a page turn or a client
+   navigation brings new ones in. Opacity and transform only: nothing
+   reflows, so chips wrap where they will end up and the cards are
+   clickable from the first frame. Under reduced motion none of this exists
+   — the global rule shortens durations but not delays, and a staggered
+   delay would hold items invisible. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-enter] .results-list > li,
+  [data-enter] .active-filters > .chip-enter {
+    transition: opacity var(--duration-base) var(--ease-enter), transform var(--duration-base) var(--ease-enter);
+  }
+  [data-enter] .results-list > li { transition-delay: calc(min(var(--i, 0), 6) * var(--stagger-step)); }
+  @starting-style {
+    [data-enter] .results-list > li { opacity: 0; transform: translateY(6px); }
+    [data-enter] .active-filters > .chip-enter { opacity: 0; transform: scale(0.96); }
+  }
+}
 
 /* Posting form (Phase 12).
    Radio chips are real radios, visually hidden inside a styled label, so

@@ -7,6 +7,7 @@ import { Chip } from '@/components/ui/Chip'
 import { Sheet } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
+import { useHydrated } from '@/lib/hooks/useHydrated'
 import type { Facets } from '@/lib/property/search'
 import { clearAllPatch, describeActiveFilters } from '@/lib/search/describe'
 import {
@@ -49,6 +50,8 @@ export function SearchLayout({
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [sheetOpen, setSheetOpen] = useState(false)
+  // Entrance animations apply only to what arrives after hydration.
+  const hydrated = useHydrated()
 
   const names = new Map(Object.entries(localityNames))
   const active = describeActiveFilters(query, names)
@@ -75,9 +78,11 @@ export function SearchLayout({
   }
 
   const activeCount = active.length
+  // This search at page 1 without a sort: the no-JavaScript sort form's target.
+  const sortBase = new URL(buildSearchUrl({ ...query, sort: 'relevance', page: 1 }), 'http://localhost')
 
   return (
-    <div className="mx-auto max-w-[1320px] px-4 py-5 lg:px-8 lg:py-6">
+    <div data-enter={hydrated ? '' : undefined} className="mx-auto max-w-[1320px] px-4 py-5 lg:px-8 lg:py-6">
       <header>
         <h1 className="font-display text-heading-2 text-ink-900 lg:text-heading-1">{heading}</h1>
         <p className="mt-1 text-body-sm text-ink-700" aria-live="polite">
@@ -97,24 +102,32 @@ export function SearchLayout({
       </header>
 
       {activeCount > 0 && (
-        <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-3">
+        <div className="active-filters mt-3 flex flex-wrap items-center gap-x-2 gap-y-3">
           <h2 className="sr-only">Active filters</h2>
           {active.map((f) => (
             <Chip
               key={f.id}
+              className="chip-enter"
               label={f.label}
               removeLabel={`Remove filter: ${f.label}`}
               onRemove={() => apply(f.remove)}
+              removeHref={buildSearchUrl(withFilterChange(query, f.remove))}
             />
           ))}
-          {/* A 44px target around the 32px pill, as on the chips beside it. */}
-          <button
-            type="button"
-            onClick={() => apply(clearAllPatch())}
+          {/* A link to the unfiltered URL, so it works without JavaScript; a
+              plain click keeps the in-place transition. A 44px target around
+              the 32px pill, as on the chips beside it. */}
+          <a
+            href={buildSearchUrl(withFilterChange(query, clearAllPatch()))}
+            onClick={(event) => {
+              if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+              event.preventDefault()
+              apply(clearAllPatch())
+            }}
             className="group -my-1.5 inline-flex h-11 items-center text-label text-brand-600 outline-none"
           >
             <span className="inline-flex h-8 items-center rounded-full px-3 group-hover:bg-brand-100 group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-focus-ring">Clear all</span>
-          </button>
+          </a>
         </div>
       )}
 
@@ -141,21 +154,30 @@ export function SearchLayout({
           )}
         </Button>
 
-        <label className="ml-auto flex min-w-0 max-w-full items-center gap-2 text-body-sm text-ink-700">
-          <span className="hidden sm:inline">Sort by</span>
-          <select
-            value={query.sort}
-            onChange={(e) => sortTo(e.target.value as SortKey)}
-            aria-label="Sort results"
-            className="h-11 min-w-0 max-w-[14rem] rounded-md border border-border-subtle bg-surface-000 px-3 text-body-sm text-ink-900 hover:border-border-strong"
-          >
-            {SORT_ORDER.map((k) => (
-              <option key={k} value={k}>
-                {SORT_LABEL[k]}
-              </option>
-            ))}
-          </select>
-        </label>
+        {/* A GET form to this search's URL, so sorting works without
+            JavaScript: the other parameters ride along as hidden fields and
+            the Sort button exists only when scripting is off. With
+            JavaScript the select applies on change, as before. */}
+        <form method="get" action={sortBase.pathname} className="ml-auto flex min-w-0 max-w-full items-center gap-2">
+          {[...sortBase.searchParams].map(([name, value]) => <input key={name} type="hidden" name={name} value={value} />)}
+          <label className="flex min-w-0 max-w-full items-center gap-2 text-body-sm text-ink-700">
+            <span className="hidden sm:inline">Sort by</span>
+            <select
+              name="sort"
+              value={query.sort}
+              onChange={(e) => sortTo(e.target.value as SortKey)}
+              aria-label="Sort results"
+              className="h-11 min-w-0 max-w-[14rem] rounded-md border border-border-subtle bg-surface-000 px-3 text-body-sm text-ink-900 hover:border-border-strong"
+            >
+              {SORT_ORDER.map((k) => (
+                <option key={k} value={k}>
+                  {SORT_LABEL[k]}
+                </option>
+              ))}
+            </select>
+          </label>
+          <noscript><Button type="submit" variant="secondary">Sort</Button></noscript>
+        </form>
       </div>
 
       <div className="mt-5 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-7">

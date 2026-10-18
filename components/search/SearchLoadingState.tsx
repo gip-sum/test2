@@ -12,9 +12,25 @@ import { Skeleton } from '@/components/ui/Skeleton'
  * The skeleton mirrors the real layout, rail included, so nothing jumps
  * when the results arrive.
  */
+// The search page awaits its params, so React streams this skeleton first and
+// the finished page after it in the SAME response, as a hidden segment
+// (<div hidden id="S:0">) that a script then swaps in. With JavaScript off,
+// slow to load or failed, nothing swaps, and the page stayed a skeleton
+// forever (UI-04 risk). This style exists only when scripting is off — a
+// browser with JavaScript treats <noscript> content as inert text — and
+// shows the streamed page while hiding the skeleton. The segment holds the
+// complete page, header and results, and is the last thing in <body>, so it
+// renders in order. Tailwind's preflight hides [hidden] with !important in
+// @layer base, and a layered !important outranks an unlayered one, so the
+// reveal sits in @layer theme — declared before base, so its !important
+// wins. React's segment markup is an implementation detail: ui-check loads
+// search with JavaScript disabled and fails if it changes.
+const NO_SCRIPT_REVEAL = '[data-search-fallback]{display:none!important}@layer theme{div[hidden][id^="S:"]{display:block!important}}'
+
 export function SearchLoadingState() {
   return (
-    <div className="mx-auto max-w-[1320px] px-4 py-5 lg:px-8 lg:py-6" aria-busy>
+    <div data-search-fallback="" className="mx-auto max-w-[1320px] px-4 py-5 lg:px-8 lg:py-6" aria-busy>
+      <noscript><style>{NO_SCRIPT_REVEAL}</style></noscript>
       <span className="sr-only" role="status">
         Loading properties
       </span>
@@ -34,14 +50,9 @@ export function SearchLoadingState() {
           <Skeleton className="h-[32rem] w-full rounded-lg" />
         </div>
         <div className="min-w-0">
-          <div className="grid gap-3 md:hidden">
-            {Array.from({ length: 4 }, (_, i) => (
-              <PropertyCardSkeleton key={i} layout="horizontal" />
-            ))}
-          </div>
-          <div className="hidden gap-4 md:grid md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
             {Array.from({ length: 6 }, (_, i) => (
-              <PropertyCardSkeleton key={i} />
+              <PropertyCardSkeleton key={i} layout="responsive" />
             ))}
           </div>
         </div>
