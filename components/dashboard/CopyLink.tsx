@@ -1,12 +1,14 @@
 'use client'
 import { useId, useState } from 'react'
 import { Button } from '@/components/ui/Button'
+import { fieldControlClass } from '@/components/ui/FormField'
 
 /**
  * Copies the public listing address; shows it for copying by hand when the
  * clipboard is unavailable (never a silent "copied"). Focus stays on the
  * button; the status is cleared first so a second copy is announced again
- * (UI-12).
+ * (UI-12). The fallback field is the shared 16px control: a smaller one
+ * zooms the page on iPhone when it takes focus.
  */
 export function CopyLink({ path, title }: { path: string; title: string }) {
   const [state, setState] = useState<{ kind: 'idle' | 'copied' } | { kind: 'manual'; url: string }>({ kind: 'idle' })
@@ -21,7 +23,7 @@ export function CopyLink({ path, title }: { path: string; title: string }) {
     <span role="status" className="inline-flex min-h-11 items-center text-body-sm text-ink-700 empty:hidden">{state.kind === 'copied' ? 'Link copied' : ''}</span>
     {state.kind === 'manual' && <span className="flex basis-full flex-col gap-1">
       <label htmlFor={inputId} className="text-body-sm text-ink-700">Copying is not available here. Select and copy this link:</label>
-      <input id={inputId} readOnly value={state.url} onFocus={(e) => e.currentTarget.select()} autoFocus className="h-11 w-full min-w-0 rounded-md border border-border-subtle bg-surface-000 px-3 text-body-sm text-ink-900" />
+      <input id={inputId} readOnly value={state.url} onFocus={(e) => e.currentTarget.select()} autoFocus className={fieldControlClass} />
     </span>}
   </>
 }
