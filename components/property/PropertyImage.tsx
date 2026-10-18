@@ -13,6 +13,9 @@ import { markPendingImage, revealImage } from '@/lib/motion/image-fade'
  *             most of how CLS stays near zero on a page full of cards.
  *   'fill'  — fills a parent that already has a size. Used by the
  *             horizontal card, whose height is set by the text column.
+ *   'responsive' — 'fill' below 768px and 'ratio' from 768px, for the one
+ *             results card that is horizontal on phones and vertical in
+ *             the grid (UI-06; the list used to render every card twice).
  *
  * Combining the two (a 4:3 box told to be `h-full`) makes the image grow
  * wider as the text wraps, which squeezes and clips the content column.
@@ -35,7 +38,7 @@ export function PropertyImage({
   alt: string
   priority?: boolean
   sizes: string
-  mode?: 'ratio' | 'fill'
+  mode?: 'ratio' | 'fill' | 'responsive'
   className?: string
   isSample?: boolean
   /** Which bottom corner the "Sample" label takes — cards with a price chip over the photo need the other one. */
@@ -46,7 +49,7 @@ export function PropertyImage({
     <div
       className={cn(
         'overflow-hidden bg-media-ground',
-        mode === 'ratio' ? 'relative aspect-[4/3] w-full' : 'absolute inset-0',
+        mode === 'ratio' ? 'relative aspect-[4/3] w-full' : mode === 'fill' ? 'absolute inset-0' : 'absolute inset-0 md:relative md:inset-auto md:aspect-[4/3] md:w-full',
         className,
       )}
     >

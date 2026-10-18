@@ -27,16 +27,11 @@ export function SimilarProperties({ results }: { results: PropertySummary[] }) {
 
       {/* The scroller is a list, so a screen reader announces how many
           there are before the user commits to arrowing through them. */}
-      <ul className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 md:hidden">
+      {/* One list: a swipeable row on phones, a grid from md (it used to be
+          two lists with every card twice, UI-06). */}
+      <ul className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2 md:grid md:snap-none md:grid-cols-2 md:gap-4 md:overflow-visible md:pb-0 xl:grid-cols-3">
         {results.map((p) => (
-          <li key={p.id} className="w-[78%] shrink-0 snap-start">
-            <PropertyCard property={p} />
-          </li>
-        ))}
-      </ul>
-      <ul className="mt-4 hidden gap-4 md:grid md:grid-cols-2 xl:grid-cols-3">
-        {results.map((p) => (
-          <li key={p.id}>
+          <li key={p.id} className="w-[78%] shrink-0 snap-start md:w-auto">
             <PropertyCard property={p} />
           </li>
         ))}

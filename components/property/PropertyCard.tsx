@@ -1,11 +1,12 @@
-import Link from 'next/link'
 import { PriceDisplay } from './PriceDisplay'
 import { PropertyImage } from './PropertyImage'
 import { SaveButton } from './SaveButton'
-import { Badge } from '@/components/ui/Badge'
-import { formatAreaCompact } from '@/lib/format/area'
+import { AreaDisplay } from './AreaDisplay'
+import { CARD_FOCUS, CardBadges, CardTitleLink } from './CardParts'
+import { MapPinIcon } from '@/components/ui/icons'
 import { formatConfiguration } from '@/lib/format/area'
-import { formatPostedAt, isNewListing } from '@/lib/format/date'
+import { formatPostedAt } from '@/lib/format/date'
+import { listingBadges } from '@/lib/property/badges'
 import {
   CONSTRUCTION_LABEL,
   FURNISHING_LABEL,
@@ -15,6 +16,34 @@ import {
 import { propertyPath } from '@/lib/property/public-id'
 import { cn } from '@/lib/cn'
 
+// The two layouts, as class sets rather than branches through the markup.
+// The photo's 1.55:1 ratio used to be a global `.property-card .aspect-[4/3]`
+// override in globals.css; it is the card's own decision, so it lives here.
+const LAYOUT = {
+  vertical: {
+    article: 'flex flex-col',
+    media: 'relative w-full shrink-0',
+    image: { mode: 'ratio', className: 'aspect-[1.55]', sizes: '(min-width: 1280px) 400px, (min-width: 768px) 45vw, 100vw' },
+    body: 'p-5',
+    price: '',
+    save: 'right-3 top-3',
+    saveLook: 'shadow-e1',
+  },
+  // Horizontal below 768px — three or four results per phone screen with the
+  // photo still large enough to judge — and the vertical card from 768px.
+  // The heart sits in the card's top-right corner in both: beside the price
+  // on a phone, on the photo in the grid.
+  responsive: {
+    article: 'flex md:flex-col',
+    media: 'relative w-[38%] max-w-[190px] shrink-0 self-stretch md:w-full md:max-w-none md:self-auto',
+    image: { mode: 'responsive', className: 'md:aspect-[1.55]', sizes: '(min-width: 1280px) 400px, (min-width: 768px) 45vw, 190px' },
+    body: 'p-3 md:p-5',
+    price: 'pr-10 md:pr-0',
+    save: 'right-2 top-2 md:right-3 md:top-3',
+    saveLook: 'border-0 bg-transparent md:border md:bg-surface-000/95 md:shadow-e1',
+  },
+} as const
+
 /**
  * The unit of comparison.
  *
@@ -23,12 +52,13 @@ import { cn } from '@/lib/cn'
  * configuration with its area basis, then title, then location, then a
  * short attribute line, then who is selling and how fresh it is.
  *
- * `layout="horizontal"` is the phone form: a vertical card shows about
- * 1.5 results per screen, a horizontal one shows three or four while
- * keeping the photo meaningful.
+ * `layout="responsive"` is the results card: horizontal on a phone, where a
+ * vertical card shows about 1.5 results per screen and a horizontal one
+ * three or four, and vertical in the grid from 768px. One card, so the
+ * results list renders each listing once (UI-06).
  *
- * At most two badges. Overflow is dropped, not stacked. There is no
- * "Verified" badge because the platform verifies nothing in V0.
+ * Badges, the stretched title link and the focus ring are shared with
+ * CompactPropertyCard (CardParts, lib/property/badges).
  */
 export function PropertyCard({
   property,
@@ -36,39 +66,16 @@ export function PropertyCard({
   priority,
 }: {
   property: PropertySummary
-  layout?: 'vertical' | 'horizontal'
+  layout?: keyof typeof LAYOUT
   priority?: boolean
 }) {
   const {
-    publicId,
-    slug,
-    title,
-    society,
-    localityName,
-    cityName,
-    intent,
-    price,
-    bedrooms,
-    bathrooms,
-    carpetArea,
-    areaUnit,
-    areaBasis,
-    furnishing,
-    constructionStatus,
-    floor,
-    totalFloors,
-    sellerType,
-    sellerName,
-    postedAt,
-    photos,
-    isPriceReduced,
+    publicId, slug, title, society, localityName, cityName, intent, price, bedrooms, bathrooms,
+    carpetArea, areaUnit, areaBasis, furnishing, constructionStatus, floor, totalFloors,
+    sellerType, sellerName, postedAt, photos,
   } = property
-
-  // Canonical grammar lives in one place, so a card can never emit a
-  // link the route would have to redirect.
-  const href = propertyPath(slug, publicId)
+  const l = LAYOUT[layout]
   const cover = photos[0]
-  const horizontal = layout === 'horizontal'
 
   const attributes = [
     CONSTRUCTION_LABEL[constructionStatus],
@@ -76,72 +83,40 @@ export function PropertyCard({
     floor && totalFloors ? `Floor ${floor} of ${totalFloors}` : null,
   ].filter(Boolean) as string[]
 
-  // Two badges maximum, in priority order.
-  const badges: Array<{ tone: 'brand' | 'supply'; label: string }> = []
-  if (isNewListing(postedAt)) badges.push({ tone: 'brand', label: 'New' })
-  if (isPriceReduced && badges.length < 2) badges.push({ tone: 'supply', label: 'Price reduced' })
-
   return (
-    <article
-      className={cn(
-        'property-card glass-card h-full group relative overflow-hidden rounded-lg border border-border-subtle shadow-e1',
-        'focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus-ring',
-        horizontal ? 'flex' : 'flex flex-col',
-      )}
-    >
-      <div
-        className={cn(
-          'relative shrink-0',
-          // Horizontal: a fixed-width column whose height comes from the
-          // text beside it, so the photo can never squeeze the content.
-          horizontal ? 'w-[38%] max-w-[190px] self-stretch' : 'w-full',
-        )}
-      >
+    <article className={cn('property-card glass-card group relative h-full overflow-hidden rounded-lg border border-border-subtle shadow-e1', CARD_FOCUS, l.article)}>
+      <div className={l.media}>
         <PropertyImage
           src={cover?.url}
           alt={cover?.alt ?? title}
           isSample={cover?.isSample}
           priority={priority}
-          mode={horizontal ? 'fill' : 'ratio'}
-          sizes={horizontal ? '190px' : '(min-width: 1280px) 400px, (min-width: 768px) 45vw, 100vw'}
+          mode={l.image.mode}
+          className={l.image.className}
+          sizes={l.image.sizes}
         />
-        {badges.length > 0 && (
-          <div className="absolute left-2 top-2 flex flex-wrap gap-1">
-            {badges.map((b) => (
-              <Badge key={b.label} tone={b.tone}>
-                {b.label}
-              </Badge>
-            ))}
-          </div>
-        )}
-        {!horizontal && <div className="absolute right-3 top-3 z-10"><SaveButton id={publicId} title={title} className="shadow-e1" /></div>}
+        <CardBadges badges={listingBadges(property)} />
       </div>
 
-      <div className={cn("flex min-w-0 flex-1 flex-col gap-1.5", horizontal ? "p-3" : "p-5")}>
-        <div className="flex items-start justify-between gap-2">
+      <div className={cn('flex min-w-0 flex-1 flex-col gap-1.5', l.body)}>
+        <div className={l.price}>
           <PriceDisplay amount={price} intent={intent} areaForRate={intent === 'buy' ? carpetArea : undefined} />
-          {/* No size override: SaveButton's own size-11 is the 44px touch target. A
-              size-9 here used to lose to it on stylesheet order; now that cn() merges,
-              it would win and shrink the target. */}
-          {horizontal && <SaveButton id={publicId} title={title} className="-mr-1 -mt-1 shrink-0 border-0 bg-transparent" />}
         </div>
 
         <p className="text-body-sm text-ink-700">
           {formatConfiguration(bedrooms, bathrooms)} ·{' '}
-          <span className="whitespace-nowrap">
-            {formatAreaCompact(carpetArea, areaUnit, areaBasis)}
-          </span>
+          <AreaDisplay value={carpetArea} unit={areaUnit} basis={areaBasis} className="whitespace-nowrap" />
         </p>
 
-        {/* Title clamps at two lines — long titles are the norm, not the exception. */}
-        <h3 className="line-clamp-2 text-body font-semibold text-ink-900">
-          <Link href={href} className="outline-none after:absolute after:inset-0">
-            {society ?? title}
-          </Link>
+        {/* Title clamps at two lines — long titles are the norm, not the
+            exception. Underlined on hover where hovering exists. */}
+        <h3 className="line-clamp-2 text-body font-semibold text-ink-900 underline-offset-2 group-hover:underline">
+          <CardTitleLink href={propertyPath(slug, publicId)}>{society ?? title}</CardTitleLink>
         </h3>
 
-        <p className="truncate text-body-sm text-ink-500">
-          {localityName}, {cityName}
+        <p className="flex min-w-0 items-center gap-1 text-body-sm text-ink-500">
+          <MapPinIcon className="size-3.5 shrink-0" />
+          <span className="truncate">{localityName}, {cityName}</span>
         </p>
 
         {attributes.length > 0 && (
@@ -157,6 +132,11 @@ export function PropertyCard({
           <span>{formatPostedAt(postedAt)}</span>
         </p>
       </div>
+
+      {/* Last in the DOM, drawn in the corner: keyboard and screen-reader
+          order is the listing, then its save action. SaveButton's own
+          size-11 is the 44px target; nothing here may shrink it. */}
+      <SaveButton id={publicId} title={society ?? title} className={cn('absolute', l.save)} visualClassName={l.saveLook} />
     </article>
   )
 }

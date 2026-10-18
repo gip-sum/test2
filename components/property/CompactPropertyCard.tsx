@@ -1,10 +1,12 @@
-import Link from 'next/link'
 import { PriceDisplay } from './PriceDisplay'
 import { PropertyImage } from './PropertyImage'
 import { SaveButton } from './SaveButton'
-import { Badge } from '@/components/ui/Badge'
-import { formatAreaCompact, formatConfiguration } from '@/lib/format/area'
-import { formatPostedAt, isNewListing } from '@/lib/format/date'
+import { AreaDisplay } from './AreaDisplay'
+import { CARD_FOCUS, CardBadges, CardTitleLink } from './CardParts'
+import { formatConfiguration } from '@/lib/format/area'
+import { formatPostedAt } from '@/lib/format/date'
+import { listingBadges } from '@/lib/property/badges'
+import { cn } from '@/lib/cn'
 import { SELLER_LABEL, type PropertySummary } from '@/lib/property/types'
 import { propertyPath } from '@/lib/property/public-id'
 
@@ -26,25 +28,18 @@ import { propertyPath } from '@/lib/property/public-id'
 export function CompactPropertyCard({ property, priority }: { property: PropertySummary; priority?: boolean }) {
   const {
     publicId, slug, title, society, localityName, cityName, intent, price, bedrooms,
-    carpetArea, areaUnit, areaBasis, propertyType, sellerType, postedAt, photos, isPriceReduced, constructionStatus,
+    carpetArea, areaUnit, areaBasis, propertyType, sellerType, postedAt, photos,
   } = property
   const cover = photos[0]
   // Bedrooms and the area with its basis — the two figures a browser
   // compares. Bathrooms wait for the listing: on a 240px card they would
   // push "(carpet)" off the line, and the basis is the part that matters.
   const configuration = propertyType === 'STUDIO' ? 'Studio' : formatConfiguration(bedrooms, null)
-  const area = formatAreaCompact(carpetArea, areaUnit, areaBasis)
-
-  // Two badges maximum, in the same priority order as PropertyCard. Each
-  // is a fact the listing states — never a judgement like "hot" or
-  // "verified" the platform cannot back.
-  const badges: Array<{ tone: 'brand' | 'supply' | 'neutral'; label: string }> = []
-  if (isNewListing(postedAt)) badges.push({ tone: 'brand', label: 'New' })
-  if (isPriceReduced) badges.push({ tone: 'supply', label: 'Price reduced' })
-  if (constructionStatus === 'UNDER_CONSTRUCTION') badges.push({ tone: 'neutral', label: 'Under construction' })
+  // Badges (listingBadges) come in the same priority order as PropertyCard,
+  // plus "Under construction", which this card's short attribute line drops.
 
   return (
-    <article className="compact-card group relative flex h-full flex-col overflow-hidden rounded-lg border border-border-subtle bg-surface-000 shadow-e1 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-focus-ring">
+    <article className={cn('compact-card group relative flex h-full flex-col overflow-hidden rounded-lg border border-border-subtle bg-surface-000 shadow-e1', CARD_FOCUS)}>
       <div className="relative">
         <PropertyImage
           src={cover?.url}
@@ -54,13 +49,7 @@ export function CompactPropertyCard({ property, priority }: { property: Property
           priority={priority}
           sizes="(min-width: 1024px) 290px, 280px"
         />
-        {badges.length > 0 && (
-          <div className="absolute left-2 top-2 flex flex-wrap gap-1">
-            {badges.slice(0, 2).map((b) => (
-              <Badge key={b.label} tone={b.tone}>{b.label}</Badge>
-            ))}
-          </div>
-        )}
+        <CardBadges badges={listingBadges(property, { construction: true })} />
         <div className="absolute bottom-2 left-2 rounded-md bg-surface-000 px-2.5 py-1 shadow-e1">
           <PriceDisplay amount={price} intent={intent} />
         </div>
@@ -69,12 +58,10 @@ export function CompactPropertyCard({ property, priority }: { property: Property
       <div className="flex min-w-0 flex-1 flex-col gap-1 p-3">
         <p className="truncate text-body-sm text-ink-700">
           {configuration && <><span className="font-semibold text-ink-900">{configuration}</span> · </>}
-          <span className="whitespace-nowrap">{area}</span>
+          <AreaDisplay value={carpetArea} unit={areaUnit} basis={areaBasis} className="whitespace-nowrap" />
         </p>
         <h3 className="truncate text-body font-semibold text-ink-900">
-          <Link href={propertyPath(slug, publicId)} className="outline-none after:absolute after:inset-0">
-            {society ?? title}
-          </Link>
+          <CardTitleLink href={propertyPath(slug, publicId)}>{society ?? title}</CardTitleLink>
         </h3>
         <p className="truncate text-body-sm text-ink-500">{localityName}, {cityName}</p>
         <p className="mt-auto pt-1 text-caption text-ink-500">
@@ -85,7 +72,7 @@ export function CompactPropertyCard({ property, priority }: { property: Property
       {/* Last in the DOM, drawn on the photo: keyboard and screen-reader
           order is the listing, then its save action. */}
       <div className="absolute right-2 top-2 z-10">
-        <SaveButton id={publicId} title={society ?? title} className="shadow-e1" />
+        <SaveButton id={publicId} title={society ?? title} visualClassName="shadow-e1" />
       </div>
     </article>
   )

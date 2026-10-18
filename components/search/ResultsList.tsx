@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { PropertyCard } from '@/components/property/PropertyCard'
 import type { PropertySummary } from '@/lib/property/types'
 
@@ -7,9 +8,11 @@ import type { PropertySummary } from '@/lib/property/types'
  * A server component with no interactivity, so the listings never enter the
  * client bundle — SearchLayout takes this as `children`.
  *
- * Horizontal cards on phones, a grid from md up: a vertical card shows
- * about 1.5 results per phone screen, a horizontal one shows three or four
- * while keeping the photo large enough to judge.
+ * One list of responsive cards: horizontal on phones, a grid from md up. It
+ * used to be two lists, one hidden by CSS at each width, which put every
+ * listing in the page twice — double the DOM a sheet opening restyles, and
+ * the grid's priority photos preloaded on phones that never showed them
+ * (UI-06).
  */
 export function ResultsList({ results }: { results: PropertySummary[] }) {
   return (
@@ -19,17 +22,10 @@ export function ResultsList({ results }: { results: PropertySummary[] }) {
           replaces was `auto`, which never shrinks below a card's min-content:
           at 320px a price row that cannot break further widened the column,
           the page and the fixed bottom bar by 8px. */}
-      <ul className="grid grid-cols-1 gap-3 md:hidden">
-        {results.map((p) => (
-          <li key={p.id}>
-            <PropertyCard property={p} layout="horizontal" />
-          </li>
-        ))}
-      </ul>
-      <ul className="hidden gap-4 md:grid md:grid-cols-2 xl:grid-cols-3">
+      <ul className="results-list grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
         {results.map((p, i) => (
-          <li key={p.id}>
-            <PropertyCard property={p} priority={i < 3} />
+          <li key={p.id} style={{ '--i': i } as CSSProperties}>
+            <PropertyCard property={p} layout="responsive" priority={i < 3} />
           </li>
         ))}
       </ul>
