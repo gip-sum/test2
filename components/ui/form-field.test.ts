@@ -2,7 +2,7 @@ import { createElement, type FC, type ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 import { Button, buttonClassName } from './Button'
-import { FormField, FormFieldset, type FieldControl } from './FormField'
+import { FormCheckbox, FormField, FormFieldset, type FieldControl } from './FormField'
 import { StatusBadge } from './StatusBadge'
 
 const html = (type: unknown, props: Record<string, unknown>) => renderToStaticMarkup(createElement(type as FC, props))
@@ -58,5 +58,24 @@ describe('StatusBadge on seller pages (UI-09)', () => {
     expect(html(StatusBadge, { status: 'DELETED', role: 'status' })).toMatch(/role="status" class="[^"]*bg-status-neutral-bg text-status-neutral/)
     expect(html(StatusBadge, { status: 'REJECTED' })).toMatch(/bg-status-problem-bg text-status-problem/)
     expect(html(StatusBadge, { status: 'ACTIVE' })).toMatch(/bg-status-live-bg text-status-live/)
+  })
+})
+
+describe('FormCheckbox (UI-11)', () => {
+  it('wraps the box in its label and ties an error to it', () => {
+    const box = (control: FieldControl) => createElement('input', { ...control, type: 'checkbox' })
+    const quiet = html(FormCheckbox, { id: 'review-confirm', label: 'I confirm this decision.', children: box })
+    expect(quiet).toMatch(/<label for="review-confirm" class="flex min-h-11[^"]*"><input id="review-confirm" type="checkbox"\/>I confirm this decision.<\/label>/)
+    expect(quiet).not.toContain('aria-invalid')
+    const wrong = html(FormCheckbox, { id: 'review-confirm', label: 'I confirm this decision.', error: 'Confirm this decision.', children: box })
+    expect(wrong).toMatch(/<input id="review-confirm" aria-invalid="true" aria-describedby="review-confirm-error" type="checkbox"\/>/)
+    expect(wrong).toContain('<p id="review-confirm-error"')
+  })
+})
+
+describe('StatusBadge for accounts (UI-11)', () => {
+  it('draws an account status from the same tone map: active is live, suspended a problem', () => {
+    expect(html(StatusBadge, { status: 'SUSPENDED' })).toMatch(/bg-status-problem-bg text-status-problem[^"]*"><span class="sr-only">Status: <\/span>Suspended/)
+    expect(html(StatusBadge, { status: 'ACTIVE' })).toContain('>Active</span>')
   })
 })

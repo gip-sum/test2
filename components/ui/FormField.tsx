@@ -96,3 +96,25 @@ export function FormFieldset({ messageId, legend, optional, hint, error, classNa
     </fieldset>
   )
 }
+
+/**
+ * A single checkbox whose label sits beside it, with an error under it
+ * (UI-11: the admin decision and account confirmations). The label wraps
+ * the box so the whole 44px row toggles it; the error is in the box's
+ * aria-describedby and marks it invalid, as FormField does for a field.
+ */
+export function FormCheckbox({ id, label, error, className, children }: {
+  id: string
+  label: ReactNode
+  error?: string
+  className?: string
+  children: (control: FieldControl) => ReactNode
+}) {
+  const control: FieldControl = { id, 'aria-invalid': error ? true : undefined, 'aria-describedby': describedBy(id, null, error) }
+  return (
+    <div className={cn('min-w-0', className)}>
+      <label htmlFor={id} className="flex min-h-11 items-center gap-3 text-body-sm text-ink-900">{children(control)}{label}</label>
+      {error && <FieldError messageId={id}>{error}</FieldError>}
+    </div>
+  )
+}

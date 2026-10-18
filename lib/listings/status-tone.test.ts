@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest'
 import { ADMIN_STATUSES } from '@/lib/admin/model'
 import { DASHBOARD_LABEL, DASHBOARD_STATUSES } from '@/lib/dashboard/model'
 import { LISTING_STATUS, STATUS_LABEL } from '@/lib/listings/types'
-import { LISTING_STATUS_TONE, STATUS_BADGE_LABEL, STATUS_TONE_CLASS, statusToneClass } from './status-tone'
+import { ACCOUNT_STATUSES } from '@/lib/users/model'
+import { isBadgeStatus, LISTING_STATUS_TONE, STATUS_BADGE_LABEL, STATUS_TONE_CLASS, statusToneClass } from './status-tone'
 
 // Resolve @theme colour tokens (following var() aliases) to their light values.
 const css = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8')
@@ -22,11 +23,19 @@ const pair = (cls: string) => {
 }
 
 describe('listing status tones', () => {
-  it('covers every status the owner and admin screens display, and the stored lifecycle', () => {
-    const all = [...new Set([...DASHBOARD_STATUSES, ...LISTING_STATUS])].sort()
+  it('covers every status the owner and admin screens display, the stored lifecycle and account status (UI-11)', () => {
+    const all = [...new Set([...DASHBOARD_STATUSES, ...LISTING_STATUS, ...ACCOUNT_STATUSES])].sort()
     expect(Object.keys(LISTING_STATUS_TONE).sort()).toEqual(all)
     expect(Object.keys(STATUS_BADGE_LABEL).sort()).toEqual(all)
     expect([...ADMIN_STATUSES].sort()).toEqual([...DASHBOARD_STATUSES].sort())
+  })
+
+  it('gives an account ACTIVE the meaning a listing ACTIVE has, and draws badges only for known strings', () => {
+    expect(STATUS_BADGE_LABEL.ACTIVE).toBe('Active')
+    expect(LISTING_STATUS_TONE.ACTIVE).toBe('live')
+    expect(LISTING_STATUS_TONE.SUSPENDED).toBe('problem')
+    expect(['ACTIVE', 'SUSPENDED', 'DELETED', 'WITHDRAWN'].every(isBadgeStatus)).toBe(true)
+    expect(isBadgeStatus('SOLD_OR_RENTED')).toBe(false)
   })
 
   it('reads the same in both vocabularies wherever they share a status', () => {
