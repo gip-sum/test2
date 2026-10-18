@@ -60,6 +60,12 @@ try {
   await check('the error summary takes focus', await page.evaluate(() => document.activeElement?.classList.contains('post-error-summary') === true))
   await check('every required answer is reported', await page.locator('.post-error-summary li').count() === 7)
   await check('invalid text inputs are marked and described', await page.getByLabel('Carpet area').getAttribute('aria-invalid') === 'true' && (await page.getByLabel('Carpet area').getAttribute('aria-describedby')).includes('carpet-error'))
+  // UI-09 shared fields: every typed answer is 16px or larger (Safari on
+  // iPhone zooms the page into a smaller field) and at least 44px tall; a
+  // field's error follows it; entered answers survive the round trip.
+  const fields = await page.locator('.post-form input:not([type=hidden]):not([type=radio]), .post-form select').evaluateAll((els) => els.filter((el) => el.getBoundingClientRect().height).map((el) => ({ id: el.id, font: parseFloat(getComputedStyle(el).fontSize), height: el.getBoundingClientRect().height })))
+  await check('shared fields: every visible typed field is 16px text and 44px or taller', fields.length > 0 && fields.every((f) => f.font >= 16 && f.height >= 44), JSON.stringify(fields))
+  await check('shared fields: the carpet area error follows its field', await page.evaluate(() => { const input = document.getElementById('field-carpet'), error = document.getElementById('carpet-error'); return Boolean(input && error && input.compareDocumentPosition(error) & Node.DOCUMENT_POSITION_FOLLOWING) }))
   await page.locator('.post-error-summary a', { hasText: 'carpet area' }).click()
   await check('summary links move focus to the field', await page.evaluate(() => document.activeElement?.id === 'field-carpet'))
 

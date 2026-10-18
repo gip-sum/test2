@@ -38,7 +38,7 @@ const photos = submissions.map((s) => ({ id: id('9', Number(s.id.slice(-2))), su
 const events = plan.filter((p) => p.withdrawnFrom).flatMap(({ n, withdrawnFrom }) => [{ id: 2, listing_id: id('d', n), from_status: withdrawnFrom, to_status: 'DRAFT', reason: null, actor_type: 'OWNER', actor_id: owner, created_at: at(-1) }, { id: 1, listing_id: id('d', n), from_status: null, to_status: 'DRAFT', reason: null, actor_type: 'OWNER', actor_id: owner, created_at: at(-30) }])
 const enquiries = [1, 2].map((k) => ({ id: id('7', k), listing_public_id: null, listing_id: id('d', 3), listing_title: '2 BHK flat for sale in New Town', buyer_id: null, seller_id: owner, buyer_name: `Buyer ${k}`, buyer_phone: `+91987654321${k}`, message: null, duplicate_of: null, status: 'new', created_at: at(-k) }))
 const serviceCalls = []
-let unavailable = false, countsMissing = false
+let unavailable = false, countsMissing = false, lifecycleDelay = 0
 
 const active = (l) => l.status === 'ACTIVE' && Date.parse(l.expires_at) > Date.now()
 function where(rows, params) {
@@ -88,6 +88,7 @@ const mock = http.createServer(async (req, res) => {
       if (!service) return send(403, {})
       const b = JSON.parse(body), l = listings.find((x) => x.id === b.p_listing)
       serviceCalls.push(b)
+      if (lifecycleDelay) await new Promise((r) => setTimeout(r, lifecycleDelay))
       if (!l || l.owner_id !== b.p_owner || l.version !== b.p_version) return send(400, {})
       const next = b.p_action === 'delete' ? 'DELETED' : 'DRAFT'
       events.unshift({ id: events.length + 10, listing_id: l.id, from_status: l.status, to_status: next, reason: null, actor_type: 'OWNER', actor_id: owner, created_at: new Date().toISOString() })
@@ -173,8 +174,24 @@ try {
   await review.getByRole('button', { name: 'Cancel' }).click()
   check('cancel leaves the listing untouched', serviceCalls.length === 0 && await review.getByRole('button', { name: /Withdraw/ }).isVisible())
   await review.getByRole('button', { name: /Withdraw/ }).click()
-  await review.getByRole('button', { name: 'Yes, withdraw' }).click()
+  // UI-09: busy keeps focus, a second press sends nothing, and after the
+  // refresh — where this card has left the "Under review" view — focus lands
+  // on the list heading with the outcome announced.
+  lifecycleDelay = 800
+  const yes = review.getByRole('button', { name: 'Yes, withdraw' })
+  await yes.focus()
+  await page.keyboard.press('Enter')
+  await page.waitForTimeout(200)
+  const busy = await page.evaluate(() => { const el = document.activeElement; return { text: el?.textContent, busy: el?.getAttribute('aria-busy'), unavailable: el?.getAttribute('aria-disabled') } })
+  await page.keyboard.press('Enter')
+  check('withdrawing: the pressed button stays focused, busy and unavailable; a second press sends nothing', busy.text === 'Withdrawing…' && busy.busy === 'true' && busy.unavailable === 'true' && serviceCalls.length === 1, JSON.stringify({ busy, calls: serviceCalls.length }))
+  lifecycleDelay = 0
   await page.getByText('No properties have this status.').waitFor()
+  await page.waitForFunction(() => document.activeElement?.id === 'properties-heading', null, { timeout: 5000 }).catch(() => {})
+  check('after withdrawing, focus is on the list heading (the card left this view) and the outcome is announced', await page.evaluate(() => document.activeElement?.id) === 'properties-heading' &&
+    await page.locator('#a11y-announcer').textContent() === '3 BHK flat for sale in Salt Lake withdrawn. It is no longer public.')
+  check('an emptied filter says which: the shared empty state, under the list heading', await page.getByRole('heading', { level: 3, name: 'Nothing under review' }).isVisible() &&
+    await page.getByRole('link', { name: 'Show all properties' }).isVisible())
   check('withdraw sends the card version through the lifecycle endpoint', serviceCalls.length === 1 && serviceCalls[0].p_action === 'withdraw' && serviceCalls[0].p_version === 2)
   check('counts follow the withdrawal', JSON.stringify(await filterCounts(page)) === JSON.stringify({ All: 7, Drafts: 1, 'Under review': 0, Active: 2, Expired: 1, Rejected: 1, 'Corrections requested': 0, Withdrawn: 2 }))
 
@@ -190,7 +207,8 @@ try {
   check('guest enquiry on an active listing is recorded for its owner', stored.buyer_name === 'Asha Roy' && stored.buyer_phone === '+919830012345' && stored.seller_id === owner && stored.listing_id === id('d', 3))
   check('confirmation says the owner has it', await bp.getByText(/can see it in their inbox/).isVisible())
   await page.goto(BASE + `/dashboard/enquiries?listing=${id('d', 3)}`)
-  check('the new enquiry appears in the seller inbox', await page.getByText('Asha Roy').isVisible() && await page.getByText('Is the flat east facing?').isVisible())
+  check('the new enquiry appears in the seller inbox', await page.getByText('Asha Roy', { exact: true }).isVisible() && await page.getByText('Is the flat east facing?').isVisible())
+  check('each lead\'s status button is a submit named for its buyer (UI-09)', await page.getByRole('button', { name: 'Update status for Asha Roy', exact: true }).getAttribute('type') === 'submit')
   await page.goto(BASE + '/dashboard?status=active')
   check('dashboard count includes it', await card(page, '2 BHK flat for sale in New Town').getByRole('link', { name: /3 enquiries · 3 new/ }).isVisible())
 
@@ -214,13 +232,47 @@ try {
   const other = await context('b'), op = await other.newPage(); await op.goto(BASE + '/dashboard')
   check('another account sees none of these properties', await op.getByRole('heading', { name: 'You have not posted a property yet' }).isVisible() && await op.locator('article').count() === 0)
 
+  // UI-09: withdrawing a card that stays in view returns focus to that card.
+  await page.goto(BASE + '/dashboard')
+  const behala = card(page, '1 BHK flat for rent in Behala')
+  await behala.getByRole('button', { name: /Withdraw/ }).click()
+  await behala.getByRole('button', { name: 'Yes, withdraw' }).click()
+  await page.waitForFunction(() => document.activeElement?.id?.startsWith('property-'), null, { timeout: 5000 }).catch(() => {})
+  check('after withdrawing in the full list, focus returns to that card heading, which now reads Withdrawn', await page.evaluate(() => document.activeElement?.textContent) === '1 BHK flat for rent in Behala' &&
+    (await behala.innerText()).includes('Withdrawn'))
+
+  // UI-09: the publishing page — canonical status badge, a busy withdraw that
+  // keeps focus, and focus on the refreshed status afterwards.
+  await page.goto(BASE + `/post/drafts/${id('c', 3)}/lifecycle`)
+  const statusBadge = page.locator('#listing-status [role="status"]')
+  check('publishing status is the shared badge in its live tone', (await statusBadge.innerText()) === 'Active' && /bg-status-live-bg/.test(await statusBadge.getAttribute('class')))
+  lifecycleDelay = 800
+  const toDraft = page.getByRole('button', { name: 'Withdraw to draft' })
+  await toDraft.click()
+  await page.waitForTimeout(200)
+  check('withdraw to draft stays focused and busy while it runs', await page.evaluate(() => document.activeElement?.textContent === 'Withdrawing…' && document.activeElement.getAttribute('aria-busy') === 'true'))
+  lifecycleDelay = 0
+  await page.waitForFunction(() => document.activeElement?.id === 'listing-status', null, { timeout: 8000 }).catch(() => {})
+  check('afterwards focus is on the refreshed status, which reads Draft in the neutral tone', await page.evaluate(() => document.activeElement?.id) === 'listing-status' &&
+    (await statusBadge.innerText()) === 'Draft' && /bg-status-neutral-bg/.test(await statusBadge.getAttribute('class')))
+
   mkdirSync('/tmp/phase19-shots', { recursive: true })
-  for (const width of [390, 412, 768, 1280]) {
+  for (const width of [320, 360, 375, 390, 412, 430, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 }); await page.goto(BASE + '/dashboard')
     await page.locator('details summary').click()
     await assertWorkspace(page, { area: 'owner', check, compactRow: card(page, '2 BHK flat for sale in New Town'), maxRowHeight: 224 })
     const small = await page.locator('main a, main button, main summary').evaluateAll((els) => els.map((e) => ({ text: e.textContent.trim().slice(0, 40), height: e.getBoundingClientRect().height })).filter((e) => e.height > 0 && e.height < 44))
     check(`dashboard controls are at least 44px at ${width}`, small.length === 0, JSON.stringify(small))
+    // Every card control is hit where it is drawn — nothing overlaps it —
+    // and no card is wider than the screen (UI-09).
+    const cardControls = await cards(page).locator('a, button').evaluateAll((els) => els.flatMap((el) => {
+      el.scrollIntoView({ block: 'center' })
+      const r = el.getBoundingClientRect(); if (!r.width) return []
+      const at = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+      return at === el || el.contains(at) ? [] : [el.textContent.trim().slice(0, 30)]
+    }))
+    const wide = await cards(page).evaluateAll((els) => els.filter((el) => el.getBoundingClientRect().right > document.documentElement.clientWidth + 1).length)
+    check(`card controls are hit where drawn and cards fit the screen at ${width}`, cardControls.length === 0 && wide === 0, JSON.stringify({ cardControls, wide }))
     await page.screenshot({ path: `/tmp/phase19-shots/dashboard-${width}.png`, fullPage: true })
     await bp.setViewportSize({ width, height: 900 }); await bp.goto(BASE + `/listing/${id('d', 3)}`)
     check(`listing page has no horizontal overflow at ${width}`, await bp.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
