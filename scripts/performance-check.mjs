@@ -34,6 +34,8 @@ const viewsSince = new Date(Date.now() - 3 * DAY).toISOString()
 const stats = new Map([[`${id('d', 2)}|${indiaDay(-1)}`, 40]]), marks = new Set(), viewCalls = []
 const enquiries = [{ listing_id: id('d', 2), seller_id: owner, created_at: at(-1), status: 'new' }, { listing_id: id('d', 2), seller_id: owner, created_at: at(-1), status: 'new' }]
 let savedListings = [], activityMissing = false, unavailable = false
+// UI-10: one supplementary source failing, counting not started, a slow period change.
+let savesDown = false, metaMissing = false, activityDelay = 0
 
 const active = (l) => l.status === 'ACTIVE' && Date.parse(l.expires_at) > Date.now()
 const dayOf = (iso) => new Date(Date.parse(iso) + 5.5 * 3_600_000).toISOString().slice(0, 10)
@@ -64,7 +66,7 @@ const mock = http.createServer(async (req, res) => {
     case '/rest/v1/property_listing_submissions': return send(200, where(submissions.filter((s) => { const l = listings.find((x) => x.id === s.listing_id); return user ? l?.owner_id === user : publicRead && l && active(l) }), p))
     case '/rest/v1/property_listing_photos': return send(200, where(photos, p))
     case '/rest/v1/rpc/seller_listing_enquiry_counts': return send(200, [])
-    case '/rest/v1/listing_analytics_meta': return user ? send(200, [{ views_since: viewsSince }]) : send(401, {})
+    case '/rest/v1/listing_analytics_meta': return !user ? send(401, {}) : metaMissing ? send(200, []) : send(200, [{ views_since: viewsSince }])
     case '/rest/v1/rpc/record_listing_view': {
       if (!service) return send(403, {})
       const b = JSON.parse(body), l = listings.find((x) => x.id === b.p_listing)
@@ -77,12 +79,14 @@ const mock = http.createServer(async (req, res) => {
     }
     case '/rest/v1/rpc/seller_listing_activity': {
       if (activityMissing) return send(404, {})
+      if (activityDelay) await new Promise((r) => setTimeout(r, activityDelay))
       const b = JSON.parse(body), owned = new Set(mine(listings).map((l) => l.id)), rows = new Map()
       for (const [k, views] of stats) { const [lid, d] = k.split('|'); if (owned.has(lid) && d >= b.p_from && d <= b.p_to) rows.set(k, { listing_id: lid, day: d, views, enquiries: 0 }) }
       for (const e of enquiries.filter((x) => x.seller_id === user)) { const d = dayOf(e.created_at), k = `${e.listing_id}|${d}`; if (d < b.p_from || d > b.p_to) continue; const r = rows.get(k) ?? { listing_id: e.listing_id, day: d, views: 0, enquiries: 0 }; r.enquiries++; rows.set(k, r) }
       return send(200, [...rows.values()])
     }
     case '/rest/v1/rpc/seller_listing_save_counts': {
+      if (savesDown) return send(500, {})
       const counts = new Map(); for (const s of savedListings) if (listings.find((l) => l.id === s.listing_id)?.owner_id === user) counts.set(s.listing_id, (counts.get(s.listing_id) ?? 0) + 1)
       return send(200, [...counts].map(([listing_id, saves]) => ({ listing_id, saves })))
     }
@@ -160,7 +164,8 @@ try {
   await seller.goto(BASE + '/dashboard')
   check('dashboard cards link to each listing’s performance', await seller.getByRole('link', { name: 'Performance 2 BHK flat for sale in New Town' }).getAttribute('href') === `/dashboard/performance?listing=${id('d', 1)}`)
   await seller.getByRole('navigation', { name: 'Seller sections', exact: true }).getByRole('link', { name: 'Performance', exact: true }).click(); await seller.waitForURL('**/dashboard/performance')
-  const rows = seller.locator('table tbody tr')
+  const listingRows = () => seller.getByRole('region', { name: /^Your listings, last/ }).locator('table tbody tr')
+  const rows = listingRows()
   check('the overview shows submitted listings only, busiest first', await rows.count() === 2 && (await rows.first().innerText()).includes('3 BHK flat for sale in Salt Lake'))
   check('overview figures come from the database', (await rows.nth(0).innerText()).replace(/\s+/g, ' ').includes('40 2 0') && (await rows.nth(1).innerText()).replace(/\s+/g, ' ').includes(`${todayViews(1)} 0 1`), (await rows.allInnerTexts()).join(' | '))
   await seller.getByRole('link', { name: 'Last 30 days' }).click(); await seller.waitForURL('**/dashboard/performance?range=30')
@@ -176,7 +181,95 @@ try {
   check('days before counting began are explained, not shown as zero', await seller.getByText(/Views are counted from .* Earlier days in this period show as not tracked, not as zero\./).isVisible())
   await seller.getByText('Daily figures').click()
   check('the table marks untracked days in words', await seller.locator('details').filter({ has: seller.getByText('Daily figures', { exact: true }) }).getByRole('table').getByText('Not tracked').count() === 3)
-  check('the chart is hidden from assistive technology; the table carries the figures', await seller.locator('figure > div[aria-hidden="true"]').count() === 2)
+  // ── The daily chart (UI-10) ─────────────────────────────────────────────
+  // Listing 1, last 7 days: counting began three days ago, so the first
+  // three days were not tracked.
+  const chart = seller.locator('[data-chart="daily-activity"]'), slider = chart.getByRole('slider'), tooltip = chart.locator('[data-chart-tooltip]')
+  const tableDays = async (page = seller) => (await page.locator('details').filter({ has: page.getByText('Daily figures', { exact: true }) }).locator('tbody tr')
+    .evaluateAll((rows) => rows.map((r) => [...r.children].map((c) => c.textContent.trim())))).reverse()
+  const detailHtml = await (await sellerContext.request.get(BASE + `/dashboard/performance?listing=${id('d', 1)}`)).text()
+  const chartHtml = detailHtml.slice(detailHtml.indexOf('data-chart="daily-activity"'), detailHtml.indexOf('Daily figures'))
+  check('the server sends the whole chart: views line, untracked band and summary', chartHtml.includes('data-series="views"') && (chartHtml.match(/data-untracked/g) ?? []).length === 1 && chartHtml.includes('Most views in a day'))
+  check('before hydration the chart claims no keyboard role it cannot answer', !chartHtml.includes('role="slider"') && !chartHtml.includes('tabindex'))
+  const geometry = await chart.evaluate((f) => ({ d: f.querySelector('[data-series="views"]').getAttribute('d'), band: f.querySelector('[data-untracked]').style.width, box: f.querySelector('svg').getAttribute('viewBox') }))
+  check('untracked days are a hatched gap, never zeros on the line', geometry.box === '0 0 7 100' && geometry.d.startsWith('M3.5,') && !/[ML][012]\.5,/.test(geometry.d) && Math.abs(parseFloat(geometry.band) - 300 / 7) < 0.01, JSON.stringify(geometry))
+  check('nothing on the chart animates: the data is there at once', await chart.evaluate((f) => f.getAnimations({ subtree: true }).length === 0))
+
+  await seller.getByRole('link', { name: 'Enquiries inbox' }).focus()
+  for (let i = 0; i < 6 && !(await slider.evaluate((e) => e === document.activeElement)); i++) await seller.keyboard.press('Tab')
+  check('Tab reaches the chart once, as a slider over the 7 days', await slider.evaluate((e) => e === document.activeElement && e.matches(':focus-visible')) && await slider.getAttribute('aria-valuemax') === '7' && await slider.getAttribute('aria-label') === 'Day, last 7 days')
+  check('keyboard focus on the chart is visible', await slider.evaluate((e) => getComputedStyle(e).outlineStyle !== 'none' && parseFloat(getComputedStyle(e).outlineWidth) >= 2))
+  check('focus shows the latest day at once', await tooltip.isVisible() && await slider.getAttribute('aria-valuenow') === '7')
+  const days = await tableDays(), said = []
+  await seller.keyboard.press('Home')
+  for (let i = 0; i < 7; i++) { said.push([await slider.getAttribute('aria-valuetext'), (await tooltip.innerText()).replace(/\s+/g, ' ')]); await seller.keyboard.press('ArrowRight') }
+  const viewWords = (v) => v === 'Not tracked' ? 'views not tracked' : `${v} ${v === '1' ? 'view' : 'views'}`
+  check('the chart reads out exactly what the table says, day by day', days.length === 7 && said.every(([text], i) => text.endsWith(`: ${viewWords(days[i][1])}, ${days[i][2]} ${days[i][2] === '1' ? 'enquiry' : 'enquiries'}`)), JSON.stringify({ said, days }))
+  check('the readout shows the same date and figures, untracked days in words', said.every(([text, tip], i) => tip.startsWith(text.split(':')[0]) && (days[i][1] === 'Not tracked' ? tip.includes('Views not tracked') : tip.includes(`${days[i][1]} view`))), JSON.stringify(said))
+  await seller.keyboard.press('PageDown'); const afterPage = await slider.getAttribute('aria-valuenow')
+  await seller.keyboard.press('End'); const afterEnd = await slider.getAttribute('aria-valuenow')
+  check('Page Down moves a week back, End returns to the latest day', afterPage === '1' && afterEnd === '7')
+  await seller.keyboard.press('Escape')
+  check('Escape hides the readout and keeps focus on the chart', await tooltip.count() === 0 && await slider.evaluate((e) => e === document.activeElement))
+  await seller.keyboard.press('Tab')
+  check('Tab leaves the chart: nothing traps focus', await slider.evaluate((e) => e !== document.activeElement) && await tooltip.count() === 0)
+  const plot = await chart.locator('svg').boundingBox()
+  await seller.mouse.move(plot.x + plot.width * (4.5 / 7), plot.y + plot.height / 2)
+  check('hovering snaps the crosshair to the nearest day', await tooltip.isVisible() && (await tooltip.innerText()).startsWith(said[4][0].split(':')[0]) && await chart.locator('[data-crosshair]').count() === 2)
+  await seller.mouse.move(1, 1)
+  check('moving the mouse away clears the readout', await tooltip.count() === 0)
+
+  for (const [range, ticks] of [[7, 7], [30, 5], [90, 7]]) {
+    await seller.goto(BASE + `/dashboard/performance?listing=${id('d', 2)}&range=${range}`)
+    check(`the ${range}-day chart and table hold every day of the period, with ${ticks} date labels`, await slider.getAttribute('aria-valuemax') === String(range) && (await tableDays()).length === range && await chart.locator('[data-tick]').count() === ticks)
+  }
+
+  // Touch, with reduced motion: a tap reads a day, the page still scrolls.
+  const touchContext = await context('a', { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true, reducedMotion: 'reduce' }), touch = await touchContext.newPage()
+  touch.on('pageerror', (e) => errors.push(e.message))
+  await touch.goto(BASE + `/dashboard/performance?listing=${id('d', 2)}&range=30`)
+  const touchChart = touch.locator('[data-chart="daily-activity"]'), touchTip = touchChart.locator('[data-chart-tooltip]'), touchSlider = touchChart.getByRole('slider')
+  check('a finger on the chart can still scroll the page and zoom', await touchSlider.evaluate((e) => getComputedStyle(e).touchAction) === 'pan-y pinch-zoom')
+  await touchChart.scrollIntoViewIfNeeded()
+  const touchPlot = await touchChart.locator('svg').boundingBox()
+  for (const [edge, x, valuenow] of [['right', touchPlot.x + touchPlot.width - 2, '30'], ['left', touchPlot.x + 2, '1']]) {
+    await touch.touchscreen.tap(x, touchPlot.y + touchPlot.height / 2)
+    const tipBox = await touchTip.boundingBox()
+    check(`a tap at the ${edge} edge shows that day, and the readout stays on screen`, await touchSlider.getAttribute('aria-valuenow') === valuenow && tipBox !== null && tipBox.x >= 0 && tipBox.x + tipBox.width <= 390, JSON.stringify(tipBox))
+  }
+  check('reduced motion: the readout and chart appear with no animation at all', await touchChart.evaluate((f) => f.getAnimations({ subtree: true }).length === 0 && parseFloat(getComputedStyle(f.querySelector('[data-chart-tooltip]')).transitionDuration) < 0.001 && parseFloat(getComputedStyle(document.querySelector('.analytics-body')).transitionDuration) < 0.001))
+  await touch.touchscreen.tap(195, 120)
+  check('tapping elsewhere puts the readout away', await touchTip.count() === 0)
+  check('no sideways scroll on the touch chart page', await touch.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+  await touchContext.close()
+
+  // A period change dims what is there instead of blanking it.
+  await seller.goto(BASE + `/dashboard/performance?listing=${id('d', 2)}`)
+  activityDelay = 1500
+  await seller.getByRole('link', { name: 'Last 30 days' }).click(); await seller.waitForTimeout(500)
+  const dimmed = Number(await seller.locator('.analytics-body').evaluate((e) => getComputedStyle(e).opacity))
+  check('changing the period dims the figures and keeps the chart in place, no skeleton', dimmed < 1 && await slider.getAttribute('aria-valuemax') === '7', String(dimmed))
+  await seller.locator('[role="slider"][aria-valuemax="30"]').waitFor(); activityDelay = 0
+  await seller.waitForTimeout(400)
+  check('the new period then shows at full strength', await seller.locator('.analytics-body').evaluate((e) => getComputedStyle(e).opacity) === '1')
+
+  // Counting not started yet: every day is "not tracked", nothing reads 0.
+  metaMissing = true; await seller.goto(BASE + `/dashboard/performance?listing=${id('d', 1)}`)
+  const emptyTiles = (await seller.getByRole('region', { name: 'Totals for the last 7 days', exact: true }).locator('dl').innerText()).replace(/\s+/g, ' ')
+  check('before counting starts there is no line and no zero: every day is untracked', await chart.getByText('Views were not tracked in this period.').isVisible() && await chart.locator('[data-series="views"]').getAttribute('d') === '' && await chart.locator('[data-untracked]').count() === 1 && emptyTiles.includes('Views, last 7 days Not tracked') && emptyTiles.includes('Previous 7 days: not tracked'), emptyTiles)
+  check('a listing with no enquiries says so in words', await chart.getByText('No enquiries in this period.').isVisible())
+  metaMissing = false
+
+  // All listings together.
+  await seller.goto(BASE + '/dashboard/performance')
+  const together = () => seller.getByRole('region', { name: 'All listings together, last 7 days', exact: true })
+  const allTiles = (await together().locator('dl').innerText()).replace(/\s+/g, ' ')
+  check('the overview totals every listing from the same measured rows', allTiles.includes(`Views, last 7 days ${40 + todayViews(1)}`) && allTiles.includes('Enquiries, last 7 days 2') && allTiles.includes(`Enquiry rate ${Math.round((2 / (40 + todayViews(1))) * 1000) / 10} per 100 views`), allTiles)
+  check('the overview chart covers all listings', await together().getByRole('slider').getAttribute('aria-label') === 'Day, all listings, last 7 days')
+  savesDown = true; await seller.reload()
+  const partial = (await together().locator('dl').innerText()).replace(/\s+/g, ' ')
+  check('one source failing is said as unavailable, never 0, and the rest still stands', partial.includes('Saved now Unavailable') && partial.includes(`Views, last 7 days ${40 + todayViews(1)}`) && await together().locator('[data-chart="daily-activity"]').isVisible(), partial)
+  savesDown = false
 
   await seller.goto(BASE + `/dashboard/performance?listing=${id('d', 2)}`)
   check('the enquiry rate appears from 20 views', await seller.getByText('5 enquiries per 100 views').isVisible())
@@ -197,23 +290,40 @@ try {
   // ── Honest states and layout ────────────────────────────────────────────
   const foreignContext = await context('b'), f = await foreignContext.newPage(); await f.goto(BASE + '/dashboard/performance')
   check('another account sees none of these listings', await f.getByRole('heading', { name: 'No listings to measure yet' }).isVisible())
+  const foreignHtml = await (await foreignContext.request.get(BASE + `/dashboard/performance?listing=${id('d', 2)}`)).text()
+  check('another seller asking for a listing by id gets no figures and no chart', /No listings to measure yet|This listing is not available here/.test(foreignHtml) && !foreignHtml.includes('data-chart="daily-activity"') && !foreignHtml.includes('3 BHK flat for sale in Salt Lake'))
+  check('the chart payload carries no buyer details', !detailHtml.includes(buyer) && !/private@example\.com|buyer_name|buyer_phone/.test(detailHtml))
   activityMissing = true; await seller.goto(BASE + '/dashboard/performance')
   check('before the migration the page says data is not available yet', await seller.getByRole('alert').getByText('Performance data is not available yet').isVisible())
   activityMissing = false
 
   mkdirSync('/tmp/phase20-shots', { recursive: true })
-  for (const width of [390, 412, 768, 1280]) {
+  for (const width of [320, 360, 375, 390, 412, 430, 768, 1280]) {
     await seller.setViewportSize({ width, height: 900 })
     for (const path of ['/dashboard/performance', `/dashboard/performance?listing=${id('d', 2)}&range=30`]) {
       await seller.goto(BASE + path)
       if (path.includes('listing')) await seller.getByText('Daily figures').click()
-      await assertWorkspace(seller, { area: 'owner', check, ...(!path.includes('listing') ? { compactRow: seller.locator('table tbody tr').first(), maxRowHeight: 96 } : {}) })
+      await assertWorkspace(seller, { area: 'owner', check, ...(!path.includes('listing') ? { compactRow: listingRows().first(), maxRowHeight: 96 } : {}) })
+      const fit = await seller.locator('[data-chart="daily-activity"]').evaluate((f) => {
+        const box = f.getBoundingClientRect(), ticks = [...f.querySelectorAll('[data-tick]')].map((t) => t.getBoundingClientRect()).filter((b) => b.width > 0)
+        return { inside: box.left >= 0 && box.right <= innerWidth && ticks.every((b) => b.left >= box.left - 1 && b.right <= box.right + 1), apart: ticks.every((b, i) => i === 0 || b.left >= ticks[i - 1].right + 4), shown: ticks.length, plot: f.querySelector('svg').getBoundingClientRect().height }
+      })
+      check(`the chart fits, keeps its height and its date labels never collide at ${width} on ${path}`, fit.inside && fit.apart && fit.shown >= 3 && fit.plot === 160, JSON.stringify(fit))
       const small = await seller.locator('main a, main button, main summary').evaluateAll((els) => els.map((e) => ({ text: e.textContent.trim().slice(0, 40), height: e.getBoundingClientRect().height })).filter((e) => e.height > 0 && e.height < 44))
       check(`controls are at least 44px at ${width} on ${path}`, small.length === 0, JSON.stringify(small))
       await seller.screenshot({ path: `/tmp/phase20-shots/${path.includes('listing') ? 'detail' : 'overview'}-${width}.png`, fullPage: true })
     }
     await b.setViewportSize({ width, height: 900 }); await b.goto(BASE + L1)
     check(`listing page with save control has no overflow at ${width}`, await b.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
+  }
+  // ── Route isolation: the chart downloads only with the performance page ──
+  const scriptsOn = async (page, path) => { await page.goto(BASE + path); return page.locator('script[src]').evaluateAll((list) => list.map((e) => e.src)) }
+  const chartChunks = []
+  for (const src of await scriptsOn(seller, '/dashboard/performance')) if ((await (await seller.request.get(src)).text()).includes('data-chart-tooltip')) chartChunks.push(src)
+  check('the chart code is found on the performance page', chartChunks.length > 0)
+  for (const [page, path] of [[g, '/'], [g, '/buy/kolkata'], [g, L1], [g, '/login'], [g, '/this-page-does-not-exist'], [seller, '/dashboard'], [seller, '/dashboard/enquiries']]) {
+    const sources = await scriptsOn(page, path)
+    check(`no chart code downloads on ${path}`, sources.length > 0 && !sources.some((src) => chartChunks.includes(src)))
   }
   unavailable = true; await seller.goto(BASE + '/dashboard/performance')
   check('an outage is an error, never an empty page', await seller.getByRole('alert').getByText('Performance could not be loaded').isVisible())

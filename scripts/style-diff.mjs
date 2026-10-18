@@ -70,6 +70,8 @@ export const SCENARIOS = [
   { name: 'dashboard', path: '/dashboard', auth: OWNER_TOKEN },
   { name: 'dashboard-enquiries', path: '/dashboard/enquiries', auth: OWNER_TOKEN },
   { name: 'dashboard-performance', path: '/dashboard/performance', auth: OWNER_TOKEN },
+  // One listing's figures and daily chart (UI-10).
+  { name: 'dashboard-performance-listing', path: '/dashboard/performance?listing=d9140f33-a429-46f3-9514-000000000003', auth: OWNER_TOKEN },
   { name: 'admin', path: '/admin', auth: ADMIN_TOKEN },
   { name: 'admin-listings', path: '/admin/listings', auth: ADMIN_TOKEN },
   { name: 'admin-moderation', path: '/admin/moderation', auth: ADMIN_TOKEN },
