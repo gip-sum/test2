@@ -10,12 +10,18 @@ import { cn } from '@/lib/cn'
  *   outline   a brand action that is not the surface's primary — Review,
  *             Update status, Save description (UI-06: five places drew it
  *             by hand)
+ *   secondaryBrand
+ *             a tool beside the work — the photo tools, Withdraw to draft,
+ *             Preview property, Save & exit (UI-09: eleven places drew it by
+ *             hand). Secondary's neutral border with brand text: quieter
+ *             than `outline`, and not named after it, because the border
+ *             is not brand.
  *   danger    destructive
  *
  * Exactly ONE filled primary per surface. Two competing filled buttons
  * measurably reduce clicks on both.
  */
-type Variant = 'primary' | 'supply' | 'secondary' | 'tertiary' | 'outline' | 'danger'
+type Variant = 'primary' | 'supply' | 'secondary' | 'secondaryBrand' | 'tertiary' | 'outline' | 'danger'
 type Size = 'sm' | 'md' | 'lg'
 
 const VARIANT: Record<Variant, string> = {
@@ -24,6 +30,7 @@ const VARIANT: Record<Variant, string> = {
   supply: 'bg-supply-600 text-on-supply hover:brightness-95 border-transparent',
   secondary:
     'bg-transparent text-ink-900 border-border-strong hover:border-ink-500',
+  secondaryBrand: 'bg-transparent text-brand-700 border-border-strong hover:bg-brand-100',
   tertiary: 'bg-transparent text-brand-600 border-transparent hover:bg-brand-100',
   outline: 'bg-transparent text-brand-700 border-brand-700 hover:bg-brand-100',
   danger: 'bg-danger-600 text-on-danger border-transparent hover:brightness-95',
@@ -61,6 +68,10 @@ export function buttonClassName({
   return cn(
     'inline-flex items-center justify-center gap-2 rounded-md border font-semibold',
     'transition-colors disabled:cursor-not-allowed disabled:opacity-45',
+    // Unavailable without being busy — aria-disabled so a focused control
+    // keeps focus (UI-09, e.g. "Earlier" on the first photo) — looks as
+    // disabled does. A busy button (aria-busy too) keeps its full colour.
+    '[&[aria-disabled=true]:not([aria-busy=true])]:cursor-not-allowed [&[aria-disabled=true]:not([aria-busy=true])]:opacity-45',
     VARIANT[variant],
     SIZE[size],
     fullWidth && 'w-full',
@@ -94,13 +105,17 @@ export function Button({
   onClick,
   ...rest
 }: Props) {
+  // A caller's aria-disabled (unavailable for now, still focusable — the
+  // other action is busy, the photo is already first) is honoured and
+  // refused like busy.
+  const unavailable = loading || rest['aria-disabled'] === true || rest['aria-disabled'] === 'true'
   return (
     <button
       {...rest}
       disabled={disabled}
-      aria-disabled={loading || undefined}
+      aria-disabled={unavailable || undefined}
       aria-busy={loading || undefined}
-      onClick={loading ? refuseWhileBusy : onClick}
+      onClick={unavailable ? refuseWhileBusy : onClick}
       className={buttonClassName({ variant, size, fullWidth, className: cn(loading && 'cursor-progress', className) })}
     >
       {/* The button keeps its width while loading — a shrinking button

@@ -26,9 +26,12 @@ export function EmptyState({
   action,
   icon,
   surface = 'glass',
+  heading: Heading = 'h2',
   className,
 }: {
   title: string
+  /** h3 when the state sits inside a section that already has its h2. */
+  heading?: 'h2' | 'h3'
   /** One or two short sentences: why it is empty, what will fill it. */
   children?: ReactNode
   action?: ReactNode
@@ -40,7 +43,7 @@ export function EmptyState({
   return (
     <div className={cn(STATE_SURFACE[surface], className)}>
       {icon && <span aria-hidden="true" className="mb-3 block size-8 text-brand-700 [&>svg]:size-8">{icon}</span>}
-      <h2 className="font-display text-heading-3 text-ink-900">{title}</h2>
+      <Heading className="font-display text-heading-3 text-ink-900">{title}</Heading>
       {children && <div className="mt-2 text-body-sm text-ink-700">{children}</div>}
       {action && <div className="mt-5 flex flex-wrap items-center gap-3">{action}</div>}
     </div>
