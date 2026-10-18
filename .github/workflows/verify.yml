@@ -71,6 +71,16 @@ jobs:
       - run: npm run performance-check
         env:
           BASE_URL: http://localhost:3101
+      # Phase 14 and 17, with UI-12's form, no-JS, busy and failure flows:
+      # buyer enquiries and the seller inbox. Neither ran in CI before; both
+      # need the simulator app, and defaulted to the public one (UI-12).
+      - run: npm run lead-check
+        env:
+          BASE_URL: http://localhost:3101
+      # Saved homes, with UI-12's removal focus, FLIP and reduced motion.
+      - run: npm run saved-check
+        env:
+          BASE_URL: http://localhost:3101
       # Phase 21: the admin console (staff gate, figures, listings, system).
       - run: npm run admin-check
         env:
