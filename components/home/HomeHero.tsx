@@ -44,6 +44,14 @@ export function HomeSearch() {
   }, [])
   return <><span ref={marker} className="search-marker" aria-hidden="true" /><div className="reference-search" data-stuck={stuck || undefined}>
     <button ref={trigger} type="button" onClick={() => setOpen(true)} aria-haspopup="dialog" className="reference-search-trigger"><SearchIcon className="size-6" /><span>Search a locality in Kolkata</span></button>
+    {/* The launcher opens a sheet, which needs JavaScript; without it the
+        first-screen search did nothing. A link to the results page takes its
+        place there, where results, sort, chips and pages all work (UI-06,
+        UI-13). */}
+    <noscript>
+      <style>{'.reference-search-trigger[type=button]{display:none!important}'}</style>
+      <Link href={`/buy/${LAUNCH_CITY.slug}`} className="reference-search-trigger"><SearchIcon className="size-6" /><span>Search homes for sale in {LAUNCH_CITY.name}</span></Link>
+    </noscript>
     <Sheet returnFocusRef={trigger} open={open} onOpenChange={setOpen} size="search" title="Find your home" description="Choose buy or rent, a locality and your filters.">
       <div className="p-4"><SearchPanel /></div>
     </Sheet>
