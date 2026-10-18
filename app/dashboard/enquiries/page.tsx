@@ -11,6 +11,7 @@ import { UUID } from '@/lib/media/types'
 import { setLeadStatus, acknowledgeNotifications } from './actions'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
+import { Button } from '@/components/ui/Button'
 
 export const metadata: Metadata = { title: 'Seller enquiries', robots: { index: false, follow: false } }
 
@@ -69,7 +70,7 @@ function LeadCard({ lead, filtered }: { lead: Lead; filtered: boolean }) {
       <label className="flex min-w-0 flex-col gap-1 text-caption font-semibold text-ink-700">Lead status
         <select name="status" defaultValue={lead.status} className="min-h-11 rounded-md border border-border-strong bg-surface-000 px-3 text-body-sm text-ink-900"><option value="new">New</option><option value="contacted">Contacted</option><option value="closed">Closed</option></select>
       </label>
-      <button type="submit" className="min-h-11 rounded-md border border-brand-700 px-3 text-label font-semibold text-brand-700 hover:bg-brand-100 focus-visible:outline-2 focus-visible:outline-focus-ring">Update status</button>
+      <Button type="submit" variant="outline" className="px-3">Update status</Button>
     </form>
   </article>
 }

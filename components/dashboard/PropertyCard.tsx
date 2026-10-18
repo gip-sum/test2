@@ -5,6 +5,7 @@ import type { PropertyCard as Card } from '@/lib/dashboard/model'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { WithdrawAction } from './WithdrawAction'
 import { CopyLink } from './CopyLink'
+import { buttonClassName } from '@/components/ui/Button'
 
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' })
 const moment = (iso: string) => `${new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })} IST`
@@ -15,7 +16,7 @@ const SINCE_LABEL: Record<Card['status'], string> = {
 }
 
 const action = 'inline-flex min-h-11 items-center text-label font-semibold text-brand-700 underline-offset-4 hover:underline'
-const primaryAction = 'inline-flex min-h-11 items-center justify-center rounded-md border border-brand-700 px-3 text-label font-semibold text-brand-700 hover:bg-brand-100'
+const primaryAction = buttonClassName({ variant: 'outline', className: 'px-3' })
 
 /** One property row: its working draft and, once submitted, its listing. */
 export function PropertyCard({ card, publishing }: { card: Card; publishing: boolean }) {

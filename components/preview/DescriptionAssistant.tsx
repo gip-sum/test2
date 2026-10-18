@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DESCRIPTION_LIMIT, validDescription, type DescriptionJob } from '@/lib/descriptions/types'
+import { Button } from '@/components/ui/Button'
 export function DescriptionAssistant({id,revision,signature,description,available,complete,initialJob,initialError}:{id:string;revision:number;signature:string;description:string|null;available:boolean;complete:boolean;initialJob:DescriptionJob|null;initialError?:string}) {
   const router=useRouter(),[text,setText]=useState(description??''),[job,setJob]=useState(initialJob),[busy,setBusy]=useState(false),[error,setError]=useState(initialError??''),[notice,setNotice]=useState('')
   const working=job?.status==='QUEUED'||job?.status==='RUNNING',stale=!!job&&job.draft_revision!==revision
@@ -33,7 +34,6 @@ export function DescriptionAssistant({id,revision,signature,description,availabl
     }catch(e){setError(e instanceof Error?e.message:'The request could not be completed.')}
     finally {setBusy(false)}
   }
-  const button='inline-flex min-h-11 items-center justify-center rounded-md border border-brand-600 px-4 font-semibold text-brand-700 disabled:opacity-50'
   return <section className="mt-8 rounded-lg border border-border-subtle p-4 sm:p-5" aria-labelledby="description-heading">
     <h2 id="description-heading" className="font-display text-heading-3">About this property</h2>
     <p id="description-help" className="mt-2 text-body-sm text-ink-700">Write one paragraph, or ask AI to draft it from your saved facts. Review every claim before saving.</p>
@@ -41,8 +41,8 @@ export function DescriptionAssistant({id,revision,signature,description,availabl
     <textarea id="property-description" aria-describedby="description-help description-count" rows={5} value={text} onChange={e=>setText(e.target.value)} className="mt-2 w-full min-w-0 rounded-md border border-border-strong bg-surface-000 p-3 text-ink-900"/>
     <p id="description-count" className="mt-1 text-caption text-ink-500">{[...text].length.toLocaleString('en-IN')} / {DESCRIPTION_LIMIT.toLocaleString('en-IN')} characters · no line breaks</p>
     <div className="mt-4 flex flex-wrap gap-3">
-      <button type="button" onClick={()=>act('save')} disabled={busy||!validDescription(text)||text.trim()===(description??'')} className={button}>Save description</button>
-      <button type="button" onClick={()=>act('generate')} disabled={busy||(working&&!pendingDelivery)||!available||!complete} className={button}>{pendingDelivery?'Retry background delivery':'Generate with AI'}</button>
+      <Button type="button" variant="outline" onClick={()=>act('save')} disabled={busy||!validDescription(text)||text.trim()===(description??'')}>Save description</Button>
+      <Button type="button" variant="outline" onClick={()=>act('generate')} disabled={busy||(working&&!pendingDelivery)||!available||!complete}>{pendingDelivery?'Retry background delivery':'Generate with AI'}</Button>
     </div>
     <p className="mt-3 text-caption text-ink-500">Generation sends property type, coarse location, price and property facts to our configured AI provider. Your name, contact details, street address and photos are excluded.</p>
     {!available&&<p className="mt-2 text-body-sm text-ink-700">AI generation is not enabled yet. You can write and save your own description.</p>}
@@ -54,7 +54,7 @@ export function DescriptionAssistant({id,revision,signature,description,availabl
       {job?.status==='SUCCEEDED'&&<p>AI suggestion ready. Review it before using it.</p>}
       {stale&&<p>The property changed since this suggestion was requested. Review the latest facts before using it.</p>}
     </div>
-    {job?.status==='SUCCEEDED'&&job.result&&<div className="mt-3 rounded-md bg-brand-100 p-3"><h3 className="font-semibold">AI suggestion · not saved</h3><p className="mt-2 break-words">{job.result}</p><button type="button" className={`${button} mt-3`} disabled={busy||stale} onClick={()=>{setText(job.result!);setNotice('Suggestion placed in the editor. Edit it and choose Save description.')}}>Use suggestion in editor</button></div>}
+    {job?.status==='SUCCEEDED'&&job.result&&<div className="mt-3 rounded-md bg-brand-100 p-3"><h3 className="font-semibold">AI suggestion · not saved</h3><p className="mt-2 break-words">{job.result}</p><Button type="button" variant="outline" className="mt-3" disabled={busy||stale} onClick={()=>{setText(job.result!);setNotice('Suggestion placed in the editor. Edit it and choose Save description.')}}>Use suggestion in editor</Button></div>}
     {error&&<p role="alert" className="mt-3 text-body-sm text-ink-700">{error}</p>}
   </section>
 }

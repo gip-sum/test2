@@ -7,12 +7,15 @@ import { cn } from '@/lib/cn'
  *   supply    the seller's action — Post Property, Publish, Renew
  *   secondary the alternative beside a primary
  *   tertiary  low emphasis, inline
+ *   outline   a brand action that is not the surface's primary — Review,
+ *             Update status, Save description (UI-06: five places drew it
+ *             by hand)
  *   danger    destructive
  *
  * Exactly ONE filled primary per surface. Two competing filled buttons
  * measurably reduce clicks on both.
  */
-type Variant = 'primary' | 'supply' | 'secondary' | 'tertiary' | 'danger'
+type Variant = 'primary' | 'supply' | 'secondary' | 'tertiary' | 'outline' | 'danger'
 type Size = 'sm' | 'md' | 'lg'
 
 const VARIANT: Record<Variant, string> = {
@@ -22,6 +25,7 @@ const VARIANT: Record<Variant, string> = {
   secondary:
     'bg-transparent text-ink-900 border-border-strong hover:border-ink-500',
   tertiary: 'bg-transparent text-brand-600 border-transparent hover:bg-brand-100',
+  outline: 'bg-transparent text-brand-700 border-brand-700 hover:bg-brand-100',
   danger: 'bg-danger-600 text-on-danger border-transparent hover:brightness-95',
 }
 
