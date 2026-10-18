@@ -101,7 +101,7 @@ try {
   check('unsaving from the homepage rail removes it', !records.get(users['a'.repeat(48)].id)?.has(railId))
   // ── UI-12: removing from the Saved list ──────────────────────────────────
   const uid = users['a'.repeat(48)].id
-  const removeFlow = async (context, label) => {
+  const removeFlow = async (context) => {
     records.set(uid, new Set(['p_8f3c2a', railId]))
     const pg = await context.newPage()
     await pg.goto(BASE + '/account/saved')
@@ -119,14 +119,14 @@ try {
     await pg.close()
     return result
   }
-  const moving = await removeFlow(first, 'motion')
+  const moving = await removeFlow(first)
   check('removing a saved home (server-confirmed) hands keyboard focus to the next home\'s heart', moving.removed)
   check('the removal is announced and the count follows', moving.announced && moving.count === '1 saved property')
   check('the remaining card travels to its new place instead of jumping', moving.flips >= 1, String(moving.flips))
   check('removing the last home hands focus to the empty shortlist', moving.empty)
   const still = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' })
   await still.addCookies([{ name: 'gb-access', value: 'a'.repeat(48), url: BASE, httpOnly: true }])
-  const quiet = await removeFlow(still, 'reduced')
+  const quiet = await removeFlow(still)
   check('reduced motion: nothing travels, focus and the announcement still follow', quiet.flips === 0 && quiet.removed && quiet.announced && quiet.empty)
   await still.close()
   records.set(uid, new Set(['p_8f3c2a']))
