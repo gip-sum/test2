@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/cn'
+import { SAVED_REMOVING } from '@/lib/saved/removal'
 import { useSaved } from './SavedProvider'
 
 /**
@@ -18,6 +19,13 @@ import { useSaved } from './SavedProvider'
  * (UI-08, the UI-07 Button rule): disabling it while focused sent keyboard
  * focus to <body>, so the confirmed state was never heard. When the server
  * confirms, the heart swells once (`data-heart`, app/globals.css).
+ *
+ * On the Saved list a confirmed removal refreshes the page and this card —
+ * and the focused heart — leaves (UI-12). Before the refresh the heart
+ * hands focus on (afterRefresh): to the next saved home's heart, else the
+ * previous one's, else the count or the empty shortlist, and says what was
+ * removed; SavedGrid slides the remaining cards into place. Nothing is
+ * removed before the server confirms it.
  */
 export function SaveButton({ id, title, className, visualClassName }: { id: string; title: string; className?: string; visualClassName?: string }) {
   const router = useRouter()
@@ -30,9 +38,13 @@ export function SaveButton({ id, title, className, visualClassName }: { id: stri
   // same listing saved through another heart) never animates.
   const [confirmed, setConfirmed] = useState<{ count: number; kind: 'save' | 'unsave' } | null>(null)
 
+  const onSavedList = pathname === '/account/saved'
+
   async function click(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault()
     event.stopPropagation()
+    // currentTarget is gone after the await below.
+    const button = event.currentTarget
     if (state === 'signed-out') {
       router.push(`/login?next=${encodeURIComponent(pathname)}`)
       return
@@ -42,12 +54,21 @@ export function SaveButton({ id, title, className, visualClassName }: { id: stri
     const result = await toggle(id, !saved)
     if (result === 'ok') setConfirmed((last) => ({ count: (last?.count ?? 0) + 1, kind: saved ? 'unsave' : 'save' }))
     if (result === 'signed-out') router.push(`/login?next=${encodeURIComponent(pathname)}`)
-    if (result === 'ok' && pathname === '/account/saved') router.refresh()
+    if (result === 'ok' && onSavedList) {
+      const item = button.closest<HTMLElement>('[data-flip-key]')
+      const neighbours = [item?.nextElementSibling, item?.previousElementSibling].map((el) => (el as HTMLElement | null)?.dataset.flipKey).filter(Boolean)
+      // Loaded only here: the hearts on every public page never need it.
+      const { afterRefresh } = await import('@/lib/a11y/after-refresh')
+      afterRefresh([...neighbours.map((key) => `save-${key}`), 'saved-count', 'saved-empty'], `${title} removed from your saved properties.`)
+      document.dispatchEvent(new Event(SAVED_REMOVING))
+      router.refresh()
+    }
   }
 
   return (
     <button
       type="button"
+      id={onSavedList ? `save-${id}` : undefined}
       aria-pressed={state === 'ready' ? saved : undefined}
       aria-busy={pending}
       aria-label={state === 'loading' ? 'Checking saved status' : state === 'error' ? 'Retry loading saved properties' : saved ? `Remove ${title} from saved` : `Save ${title}`}
