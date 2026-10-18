@@ -53,6 +53,10 @@ export const SCENARIOS = [
   { name: 'search-zero', path: '/buy/kolkata?loc=howrah&type=VILLA&bhk=5&pmax=1600000' },
   { name: 'property', path: '/property/4-bhk-flat-for-sale-in-ballygunge-p5d40ab' },
   { name: 'property-2', path: '/property/2-bhk-builder-floor-for-sale-in-behala-p9c17f4' },
+  // The enquiry form (UI-12): in the phone sheet, and its error summary and
+  // field errors in the desktop sidebar after an invalid submit.
+  { name: 'property-enquiry-sheet', path: '/property/4-bhk-flat-for-sale-in-ballygunge-p5d40ab', open: 'button[aria-haspopup="dialog"]:has-text("Contact")', widths: [390] },
+  { name: 'property-enquiry-error', path: '/property/4-bhk-flat-for-sale-in-ballygunge-p5d40ab', widths: [1280], fill: { 'form:has(input[name="phone"]):visible input[name="phone"]': '12345' }, submit: 'form:has(input[name="phone"]):visible button[type="submit"]', waitFor: 'form:has(input[name="phone"]):visible [role="alert"]' },
   { name: 'login', path: '/login' },
   { name: 'login-register', path: '/login?mode=register' },
   { name: 'login-configured', path: '/login', server: 'auth' },
@@ -80,6 +84,11 @@ export const SCENARIOS = [
   { name: 'admin-users', path: '/admin/users', auth: ADMIN_TOKEN },
   { name: 'admin-user', path: '/admin/users/a9140f33-a429-46f3-9514-3e8f32f18189', auth: ADMIN_TOKEN },
   { name: 'admin-review', path: '/admin/moderation/d9140f33-a429-46f3-9514-000000000002', auth: ADMIN_TOKEN },
+  // The buyer's account (UI-12): the profile form, a field error, and the
+  // Saved list with two homes.
+  { name: 'account-profile', path: '/account', auth: OWNER_TOKEN },
+  { name: 'account-profile-error', path: '/account', auth: OWNER_TOKEN, widths: [390], fill: { 'input[name="contact_phone"]': '12' }, submit: 'form:has(input[name="contact_phone"]) button[type="submit"]', waitFor: 'input[name="contact_phone"][aria-invalid="true"]' },
+  { name: 'account-saved', path: '/account/saved', auth: OWNER_TOKEN },
 ]
 
 // Recorded per element. Rounded box geometry catches a change that moves

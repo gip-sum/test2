@@ -82,7 +82,9 @@ export async function startWorkspaceSimulator(port = 3300) {
     const mine = (rows) => rows.filter((r) => r.owner_id === user)
     const staff = user === admin
     switch (url.pathname) {
-      case '/rest/v1/saved_properties': case '/rest/v1/saved_listings': case '/rest/v1/property_draft_reviews': case '/rest/v1/media_assets': return send(200, [])
+      // Two saved demo homes for the Saved screen (UI-12); nothing else reads them.
+      case '/rest/v1/saved_properties': return send(200, user === owner ? [{ property_public_id: 'p_5d40ab', created_at: at(-2) }, { property_public_id: 'p_9c17f4', created_at: at(-5) }] : [])
+      case '/rest/v1/saved_listings': case '/rest/v1/property_draft_reviews': case '/rest/v1/media_assets': return send(200, [])
       case '/rest/v1/buyer_profiles': return send(200, user === owner ? [{ id: owner, full_name: 'Test Seller', contact_phone: null, preferred_intent: 'both', preferred_locality: null, email_updates: false, updated_at: at(-1) }] : [])
       case '/rest/v1/property_drafts': return send(200, where(mine(drafts), p))
       case '/rest/v1/property_listings': return send(200, where(user ? mine(listings) : publicRead ? listings.filter(active) : [], p))
