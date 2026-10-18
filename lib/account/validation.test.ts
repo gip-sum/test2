@@ -22,4 +22,11 @@ describe('buyer account input', () => {
       { preferred_locality: 'nonexistent' }, { full_name: 'a'.repeat(101) },
     ]) expect(validateProfile(form({ ...valid, ...changed }), ['new-town']).ok).toBe(false)
   })
+  it('names the field each problem belongs to, with the same wording (UI-12)', () => {
+    expect(validateProfile(form({ ...valid, contact_phone: 'abc' }), ['new-town'])).toEqual({ ok: false, field: 'contact_phone', message: 'Enter a contact number with 10 to 15 digits, or leave it empty.' })
+    expect(validateProfile(form({ ...valid, full_name: 'a'.repeat(101) }), ['new-town'])).toMatchObject({ ok: false, field: 'full_name' })
+    expect(validateProfile(form({ ...valid, preferred_intent: 'seller' }), ['new-town'])).toMatchObject({ ok: false, field: 'preferred_intent' })
+    expect(validateProfile(form({ ...valid, preferred_locality: 'nonexistent' }), ['new-town'])).toMatchObject({ ok: false, field: 'preferred_locality' })
+    expect(validateProfile(new FormData(), ['new-town'])).toMatchObject({ ok: false, field: null })
+  })
 })
