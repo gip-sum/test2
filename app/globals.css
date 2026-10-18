@@ -1269,7 +1269,7 @@ img[data-fade='in'] { opacity: 1; transition: opacity var(--duration-base) var(-
 /* Search results and filter chips that arrive after the page is
    interactive (UI-06): a short fade with a 6px rise, results staggered by
    --stagger-step for at most six items. `data-enter` is set on the search
-   frame only after hydration (useHydrated), and @starting-style applies
+   frame by an effect after hydration, and @starting-style applies
    only to elements first rendered after that, so server-rendered results
    never start invisible; a filter change, a page turn or a client
    navigation brings new ones in. Opacity and transform only: nothing

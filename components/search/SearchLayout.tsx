@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useTransition, type ReactNode } from 'react'
+import { useEffect, useRef, useState, useTransition, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { FilterControls, type FilterPatch } from '@/components/filters/FilterControls'
 import { Chip } from '@/components/ui/Chip'
 import { Sheet } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/cn'
-import { useHydrated } from '@/lib/hooks/useHydrated'
 import type { Facets } from '@/lib/property/search'
 import { clearAllPatch, describeActiveFilters } from '@/lib/search/describe'
 import {
@@ -50,8 +49,13 @@ export function SearchLayout({
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [sheetOpen, setSheetOpen] = useState(false)
-  // Entrance animations apply only to what arrives after hydration.
-  const hydrated = useHydrated()
+  // Entrance animations apply only to what arrives after hydration. Set on
+  // the element directly rather than through state: a state change here
+  // re-rendered the whole frame, filter rail included, right after
+  // hydration (measured: +100ms of blocking time on a 4x-slowed phone).
+  // React does not manage the attribute, so later renders leave it alone.
+  const frame = useRef<HTMLDivElement>(null)
+  useEffect(() => { frame.current?.setAttribute('data-enter', '') }, [])
 
   const names = new Map(Object.entries(localityNames))
   const active = describeActiveFilters(query, names)
@@ -82,7 +86,7 @@ export function SearchLayout({
   const sortBase = new URL(buildSearchUrl({ ...query, sort: 'relevance', page: 1 }), 'http://localhost')
 
   return (
-    <div data-enter={hydrated ? '' : undefined} className="mx-auto max-w-[1320px] px-4 py-5 lg:px-8 lg:py-6">
+    <div ref={frame} className="mx-auto max-w-[1320px] px-4 py-5 lg:px-8 lg:py-6">
       <header>
         <h1 className="font-display text-heading-2 text-ink-900 lg:text-heading-1">{heading}</h1>
         <p className="mt-1 text-body-sm text-ink-700" aria-live="polite">
