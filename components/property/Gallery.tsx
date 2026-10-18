@@ -3,7 +3,7 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import Image from 'next/image'
 import { markPendingImage, revealImage } from '@/lib/motion/image-fade'
-import { useRef, useState, type TouchEvent } from 'react'
+import { useEffect, useRef, useState, type TouchEvent } from 'react'
 import { cn } from '@/lib/cn'
 import type { PropertyMedia } from '@/lib/property/types'
 
@@ -12,8 +12,27 @@ export function swipeDirection(dx: number, dy: number): -1 | 0 | 1 {
   return dx < 0 ? 1 : -1
 }
 
+/**
+ * Scrolls a thumbnail strip just far enough to show its current thumbnail.
+ * The strip's own scroll position only — never the page: scrollIntoView
+ * would also scroll the window when the strip is off screen.
+ */
+function keepCurrentInView(strip: HTMLElement | null) {
+  const current = strip?.querySelector<HTMLElement>('[aria-current="true"]')
+  if (!strip || !current) return
+  const box = strip.getBoundingClientRect(), thumb = current.getBoundingClientRect()
+  const by = thumb.left < box.left ? thumb.left - box.left - 8 : thumb.right > box.right ? thumb.right - box.right + 8 : 0
+  if (by) strip.scrollBy({ left: by, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+}
+
 export function Gallery({ photos, title }: { photos: PropertyMedia[]; title: string }) {
   const [index, setIndex] = useState(0)
+  // Which way the last change went: 1 forward, -1 back, 0 before any. The
+  // incoming photo arrives from that side (UI-08), so a swipe, an arrow key
+  // and a thumbnail far along the strip all say where you are going.
+  const [direction, setDirection] = useState<-1 | 0 | 1>(0)
+  const strip = useRef<HTMLUListElement>(null)
+  const lightboxStrip = useRef<HTMLUListElement>(null)
   const [open, setOpen] = useState(false)
   const [failed, setFailed] = useState<Set<string>>(() => new Set())
   const touchStart = useRef<{ x: number; y: number } | null>(null)
@@ -22,8 +41,14 @@ export function Gallery({ photos, title }: { photos: PropertyMedia[]; title: str
   const count = usable.length
   const multi = count > 1
 
-  const go = (delta: number) => setIndex((current) => (current + delta + count) % count)
-  const select = (next: number) => setIndex(next)
+  const go = (delta: number) => { setDirection(delta > 0 ? 1 : -1); setIndex((current) => (current + delta + count) % count) }
+  const select = (next: number) => { if (next !== index) setDirection(next > index ? 1 : -1); setIndex(next) }
+  // Swiping or pressing arrows to photo 9 used to leave the strip showing
+  // photos 1 to 5, the current one out of sight.
+  useEffect(() => {
+    keepCurrentInView(strip.current)
+    keepCurrentInView(lightboxStrip.current)
+  }, [index, open])
   const markFailed = (id: string) => setFailed((current) => new Set(current).add(id))
   const show = (next: number, trigger: HTMLButtonElement) => {
     select(next)
@@ -63,6 +88,8 @@ export function Gallery({ photos, title }: { photos: PropertyMedia[]; title: str
             if (event.key === 'ArrowLeft') { event.preventDefault(); go(-1) }
           }}
           {...touch}
+          data-photo-frame=""
+          data-direction={direction || undefined}
           className="relative aspect-[4/3] min-w-0 touch-pan-y overflow-hidden rounded-lg bg-media-ground lg:aspect-[16/10]"
         >
           {/* Keyed by photo, so a new photo mounts fresh and fades into the
@@ -107,7 +134,7 @@ export function Gallery({ photos, title }: { photos: PropertyMedia[]; title: str
         {multi ? `Image ${index + 1} of ${count}. ${current.alt}` : current.alt}
       </p>
       {multi && (
-        <ul aria-label="Choose a photo" className="mt-2 flex gap-2 overflow-x-auto pb-1">
+        <ul ref={strip} aria-label="Choose a photo" className="mt-2 flex gap-2 overflow-x-auto pb-1">
           {usable.map((photo, position) => (
             <li key={photo.id} className="shrink-0">
               <button
@@ -144,7 +171,7 @@ export function Gallery({ photos, title }: { photos: PropertyMedia[]; title: str
               </button>
             </header>
             <Dialog.Description className="sr-only">Property photos. Use arrow keys or swipe to change image; Escape closes the gallery.</Dialog.Description>
-            <div className="relative min-h-0 flex-1 touch-pan-y" {...touch}>
+            <div className="relative min-h-0 flex-1 overflow-hidden touch-pan-y" data-photo-frame="" data-direction={direction || undefined} {...touch}>
               <MediaPhoto key={current.id} media={current} failed={failed.has(current.id)} onError={() => markFailed(current.id)} sizes="100vw" contain priority />
               {multi && (
                 <>
@@ -155,7 +182,7 @@ export function Gallery({ photos, title }: { photos: PropertyMedia[]; title: str
             </div>
             <p role="status" aria-live="polite" className="sr-only">{multi ? `Full screen image ${index + 1} of ${count}. ${current.alt}` : current.alt}</p>
             {multi && (
-              <ul aria-label="Choose a full-screen photo" className="flex gap-2 overflow-x-auto px-4 py-3" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}>
+              <ul ref={lightboxStrip} aria-label="Choose a full-screen photo" className="flex gap-2 overflow-x-auto px-4 py-3" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}>
                 {usable.map((photo, position) => (
                   <li key={photo.id} className="shrink-0">
                     <button

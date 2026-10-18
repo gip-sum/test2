@@ -1266,6 +1266,41 @@
 img[data-fade='pending'] { opacity: 0; }
 img[data-fade='in'] { opacity: 1; transition: opacity var(--duration-base) var(--ease-enter); }
 
+/* Gallery direction (components/property/Gallery.tsx, UI-08): the photo
+   that replaces another arrives 16px from the side it came from — next from
+   the right, previous from the left — composing with the fade above when it
+   is still loading. Transform only, inside the frame's overflow, so nothing
+   moves the layout and the image is never held back. The frame carries no
+   direction until the first change, so the first photo never slides. */
+@keyframes motion-photo-next { from { transform: translateX(16px); } }
+@keyframes motion-photo-prev { from { transform: translateX(-16px); } }
+@media (prefers-reduced-motion: no-preference) {
+  [data-photo-frame][data-direction='1'] > img { animation: motion-photo-next var(--duration-base) var(--ease-enter); }
+  [data-photo-frame][data-direction='-1'] > img { animation: motion-photo-prev var(--duration-base) var(--ease-enter); }
+}
+
+/* Save confirmation (components/property/SaveButton.tsx, UI-08): when the
+   server confirms a save, the heart fills with one small swell — 0.85 to
+   1.12 and back, 200ms — and an unsave settles back from 0.9. It plays only
+   on the confirmed change the person made (the button re-keys the icon), never
+   when saved state loads, so a page of saved homes does not throb on
+   arrival. The fill, the label and aria-pressed carry the state; the swell
+   only marks the moment. */
+@keyframes motion-heart-save { 0% { transform: scale(0.85); } 55% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes motion-heart-unsave { from { transform: scale(0.9); } }
+@media (prefers-reduced-motion: no-preference) {
+  [data-heart='save'] { animation: motion-heart-save var(--duration-base) var(--ease-standard); }
+  [data-heart='unsave'] { animation: motion-heart-unsave var(--duration-fast) var(--ease-standard); }
+}
+
+/* Posting progress (components/posting/PostingProgress.tsx, UI-08): each
+   segment is a track with a fill scaled from its left edge. Moving to the
+   next step with the page in place, the next segment fills; going back, it
+   empties. A full page load draws the segments at rest, filled or empty, as
+   before. */
+.progress-fill { transform: scaleX(0); transform-origin: left; transition: transform var(--duration-slow) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard); }
+.progress-fill[data-filled] { transform: none; }
+
 /* Search results and filter chips that arrive after the page is
    interactive (UI-06): a short fade with a 6px rise, results staggered by
    --stagger-step for at most six items. `data-enter` is set on the search

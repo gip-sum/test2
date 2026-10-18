@@ -304,6 +304,80 @@ try {
     await page.context().close()
   }
 
+  // ── Gallery direction and thumbnails (UI-08) ───────────────────────────
+  // A changed photo arrives from the side it came from; the first never
+  // slides; the current thumbnail stays in view without scrolling the page.
+  const galleryHref = await (async () => {
+    const html = await (await fetch(base + SEARCH)).text()
+    for (const href of new Set([...html.matchAll(/href="(\/property\/[^"]+)"/g)].map((m) => m[1]))) {
+      const page = await open(href)
+      const many = await page.locator('ul[aria-label="Choose a photo"] li').count()
+      await page.context().close()
+      if (many >= 4) return href
+    }
+  })()
+  const slide = (page) => page.evaluate(() => {
+    const frame = document.querySelector('[data-photo-frame]')
+    const img = frame.querySelector(':scope > img')
+    return { direction: frame.dataset.direction ?? null, box: JSON.stringify(frame.getBoundingClientRect()), anims: img.getAnimations().map((a) => ({ name: a.animationName, d: a.effect.getTiming().duration, from: a.effect.getKeyframes()[0]?.transform })) }
+  })
+  {
+    const page = await open(galleryHref)
+    const frame = page.getByRole('group', { name: /^Photos of/ })
+    await frame.locator('img').first().waitFor()
+    const start = await slide(page)
+    check('gallery direction: the first photo never slides', start.direction === null && !start.anims.some((a) => /motion-photo/.test(a.name)), JSON.stringify(start))
+    await page.getByRole('button', { name: 'Next photo' }).click()
+    const next = await slide(page)
+    check('gallery direction: Next brings the photo in from the right, 16px over 200ms', next.anims.some((a) => a.name === 'motion-photo-next' && a.d === 200 && /translateX?\(16px/.test(a.from)) && next.box === start.box, JSON.stringify(next))
+    await page.getByRole('button', { name: 'Previous photo' }).click()
+    const prev = await slide(page)
+    check('gallery direction: Previous brings it in from the left', prev.anims.some((a) => a.name === 'motion-photo-prev' && /translateX?\(-16px/.test(a.from)), JSON.stringify(prev))
+    // A touch swipe right-to-left is "next", as the buttons are.
+    await frame.evaluate((el) => {
+      const r = el.getBoundingClientRect(), y = r.top + r.height / 2
+      const touch = (x) => new Touch({ identifier: 1, target: el, clientX: x, clientY: y })
+      el.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, touches: [touch(r.right - 40)], changedTouches: [touch(r.right - 40)] }))
+      el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, touches: [], changedTouches: [touch(r.left + 60)] }))
+    })
+    const swiped = await slide(page)
+    check('gallery direction: a swipe to the left arrives from the right, like Next', swiped.anims.some((a) => a.name === 'motion-photo-next') && await page.locator('[role="status"]').filter({ hasText: /^Image 2 of/ }).count() === 1, JSON.stringify(swiped))
+    const count = await page.locator('ul[aria-label="Choose a photo"] li').count()
+    await frame.focus()
+    const scrollY = await page.evaluate(() => scrollY)
+    const last = page.locator('[role="status"]').filter({ hasText: new RegExp(`^Image ${count} of ${count}\\.`) })
+    for (let i = 0; i < count && !(await last.count()); i++) await page.keyboard.press('ArrowRight')
+    await page.waitForTimeout(700)
+    const strip = await page.evaluate(() => {
+      const s = document.querySelector('ul[aria-label="Choose a photo"]'), c = s.querySelector('[aria-current="true"]')
+      const a = s.getBoundingClientRect(), r = c.getBoundingClientRect()
+      return { inView: r.left >= a.left - 1 && r.right <= a.right + 1, scrolled: s.scrollLeft, overflow: s.scrollWidth > s.clientWidth, y: scrollY, page: document.documentElement.scrollWidth <= innerWidth + 1 }
+    })
+    check(`gallery thumbnails: stepping to the last photo keeps its thumbnail in view (${count} photos, strip scrolled ${Math.round(strip.scrolled)}px)`, strip.inView && (!strip.overflow || strip.scrolled > 0), JSON.stringify(strip))
+    check('gallery thumbnails: only the strip scrolls — the page stays where it was, no overflow', strip.y === scrollY && strip.page, JSON.stringify(strip))
+    await page.context().close()
+  }
+
+  // ── Posting progress (UI-08) ───────────────────────────────────────────
+  {
+    const page = await open('/post')
+    await page.getByRole('link', { name: /I own the property/ }).waitFor()
+    const fills = () => page.evaluate(() => [...document.querySelectorAll('.progress-fill')].map((e) => ({ t: getComputedStyle(e).transform, running: e.getAnimations().map((a) => ({ p: a.transitionProperty, d: a.effect.getTiming().duration })) })))
+    const rest = await fills()
+    check('progress: at rest the current step is full, the rest empty, nothing moving', rest[0].t === 'none' && rest.slice(1).every((f) => /^matrix\(0, 0, 0, 1/.test(f.t)) && rest.every((f) => !f.running.length), JSON.stringify(rest.slice(0, 3)))
+    await page.getByRole('link', { name: /I own the property/ }).click()
+    await page.waitForURL('**role=OWNER**')
+    const moving = await fills()
+    check('progress: the next step fills from the left over 300ms when the page moves on in place', moving[1].running.some((r) => r.p === 'transform' && r.d === 300), JSON.stringify(moving.slice(0, 3)))
+    await page.waitForTimeout(450)
+    check('progress: and ends full', (await fills())[1].t === 'none')
+    await page.goBack()
+    await page.waitForURL((u) => !u.search.includes('role='))
+    await page.waitForTimeout(450)
+    check('progress: going back empties it again', /^matrix\(0, 0, 0, 1/.test((await fills())[1].t))
+    await page.context().close()
+  }
+
   // ── Property card on touch ────────────────────────────────────────────
   {
     const page = await open(SEARCH, { context: { hasTouch: true, isMobile: true } })
@@ -506,6 +580,21 @@ try {
     check('reduced: skeleton does not shimmer', still.count === '1' && still.duration <= 0.01 && /^matrix\(1, 0, 0, 1, -\d/.test(still.transform), JSON.stringify(still))
     release()
     await sk.context().close()
+
+    // UI-08 under reduced motion: photos change in place, the progress fills
+    // at once.
+    const rmGallery = await open(galleryHref, { context: reduced })
+    await rmGallery.getByRole('group', { name: /^Photos of/ }).locator('img').first().waitFor()
+    await rmGallery.getByRole('button', { name: 'Next photo' }).click()
+    const still2 = await slide(rmGallery)
+    check('reduced: the next photo does not slide in', !still2.anims.some((a) => /motion-photo/.test(a.name)) && await rmGallery.locator('[role="status"]').filter({ hasText: /^Image 2 of/ }).count() === 1, JSON.stringify(still2))
+    await rmGallery.context().close()
+    const rmPost = await open('/post', { context: reduced })
+    await rmPost.getByRole('link', { name: /I own the property/ }).click()
+    await rmPost.waitForURL('**role=OWNER**')
+    const instant = await rmPost.evaluate(() => [...document.querySelectorAll('.progress-fill')][1].getAnimations().map((a) => a.effect.getTiming().duration))
+    check('reduced: the progress step fills without a perceptible transition', instant.every((d) => d <= 0.01), JSON.stringify(instant))
+    await rmPost.context().close()
   }
 
   check('no page errors', errors.length === 0, errors.join('\n'))

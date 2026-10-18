@@ -25,6 +25,20 @@ export function stageUrl(index: number, view: PostingView): string {
   return postingUrl(entry, { details: carried, edit: true, location, pricing })
 }
 
+/**
+ * One segment: a track and a fill scaled from its left edge (.progress-fill,
+ * app/globals.css). The step being entered keeps its element across a
+ * client-side navigation, so its fill sweeps in; at rest it reads exactly as
+ * the plain bars it replaced.
+ */
+function Segment({ filled, hover }: { filled: boolean; hover?: boolean }) {
+  return (
+    <span className="block h-1.5 overflow-hidden rounded-full bg-surface-200">
+      <span data-filled={filled || undefined} className={`progress-fill block h-full rounded-full bg-brand-600${hover ? ' group-hover:bg-brand-700' : ''}`} />
+    </span>
+  )
+}
+
 export function PostingProgress({ view, photos = false }: { view: PostingView; photos?: boolean }) {
   const active = photos ? 7 : STAGES.findIndex((stage) => stage.id === (view.stage === 'pricing-review' ? 'review' : view.stage === 'location-review' ? 'location' : view.stage === 'review' ? 'details' : view.stage))
   return (
@@ -35,12 +49,12 @@ export function PostingProgress({ view, photos = false }: { view: PostingView; p
           <li key={stage.id} aria-current={index === active ? 'step' : undefined}>
             {index < active ? (
               <Link href={stageUrl(index, view)} className="post-progress-link group block min-h-11 rounded-sm" aria-label={`Return to ${stage.label}`}>
-                <span className="block h-1.5 rounded-full bg-brand-600 transition-colors group-hover:bg-brand-700" />
+                <Segment filled hover />
                 <span className="mt-2 block text-(length:--text-overline) font-semibold text-brand-700 sm:text-caption">{stage.label}</span>
               </Link>
             ) : (
               <span className="block">
-                <span className={`block h-1.5 rounded-full ${index === active ? 'bg-brand-600' : 'bg-surface-200'}`} />
+                <Segment filled={index === active} />
                 <span className={`mt-2 block text-(length:--text-overline) font-semibold sm:text-caption ${index === active ? 'text-ink-900' : 'text-ink-500'}`}>{stage.label}</span>
               </span>
             )}

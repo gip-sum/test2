@@ -22,6 +22,8 @@ const sessions = new Set()
 // the session back. Without this the simulator is laxer than the provider.
 const revokedRefreshTokens = new Set()
 let savedProfile = null
+const savedHomes = new Set()
+let savedDelay = 0
 const mock = http.createServer(async (request, response) => {
   const chunks = []
   for await (const chunk of request) chunks.push(chunk)
@@ -49,6 +51,13 @@ const mock = http.createServer(async (request, response) => {
   }
   if (url.pathname === '/auth/v1/user') return sessions.has(request.headers.authorization?.slice(7)) ? send(200, USER) : send(401, {})
   if (url.pathname === '/rest/v1/rpc/my_account_access') return send(200, true)
+  if (url.pathname === '/rest/v1/saved_properties') {
+    if (!sessions.has(request.headers.authorization?.slice(7))) return send(401, {})
+    await new Promise((resolve) => setTimeout(resolve, savedDelay))
+    if (request.method === 'GET') return send(200, [...savedHomes].map((property_public_id) => ({ property_public_id, created_at: new Date().toISOString() })))
+    if (request.method === 'POST') { savedHomes.add(body.property_public_id); return send(201, [{ property_public_id: body.property_public_id }]) }
+    if (request.method === 'DELETE') { savedHomes.delete(url.searchParams.get('property_public_id')?.replace(/^eq\./, '')); return send(204, {}) }
+  }
   if (url.pathname === '/rest/v1/buyer_profiles') {
     if (!sessions.has(request.headers.authorization?.slice(7))) return send(401, {})
     if (request.method === 'GET') return send(200, savedProfile ? [savedProfile] : [])
@@ -136,6 +145,49 @@ try {
   check('token is absent from rendered HTML', !(await page.content()).includes('a'.repeat(48)))
   check('signed-in navigation opens account', await page.getByRole('link', { name: 'Account' }).first()
     .waitFor({ timeout: 5000 }).then(() => true).catch(() => false))
+  // UI-08: saving a home. Focus stays on the heart while the save is in
+  // flight (it used to be disabled, which sent focus to <body>), and when the
+  // server confirms, the heart swells once. Loading saved state never animates.
+  {
+    const listing = '/property/3-bhk-flat-for-sale-in-new-town-p8f3c2a'
+    await page.goto(BASE + listing)
+    const heart = page.getByRole('button', { name: /^Save / }).first()
+    await page.waitForFunction(() => [...document.querySelectorAll('button[aria-pressed]')].length > 0)
+    const icon = () => heart.evaluate((el) => { const svg = el.querySelector('svg'); return { heart: svg.dataset.heart ?? null, anims: svg.getAnimations().map((a) => ({ name: a.animationName, d: a.effect.getTiming().duration })) } })
+    check('save: nothing animates while saved state loads', (await icon()).heart === null)
+    // Record the swell as it starts: at 200ms it can be over before a poll
+    // sees it.
+    await heart.evaluate((el) => { window.__heart = []; el.addEventListener('animationstart', (e) => window.__heart.push({ name: e.animationName, d: getComputedStyle(e.target).animationDuration })) })
+    savedDelay = 600
+    await heart.focus()
+    await page.keyboard.press('Enter')
+    await page.waitForTimeout(200)
+    check('save: while the save is in flight the heart is busy, refuses presses and keeps focus', await heart.getAttribute('aria-busy') === 'true' && await heart.getAttribute('aria-disabled') === 'true' && await heart.evaluate((el) => el === document.activeElement))
+    const saved = page.getByRole('button', { name: /^Remove .* from saved$/ }).first()
+    await saved.waitFor()
+    const confirmed = await saved.evaluate((el) => ({ focus: el === document.activeElement, pressed: el.getAttribute('aria-pressed'), heart: el.querySelector('svg').dataset.heart, started: window.__heart }))
+    check('save: when the server confirms, the heart fills and swells once (200ms); state, label and focus are all there without it', confirmed.focus && confirmed.pressed === 'true' && confirmed.heart === 'save' &&
+      JSON.stringify(confirmed.started) === JSON.stringify([{ name: 'motion-heart-save', d: '0.2s' }]) && savedHomes.has('p_8f3c2a'), JSON.stringify(confirmed))
+    savedDelay = 0
+    await page.keyboard.press('Space')
+    await page.getByRole('button', { name: /^Save / }).first().waitFor()
+    const unsaved = await page.getByRole('button', { name: /^Save / }).first().evaluate((el) => ({ focus: el === document.activeElement, heart: el.querySelector('svg').dataset.heart, started: window.__heart.map((a) => a.name) }))
+    check('save: Space on the same heart unsaves it, with a smaller settle; focus stays', unsaved.focus && unsaved.heart === 'unsave' && unsaved.started.at(-1) === 'motion-heart-unsave' && !savedHomes.has('p_8f3c2a'), JSON.stringify(unsaved))
+    savedHomes.add('p_8f3c2a')
+    await page.reload()
+    await page.getByRole('button', { name: /^Remove .* from saved$/ }).first().waitFor()
+    check('save: a home that loads already saved shows its filled heart, still', await page.getByRole('button', { name: /^Remove .* from saved$/ }).first().evaluate((el) => !el.querySelector('svg').dataset.heart && !el.querySelector('svg').getAnimations().length))
+    const calm = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' })
+    await calm.addCookies(await context.cookies())
+    const still = await calm.newPage()
+    await still.goto(BASE + listing)
+    await still.getByRole('button', { name: /^Remove .* from saved$/ }).first().click()
+    await still.getByRole('button', { name: /^Save / }).first().waitFor()
+    check('save: under reduced motion the heart changes state with no movement', await still.getByRole('button', { name: /^Save / }).first().evaluate((el) => el.getAttribute('aria-pressed') === 'false' && !el.querySelector('svg').getAnimations().length))
+    await calm.close()
+    await page.goto(BASE + '/account')
+  }
+
   // Phase D: the phone bar's Activity hub, signed in. Saved and enquiries
   // stay reachable from it, and Activity is current on each page it leads to.
   await page.setViewportSize({ width: 390, height: 844 })
