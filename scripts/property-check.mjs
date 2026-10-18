@@ -101,9 +101,21 @@ try {
   check('long description has an expand control', await more.count() === 1)
   if (await more.count()) {
     check('collapsed description reports false', await more.getAttribute('aria-expanded') === 'false')
-    await more.click()
+    // UI-13: a disclosure that makes sense out of context, 44px tall,
+    // operated by the keyboard, and pointing at the text it opens.
+    check('Read more is named for what it opens', await page.getByRole('button', { name: 'Read more of the description', exact: true }).count() === 1)
+    check('Read more controls the description', await page.locator(`[id="${await more.getAttribute('aria-controls')}"]`).count() === 1)
+    check('Read more is a 44px target', (await more.boundingBox()).height >= 43.5)
+    const clamped = await page.locator('[data-description]').evaluate((el) => el.scrollHeight > el.clientHeight + 1)
+    await more.focus()
+    await page.keyboard.press('Enter')
     check('expanded description reports true', await page.getByRole('button', { name: 'Show less' })
       .getAttribute('aria-expanded') === 'true')
+    check('Enter opens the whole description, and focus stays on the control', clamped &&
+      await page.locator('[data-description]').evaluate((el) => el.scrollHeight <= el.clientHeight + 1) &&
+      await page.evaluate(() => document.activeElement?.getAttribute('aria-expanded') === 'true'))
+    await page.keyboard.press('Space')
+    check('Space closes it again', await page.getByRole('button', { name: /Read more/ }).getAttribute('aria-expanded') === 'false')
   }
   const initial = await page.locator('[aria-live="polite"]').filter({ hasText: /^Image / }).innerText()
   const next = page.getByRole('button', { name: 'Next photo' })
@@ -204,6 +216,12 @@ try {
   } else {
     check('form submits without JavaScript', false, 'property content is hidden')
   }
+  // UI-13: without JavaScript the button could never open the text, so all
+  // of it shows and the button does not.
+  await noJsPage.goto(BASE + FULL, { waitUntil: 'load' })
+  check('without JavaScript the whole description shows, with no dead Read more',
+    await noJsPage.locator('[data-description]').evaluate((el) => el.scrollHeight <= el.clientHeight + 1) &&
+    await noJsPage.locator('[data-description-toggle]').evaluate((el) => getComputedStyle(el).display === 'none'))
   await noJs.close()
 
   console.log('\nResponsive layout, sticky action, layout shift')

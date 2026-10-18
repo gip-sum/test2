@@ -190,16 +190,23 @@ try {
   await home(page)
   await page.locator('.reference-search-trigger').click()
   await more.click()
-  await check('Clear all is disabled while nothing is chosen', await sheet.getByRole('button', { name: 'Clear all' }).isDisabled())
+  // Unavailable, but never natively disabled: Clear all empties itself, and
+  // disabling it under the keyboard sent focus out of this sheet into the
+  // dialog behind, where the next Escape closed neither (UI-13: the cause of
+  // this check's long-standing local failure at the picker below).
+  const clearAll = sheet.getByRole('button', { name: 'Clear all' })
+  await check('Clear all is unavailable while nothing is chosen, and still focusable', await clearAll.getAttribute('aria-disabled') === 'true' && await clearAll.getAttribute('disabled') === null)
   await sheet.getByRole('button', { name: 'Villa', exact: true }).click()
-  await sheet.getByRole('button', { name: 'Clear all' }).click()
+  await clearAll.focus()
+  await page.keyboard.press('Enter')
   await check('Clear all releases every option', (await sheet.locator('button[aria-pressed="true"]').count()) === 0)
+  await check('focus stays on Clear all, inside the filters sheet', await clearAll.evaluate((el) => el === document.activeElement))
   await page.keyboard.press('Escape')
 
   // ── The locality picker ──────────────────────────────────────────────
   await form.getByRole('button', { name: /Search a locality in Kolkata/ }).click()
   const picker = page.getByRole('dialog', { name: 'Where are you looking?' })
-  await picker.getByRole('textbox', { name: 'Search localities' }).fill('Salt')
+  await picker.getByRole('combobox', { name: 'Search localities' }).fill('Salt')
   await picker.getByRole('option', { name: /Salt Lake/ }).first().click()
   await picker.getByRole('button', { name: /Done · 1 locality/ }).click()
   // The picker plays a 200ms exit (UI-04) and, like any modal, keeps the page
@@ -209,6 +216,87 @@ try {
   await form.getByRole('button', { name: 'Search properties for sale' }).click()
   await page.waitForURL((url) => url.pathname === '/buy/kolkata/salt-lake')
   await check('Search with one locality opens its results page', (await resultCount(page)) > 0)
+
+  // ── UI-13: the locality picker by keyboard and screen reader ─────────
+  // Phone: the sheet holds the same combobox as desktop. Options are not
+  // tab stops; arrows move the active option, Enter toggles it, and each
+  // change is said in words.
+  await home(page)
+  await page.locator('.reference-search-trigger').click()
+  await form.getByRole('button', { name: /Search a locality in Kolkata/ }).click()
+  const box = page.getByRole('dialog', { name: 'Where are you looking?' }).getByRole('combobox', { name: 'Search localities' })
+  // The sheet hands focus over once its entrance starts; wait for that
+  // rather than reading the first frame.
+  await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'combobox', null, { timeout: 3000 }).catch(() => {})
+  await check('phone: the picker field is a 16px combobox with focus', await box.evaluate((el) => getComputedStyle(el).fontSize === '16px' && el === document.activeElement), await page.evaluate(() => document.activeElement?.outerHTML.slice(0, 80)))
+  await check('phone: browser autofill stays out of the suggestions', await box.getAttribute('autocomplete') === 'off')
+  const said = () => page.locator('[data-sheet] [role="status"]').last().innerText()
+  await box.fill('zzzz')
+  await check('phone: no match is shown and said', /No locality matches/.test(await page.locator('[data-sheet]').last().innerText()) && /No locality matches zzzz/.test(await said()))
+  await box.fill('Salt')
+  await check('phone: the number of matches is said', /\d+ localit(y|ies) found/.test(await said()), await said())
+  await check('phone: suggestions are options, not tab stops', await page.locator('[role="option"]').count() > 0 && await page.locator('button[role="option"], [role="option"][tabindex]').count() === 0)
+  await check('phone: nothing looks active before the arrows move', await box.getAttribute('aria-activedescendant') === null)
+  await page.keyboard.press('ArrowDown')
+  const activeId = await box.getAttribute('aria-activedescendant')
+  await check('phone: ArrowDown makes the first suggestion active', !!activeId && await page.locator(`[id="${activeId}"]`).getAttribute('role') === 'option')
+  await page.keyboard.press('Enter')
+  await check('phone: Enter chooses it, and the choice is said', await page.locator(`[id="${activeId}"]`).getAttribute('aria-selected') === 'true' && /added\. 1 locality chosen\./.test(await said()), await said())
+  await check('phone: focus stays in the field after choosing', await box.evaluate((el) => el === document.activeElement))
+  const removeChosen = page.locator('[data-sheet]').last().getByRole('button', { name: /^Remove / })
+  await removeChosen.focus()
+  await page.keyboard.press('Enter')
+  await check('phone: removing the last chosen locality hands focus back to the field', await box.evaluate((el) => el === document.activeElement) && await removeChosen.count() === 0)
+  await box.fill('Uttarpara')
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  await check('phone: a long locality name fits without sideways scrolling', await page.evaluate(() => [...document.querySelectorAll('[data-sheet]')].every((s) => s.scrollWidth <= s.clientWidth + 1) && document.documentElement.scrollWidth <= innerWidth + 1))
+  await page.keyboard.press('Escape')
+  await check('phone: Escape first clears the search, leaving the picker open', await box.inputValue() === '' && await box.getAttribute('aria-expanded') === 'false' && await page.getByRole('dialog', { name: 'Where are you looking?' }).isVisible())
+  await page.keyboard.press('Escape')
+  await page.getByRole('dialog', { name: 'Where are you looking?' }).waitFor({ state: 'detached' })
+  await page.waitForTimeout(100)
+  await check('phone: Escape closes the picker and focus returns to the field that opened it', await page.evaluate(() => document.activeElement?.getAttribute('aria-label')?.startsWith('Localities: ') ?? false))
+
+  // Desktop: the inline combobox inside the search sheet. Escape closes the
+  // suggestions first (the sheet stays open), then the sheet.
+  {
+    const desk = await open(1280, 900)
+    await home(desk)
+    await desk.locator('.reference-search-trigger').click()
+    const inline = desk.getByRole('dialog', { name: 'Find your home' }).getByRole('combobox', { name: 'Search localities in Kolkata' })
+    await inline.click()
+    await inline.fill('New')
+    await check('desktop: typing opens the suggestions', await inline.getAttribute('aria-expanded') === 'true' && !!(await inline.getAttribute('aria-activedescendant')))
+    await desk.keyboard.press('ArrowDown')
+    await desk.keyboard.press('ArrowUp')
+    await desk.keyboard.press('Enter')
+    await check('desktop: Enter adds the active suggestion as a chip and clears the text', await desk.locator('[data-sheet] ul[aria-label="Chosen localities"] li').count() === 1 && await inline.inputValue() === '')
+    await inline.fill('Sal')
+    await desk.keyboard.press('Escape')
+    await check('desktop: Escape closes the suggestions and leaves the sheet open', await inline.getAttribute('aria-expanded') === 'false' && await desk.getByRole('dialog', { name: 'Find your home' }).isVisible())
+    await desk.keyboard.press('Escape')
+    await check('desktop: a second Escape clears the text', await inline.inputValue() === '')
+    await desk.keyboard.press('Backspace')
+    await check('desktop: Backspace in the empty field removes the last chip', await desk.locator('[data-sheet] ul[aria-label="Chosen localities"]').count() === 0)
+    await desk.keyboard.press('Escape')
+    await desk.getByRole('dialog', { name: 'Find your home' }).waitFor({ state: 'detached' })
+    await desk.context().close()
+  }
+
+  // Without JavaScript the launcher (a sheet trigger) cannot work, so a
+  // link to the results page takes its place.
+  {
+    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, javaScriptEnabled: false })
+    const nojs = await ctx.newPage()
+    await nojs.goto(base + '/', { waitUntil: 'load' })
+    const link = nojs.locator('a.reference-search-trigger')
+    await check('no JavaScript: the search launcher is a link to the results', await link.isVisible() && await link.getAttribute('href') === '/buy/kolkata' && !(await nojs.locator('button.reference-search-trigger').isVisible()))
+    await link.click()
+    await nojs.waitForURL((url) => url.pathname === '/buy/kolkata')
+    await check('no JavaScript: it opens the results page', await nojs.locator('article').count() > 0)
+    await ctx.close()
+  }
 
   // ── Listing rails: swipe, snap, peek, and an honest end card ─────────
   await home(page)

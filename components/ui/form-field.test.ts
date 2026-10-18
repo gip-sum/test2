@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest'
 import { Button, buttonClassName } from './Button'
 import { FormCheckbox, FormField, FormFieldset, type FieldControl } from './FormField'
 import { StatusBadge } from './StatusBadge'
+import { ToggleChip } from './ToggleChip'
+import { Chip } from './Chip'
 
 const html = (type: unknown, props: Record<string, unknown>) => renderToStaticMarkup(createElement(type as FC, props))
 const input = (control: FieldControl) => createElement('input', { ...control, name: 'carpet' })
@@ -87,5 +89,32 @@ describe('Button text variant (UI-12)', () => {
     expect(cls).not.toMatch(/\btext-label\b|\bpx-4\b/)
     // A caller's colour wins (tailwind-merge).
     expect(buttonClassName({ variant: 'text', className: 'text-brand-700' })).not.toContain('text-current')
+  })
+})
+
+describe('ToggleChip (UI-13)', () => {
+  it('is a 44px pressed toggle whose state is not colour alone', () => {
+    const on = html(ToggleChip, { pressed: true, onToggle: () => {}, children: '2 BHK' })
+    expect(on).toContain('aria-pressed="true"')
+    expect(on).toContain('h-11')
+    expect(on).toContain('border-2')
+    expect(on).toContain('<svg')
+    const off = html(ToggleChip, { pressed: false, onToggle: () => {}, children: '2 BHK' })
+    expect(off).toContain('aria-pressed="false"')
+    expect(off).not.toContain('<svg')
+  })
+
+  it('marks a value that would empty the results unavailable without disabling it', () => {
+    const out = html(ToggleChip, { pressed: false, onToggle: () => {}, unavailable: true, count: 0, children: 'East' })
+    expect(out).toContain('aria-disabled="true"')
+    expect(out).not.toMatch(/\sdisabled=/)
+    expect(out).toMatch(/>0<\/span>/)
+  })
+})
+
+describe('Chip removal focus (UI-13)', () => {
+  it('marks its remove control so focus can move to the next chip', () => {
+    expect(html(Chip, { label: 'New Town', onRemove: () => {}, focusAfterRemove: 'field' })).toContain('data-chip-remove')
+    expect(html(Chip, { label: 'New Town', onRemove: () => {}, removeHref: '/buy/kolkata' })).toMatch(/<a href="\/buy\/kolkata"[^>]*data-chip-remove/)
   })
 })

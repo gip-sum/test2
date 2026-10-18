@@ -19,10 +19,14 @@ import { describe, expect, it } from 'vitest'
 // buttons onto Button; no handwritten button remains in app/admin or
 // components/admin. UI-12 moved ten text actions (Reload…, Try again, Copy
 // link, Withdraw, Retry save, Sign out…) onto Button's `text` variant and
-// made the zero-results exits links (they change the URL).
+// made the zero-results exits links (they change the URL). UI-13 made the
+// two drifted filter toggles one `ToggleChip` primitive, put More filters,
+// Search, Clear all and Read more on Button, made the filter sheet's Clear
+// all the same link as the one beside the chips, and turned the locality
+// suggestions from tabbable buttons into combobox options.
 //
 // Lower the ceiling when a stage migrates more. Raising it needs a reason.
-const CEILING = 27
+const CEILING = 19
 const root = process.cwd()
 const walk = (dir: string): string[] => readdirSync(dir).flatMap((name) => {
   const path = join(dir, name)

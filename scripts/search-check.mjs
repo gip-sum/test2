@@ -273,6 +273,76 @@ for (const width of [390, 412, 768, 1280]) {
   await c.close()
 }
 
+console.log('\nUI-13. Filters by keyboard: focus, 16px fields, 44px toggles')
+{
+  // Its own page: the shared one is closed by the widths section above.
+  const ctx13 = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+  const q = await ctx13.newPage()
+  const settled = () => q.waitForFunction(() => document.querySelectorAll('[role="status"]').length === 0 &&
+    (document.querySelectorAll('article').length > 0 || document.querySelector('section[aria-labelledby="zero-results"]') !== null), null, { timeout: 15000 })
+  const go = async (path) => { await q.goto(B + path, { waitUntil: 'load' }); await settled(); await q.evaluate(() => document.fonts.ready) }
+  const active = () => q.evaluate(() => ({ id: document.activeElement?.id ?? '', label: document.activeElement?.getAttribute('aria-label') ?? '', text: document.activeElement?.textContent?.trim() ?? '', pressed: document.activeElement?.getAttribute('aria-pressed') }))
+  await go('/buy/kolkata?bhk=2,3&type=APARTMENT')
+  const firstChip = q.locator('a[aria-label^="Remove filter"]').first()
+  const removed = await firstChip.getAttribute('aria-label')
+  await firstChip.focus()
+  await q.keyboard.press('Enter')
+  await q.waitForFunction((label) => ![...document.querySelectorAll('a[aria-label^="Remove filter"]')].some((a) => a.getAttribute('aria-label') === label), removed, { timeout: 8000 })
+  const afterChip = await active()
+  check('removing a chip by keyboard hands focus to the next chip', /^Remove filter/.test(afterChip.label) && afterChip.label !== removed, `${removed} → ${afterChip.label}`)
+
+  await go('/buy/kolkata?bhk=2')
+  await q.locator('a[aria-label^="Remove filter"]').first().focus()
+  await q.keyboard.press('Enter')
+  await q.waitForFunction(() => !location.search.includes('bhk'), null, { timeout: 8000 })
+  await settled()
+  check('removing the last chip hands focus to the result count', (await active()).id === 'results-count')
+
+  await go('/buy/kolkata?bhk=2,3')
+  await q.getByRole('link', { name: 'Clear all', exact: true }).first().focus()
+  await q.keyboard.press('Enter')
+  await q.waitForFunction(() => !location.search.includes('bhk'), null, { timeout: 8000 })
+  await settled()
+  check('Clear all by keyboard hands focus to the result count', (await active()).id === 'results-count')
+
+  await go('/buy/kolkata')
+  const sizes = await q.evaluate(() => ({
+    sort: getComputedStyle(document.querySelector('select[aria-label="Sort results"]')).fontSize,
+    fields: [...document.querySelectorAll('aside[aria-label="Filters"] input')].map((i) => getComputedStyle(i).fontSize),
+  }))
+  check('Sort and the filter text fields are 16px (no zoom on iPhone)', sizes.sort === '16px' && sizes.fields.length > 0 && sizes.fields.every((f) => f === '16px'), JSON.stringify(sizes))
+  const toggles = await q.locator('aside[aria-label="Filters"] [aria-pressed]').evaluateAll((els) => els.filter((e) => e.getBoundingClientRect().height > 0).map((e) => Math.round(e.getBoundingClientRect().height)))
+  check('every visible filter toggle in the rail is at least 44px tall', toggles.length > 0 && toggles.every((h) => h >= 44), `${toggles.length} toggles, min ${Math.min(...toggles)}`)
+  check('no filter control is natively disabled (focus would fall to <body>)', await q.locator('aside[aria-label="Filters"] button[disabled]').count() === 0)
+  const bhk3 = q.locator('aside[aria-label="Filters"]').getByRole('button', { name: /^3 BHK/ })
+  await bhk3.focus()
+  await q.keyboard.press('Enter')
+  await q.waitForFunction(() => location.search.includes('bhk=3'), null, { timeout: 8000 })
+  await settled()
+  const onToggle = await active()
+  check('a filter toggled by keyboard keeps focus and reads pressed', onToggle.pressed === 'true' && /^3 BHK/.test(onToggle.text), JSON.stringify(onToggle))
+
+  const phone = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
+  const ph = await phone.newPage()
+  await ph.goto(B + '/buy/kolkata?bhk=2,3', { waitUntil: 'load' })
+  await ph.waitForFunction(() => document.querySelectorAll('article').length > 0 && document.querySelectorAll('[role="status"]').length === 0, null, { timeout: 15000 })
+  const filtersButton = ph.getByRole('button', { name: /^Filters/ })
+  await filtersButton.click()
+  const sheet = ph.getByRole('dialog', { name: 'Filters' })
+  await sheet.waitFor()
+  await sheet.getByRole('link', { name: 'Clear all', exact: true }).focus()
+  await ph.keyboard.press('Enter')
+  await ph.waitForFunction(() => !location.search.includes('bhk'), null, { timeout: 8000 })
+  await ph.waitForTimeout(300)
+  check("phone: the sheet's Clear all keeps focus inside the open sheet", await sheet.isVisible() && await ph.evaluate(() => document.activeElement?.id === 'filters-sheet-body'))
+  await ph.keyboard.press('Escape')
+  await sheet.waitFor({ state: 'detached' })
+  await ph.waitForTimeout(100)
+  check('phone: Escape closes the sheet and focus returns to Filters', await ph.evaluate(() => /^Filters/.test(document.activeElement?.textContent?.trim() ?? '')))
+  await phone.close()
+  await ctx13.close()
+}
+
 await browser.close()
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail === 0 ? 0 : 1)
