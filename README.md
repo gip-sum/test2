@@ -28,7 +28,7 @@ An original property marketplace for Kolkata, built around one loop:
 | 14 | Property pricing form | Implemented; review pending |
 | E | 99acres interface redesign from client screenshots | Implemented and verified locally; publication pending |
 | Workspace addon | Compact admin and property-owner interface, selected concept 1 | Implemented and verified; see [specification and evidence](docs/phases/ADDON-WORKSPACE-interface.md) |
-| UI track | UI modernization UI-01 … UI-14, outside the 75-phase numbering | UI-01 audit, UI-02 foundation, UI-03 design-system cleanup, UI-04 animation system, UI-05 core components, UI-06 search & cards, UI-07 auth UI, UI-08 special interactions, UI-09 seller workspace and UI-10 seller analytics complete; see [docs/ui-modernization](docs/ui-modernization/) |
+| UI track | UI modernization UI-01 … UI-14, outside the 75-phase numbering | UI-01 audit, UI-02 foundation, UI-03 design-system cleanup, UI-04 animation system, UI-05 core components, UI-06 search & cards, UI-07 auth UI, UI-08 special interactions, UI-09 seller workspace, UI-10 seller analytics and UI-11 admin workspace complete; see [docs/ui-modernization](docs/ui-modernization/) |
 
 The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
 criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)

@@ -213,7 +213,11 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
    `afterRefresh` (lib/a11y/after-refresh) with the ids to focus, and its
    page renders `<RestoreFocus token>` (UI-09). Form fields use
    `components/ui/FormField` — label, hint, control, error, all wired —
-   with 16px controls. Handwritten `<button>`s are pinned by
+   with 16px controls (`FormCheckbox` for a confirmation box). A submit is
+   never disabled as a hint: pressing it checks the input, marks each
+   problem on its field and focuses the first (UI-11). An account's status
+   renders through `StatusBadge` too; its vocabulary lives beside the
+   listing statuses in lib/listings/status-tone. Handwritten `<button>`s are pinned by
    `lib/design/button-count.test.ts`: lower its ceiling when you migrate,
    never raise it without a reason. A multi-step form keeps ONE action state across its steps, so
    every step survives a post without JavaScript; a client `onSubmit` may
