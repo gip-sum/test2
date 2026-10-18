@@ -1,11 +1,17 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { compressPhoto } from '@/lib/media/compress'
 import { fileError, PHOTO_LIMIT, type Photo } from '@/lib/media/types'
+import { measure, play, type FlipSnapshot } from '@/lib/motion/flip'
 
 type Item = { id: string; name: string; url?: string; file?: File; photo?: Photo; phase: 'preparing' | 'uploading' | 'processing' | 'ready' | 'error'; progress: number; attempted?: boolean; error?: string }
-const button = 'inline-flex min-h-11 items-center justify-center rounded-md border border-border-strong px-3 text-body-sm font-semibold text-brand-700 disabled:opacity-40'
+// aria-disabled, not disabled (UI-08, the UI-07 Button rule): a control
+// disabled while it has focus sends focus to <body>, and every move used to
+// do exactly that to the button just pressed. Each handler already refuses
+// while busy or at the end of the list.
+const button = 'inline-flex min-h-11 items-center justify-center rounded-md border border-border-strong px-3 text-body-sm font-semibold text-brand-700 disabled:opacity-40 aria-disabled:opacity-40 aria-disabled:cursor-not-allowed'
+type Control = 'earlier' | 'later' | 'remove'
 async function jsonRequest(method: string, body?: object) {
   const response = await fetch('/api/posting/photos', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(30_000) })
   const data = await response.json()
@@ -22,12 +28,25 @@ export function PhotoManager({ collection }: { collection: string }) {
   const active = useRef<XMLHttpRequest | null>(null)
   const mounted = useRef(true)
   const lock = useRef(false)
+  const list = useRef<HTMLOListElement>(null)
+  // Positions before a move or removal, played back once React has drawn
+  // the new order (lib/motion/flip.ts), and where focus goes afterwards.
+  const flip = useRef<{ from: FlipSnapshot; lead?: string; focus?: { id: string; control: Control } | 'input' } | null>(null)
   const patch = (id: string, change: Partial<Item>) => { if (mounted.current) setItems(previous => previous.map(item => item.id === id ? { ...item, ...change } : item)) }
   useEffect(() => {
     mounted.current = true
     const urls = resources.current
     return () => { mounted.current = false; active.current?.abort(); for (const url of urls) URL.revokeObjectURL(url); urls.clear() }
   }, [])
+  useLayoutEffect(() => {
+    const pending = flip.current
+    if (!pending) return
+    flip.current = null
+    play(list.current, pending.from, pending.lead)
+    const target = pending.focus
+    if (target === 'input') document.getElementById('property-photos')?.focus()
+    else if (target) list.current?.querySelector<HTMLElement>(`[data-flip-key="${target.id}"] [data-control="${target.control}"]`)?.focus()
+  }, [items])
   useEffect(() => {
     const controller = new AbortController()
     fetch(`/api/posting/photos?collection=${collection}`, { signal: controller.signal }).then(async response => {
@@ -89,18 +108,40 @@ export function PhotoManager({ collection }: { collection: string }) {
       // Even a failed transfer may have reserved a row or finished remotely.
       if (item.attempted || item.photo) await jsonRequest('DELETE', { id: item.id })
       if (item.url?.startsWith('blob:')) { URL.revokeObjectURL(item.url); resources.current.delete(item.url) }
+      // The photos after it slide up into the gap, and focus moves to the
+      // photo that took its place (or the one before, or the picker) instead
+      // of falling to the top of the page with the removed button.
+      const index = items.findIndex(photo => photo.id === item.id)
+      const neighbour = items[index + 1] ?? items[index - 1]
+      flip.current = { from: measure(list.current), focus: neighbour ? { id: neighbour.id, control: 'remove' } : 'input' }
       setItems(previous => previous.filter(photo => photo.id !== item.id)); setNotice(`${item.name} removed.`)
     } catch (error) { setNotice(error instanceof Error ? error.message : 'Could not remove photo.') }
     finally { lock.current = false; setBusy(false) }
   }
-  async function move(index: number, target: number) {
-    if (lock.current || items.some(item => item.phase !== 'ready')) return
+  async function move(index: number, target: number, control: Control) {
+    if (lock.current || items.some(item => item.phase !== 'ready') || target < 0 || target >= items.length) return
+    const previous = items
     const ordered = [...items]; const [item] = ordered.splice(index, 1)
     if (!item) return
     ordered.splice(target, 0, item); lock.current = true; setBusy(true)
-    try { await jsonRequest('PATCH', { collection, ids: ordered.map(photo => photo.id) }); setItems(ordered); setNotice(`${item.name} moved to position ${target + 1}.`) }
-    catch (error) { setNotice(error instanceof Error ? error.message : 'Could not save photo order.') }
-    finally { lock.current = false; setBusy(false) }
+    // The photo moves at once and travels from its old place to its new one,
+    // so the eye follows it across the grid; the order is saved behind it.
+    // If saving fails it travels back and the notice says why. Focus stays
+    // on the control pressed — or, once the photo reaches an end, on the one
+    // that still has somewhere to go ("Make cover" leaves the first photo).
+    const edge = control === 'earlier' && target === 0 ? 'later' : control === 'later' && target === items.length - 1 ? 'earlier' : control
+    flip.current = { from: measure(list.current), lead: item.id, focus: { id: item.id, control: edge } }
+    setItems(ordered)
+    try { await jsonRequest('PATCH', { collection, ids: ordered.map(photo => photo.id) }); if (mounted.current) setNotice(`${item.name} moved to position ${target + 1}.`) }
+    catch (error) {
+      if (mounted.current) {
+        // Back where it was, so the control pressed makes sense again.
+        flip.current = { from: measure(list.current), lead: item.id, focus: { id: item.id, control } }
+        setItems(previous)
+        setNotice(error instanceof Error ? `${error.message} The photo is back in position ${index + 1}.` : `Could not save photo order. The photo is back in position ${index + 1}.`)
+      }
+    }
+    finally { lock.current = false; if (mounted.current) setBusy(false) }
   }
   const canOrder = !busy && items.every(item => item.phase === 'ready')
   return <div className="mt-6">
@@ -111,8 +152,8 @@ export function PhotoManager({ collection }: { collection: string }) {
     </div>
     <p role="status" aria-live="polite" className="mt-4 break-words [overflow-wrap:anywhere] text-body-sm text-ink-700">{loading ? 'Loading your photos…' : notice || `${items.filter(item => item.phase === 'ready').length} photos uploaded. The first photo is your cover.`}</p>
     {loadError && <button type="button" className={`${button} mt-3`} onClick={() => window.location.reload()}>Reload photos</button>}
-    <ol aria-label="Property photos" className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {items.map((item, index) => <li key={item.id} className="min-w-0 rounded-lg border border-border-subtle bg-surface-000 p-3">
+    <ol ref={list} aria-label="Property photos" className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {items.map((item, index) => <li key={item.id} data-flip-key={item.id} className="relative min-w-0 rounded-lg border border-border-subtle bg-surface-000 p-3">
         <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-surface-200">
           {/* Local blobs and authenticated private image endpoints cannot use the public image optimizer. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -124,11 +165,11 @@ export function PhotoManager({ collection }: { collection: string }) {
         {item.phase === 'uploading' && <progress aria-label={`Upload progress for ${item.name}`} value={item.progress} max={100} className="mt-2 w-full accent-brand-600" />}
         {item.error && <p className="mt-2 break-words text-caption text-danger-600">{item.error}</p>}
         <div className="mt-3 flex flex-wrap gap-2">
-          <button type="button" className={button} disabled={!canOrder || index === 0} aria-label={`Move ${item.name} earlier`} onClick={() => void move(index, index - 1)}>← Earlier</button>
-          <button type="button" className={button} disabled={!canOrder || index === items.length - 1} aria-label={`Move ${item.name} later`} onClick={() => void move(index, index + 1)}>Later →</button>
-          {index > 0 && <button type="button" className={button} disabled={!canOrder} aria-label={`Make ${item.name} cover`} onClick={() => void move(index, 0)}>Make cover</button>}
-          {item.phase === 'error' && item.file && <button type="button" className={button} disabled={busy} onClick={() => void retry(item)}>Retry upload</button>}
-          <button type="button" className={button} disabled={busy} aria-label={`Remove ${item.name}`} onClick={() => void remove(item)}>Remove</button>
+          <button type="button" data-control="earlier" className={button} aria-disabled={!canOrder || index === 0 || undefined} aria-label={`Move ${item.name} earlier`} onClick={() => { if (canOrder) void move(index, index - 1, 'earlier') }}>← Earlier</button>
+          <button type="button" data-control="later" className={button} aria-disabled={!canOrder || index === items.length - 1 || undefined} aria-label={`Move ${item.name} later`} onClick={() => { if (canOrder) void move(index, index + 1, 'later') }}>Later →</button>
+          {index > 0 && <button type="button" className={button} aria-disabled={!canOrder || undefined} aria-label={`Make ${item.name} cover`} onClick={() => { if (canOrder) void move(index, 0, 'later') }}>Make cover</button>}
+          {item.phase === 'error' && item.file && <button type="button" className={button} aria-disabled={busy || undefined} onClick={() => { if (!busy) void retry(item) }}>Retry upload</button>}
+          <button type="button" data-control="remove" className={button} aria-disabled={busy || undefined} aria-label={`Remove ${item.name}`} onClick={() => { if (!busy) void remove(item) }}>Remove</button>
         </div>
       </li>)}
     </ol>

@@ -7,7 +7,7 @@ const BASE = process.env.BASE_URL ?? 'http://localhost:3101'
 const CHROME = process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
 const A = 'a9140f33-a429-46f3-9514-3e8f32f18189', B = 'b9140f33-a429-46f3-9514-3e8f32f18189'
 const rows = new Map(), objects = new Map()
-let failUpload = false, unavailable = false, passed = 0
+let failUpload = false, unavailable = false, failReorder = false, reorderDelay = 0, passed = 0
 const mock = http.createServer(async (request,response) => {
   const chunks=[]; for await (const chunk of request) chunks.push(chunk)
   const raw=Buffer.concat(chunks), url=new URL(request.url,'http://localhost:3300')
@@ -31,6 +31,8 @@ const mock = http.createServer(async (request,response) => {
     if(request.method==='DELETE'){selected.forEach(row=>rows.delete(row.id));return send(200,[])}
   }
   if(url.pathname==='/rest/v1/rpc/reorder_media_photos') {
+    if(reorderDelay)await new Promise(resolve=>setTimeout(resolve,reorderDelay))
+    if(failReorder){failReorder=false;return send(503,{})}
     const body=JSON.parse(raw); const actual=[...rows.values()].filter(row=>row.owner_id===owner&&row.collection_id===body.collection)
     if(actual.length!==body.photo_ids.length||new Set(body.photo_ids).size!==actual.length||!actual.every(row=>body.photo_ids.includes(row.id)))return send(400,{})
     body.photo_ids.forEach((id,index)=>rows.get(id).position=index);return send(200,null)
@@ -75,6 +77,38 @@ try {
   check('reorder persisted', [...rows.values()].find(row=>row.original_name==='bedroom.png').position===0)
   await page.reload();await page.getByText('Uploaded ·',{exact:false}).nth(1).waitFor()
   check('collection preserves saved order on refresh',(await page.locator('ol[aria-label="Property photos"] li').first().innerText()).includes('bedroom.png'))
+
+  // UI-08: a moved photo travels to its new place, focus stays on the
+  // control pressed, and a failed save puts the photo back and says so.
+  const names=()=>page.locator('ol[aria-label="Property photos"] li').evaluateAll(items=>items.map(item=>item.querySelector('p')?.textContent.replace(/^\d+\. /,'')))
+  const focused=()=>page.evaluate(()=>document.activeElement?.getAttribute('aria-label'))
+  reorderDelay=600
+  await page.getByRole('button',{name:'Move bedroom.png later',exact:true}).focus()
+  const moved=await page.getByRole('button',{name:'Move bedroom.png later',exact:true}).evaluate(el=>new Promise(resolve=>{
+    el.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));el.click()
+    requestAnimationFrame(()=>resolve({flips:[...document.querySelectorAll('[data-flip-key]')].reduce((n,item)=>n+item.getAnimations().filter(a=>a.id==='flip').length,0),raised:el.closest('[data-flip-key]').style.zIndex,first:document.querySelector('[data-flip-key] p')?.textContent}))
+  }))
+  check('a moved photo is in its new place at once and travels there (both photos animate, the moved one above)',moved.flips===2&&moved.raised==='1'&&moved.first.includes('living-room.png'))
+  check('while the order saves, the controls refuse presses but keep focus where it was',await focused()==='Move bedroom.png earlier'&&await page.getByRole('button',{name:'Move bedroom.png earlier',exact:true}).getAttribute('aria-disabled')==='true')
+  await page.getByRole('status').filter({hasText:'bedroom.png moved to position 2'}).waitFor()
+  check('at the end of the list, focus moves to the control that can still move it',await focused()==='Move bedroom.png earlier'&&[...rows.values()].find(row=>row.original_name==='bedroom.png').position===1)
+  reorderDelay=0;failReorder=true
+  await page.keyboard.press('Enter')
+  await page.getByRole('status').filter({hasText:'The photo is back in position 2.'}).waitFor()
+  check('a failed save puts the photo back where it was, says so, and keeps focus on it',JSON.stringify(await names())===JSON.stringify(['living-room.png','bedroom.png'])&&await focused()==='Move bedroom.png earlier'&&[...rows.values()].find(row=>row.original_name==='bedroom.png').position===1)
+  await page.keyboard.press('Enter');await page.getByRole('status').filter({hasText:'bedroom.png moved to position 1'}).waitFor()
+  check('the keyboard alone reorders: Enter moves it, focus follows it to the first place',JSON.stringify(await names())===JSON.stringify(['bedroom.png','living-room.png'])&&await focused()==='Move bedroom.png later')
+  {
+    const still=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'})
+    await still.addCookies([{name:'gb-access',value:'a'.repeat(48),url:BASE}])
+    const quiet=await still.newPage();await quiet.goto(BASE+path);await quiet.getByText('Uploaded ·',{exact:false}).nth(1).waitFor()
+    const calm=await quiet.getByRole('button',{name:'Move bedroom.png later',exact:true}).evaluate(el=>new Promise(resolve=>{el.click();requestAnimationFrame(()=>resolve({flips:document.getAnimations().filter(a=>a.id==='flip').length,first:document.querySelector('[data-flip-key] p')?.textContent}))}))
+    check('reduced motion: the photo changes place at once, with no movement',calm.flips===0&&calm.first.includes('living-room.png'))
+    await quiet.getByRole('status').filter({hasText:'moved to position 2'}).waitFor()
+    await quiet.getByRole('button',{name:'Make bedroom.png cover',exact:true}).click();await quiet.getByRole('status').filter({hasText:'moved to position 1'}).waitFor()
+    check('"Make cover" leaves the first photo without its button; focus moves to the one that remains',await quiet.evaluate(()=>document.activeElement?.getAttribute('aria-label'))==='Move bedroom.png later')
+    await still.close()
+  }
   const first=[...rows.values()][0]
   const ownImage=await context.request.get(BASE+`/api/posting/photos/${first.id}`);check('owner preview available',ownImage.status()===200&&ownImage.headers()['cache-control'].includes('no-store'))
   const other=await browser.newContext();await other.addCookies([{name:'gb-access',value:'b'.repeat(48),url:BASE}])
@@ -97,10 +131,18 @@ try {
   check('lost success response is idempotent',retry.status()===200&&rows.size===3)
   await page.getByRole('button',{name:'Remove living-room.png',exact:true}).click();await page.getByRole('status').filter({hasText:'removed.'}).waitFor()
   check('delete clears object and record',rows.size===2&&objects.size===2)
+  check('after a removal focus moves to the photo that took its place, not the top of the page',/^Remove (bedroom|balcony)\.png$/.test(await focused()))
   await page.locator('#property-photos').setInputFiles({name:'bad.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg/>')})
   await page.getByRole('status').filter({hasText:'Choose a JPEG'}).waitFor();check('unsupported original rejected before upload',rows.size===2)
-  for(const width of [390,412,768,1280]) {
+  for(const width of [320,360,375,390,412,430,768,1280]) {
     await page.setViewportSize({width,height:844});check(`${width}: no overflow`,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1))
+    if(width===320){
+      // Mid-move, the travelling photo is drawn between cells: still no
+      // sideways scroll (UI-08).
+      const during=await page.locator('ol[aria-label="Property photos"] li').first().getByRole('button',{name:/later$/}).evaluate(el=>new Promise(resolve=>{el.click();requestAnimationFrame(()=>resolve({moving:document.getAnimations().filter(a=>a.id==='flip').length,fits:document.documentElement.scrollWidth<=innerWidth+1}))}))
+      check('320: no overflow while a photo travels',during.moving>0&&during.fits)
+      await page.getByRole('status').filter({hasText:'moved to position 2'}).waitFor()
+    }
     check(`${width}: action targets at least 44px`,await page.locator('ol[aria-label="Property photos"] button').evaluateAll(nodes=>nodes.every(node=>node.getBoundingClientRect().height>=44)))
     await page.evaluate(()=>window.scrollTo(0,0))
     await page.screenshot({path:`/tmp/phase15-shots/photos-${width}.png`,fullPage:true})

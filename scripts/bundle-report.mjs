@@ -37,6 +37,9 @@ export const ROUTES = [
   ['Property details', '/property/4-bhk-flat-for-sale-in-ballygunge-p5d40ab'],
   ['Login', '/login'],
   ['Post property', '/post'],
+  // Behind sign-in (a guest is redirected), so measured from its manifest:
+  // the photo manager and its reorder animation live here (UI-08).
+  ['Post photos', '/post/photos', 'post/photos'],
   ['EMI calculator', '/calculators/emi'],
   ['Activity (guest)', '/account/activity'],
   ['Not found (404)', '/this-page-does-not-exist'],
