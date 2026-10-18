@@ -114,3 +114,55 @@ export function niceMax(max: number): number {
   const power = 10 ** Math.floor(Math.log10(max))
   return [1, 2, 5, 10].map((m) => m * power).find((v) => v >= max)!
 }
+
+/**
+ * All of a seller's listings together (UI-10), for the overview. Every
+ * listing shares one counting start date, so a day is either counted for
+ * all of them or for none; a day nobody counted stays null in the sum.
+ */
+export function combineSeries(listings: readonly ListingPerformance[]): DayPoint[] {
+  const first = listings[0]
+  if (!first) return []
+  return first.series.map((p, i) => {
+    const day = listings.map((l) => l.series[i]!)
+    const counted = day.filter((d) => d.views !== null)
+    return { day: p.day, views: counted.length ? counted.reduce((n, d) => n + d.views!, 0) : null, enquiries: day.reduce((n, d) => n + d.enquiries, 0) }
+  })
+}
+
+export function sumTotals(list: readonly Totals[]): Totals {
+  const counted = list.filter((t) => t.views !== null)
+  return {
+    views: counted.length ? counted.reduce((n, t) => n + t.views!, 0) : null,
+    enquiries: list.reduce((n, t) => n + t.enquiries, 0),
+    untrackedDays: Math.max(0, ...list.map((t) => t.untrackedDays)),
+  }
+}
+
+/**
+ * How a period compares with the one before, as plain figures (UI-10).
+ *
+ * Views are compared only when every day of both periods was counted. A
+ * period that was partly tracked is stated, never compared: 30 counted days
+ * against 5 would read as growth that never happened. A period that was not
+ * tracked at all is not 0 and not 0%: it is "not tracked".
+ */
+export type Change =
+  | { kind: 'up' | 'down' | 'same'; by: number; previous: number }
+  | { kind: 'not-tracked' }
+  | { kind: 'partly-tracked'; previous: number; countedDays: number }
+
+export function viewsChange(current: Totals, previous: Totals, range: Range): Change {
+  if (previous.views === null) return { kind: 'not-tracked' }
+  if (current.views === null || current.untrackedDays > 0 || previous.untrackedDays > 0) return { kind: 'partly-tracked', previous: previous.views, countedDays: range - previous.untrackedDays }
+  return difference(current.views, previous.views)
+}
+
+/** Enquiries are recorded whenever they happen, so every period compares. */
+export function enquiriesChange(current: Totals, previous: Totals): Change {
+  return difference(current.enquiries, previous.enquiries)
+}
+
+function difference(now: number, before: number): Change {
+  return { kind: now > before ? 'up' : now < before ? 'down' : 'same', by: Math.abs(now - before), previous: before }
+}
