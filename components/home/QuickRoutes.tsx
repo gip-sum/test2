@@ -17,20 +17,27 @@ const ROUTES: Route[] = [
   { href: '/post', label: 'Post property', hint: 'List yours', Icon: PlusIcon, supply: true },
 ]
 
+/**
+ * Phones and tablets: shortcut tiles under the hero (UI-14), as an app's
+ * home screen would show them — a tinted square per destination, the
+ * seller's in its own orange. Desktop has the header for these.
+ */
 export function QuickRoutes() {
   return (
-    <nav aria-label="Quick routes" className="quick-routes lg:hidden">
-      <ul>
+    <nav aria-label="Quick routes" className="home-container pt-6 lg:hidden">
+      <ul className="home-shortcuts -mx-4 flex gap-1 overflow-x-auto px-3 [scrollbar-width:none] sm:-mx-6 sm:px-5">
         {ROUTES.map(({ href, label, hint, Icon, supply }) => (
-          <li key={label}>
-            <Link href={href} className="quick-route">
-              <span className={supply ? 'quick-icon quick-icon-supply' : 'quick-icon'} aria-hidden="true"><Icon className="size-5.5" /></span>
-              <span className="quick-label">{label}</span>
-              <span className="quick-hint">{hint}</span>
+          <li key={label} className="w-20 shrink-0">
+            <Link href={href} className="flex min-h-11 flex-col items-center gap-2 rounded-md px-1 py-1.5 text-center">
+              <span className={supply ? 'grid size-13 place-items-center rounded-md bg-supply-100 text-supply-700' : 'grid size-13 place-items-center rounded-md bg-brand-50 text-brand-700 ring-1 ring-brand-100'} aria-hidden="true">
+                <Icon className="size-6" />
+              </span>
+              <span className="text-caption font-semibold leading-tight text-ink-900">{label}</span>
+              <span className="sr-only">{hint}</span>
             </Link>
           </li>
         ))}
-        <li className="quick-view-all"><MarketplaceMenu nav={getMarketplaceNav()} trigger="text" /></li>
+        <li className="flex w-20 shrink-0 items-start justify-center pt-3"><MarketplaceMenu nav={getMarketplaceNav()} trigger="text" /></li>
       </ul>
     </nav>
   )

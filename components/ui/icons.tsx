@@ -251,3 +251,17 @@ export function VideoIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/** Bedrooms, on a homepage card's specification row (UI-14). */
+export function BedIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><path d="M3 18v-7a2 2 0 012-2h14a2 2 0 012 2v7M3 15h18M3 18v2M21 18v2M7 9V6.5A1.5 1.5 0 018.5 5h7A1.5 1.5 0 0117 6.5V9" /></svg>
+}
+
+/** An area figure: a square with its corners marked (UI-14). */
+export function AreaIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" /><rect x="8" y="8" width="8" height="8" rx="1" /></svg>
+}
+
+export function CheckIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><path d="M5 13l4 4L19 7" /></svg>
+}

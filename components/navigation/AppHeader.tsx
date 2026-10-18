@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Wordmark } from './Wordmark'
+import { PlusIcon } from '@/components/ui/icons'
 import { buttonClassName } from '@/components/ui/Button'
 import { getMarketplaceNav } from '@/lib/navigation/marketplace'
 import { AccountLink } from './AccountLink'
@@ -21,8 +22,8 @@ export function AppHeader({ bottomNavForced = false }: { bottomNavForced?: boole
         <HeaderNav nav={nav} />
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
-          <Link href="/post" className={buttonClassName({ variant: 'supply', size: 'md', className: 'header-post whitespace-nowrap' })}>
-            Post property
+          <Link href="/post" className={buttonClassName({ variant: 'supply', size: 'md', className: 'header-post gap-1.5 whitespace-nowrap' })}>
+            <PlusIcon className="size-4" />Post property
           </Link>
           <div className="max-lg:hidden"><AccountLink /></div>
           <MarketplaceMenu nav={nav} trigger="icon" barForced={bottomNavForced} className="lg:hidden" />

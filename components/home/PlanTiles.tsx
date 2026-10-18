@@ -1,37 +1,43 @@
 import Link from 'next/link'
 import { SectionHeading } from './SectionHeading'
 import { CALCULATORS } from '@/components/calculators/catalogue'
-import { ChevronRightIcon } from '@/components/ui/icons'
+import { ArrowRightIcon } from '@/components/ui/icons'
 
 /**
- * The two questions before the search: what can I afford, and what will it
- * cost each month. Both are working calculators (Phase 40A); the budget
- * one ends in a search capped at the answer.
+ * Plan your purchase (UI-14): the two calculators as wide cards, each a
+ * single link, with what it works out in a sentence. No figures here: the
+ * answers live on the calculator pages, from the visitor's own numbers.
  */
 export function PlanTiles() {
   return (
-    <section aria-labelledby="plan-purchase" className="home-section reference-tools">
-      <SectionHeading
-        id="plan-purchase"
-        eyebrow="Plan your purchase"
-        title="Use popular tools"
-        description="Go from browsing to buying"
-        action={{ href: '/calculators', label: 'View all' }}
-      />
-      <ul className="calc-index mt-4">
-        {CALCULATORS.map(({ href, body, Icon }) => (
-          <li key={href}>
-            <Link href={href} className="calc-index-card">
-              <span className="calc-index-icon" aria-hidden="true"><Icon className="size-6" /></span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-body font-semibold text-ink-900">{href.endsWith('/budget') ? 'Budget Calculator' : 'EMI Calculator'}</span>
-                <span className="mt-0.5 block text-body-sm text-ink-700">{body}</span>
-              </span>
-              <ChevronRightIcon className="size-5 shrink-0 text-brand-600" />
-            </Link>
-          </li>
-        ))}
-      </ul>
+    <section aria-labelledby="plan-purchase" className="home-band">
+      <div className="home-container">
+        <SectionHeading
+          id="plan-purchase"
+          eyebrow="Plan your purchase"
+          title="Know your budget before you visit"
+          description="Two calculators that work from your own numbers. The budget calculator links to the homes that fit."
+          action={{ href: '/calculators', label: 'All tools', context: 'calculators' }}
+        />
+        <ul className="mt-6 grid gap-4 md:grid-cols-2 lg:mt-8 lg:gap-5">
+          {CALCULATORS.map(({ href, body, Icon }, index) => (
+            <li key={href}>
+              <Link href={href} className="home-card home-arrow-card group flex h-full items-start gap-4 rounded-lg border border-border-subtle bg-surface-000 p-5 shadow-e1 lg:gap-5 lg:p-6">
+                <span className={index === 0 ? 'grid size-14 shrink-0 place-items-center rounded-md bg-brand-50 text-brand-700' : 'grid size-14 shrink-0 place-items-center rounded-md bg-supply-100 text-supply-700'} aria-hidden>
+                  <Icon className="size-7" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-display text-heading-3 text-ink-900">{href.endsWith('/budget') ? 'Budget calculator' : 'Home loan EMI calculator'}</span>
+                  <span className="mt-1.5 block text-body text-ink-700">{body}</span>
+                  <span className="mt-3 inline-flex items-center gap-2 text-label text-brand-700">
+                    Open calculator <ArrowRightIcon className="home-arrow size-4" />
+                  </span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   )
 }

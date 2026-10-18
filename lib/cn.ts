@@ -12,13 +12,13 @@ import { extendTailwindMerge } from 'tailwind-merge'
  * product. Naming the scale here is what stops that.
  */
 export const TYPE_SCALE = [
-  'display-1', 'heading-1', 'heading-2', 'heading-3',
+  'display-xl', 'display-1', 'heading-1', 'heading-2', 'heading-3',
   'body-lg', 'body', 'body-sm', 'label', 'overline', 'caption',
   'price-lg', 'price', 'stat',
 ] as const
 
 /** The @theme elevation scale and role shadows. Unlisted, `shadow-e2 shadow-none` would keep both. */
-export const SHADOW_SCALE = ['e0', 'e1', 'e2', 'e3', 'float', 'panel', 'glass', 'tile', 'raised'] as const
+export const SHADOW_SCALE = ['e0', 'e1', 'e2', 'e3', 'float', 'panel', 'glass', 'tile', 'raised', 'lift', 'hero'] as const
 
 /** The @theme font families (`font-sans`, `font-display`). */
 export const FONT_FAMILIES = ['sans', 'display'] as const

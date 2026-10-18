@@ -139,6 +139,9 @@
   --color-graphite: #292929;         /* Phase E current item and headings */
   --color-graphite-muted: #737373;   /* Phase E inactive labels */
   --color-surface-grey: #f2f2f2;     /* Phase E category rail */
+  /* The homepage's warm neutral band (UI-14): between white and cream, so a
+     section reads as a change of room, not as a coloured box. */
+  --color-paper: #f7f5ef;
   /* Discovery tiles: neighbouring tiles take different tints so a row of
      places or property types reads as separate things, and the type
      drawings take their roofs, trim and lit windows from Kolkata's own
@@ -175,10 +178,22 @@
   --shadow-glass: 0 8px 24px #064e3b0b;    /* glass cards */
   --shadow-tile: 0 2px 4px #173e2626;      /* Phase E resting tiles and panels */
   --shadow-raised: 0 8px 16px #173e2626;   /* Phase E sticky search trigger */
+  /* A homepage card lifted under the pointer (UI-14): soft, wide and green
+     tinted, so a lifted card reads as nearer, not as outlined. */
+  --shadow-lift: 0 2px 6px #0f2a1f0f, 0 18px 40px #0f2a1f24;
+  /* The hero search card over the photograph (UI-14). */
+  --shadow-hero: 0 2px 8px #04140e1f, 0 32px 80px #04140e47;
 
   /* ---- Type scale ----
      Thirteen semantic styles. Each carries size, leading and weight so a
      component names the role, never the pixels.                          */
+  /* The homepage hero headline (UI-14): the one size above display-1, for
+     the first words of the marketplace on a wide screen. */
+  --text-display-xl: 56px;
+  --text-display-xl--line-height: 60px;
+  --text-display-xl--font-weight: 700;
+  --text-display-xl--letter-spacing: -0.03em;
+
   --text-display-1: 39px;
   --text-display-1--line-height: 42px;
   --text-display-1--font-weight: 700;
@@ -1443,8 +1458,12 @@ img[data-fade='in'] { opacity: 1; transition: opacity var(--duration-base) var(-
 }
 /* Phase E: mobile reference layout. Colours remain in the shared token layer. */
 .reference-wordmark { display: flex; flex-shrink: 0; align-items: center; min-height: 44px; border-radius: var(--radius-md); }
-.header-post { background: var(--color-surface-000); color: var(--color-brand-700); border: 1px solid var(--color-border-subtle); border-radius: var(--radius-full); padding: 0 14px; box-shadow: none; }
-.header-post:hover { background: var(--color-brand-50); }
+/* The seller's door in the header (UI-14): a forest pill with a mint plus,
+   the brand's deepest green, so it reads as the one action in the bar
+   without competing with the search's filled green. */
+.header-post { background: var(--color-forest); color: var(--color-on-forest); border: 1px solid var(--color-forest); border-radius: var(--radius-full); padding: 0 16px 0 12px; box-shadow: var(--shadow-e1); }
+.header-post svg { color: var(--color-mint); }
+.header-post:hover { background: var(--color-brand-700); border-color: var(--color-brand-700); }
 .app-bar-top, .app-bar-bottom { box-shadow: none; background: var(--color-surface-000); }
 .bar-item { color: var(--color-graphite-muted); }
 .bar-item[aria-current], .bar-item[aria-expanded='true'] { color: var(--color-graphite); }
@@ -1734,3 +1753,117 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
   .workspace-tabs a { white-space: nowrap; scroll-margin-inline: 8px; }
   .workspace-empty { padding: 20px; }
 }
+
+/* ---- Homepage, visual redesign (UI-14) ------------------------------------
+   One container, bands that change the room (white, mint, paper, forest),
+   a photographic hero with the search as its strongest element, and cards
+   that lift under a pointer. Everything here is Home's; the header, footer
+   and notice it shares with other pages keep their own rules. */
+.home-container { max-width: 1320px; margin-inline: auto; padding-inline: 16px; }
+@media (min-width: 640px) { .home-container { padding-inline: 24px; } }
+@media (min-width: 1024px) { .home-container { padding-inline: 32px; } }
+
+.home-band { padding-block: 40px; }
+@media (min-width: 768px) { .home-band { padding-block: 64px; } }
+@media (min-width: 1280px) { .home-band { padding-block: 80px; } }
+.home-band + .home-band:not(.home-band-mint, .home-band-paper, .home-band-forest) { padding-top: 8px; }
+@media (min-width: 768px) { .home-band + .home-band:not(.home-band-mint, .home-band-paper, .home-band-forest) { padding-top: 16px; } }
+.home-band-mint { background: var(--color-brand-50); }
+.home-band-paper { background: var(--color-paper); }
+
+/* Hero: the photograph under a forest shade that is darkest where the words
+   and the search sit, so white type always has its contrast. */
+.home-hero { position: relative; isolation: isolate; overflow: hidden; background: var(--color-forest); color: var(--color-on-forest); }
+.home-hero-shade {
+  position: absolute; inset: 0; z-index: -1;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--color-forest) 72%, transparent) 0%,
+      color-mix(in srgb, var(--color-forest) 40%, transparent) 30%,
+      color-mix(in srgb, var(--color-forest) 88%, transparent) 62%,
+      var(--color-forest) 100%);
+}
+@media (min-width: 1024px) {
+  .home-hero-shade {
+    background:
+      linear-gradient(0deg, color-mix(in srgb, var(--color-forest) 80%, transparent) 0%, transparent 42%),
+      linear-gradient(95deg,
+        color-mix(in srgb, var(--color-forest) 96%, transparent) 0%,
+        color-mix(in srgb, var(--color-forest) 84%, transparent) 30%,
+        color-mix(in srgb, var(--color-forest) 30%, transparent) 62%,
+        transparent 86%);
+  }
+}
+.home-hero-inner { padding-block: 24px 24px; }
+@media (min-width: 768px) { .home-hero-inner { padding-block: 64px 48px; } }
+@media (min-width: 1024px) { .home-hero-inner { padding-block: 88px 64px; } }
+.home-hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; border-radius: var(--radius-full); padding: 6px 12px 6px 8px; background: color-mix(in srgb, var(--color-on-forest) 12%, transparent); box-shadow: inset 0 0 0 1px var(--color-forest-line); color: var(--color-mint); }
+.home-hero-accent { color: var(--color-mint); }
+
+/* The search card: white, wide and lifted off the photograph. */
+.home-search-card { margin-top: 24px; border-radius: var(--radius-lg); background: var(--color-surface-000); color: var(--color-ink-900); box-shadow: var(--shadow-hero); padding: 12px; }
+@media (min-width: 640px) { .home-search-card { padding: 16px; } }
+@media (min-width: 1024px) { .home-search-card { margin-top: 40px; max-width: 1000px; padding: 20px 24px 24px; } }
+
+/* Shortcuts on the photograph: real places with their real counts. */
+.home-hero-links { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
+.home-hero-links::-webkit-scrollbar { display: none; }
+@media (min-width: 640px) { .home-hero-links { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding-inline: 0; } }
+.home-hero-link { display: inline-flex; flex: none; min-height: 44px; align-items: center; gap: 8px; border-radius: var(--radius-full); padding-inline: 16px; background: color-mix(in srgb, var(--color-on-forest) 10%, transparent); box-shadow: inset 0 0 0 1px var(--color-forest-line); transition: background-color var(--duration-fast) var(--ease-standard); }
+@media (hover: hover) and (pointer: fine) { .home-hero-link:hover { background: color-mix(in srgb, var(--color-on-forest) 20%, transparent); } }
+
+/* Cards: a framed photo, then the facts. They lift under a pointer only:
+   Android keeps :hover after a tap (UI-04). */
+.home-card { transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard); }
+.home-card-photo img { transition: transform var(--duration-deliberate) var(--ease-standard); }
+@media (hover: hover) and (pointer: fine) {
+  .home-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); border-color: var(--color-border-strong); }
+  .home-card:hover .home-card-photo img { transform: scale(1.04); }
+  .home-arrow-card:hover .home-arrow { transform: translateX(4px); }
+}
+.home-arrow { transition: transform var(--duration-base) var(--ease-standard); }
+
+/* Rails: a swipeable row on phones and tablets, a grid from 1024px. */
+/* Every scrolling row is positioned, so the absolutely positioned
+   accessible labels inside it (sr-only) are clipped by it. Unpositioned, a
+   label in an off-screen card sat at its static place far to the right,
+   unclipped, and widened the whole page on phones to 809px. */
+.home-rail, .home-type-rail, .home-hero-links, .home-shortcuts { position: relative; }
+.home-rail { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: -16px; padding: 4px 16px 12px; }
+.home-rail::-webkit-scrollbar { display: none; }
+@media (min-width: 640px) { .home-rail { margin-inline: -24px; padding-inline: 24px; } }
+.home-rail > li { flex: 0 0 min(80%, 300px); min-width: 0; scroll-snap-align: start; }
+.home-rail > li.home-rail-end { flex-basis: min(56%, 220px); }
+@media (min-width: 1024px) {
+  .home-rail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; overflow: visible; margin-inline: 0; padding: 4px 0 8px; }
+  .home-rail > li:nth-child(n + 4):not(.home-rail-end) { display: none; }
+}
+
+
+/* The seller band: forest, with a light contour drawing behind the words. */
+.home-seller { position: relative; isolation: isolate; overflow: hidden; border-radius: var(--radius-lg); background: var(--color-forest); color: var(--color-on-forest); }
+.home-seller::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--color-brand-500) 38%, transparent) 0%, transparent 55%), radial-gradient(80% 70% at 0% 100%, color-mix(in srgb, var(--color-mint) 14%, transparent) 0%, transparent 60%); }
+
+/* Property types: a swipeable row on phones, five across from 768px. */
+.home-type-rail { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: -16px; padding: 4px 16px 12px; }
+.home-type-rail::-webkit-scrollbar { display: none; }
+.home-type-rail > li { flex: 0 0 min(60%, 220px); min-width: 0; scroll-snap-align: start; }
+@media (min-width: 640px) { .home-type-rail { margin-inline: -24px; padding-inline: 24px; } }
+@media (min-width: 768px) { .home-type-rail { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; overflow: visible; margin-inline: 0; padding: 4px 0 8px; } }
+.home-type-art .type-art { width: 96px; height: 72px; margin-bottom: 0; }
+
+/* A neighbourhood card's map tile (UI-14): a pale road across a dot grid,
+   drawn in CSS, tinted like the property-type cards. Decoration only; it
+   carries no location data. */
+.home-map {
+  position: relative; height: 64px;
+  background-color: var(--color-tint-mint);
+  background-image:
+    linear-gradient(118deg, transparent 47%, color-mix(in srgb, var(--color-surface-000) 80%, transparent) 47% 55%, transparent 55%),
+    linear-gradient(28deg, transparent 64%, color-mix(in srgb, var(--color-surface-000) 55%, transparent) 64% 68%, transparent 68%),
+    radial-gradient(color-mix(in srgb, var(--color-forest) 16%, transparent) 1px, transparent 1.6px);
+  background-size: auto, auto, 12px 12px;
+}
+.home-map-1 { background-color: var(--color-tint-sand); }
+.home-map-2 { background-color: var(--color-tint-sky); }
+.home-map-3 { background-color: var(--color-tint-rose); }

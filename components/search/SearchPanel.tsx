@@ -89,16 +89,17 @@ export function SearchPanel() {
         router.push(url)
       }}
       aria-label="Search properties"
-      className="premium-search-panel relative rounded-lg border border-glass-edge bg-surface-000 p-3 shadow-e2 sm:p-4 lg:p-5"
+      // The card around it is the hero's (UI-14): the panel is the form only.
+      className="relative"
     >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <IntentTabs value={intent} onChange={handleIntentChange} fullWidth />
         <p className="hidden text-body-sm text-ink-500 lg:block">
-          Properties {scope} in {LAUNCH_CITY.name}
+          Searching properties {scope} in <span className="font-semibold text-ink-900">{LAUNCH_CITY.name}</span>
         </p>
       </div>
 
-      <div className="mt-3 flex flex-col gap-2.5 lg:flex-row lg:items-start">
+      <div className="mt-3 flex flex-col gap-2.5 lg:mt-4 lg:flex-row lg:items-start lg:gap-3">
         <div className="min-w-0 lg:flex-1">
           <LocationField selected={localities} onChange={setLocalities} />
         </div>
@@ -124,7 +125,7 @@ export function SearchPanel() {
               </span>
             )}
           </Button>
-          <Button type="submit" size="lg" className="h-12 min-w-0 flex-1 text-label shadow-e1 lg:flex-none">
+          <Button type="submit" size="lg" className="h-12 min-w-0 flex-1 text-label shadow-e1 lg:flex-none lg:px-8">
             <SearchIcon className="size-4.5" />
             Search<span className="sr-only"> properties {scope}</span>
           </Button>

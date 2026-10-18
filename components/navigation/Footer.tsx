@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { getPopularLocalities } from '@/lib/location/queries'
 import { FILTER_SLUGS, buildLandingUrl } from '@/lib/search/query'
@@ -28,12 +29,27 @@ export function Footer() {
   const city = LAUNCH_CITY.slug
 
   return (
-    <footer className="site-footer mt-12 border-t border-border-subtle bg-surface-000">
-      <div className="mx-auto max-w-[1320px] px-4 py-10 lg:px-8">
-        <div className="footer-intro"><Link href="/" className="font-display text-heading-1 text-brand-700">{BRAND.name}</Link><p>A better tomorrow.<br /><em>At home.</em></p></div>
+    // Forest, the brand's deepest green, so the page ends on the same note
+    // the homepage hero opens on (UI-14).
+    <footer className="site-footer mt-12 bg-forest text-on-forest">
+      <div className="mx-auto max-w-[1320px] px-4 pb-10 pt-12 sm:px-6 lg:px-8 lg:pt-16">
+        <div className="flex flex-col gap-6 border-b border-forest-line pb-10 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <Link href="/" aria-label={`${BRAND.name} — home`} className="inline-block">
+              <Image src={BRAND.logo.dark} alt="" width={Math.round((BRAND.logo.width / BRAND.logo.height) * 44)} height={44} className="h-11 w-auto" />
+            </Link>
+            <p className="mt-4 max-w-md text-body text-on-forest/75">
+              Homes to buy and rent across {LAUNCH_CITY.name}, organised by its own neighbourhoods.
+            </p>
+          </div>
+          <Link href="/post" className="inline-flex min-h-12 items-center justify-center self-start rounded-full bg-supply-600 px-6 text-label text-on-supply lg:self-auto">
+            Post your property
+          </Link>
+        </div>
+
         {/* Two columns even on phones: four single-column link lists made
             the footer longer than a screen and a half. */}
-        <div className="grid grid-cols-2 gap-x-5 gap-y-8 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-5 gap-y-8 pt-10 lg:grid-cols-4">
           <FooterGroup title={`Buy in ${LAUNCH_CITY.name}`}>
             {localities.slice(0, 6).map((l) => (
               <FooterLink key={l.slug} href={`/buy/${city}/${l.slug}`}>
@@ -76,17 +92,17 @@ export function Footer() {
           </FooterGroup>
         </div>
 
-        <div className="mt-8 border-t border-border-subtle pt-6">
-          <p className="text-caption text-ink-500">
+        <div className="mt-10 border-t border-forest-line pt-6">
+          <p className="text-caption text-on-forest/70">
             {BRAND.name} — {BRAND.tagline}. Currently covering {LAUNCH_CITY.name},{' '}
             {LAUNCH_CITY.state}.
           </p>
-          <p className="mt-1.5 max-w-3xl text-caption text-ink-500">
+          <p className="mt-1.5 max-w-3xl text-caption text-on-forest/70">
             Listings are posted by owners, agents and builders. The current catalogue contains sample data. Independently verify ownership, documents, measurements and prices.
             Confirm these independently before any payment.
           </p>
           {BRAND.isPlaceholder ? (
-            <p className="mt-1.5 text-caption text-ink-500">
+            <p className="mt-1.5 text-caption text-on-forest/70">
               {BRAND.name} is a temporary working name. The final brand has not been chosen.
             </p>
           ) : null}
@@ -99,8 +115,8 @@ export function Footer() {
 function FooterGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 className="text-overline uppercase text-ink-500">{title}</h2>
-      <ul className="mt-3 flex flex-col gap-2">{children}</ul>
+      <h2 className="text-overline uppercase text-mint">{title}</h2>
+      <ul className="mt-3 flex flex-col">{children}</ul>
     </div>
   )
 }
@@ -108,7 +124,7 @@ function FooterGroup({ title, children }: { title: string; children: React.React
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <li>
-      <Link href={href} className="rounded-md text-body-sm text-ink-700 hover:text-brand-600 hover:underline">
+      <Link href={href} className="inline-flex min-h-11 items-center rounded-md text-body-sm text-on-forest/80 hover:text-on-forest hover:underline">
         {children}
       </Link>
     </li>
