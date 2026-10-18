@@ -22,7 +22,20 @@ export function authConfig() {
   } catch { return null }
 }
 
-export type ProviderResult<T> = { ok: true; data: T } | { ok: false; status: number }
+/**
+ * `code` is the provider's machine-readable `error_code` when it sent one
+ * (e.g. "email_address_invalid"). It is for choosing a message on the
+ * server; it never reaches the browser, and neither does the provider's own
+ * wording (lib/auth/messages.ts).
+ */
+export type ProviderResult<T> = { ok: true; data: T } | { ok: false; status: number; code?: string }
+
+async function errorCode(response: Response): Promise<string | undefined> {
+  try {
+    const body = await response.json() as { error_code?: unknown }
+    return typeof body.error_code === 'string' && /^[a-z_]{1,64}$/.test(body.error_code) ? body.error_code : undefined
+  } catch { return undefined }
+}
 
 export async function authRequest<T>(path: string, method: 'GET' | 'POST', body?: object, token?: string): Promise<ProviderResult<T>> {
   const config = authConfig()
@@ -39,7 +52,7 @@ export async function authRequest<T>(path: string, method: 'GET' | 'POST', body?
       cache: 'no-store',
       signal: AbortSignal.timeout(8000),
     })
-    if (!response.ok) return { ok: false, status: response.status }
+    if (!response.ok) return { ok: false, status: response.status, code: await errorCode(response) }
     if (response.status === 204) return { ok: true, data: undefined as T }
     return { ok: true, data: await response.json() as T }
   } catch { return { ok: false, status: 503 } }
