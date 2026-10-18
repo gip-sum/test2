@@ -66,8 +66,18 @@ try{
  await page.getByRole('link',{name:'SAMPLE submitted home',exact:true}).filter({visible:true}).click();await page.getByRole('heading',{name:'Review submitted listing',exact:true}).waitFor()
  check('review shows the saved facts and description',await page.getByText(draft.description,{exact:true}).isVisible())
  const image=page.locator('section[aria-label="Property photos"] img').first();await image.evaluate(e=>e.decode());check('private immutable JPEG loads',await image.evaluate(e=>e.naturalWidth===640))
- check('confirmation is required',await page.getByRole('button',{name:'Approve listing',exact:true}).isDisabled())
- for(const width of [390,412,768,1280]){await page.setViewportSize({width,height:900});check('review does not overflow '+width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));check('decision labels have 44px targets '+width,await page.locator('form label').evaluateAll(labels=>labels.filter(e=>e.querySelector('input[type="radio"],input[type="checkbox"]')).every(e=>e.getBoundingClientRect().height>=44)))}
+ // UI-11: the decision button is never disabled as a hint; a press checks the input, sends nothing, marks the field and focuses it.
+ const sentBefore=requests.length,confirmBox=page.getByRole('checkbox')
+ await page.getByRole('button',{name:'Approve listing',exact:true}).click()
+ check('confirmation is required: nothing is sent, the box is marked and focused',requests.length===sentBefore&&await confirmBox.evaluate(e=>e===document.activeElement&&e.getAttribute('aria-invalid')==='true'&&e.getAttribute('aria-describedby')==='review-confirm-error')&&(await page.locator('#review-confirm-error').innerText()).includes('Confirm this decision'))
+ await page.getByLabel('Public validity in days').fill('0');await confirmBox.check();await page.getByRole('button',{name:'Approve listing',exact:true}).click()
+ check('an invalid validity period is marked on its field and focuses it',requests.length===sentBefore&&await page.getByLabel('Public validity in days').evaluate(e=>e===document.activeElement&&e.getAttribute('aria-invalid')==='true')&&(await page.locator('#review-days-error').innerText()).includes('1 to 180'))
+ await page.getByLabel('Public validity in days').fill('90')
+ check('editing a field asks for a fresh confirmation and clears that field\'s error',!await confirmBox.isChecked()&&await page.locator('#review-days-error').count()===0)
+ await page.getByRole('radio',{name:'Reject',exact:true}).check();await confirmBox.check();await page.getByRole('button',{name:'Reject listing',exact:true}).click()
+ check('a rejection without a reason is marked on the reason and focuses it',requests.length===sentBefore&&await page.getByLabel('Reason for the seller (required)').evaluate(e=>e===document.activeElement&&e.getAttribute('aria-invalid')==='true'&&e.getAttribute('aria-describedby').split(' ').includes('review-reason-error')))
+ check('decision fields use the shared 16px field frame',await page.getByLabel('Reason for the seller (required)').evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=16&&e.getBoundingClientRect().height>=44))
+ for(const width of [320,360,375,390,412,430,768,1280]){await page.setViewportSize({width,height:900});check('review does not overflow '+width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));check('decision labels have 44px targets '+width,await page.locator('form label').evaluateAll(labels=>labels.filter(e=>e.querySelector('input[type="radio"],input[type="checkbox"]')).every(e=>e.getBoundingClientRect().height>=44)))}
  await page.getByRole('radio',{name:'Request corrections',exact:true}).check();await page.getByLabel('Reason for the seller (required)').fill('Please replace the unclear photographs');await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Request corrections',exact:true}).click();await page.getByRole('status').filter({hasText:/^Corrections requested$/}).waitFor()
  check('correction has its own status and recorded reason',await page.getByRole('heading',{name:'Corrections requested',exact:true}).isVisible())
  await ownerPage.goto(BASE+'/dashboard?status=corrections');check('seller correction filter and reason are real',await ownerPage.getByText('Please replace the unclear photographs',{exact:false}).isVisible())
@@ -78,11 +88,32 @@ try{
  reset();await page.goto(url);const stale=await staff.newPage();await stale.goto(url);listing.version++
  await stale.getByRole('checkbox').check();const conflict=stale.waitForResponse(r=>r.url().endsWith('/api/admin/moderation')&&r.request().method()==='POST');await stale.getByRole('button',{name:'Approve listing',exact:true}).click();const conflictResponse=await conflict;check('stale decision returns conflict',conflictResponse.status()===409,await conflictResponse.text());const conflictMessage=stale.locator('form [role=alert]');await conflictMessage.waitFor();check('stale version asks for refresh',(await conflictMessage.innerText()).includes('This listing or decision changed'),await conflictMessage.innerText());await stale.close()
  reset();await page.goto(url);fail=true;await page.getByRole('checkbox').focus();await page.keyboard.press('Space');const failedResponse=page.waitForResponse(r=>r.url().endsWith('/api/admin/moderation')&&r.request().method()==='POST');await page.getByRole('button',{name:'Approve listing',exact:true}).focus();await page.keyboard.press('Enter');check('outage returns unavailable', (await failedResponse).status()===503);await page.locator('form [role=alert]').waitFor();check('keyboard confirmation works and outage preserves it for retry',await page.getByRole('checkbox').isChecked());fail=false;lose=true;delay=400
- await page.getByRole('button',{name:'Approve listing',exact:true}).click();await page.getByText('Saving the review decision.',{exact:true}).waitFor();check('busy state is announced',await page.locator('form').getAttribute('aria-busy')==='true');await page.locator('form [role=alert]').waitFor();await page.getByRole('button',{name:'Approve listing',exact:true}).click();await page.getByRole('status').filter({hasText:/^Active$/}).waitFor();check('lost response retries the same UUID once',actions.length===1&&requests.every(r=>r.p_request===requests[0].p_request))
+ const sentAtStart=requests.length
+ await page.getByRole('button',{name:'Approve listing',exact:true}).click();await page.getByText('Saving the review decision.',{exact:true}).waitFor();check('busy state is announced',await page.locator('form').getAttribute('aria-busy')==='true')
+ check('the busy button keeps focus and is marked unavailable, not disabled',await page.getByRole('button',{name:'Saving decision…',exact:true}).evaluate(e=>e===document.activeElement&&!e.disabled&&e.getAttribute('aria-disabled')==='true'&&e.getAttribute('aria-busy')==='true'))
+ await page.keyboard.press('Enter');await page.keyboard.press('Space')
+ check('fields stay focusable while saving; edits are refused',await page.getByLabel('Public validity in days').evaluate(e=>!e.disabled&&!e.closest('fieldset:disabled')))
+ await page.locator('form [role=alert]').waitFor()
+ check('a second press while busy sent nothing',requests.length===sentAtStart+1,String(requests.length-sentAtStart))
+ check('after a failure focus is still on the decision button',await page.getByRole('button',{name:'Approve listing',exact:true}).evaluate(e=>e===document.activeElement))
+ check('the alert offers the shared Refresh review button',await page.locator('form [role=alert]').getByRole('button',{name:'Refresh review',exact:true}).isVisible())
+ await page.getByRole('button',{name:'Approve listing',exact:true}).click();await page.getByRole('status').filter({hasText:/^Active$/}).waitFor();check('lost response retries the same UUID once',actions.length===1&&requests.every(r=>r.p_request===requests[0].p_request))
+ await page.waitForFunction(()=>document.activeElement?.id==='listing-status')
+ check('after the refresh focus lands on the changed status, whose live region reads it',await page.locator('#listing-status [role=status]').innerText()==='Active'&&await page.getByRole('heading',{name:'Decision unavailable',exact:true}).isVisible())
  const publicPage=await guest.newPage();await publicPage.goto(BASE+`/listing/${listingId}`);await publicPage.getByRole('heading',{name:'SAMPLE submitted home',exact:true}).waitFor();check('approval makes the saved copy public',await publicPage.getByText(draft.description,{exact:true}).isVisible());await publicPage.close()
  down=true;await page.goto(url);check('failed review is an error, not an empty property',await page.getByRole('heading',{name:'Review unavailable',exact:true}).isVisible());down=false
  revoked=true;check('revocation blocks photo immediately',(await staff.request.get(privatePhoto)).status()===404);revoked=false
  check('foreign origin cannot decide',(await staff.request.post(BASE+'/api/admin/moderation',{headers:{Origin:'https://foreign.test'},data:input})).status()===403)
- await page.goto(BASE+'/admin/moderation');check('empty review queue is honest',await page.getByText('Nothing is waiting for review.').isVisible())
+ await page.goto(BASE+'/admin/moderation');check('empty review queue is honest',await page.getByText('Nothing is waiting for review.').isVisible()&&await page.getByRole('heading',{level:3,name:'The queue is empty',exact:true}).isVisible())
+ // UI-11: no admin code or admin data reaches public or seller pages.
+ reset();const scriptsOn=async(pg,path)=>{await pg.goto(BASE+path);return pg.locator('script[src]').evaluateAll(list=>list.map(e=>e.src))}
+ const adminChunks=[];for(const src of await scriptsOn(page,`/admin/moderation/${listingId}`))if((await(await staff.request.get(src)).text()).includes('/api/admin/moderation'))adminChunks.push(src)
+ check('the review form code is found on the review page',adminChunks.length>0)
+ const guestPeek=await guest.newPage()
+ for(const [pg,path] of [[guestPeek,'/'],[guestPeek,'/buy/kolkata'],[guestPeek,'/login'],[guestPeek,'/this-page-does-not-exist'],[ownerPage,'/dashboard'],[ownerPage,'/dashboard/performance']]){const sources=await scriptsOn(pg,path);check('no admin code downloads on '+path,sources.length>0&&!sources.some(src=>adminChunks.includes(src)))}
+ const sellerHtml=await(await seller.request.get(BASE+'/dashboard')).text()
+ check('the seller dashboard carries no staff navigation, staff ids or decision history',!/Admin sections|Decision history|Review decision/.test(sellerHtml)&&!sellerHtml.includes(mod))
+ check('a seller asking for the review page gets the ordinary 404',(await ownerPage.goto(url)).status()===404&&await ownerPage.getByText('Review decision').count()===0)
+ await guestPeek.close()
  console.log(`Phase 22 moderation browser checks: ${count} passed`)
 }finally{await browser.close();await new Promise(r=>mock.close(r))}

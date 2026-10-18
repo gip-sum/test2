@@ -52,7 +52,10 @@ try{
  const context=async(token)=>{const c=await browser.newContext({viewport:{width:1280,height:900}});if(token)await c.addCookies([{name:'gb-access',value:token.repeat(48),url:BASE}]);return c}
  const guest=await(await context()).newPage();await guest.goto(BASE+'/admin/users')
  check('guest returns through login',new URL(guest.url()).pathname==='/login'&&new URL(guest.url()).searchParams.get('next')==='/admin/users')
- for(const token of ['a','c']){const p=await(await context(token)).newPage();const r=await p.goto(BASE+'/admin/users');check('buyer/moderator cannot inspect accounts '+token,r.status()===404);await p.context().close()}
+ for(const token of ['a','c']){const p=await(await context(token)).newPage();const r=await p.goto(BASE+'/admin/users');check('buyer/moderator cannot inspect accounts '+token,r.status()===404);
+  // Hiding the form is not the authorization: the server refuses the change itself (UI-11).
+  const attempt=await p.request.post(BASE+'/api/admin/users',{headers:{origin:BASE},data:{user:seller,version:0,status:'SUSPENDED',role:null,reason:'SAMPLE forged change',request:id('f',9),accepted:true}})
+  check('buyer/moderator cannot change an account through the API '+token,attempt.status()!==200&&changes.length===0&&!(await p.request.get(BASE+'/admin/users/'+seller).then(r=>r.text())).includes('Manage account'));await p.context().close()}
  const p=await(await context('b')).newPage(),detail=BASE+'/admin/users/'+seller
  await p.goto(BASE+'/admin/users');check('directory truthful total',(await p.getByRole('heading',{name:'Accounts (31)',exact:true}).textContent()).includes('(31)'))
  await p.getByLabel('Search name, email or exact account ID').fill('SAMPLE Seller');await p.getByRole('button',{name:'Search accounts'}).click()
@@ -60,27 +63,49 @@ try{
  await p.reload();check('search survives reload',await p.getByLabel('Search name, email or exact account ID').inputValue()==='SAMPLE Seller')
  await p.getByRole('link',{name:'SAMPLE Seller',exact:true}).click();await p.waitForURL(detail)
  await p.getByRole('heading',{name:'Manage account'}).waitFor();check('account detail and totals',(await p.locator('#listings-title').textContent()).includes('(27)')&&(await p.locator('#leads-title').textContent()).includes('(27)'))
+ check('listing history statuses are shared badges',await p.locator('#listings li').first().locator('.bg-status-live-bg').textContent()==='Status: Active')
  await p.locator('#listings').getByLabel('Page 2',{exact:true}).click();await p.waitForURL('**listings=2#listings');check('listing history has independent page',await p.locator('#listings > ul > li').count()===2&&await p.locator('#leads > ul > li').count()===25)
  const save=p.getByRole('button',{name:'Save account change',exact:true}),reason=p.getByLabel('Reason (required)'),confirm=p.getByLabel('I confirm this change for this account.')
+ // UI-11: Save is never disabled as a hint. A press with nothing to save checks the input, sends nothing and marks each field.
+ const sentBefore=requests.length;await save.click()
+ check('nothing to save: nothing is sent, the status field is marked and focused',requests.length===sentBefore&&await p.getByLabel('Marketplace status',{exact:true}).evaluate(e=>e===document.activeElement&&e.getAttribute('aria-invalid')==='true'&&e.getAttribute('aria-describedby').split(' ').includes('account-status-error')))
+ check('every missing answer is marked on its own field',await reason.getAttribute('aria-invalid')==='true'&&await confirm.getAttribute('aria-invalid')==='true'&&(await p.locator('#account-reason-error').innerText()).includes('at least 5 characters'))
+ check('account fields use the shared 16px frame',await p.getByLabel('Marketplace status',{exact:true}).evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=16&&e.getBoundingClientRect().height>=44))
  await p.getByLabel('Marketplace status',{exact:true}).selectOption('SUSPENDED');await p.getByLabel('Assigned seller role',{exact:true}).selectOption('AGENT');await reason.fill('SAMPLE review: investigate listing activity')
- check('confirmation required',await save.isDisabled());await confirm.check();check('valid confirmed change enabled',await save.isEnabled())
+ await save.click()
+ check('confirmation required: nothing is sent, the box is marked and focused',requests.length===sentBefore&&await confirm.evaluate(e=>e===document.activeElement&&e.getAttribute('aria-invalid')==='true'))
+ await confirm.check();check('a confirmed, valid change is available to press',await save.getAttribute('aria-disabled')===null&&await confirm.getAttribute('aria-invalid')===null)
  await reason.fill('SAMPLE updated review reason');check('editing resets confirmation',!await confirm.isChecked());await confirm.check()
  fail=true;await Promise.all([p.waitForResponse(r=>r.url().endsWith('/api/admin/users')&&r.status()===503),save.click()]);await p.locator('form [role="alert"]').waitFor();check('outage keeps input',await reason.inputValue()==='SAMPLE updated review reason'&&await confirm.isChecked())
  fail=false;lose=true;await Promise.all([p.waitForResponse(r=>r.url().endsWith('/api/admin/users')&&r.status()===503),save.click()])
  await p.locator('form [role="alert"]').waitFor();await Promise.all([p.waitForResponse(r=>r.url().endsWith('/api/admin/users')&&r.status()===200),save.click()])
  await p.waitForFunction(()=>document.querySelector('#changes-title')?.textContent.includes('(1)'))
+ await p.waitForFunction(()=>document.activeElement?.id==='account-status-value')
+ check('after the refresh focus lands on the changed status, now a Suspended badge',(await p.locator('#account-status-value').innerText()).includes('Suspended')&&await p.locator('#account-status-value .bg-status-problem-bg').count()===1)
+ await p.waitForFunction(()=>document.getElementById('a11y-announcer')?.textContent)
+ check('the change is announced',(await p.locator('#a11y-announcer').textContent())==='Account change recorded. Marketplace status: Suspended. Seller role: Agent.')
  check('lost-response retries create one change',changes.length===1&&requests.slice(-3).every(r=>r.p_request===requests.at(-1).p_request))
  check('change history visible',(await p.locator('#changes').textContent()).includes('SAMPLE updated review reason'))
  const suspended=await(await context('a')).newPage();await suspended.goto(BASE+'/dashboard');check('same signed-in token sent to suspension recovery',new URL(suspended.url()).pathname==='/account/access'&&(await suspended.locator('h1').textContent()).includes('suspended'))
  check('suspended API blocked',(await suspended.request.post(BASE+'/api/admin/users',{headers:{origin:BASE},data:{}})).status()===403)
  await p.goto(detail);stale=true;await p.getByLabel('Marketplace status',{exact:true}).selectOption('ACTIVE');await reason.fill('SAMPLE restoration reviewed');await confirm.check();await Promise.all([p.waitForResponse(r=>r.url().endsWith('/api/admin/users')&&r.status()===409),save.click()]);await p.locator('form [role="alert"]').waitFor()
- check('stale account requires refresh',await save.isDisabled()&&(await p.locator('form [role="alert"]').textContent()).includes('Refresh'))
- stale=false;await p.reload();await p.getByLabel('Marketplace status',{exact:true}).selectOption('ACTIVE');await reason.fill('SAMPLE restoration reviewed');await confirm.check();delay=600
- await save.click();await p.locator('form[aria-busy="true"]').waitFor();check('saving state is announced',(await p.getByRole('status').allTextContents()).some(t=>t.includes('Saving account')))
+ check('stale account requires refresh',await save.getAttribute('aria-disabled')==='true'&&(await p.locator('form [role="alert"]').textContent()).includes('Refresh'))
+ check('a locked form still keeps focus on Save',await save.evaluate(e=>e===document.activeElement&&!e.disabled))
+ stale=false;await p.locator('form [role="alert"]').getByRole('button',{name:'Refresh account',exact:true}).click()
+ await p.waitForFunction(()=>document.activeElement?.id==='manage-account-heading')
+ check('Refresh account (the shared Button) re-reads in place, unlocks the form and returns focus to it',await save.getAttribute('aria-disabled')===null&&await p.locator('form [role="alert"]').count()===0)
+ await p.reload();await p.getByLabel('Marketplace status',{exact:true}).selectOption('ACTIVE');await reason.fill('SAMPLE restoration reviewed');await confirm.check();delay=600
+ const sentAtBusy=requests.length;await save.click();await p.locator('form[aria-busy="true"]').waitFor();check('saving state is announced',(await p.getByRole('status').allTextContents()).some(t=>t.includes('Saving account')))
+ check('the busy button keeps focus and is marked unavailable, not disabled',await p.getByRole('button',{name:'Saving change…',exact:true}).evaluate(e=>e===document.activeElement&&!e.disabled&&e.getAttribute('aria-disabled')==='true'))
+ await p.keyboard.press('Enter');await p.waitForTimeout(100)
+ check('a second press while busy sends nothing',requests.length===sentAtBusy+1)
  await p.waitForFunction(()=>document.querySelector('#changes-title')?.textContent.includes('(2)'));delay=0
+ await p.waitForFunction(()=>document.activeElement?.id==='account-status-value')
+ check('restoring access also hands focus to the changed status',(await p.locator('#account-status-value').innerText()).includes('Active'))
  await suspended.goto(BASE+'/account/access');check('same token recovers after restoration',new URL(suspended.url()).pathname==='/account')
  await p.goto(BASE+'/admin/users?status=ACTIVE&role=AGENT');check('role and status filter results',await p.getByRole('heading',{name:'Accounts (1)',exact:true}).isVisible())
- await p.goto(BASE+'/admin/users?q=nobody-matches');check('empty search is explicit',await p.getByText('No accounts match these filters.',{exact:true}).isVisible())
+ check('account status is the shared badge, its meaning in words',(await p.locator('table tbody tr td').first().textContent()).trim()==='Status: Active'&&await p.locator('table tbody .bg-status-live-bg').count()===1)
+ await p.goto(BASE+'/admin/users?q=nobody-matches');check('empty search is explicit',await p.getByText('No accounts match these filters.',{exact:true}).isVisible()&&await p.getByRole('heading',{level:3,name:'No accounts found',exact:true}).isVisible())
  down=true;await p.reload();check('read failure distinct from no accounts',await p.locator('main [role="alert"]').isVisible()&&!(await p.locator('body').textContent()).includes('No accounts match these filters.'));down=false
  const missing=await p.goto(BASE+'/admin/users/'+id('0'));check('missing account is 404',missing.status()===404)
  await p.goto(BASE+'/admin/users/'+admin);check('self/staff management absent',await p.getByRole('heading',{name:'Manage account'}).count()===0)
@@ -88,7 +113,7 @@ try{
  check('former staff remain protected in UI',await p.getByRole('heading',{name:'Manage account'}).count()===0&&await p.getByText('Your own account and current or former staff accounts are managed by a trusted operator.',{exact:true}).isVisible())
  mkdirSync('.shots/phase23',{recursive:true})
  subject.email='long.sample.account.'.repeat(10)+'@example.test';subject.full_name='SAMPLE '+ 'LongName'.repeat(25)
- for(const width of [390,412,768,1280]){
+ for(const width of [320,360,375,390,412,430,768,1280]){
   await p.setViewportSize({width,height:900})
   for(const path of ['/admin/users', '/admin/users/'+seller]){
    await p.goto(BASE+path)

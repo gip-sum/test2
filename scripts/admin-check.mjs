@@ -111,6 +111,7 @@ try {
   check('filter and page survive reload', await page.locator('table tbody tr').count() === 5 && await page.getByRole('link', { name: /^Active/ }).getAttribute('aria-current') === 'page')
   await page.goto(BASE + '/admin/listings?status=nonsense&page=99')
   check('unknown filters fall back to all, and a page past the end is empty, not an error', await page.getByRole('heading', { level: 2, name: /All submitted listings \(36\)/ }).isVisible() && await page.getByText('No listings have this status.').isVisible())
+  check('the empty page is the shared EmptyState, titled for a page past the end, with a way back', await page.getByRole('heading', { level: 3, name: 'No listings on this page', exact: true }).isVisible() && await page.getByRole('link', { name: 'Show all listings', exact: true }).getAttribute('href') === '/admin/listings')
 
   // Moderation queue.
   await page.goto(BASE + '/admin/moderation')
@@ -132,11 +133,11 @@ try {
   overviewDown = false
 
   mkdirSync('/tmp/phase21-shots', { recursive: true })
-  for (const width of [390, 412, 768, 1280]) {
+  for (const width of [320, 360, 375, 390, 412, 430, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 })
-    for (const path of ['/admin', '/admin/listings?status=review', '/admin/system']) {
+    for (const path of ['/admin', '/admin/listings?status=review', '/admin/moderation', '/admin/system']) {
       await page.goto(BASE + path)
-      await assertWorkspace(page, { area: 'admin', check, ...(path.startsWith('/admin/listings') ? { compactRow: page.locator('table tbody tr').first(), maxRowHeight: 160 } : {}) })
+      await assertWorkspace(page, { area: 'admin', check, ...(path.startsWith('/admin/listings') || path === '/admin/moderation' ? { compactRow: page.locator('table tbody tr').first(), maxRowHeight: 160 } : {}) })
       const small = await page.locator('main a, main button').evaluateAll((els) => els.map((e) => ({ text: e.textContent.trim().slice(0, 40), height: e.getBoundingClientRect().height })).filter((e) => e.height > 0 && e.height < 44))
       check(`controls are at least 44px at ${width} on ${path}`, small.length === 0, JSON.stringify(small))
       await page.screenshot({ path: `/tmp/phase21-shots/${path.split('?')[0].replaceAll('/', '_')}-${width}.png`, fullPage: true })
