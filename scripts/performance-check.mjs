@@ -237,7 +237,11 @@ try {
     const tipBox = await touchTip.boundingBox()
     check(`a tap at the ${edge} edge shows that day, and the readout stays on screen`, await touchSlider.getAttribute('aria-valuenow') === valuenow && tipBox !== null && tipBox.x >= 0 && tipBox.x + tipBox.width <= 390, JSON.stringify(tipBox))
   }
-  check('reduced motion: the readout and chart appear with no animation at all', await touchChart.evaluate((f) => f.getAnimations({ subtree: true }).length === 0 && parseFloat(getComputedStyle(f.querySelector('[data-chart-tooltip]')).transitionDuration) < 0.001 && parseFloat(getComputedStyle(document.querySelector('.analytics-body')).transitionDuration) < 0.001))
+  // The global reduced-motion rule gives every element a 0.01ms transition
+  // over `all`, so a tap can leave a CSSTransition alive for that instant
+  // (the focus ring appearing). Counting animations raced it (CI #89); the
+  // promise is that nothing takes perceptible time, so that is what is asserted.
+  check('reduced motion: the readout and chart appear with no perceptible animation', await touchChart.evaluate((f) => f.getAnimations({ subtree: true }).every((a) => Number(a.effect.getComputedTiming().duration) < 1) && parseFloat(getComputedStyle(f.querySelector('[data-chart-tooltip]')).transitionDuration) < 0.001 && parseFloat(getComputedStyle(document.querySelector('.analytics-body')).transitionDuration) < 0.001))
   await touch.touchscreen.tap(195, 120)
   check('tapping elsewhere puts the readout away', await touchTip.count() === 0)
   check('no sideways scroll on the touch chart page', await touch.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
