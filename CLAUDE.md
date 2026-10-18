@@ -186,7 +186,17 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
 4. **Anime.js** only for a genuine timeline or SVG sequence; it is installed
    with the first feature that needs one. CSS stays CSS (login, 404).
 5. **Bklit UI** for charts of real, measured data only — never decoration,
-   never a figure the platform has not measured.
+   never a figure the platform has not measured. It is a source, like
+   Kokonut: `components/analytics/DailyActivityChart` is the adapted chart
+   (UI-10) — drawn by a server component, with a client `ChartScrubber` for
+   the slider, crosshair and readout; no visx, d3 or Motion. A day that was
+   not measured is a gap, never a zero, in the chart, its readout and its
+   table. Every chart has a table of the same rows and a one-line summary,
+   draws with no entrance animation, and keeps one measure per axis (two
+   measures → two panels on a shared date axis, never two y-scales). Period
+   comparisons are plain differences in words, never percentages, and only
+   between fully measured periods. A current count (saves) is never charted
+   as history or put in a funnel.
 6. **Mobile is mandatory**: the widths above, 44px targets, no overflow.
    A small control keeps its look and grows its hit area: a square element
    of at least 44px with negative margins handing the space back (Chrome
