@@ -46,6 +46,9 @@ export const ROUTES = [
   ['Seller dashboard', '/dashboard', 'dashboard'],
   ['Seller performance', '/dashboard/performance', 'dashboard/performance'],
   ['Admin overview', '/admin', 'admin'],
+  // The buyer's profile form and Saved list (UI-12).
+  ['Account profile', '/account', 'account'],
+  ['Saved homes', '/account/saved', 'account/saved'],
 ]
 
 const args = process.argv.slice(2)

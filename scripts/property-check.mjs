@@ -144,9 +144,17 @@ try {
     await form.getByLabel('Message').inputValue() === 'Please share viewing details')
   await form.getByLabel('Mobile number').fill('9876543210')
   await form.getByRole('button', { name: 'Send enquiry' }).click()
-  const unavailable = await page.locator('aside [role="alert"]').getByText(/temporarily unavailable/).waitFor({ timeout: 10000 })
+  // The enquiry path's own refusal (lib/enquiry/queries). This check
+  // expected "temporarily unavailable", which no enquiry path has ever said,
+  // so it failed from the day it was written (found in UI-12). It now
+  // asserts the real sentence, that nothing claims success, and that what
+  // was typed is still there.
+  const refused = /could not be saved/
+  const unavailable = await page.locator('aside [role="alert"]').getByText(refused).waitFor({ timeout: 10000 })
     .then(() => true).catch(() => false)
-  check('valid enquiry does not claim success when durable storage is unavailable', unavailable,
+  check('valid enquiry does not claim success when durable storage is unavailable',
+    unavailable && await page.locator('aside').getByText(/Enquiry sent/).count() === 0 &&
+      await form.getByLabel('Mobile number').inputValue() === '9876543210',
     unavailable ? '' : (await page.locator('aside').innerText()).slice(0, 300))
   await ready(page, '/buy/kolkata?bhk=3')
   const resultLink = page.locator('article h3 a[href^="/property/"]:visible').first()
@@ -189,8 +197,10 @@ try {
     await noJsForm.getByLabel('Your name').fill('No JS Browser Check')
     await noJsForm.getByLabel('Mobile number').fill('9876543211')
     await noJsForm.getByRole('button', { name: 'Send enquiry' }).click()
-    check('form submits without JavaScript', await noJsPage.locator('aside [role="alert"]').getByText(/temporarily unavailable/)
-      .waitFor({ timeout: 10000 }).then(() => true).catch(() => false))
+    const reached = await noJsPage.locator('aside [role="alert"]').getByText(/could not be saved/)
+      .waitFor({ timeout: 10000 }).then(() => true).catch(() => false)
+    check('form submits without JavaScript', reached && await noJsPage.locator('aside').getByText(/Enquiry sent/).count() === 0 &&
+      await noJsPage.locator('aside form').getByLabel('Your name').inputValue() === 'No JS Browser Check')
   } else {
     check('form submits without JavaScript', false, 'property content is hidden')
   }
