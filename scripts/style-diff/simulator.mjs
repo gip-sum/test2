@@ -40,6 +40,11 @@ const listings = plan.filter((p) => p.listing).map(({ n, listing }) => ({ id: id
 const submissions = plan.filter((p) => p.listing).map(({ n, title, intent = 'buy' }) => ({ id: id('e', n), listing_id: id('d', n), title, seller_name: 'Test Seller', seller_type: 'OWNER', intent, property_type: 'APARTMENT', bedrooms: 2, bathrooms: 2, area_unit: 'sqft', carpet_area: 1000, built_up_area: null, super_area: null, furnishing: 'UNFURNISHED', floor: 3, total_floors: 8, construction_status: 'READY', age_years: 4, possession_by: null, available_from: intent === 'rent' ? 'now' : null, city_name: 'Kolkata', locality_name: 'New Town', city_id: 'kolkata', locality_id: 'new-town', sub_locality_id: null, society_name: null, address: 'Test building address', latitude: null, longitude: null, price: intent === 'rent' ? 25000 : 6000000, deposit: intent === 'rent' ? 100000 : null, maintenance_status: 'none', maintenance_monthly: null, negotiable: true, created_at: at(-20) }))
 const events = plan.filter((p) => p.withdrawnFrom).flatMap(({ n, withdrawnFrom }) => [{ id: 2, listing_id: id('d', n), from_status: withdrawnFrom, to_status: 'DRAFT', reason: null, actor_type: 'OWNER', actor_id: owner, created_at: at(-1) }, { id: 1, listing_id: id('d', n), from_status: null, to_status: 'DRAFT', reason: null, actor_type: 'OWNER', actor_id: owner, created_at: at(-30) }])
 const enquiries = [1, 2, 3].map((k) => ({ id: id('7', k), listing_public_id: null, listing_id: id('d', 3), listing_title: '2 BHK flat for sale in New Town', buyer_id: null, seller_id: owner, buyer_name: `Buyer ${k}`, buyer_phone: `+91987654321${k}`, message: k === 1 ? 'Is the flat still available? I would like to visit this weekend.' : null, duplicate_of: null, status: k === 3 ? 'contacted' : 'new', created_at: at(-k) }))
+const accounts = [
+  { id: owner, email: 'seller@example.test', full_name: 'Test Seller', created_at: at(-60), last_sign_in_at: at(-1), status: 'ACTIVE', seller_role: 'OWNER', version: 1, staff_role: null, operator_managed: false },
+  { id: id('6', 1), email: 'suspended.account@example.test', full_name: null, created_at: at(-30), last_sign_in_at: null, status: 'SUSPENDED', seller_role: null, version: 2, staff_role: null, operator_managed: false },
+  { id: admin, email: 'staff@example.test', full_name: 'Staff Admin', created_at: at(-90), last_sign_in_at: at(0), status: 'ACTIVE', seller_role: null, version: 0, staff_role: 'ADMIN', operator_managed: true },
+]
 const views = new Map([[`${id('d', 3)}|${indiaDay(-1)}`, 40], [`${id('d', 3)}|${indiaDay(-2)}`, 12], [`${id('d', 4)}|${indiaDay(-1)}`, 7]])
 
 const adminRow = (n, status, daysAgo, extra = {}) => ({ id: id('d', 100 + n), status, title: `Listing ${n}`, seller_name: `Seller ${n}`, seller_type: 'OWNER', intent: 'buy', price: 6000000 + n, locality_name: 'New Town', city_name: 'Kolkata', submitted_at: at(-daysAgo), updated_at: at(-daysAgo / 2), activated_at: null, expires_at: null, ...extra })
@@ -106,6 +111,22 @@ export async function startWorkspaceSimulator(port = 3300) {
         if (!staff) return send(403, {})
         const rows = adminListings.filter((l) => l.status === 'UNDER_REVIEW').sort((a, b) => a.submitted_at.localeCompare(b.submitted_at))
         return send(200, { rows: rows.slice(body.p_offset, body.p_offset + body.p_limit), total: rows.length })
+      }
+      // Account and review screens (UI-11): fixed rows in the shapes users-check and moderation-check use.
+      case '/rest/v1/rpc/admin_users': return staff ? send(200, { rows: accounts, total: accounts.length, page: 1 }) : send(403, {})
+      case '/rest/v1/rpc/admin_user': {
+        const account = staff && accounts.find((a) => a.id === body.p_user)
+        if (!account) return send(404, { code: 'P0002' })
+        const listed = account.id === owner ? listings.filter((l) => l.status !== 'DRAFT').map((l) => ({ id: l.id, title: submissions.find((s) => s.listing_id === l.id).title, status: l.status, seller_type: 'OWNER', created_at: l.created_at })) : []
+        const leads = account.id === owner ? enquiries.map((e) => ({ id: e.id, listing_id: e.listing_id, listing_title: e.listing_title, direction: 'received', status: e.status, created_at: e.created_at })) : []
+        const changes = account.id === owner ? [{ id: id('5', 1), status_before: 'ACTIVE', status_after: 'ACTIVE', role_before: null, role_after: 'OWNER', reason: 'Classified from the listings this account submitted.', actor_id: admin, version_before: 0, version_after: 1, created_at: at(-5) }] : []
+        const page = (rows) => ({ rows, total: rows.length, page: 1 })
+        return send(200, { account, contact_phone: null, preferred_intent: null, listings: page(listed), leads: page(leads), changes: page(changes) })
+      }
+      case '/rest/v1/rpc/moderation_review': {
+        const listing = staff && listings.find((l) => l.id === body.p_listing)
+        if (!listing) return send(404, { code: 'P0002' })
+        return send(200, { listing, submission: submissions.find((s) => s.id === listing.current_submission_id), photos: [], history: [] })
       }
       case '/rest/v1/rpc/admin_listings': {
         if (!staff) return send(403, {})

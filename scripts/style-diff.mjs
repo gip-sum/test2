@@ -76,6 +76,10 @@ export const SCENARIOS = [
   { name: 'admin-listings', path: '/admin/listings', auth: ADMIN_TOKEN },
   { name: 'admin-moderation', path: '/admin/moderation', auth: ADMIN_TOKEN },
   { name: 'admin-system', path: '/admin/system', auth: ADMIN_TOKEN },
+  // The account and review screens and their forms (UI-11).
+  { name: 'admin-users', path: '/admin/users', auth: ADMIN_TOKEN },
+  { name: 'admin-user', path: '/admin/users/a9140f33-a429-46f3-9514-3e8f32f18189', auth: ADMIN_TOKEN },
+  { name: 'admin-review', path: '/admin/moderation/d9140f33-a429-46f3-9514-000000000002', auth: ADMIN_TOKEN },
 ]
 
 // Recorded per element. Rounded box geometry catches a change that moves
