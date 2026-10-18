@@ -51,6 +51,9 @@ export const SCENARIOS = [
   { name: 'search-locality', path: '/buy/kolkata/new-town' },
   { name: 'search-rent', path: '/rent/kolkata' },
   { name: 'search-zero', path: '/buy/kolkata?loc=howrah&type=VILLA&bhk=5&pmax=1600000' },
+  // The results page's filter sheet on a phone (UI-13: shared ToggleChip,
+  // Clear all as a link).
+  { name: 'search-filters-sheet', path: '/buy/kolkata?bhk=2,3', open: 'button[aria-haspopup="dialog"]:has-text("Filters")', widths: [390] },
   { name: 'property', path: '/property/4-bhk-flat-for-sale-in-ballygunge-p5d40ab' },
   { name: 'property-2', path: '/property/2-bhk-builder-floor-for-sale-in-behala-p9c17f4' },
   // The enquiry form (UI-12): in the phone sheet, and its error summary and
