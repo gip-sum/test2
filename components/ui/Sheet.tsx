@@ -81,6 +81,11 @@ export function Sheet({
       // belongs to this sheet, not to the layer that is already leaving.
       const leaving = event.target instanceof Element && event.target.closest('[data-sheet][data-state="closed"]')
       if (event.target !== document.body && !leaving && !content.current?.contains(event.target)) return
+      // A combobox inside the sheet takes Escape while it has something to
+      // dismiss: first its open suggestions, then its text (the combobox
+      // pattern). Once it is empty and closed, Escape closes the sheet (UI-13).
+      const box = event.target instanceof HTMLInputElement && event.target.getAttribute('role') === 'combobox' ? event.target : null
+      if (box && (box.getAttribute('aria-expanded') === 'true' || box.value !== '')) return
       event.preventDefault()
       event.stopImmediatePropagation()
       onOpenChange(false)
@@ -109,6 +114,14 @@ export function Sheet({
           // listener. Disable that default; the layout-effect listener above
           // reads the current DOM layer before handling each keypress.
           onEscapeKeyDown={(event) => event.preventDefault()}
+          // Radix focuses the first tabbable element (the Close button) and
+          // React's autoFocus loses to it. A sheet whose purpose is typing —
+          // the locality picker — marks its field `data-autofocus` and
+          // opens with focus there (UI-13).
+          onOpenAutoFocus={(event) => {
+            const field = content.current?.querySelector<HTMLElement>('[data-autofocus]')
+            if (field) { event.preventDefault(); field.focus({ preventScroll: true }) }
+          }}
           onCloseAutoFocus={(event) => {
             const target = returnFocusRef?.current ?? returnTo.current
             if (target?.isConnected) {
