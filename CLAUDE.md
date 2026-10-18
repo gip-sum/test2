@@ -231,6 +231,16 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
    `<noscript>` where the sheet would be, so it works without JavaScript on
    every width. An underlined action in a sentence or alert is
    `<Button variant="text">` with its colour from the call site.
+   A control that removes or empties itself hands focus on first: a
+   `Chip` moves it to the next chip in its `data-chip-group`, else to
+   `focusAfterRemove`; Clear all to the result count. A filter value is
+   `components/ui/ToggleChip`, and one that would empty the results is
+   `aria-disabled`, never `disabled` (UI-13: a self-disabling Clear all
+   sent focus into the dialog behind its sheet). A search suggestion list
+   is a combobox: focus stays in the text box, options are not tab stops,
+   picks are announced; a sheet opened to type marks its field
+   `data-autofocus`. Every text field and select is 16px, compact filter
+   fields included — smaller ones zoom the page on iPhone.
 7. **No new dependency** without a reason recorded in the phase spec and a
    `npm run bundle-report` comparison.
 8. **Green identity through tokens.** `lib/design/raw-colour.test.ts` fails

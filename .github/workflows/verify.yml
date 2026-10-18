@@ -98,6 +98,9 @@ jobs:
       # filter sheet and locality picker, swipeable rails, opaque header and
       # bottom bar, and tile counts that match their results pages.
       - run: npm run home-check
+      # Property pages: gallery, Read more as a disclosure (also without
+      # JavaScript, UI-13), the enquiry form's refusal and no-JS post, widths.
+      - run: npm run property-check
       # Phase 40A: the numbers, the URL, no-JS submission and the links in and out.
       - run: npm run calculator-check
       # Phase A: the header tiers, panels and menu by keyboard, 44px targets,
