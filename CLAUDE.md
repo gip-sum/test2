@@ -224,7 +224,13 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
    call the same server action to check first, refuse a double submit and
    catch a request that never left the browser. Sign-in sentences come from
    `lib/auth/messages.ts`; a provider's own error text never reaches the
-   page.
+   page. A server-action form's failure state returns what was typed and
+   the field it concerns: React resets an action form to its defaults
+   afterwards, and a failed save must not lose the change (UI-12). A form
+   that is reachable only through a client-opened sheet is also rendered in
+   `<noscript>` where the sheet would be, so it works without JavaScript on
+   every width. An underlined action in a sentence or alert is
+   `<Button variant="text">` with its colour from the call site.
 7. **No new dependency** without a reason recorded in the phase spec and a
    `npm run bundle-report` comparison.
 8. **Green identity through tokens.** `lib/design/raw-colour.test.ts` fails
