@@ -11,7 +11,7 @@ import { UUID } from '@/lib/media/types'
 import { setLeadStatus, acknowledgeNotifications } from './actions'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
-import { Button } from '@/components/ui/Button'
+import { SubmitButton } from '@/components/ui/SubmitButton'
 
 export const metadata: Metadata = { title: 'Seller enquiries', robots: { index: false, follow: false } }
 
@@ -39,7 +39,7 @@ export default async function SellerEnquiries({ searchParams }: { searchParams: 
         <p className="text-body-sm font-semibold text-ink-900">{listingId ? 'One listing' : 'All listings'}</p>
         {listingId && <Link href="/dashboard/enquiries" className="inline-flex min-h-11 items-center text-label font-semibold text-brand-700 underline underline-offset-4">All enquiries</Link>}
       </div>
-      {unread !== null && <div className="flex flex-wrap items-center gap-x-4"><p className="text-body-sm text-ink-700">{unread} unread {unread === 1 ? 'notification' : 'notifications'}</p>{unread > 0 && <form action={acknowledgeNotifications}><button type="submit" className="min-h-11 text-label font-semibold text-brand-700 underline">Mark notifications read</button></form>}</div>}
+      {unread !== null && <div className="flex flex-wrap items-center gap-x-4"><p className="text-body-sm text-ink-700">{unread} unread {unread === 1 ? 'notification' : 'notifications'}</p>{unread > 0 && <form action={acknowledgeNotifications}><SubmitButton variant="secondaryBrand">Mark notifications read</SubmitButton></form>}</div>}
     </div>
     {!result.ok ? <ErrorState surface="workspace">{listingId ? 'Enquiries for this listing are temporarily unavailable. Please refresh this page.' : 'Your leads are temporarily unavailable. Please refresh this page.'}</ErrorState> :
       result.rows.length === 0 ? <EmptyState surface="workspace" icon={<MailIcon />} title="No enquiries received">{listingId ? 'Enquiries about this listing appear here when buyers get in touch.' : 'Enquiries appear here when buyers contact you about your active listings.'}</EmptyState> :
@@ -70,7 +70,9 @@ function LeadCard({ lead, filtered }: { lead: Lead; filtered: boolean }) {
       <label className="flex min-w-0 flex-col gap-1 text-caption font-semibold text-ink-700">Lead status
         <select name="status" defaultValue={lead.status} className="min-h-11 rounded-md border border-border-strong bg-surface-000 px-3 text-body-sm text-ink-900"><option value="new">New</option><option value="contacted">Contacted</option><option value="closed">Closed</option></select>
       </label>
-      <Button type="submit" variant="outline" className="px-3">Update status</Button>
+      {/* Busy while the server action runs, and still a plain submit
+          without JavaScript (UI-09). */}
+      <SubmitButton variant="outline" className="px-3">Update status<span className="sr-only"> for {lead.buyer_name}</span></SubmitButton>
     </form>
   </article>
 }

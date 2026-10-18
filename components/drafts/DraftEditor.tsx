@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Button } from '@/components/ui/Button'
 import { DRAFT_KEYS, parseSnapshot, sameSnapshot, snapshotFromUrl, snapshotOf, type Draft, type DraftKey, type Snapshot } from '@/lib/drafts/types'
 
 type Recovery = { revision: number; snapshot: Snapshot }
@@ -12,6 +13,8 @@ export function DraftEditor({ initial, children }: { initial: Draft; children: R
   const blocked = useRef(false), leaving = useRef(false)
   const [status, setStatus] = useState('Saved to your account'), [error, setError] = useState(''), [conflict, setConflict] = useState(false)
   const [recovery, setRecovery] = useState<Recovery | null>(null), [moving, setMoving] = useState(false)
+  // Which "leave" button is saving before it navigates (UI-09).
+  const [exitTo, setExitTo] = useState<'preview' | 'exit' | null>(null)
   const key = `gb-draft:v1:${initial.owner_id}:${initial.id}`
   function stash() {
     try { sessionStorage.setItem(key, JSON.stringify({ revision: revision.current, snapshot: latest.current })) } catch { /* Account saving still works if browser storage is disabled. */ }
@@ -92,17 +95,28 @@ export function DraftEditor({ initial, children }: { initial: Draft; children: R
     latest.current = recovery.snapshot; blocked.current = false; setRecovery(null)
     await move(latest.current)
   }
+  async function leave(kind: 'preview' | 'exit', href: string) {
+    if (exitTo || moving) return
+    setExitTo(kind)
+    // Busy until the next page replaces this one; back to idle if saving failed.
+    if (await flush()) router.push(href)
+    else setExitTo(null)
+  }
   function reload() { clean(); blocked.current = false; latest.current = saved.current; window.location.reload() }
   return <div ref={root}>
     <div className="mx-auto max-w-[1320px] px-4 pt-5 lg:px-8">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-brand-100 p-4">
         <div><p className="font-semibold text-ink-900">Private draft</p><p role="status" className="text-body-sm text-ink-700">{status}</p></div>
-        <button type="button" disabled={moving || !!recovery || conflict} onClick={async () => { if (await flush()) router.push(`/post/drafts/${initial.id}/preview`) }} className="min-h-11 px-3 font-semibold text-brand-700">Preview property</button>
-        <button type="button" disabled={moving || !!recovery || conflict} onClick={async () => { if (await flush()) router.push('/post/drafts') }} className="min-h-11 px-3 font-semibold text-brand-700">Save & exit</button>
+        {/* While saving to leave, the pressed button stays focused and busy
+            (UI-09); the other is unavailable but keeps its place. */}
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="secondaryBrand" disabled={!!recovery || conflict} loading={exitTo === 'preview'} aria-disabled={((moving || exitTo) && exitTo !== 'preview') || undefined} onClick={() => void leave('preview', `/post/drafts/${initial.id}/preview`)}>Preview property</Button>
+          <Button type="button" variant="secondaryBrand" disabled={!!recovery || conflict} loading={exitTo === 'exit'} aria-disabled={((moving || exitTo) && exitTo !== 'exit') || undefined} onClick={() => void leave('exit', '/post/drafts')}>Save & exit</Button>
+        </div>
       </div>
       <noscript><p>JavaScript is required to edit and autosave this draft. <Link href="/post/drafts">Return to drafts</Link>.</p></noscript>
       {error && <div role="alert" className="mt-3 rounded-md border border-border-strong p-4 text-danger-600"><p>{error}</p>{conflict ? <button type="button" onClick={reload} className="min-h-11 underline">Discard unsent edits and load latest</button> : <button type="button" onClick={async () => { if (await flush()) { if (leaving.current) router.refresh() } }} className="min-h-11 underline">Retry save</button>}</div>}
-      {recovery && <div role="alert" className="mt-3 rounded-md border border-border-strong p-4 text-ink-900"><p>Unsent changes were recovered from this tab. They are not saved to your account.</p><button type="button" onClick={restore} className="min-h-11 px-3 font-semibold text-brand-700">Restore unsent changes</button><button type="button" onClick={reload} className="min-h-11 px-3 underline">Keep account version</button></div>}
+      {recovery && <div role="alert" className="mt-3 rounded-md border border-border-strong p-4 text-ink-900"><p>Unsent changes were recovered from this tab. They are not saved to your account.</p><Button type="button" variant="secondaryBrand" onClick={restore} className="mt-2">Restore unsent changes</Button><button type="button" onClick={reload} className="min-h-11 px-3 underline">Keep account version</button></div>}
     </div>
     <div inert={moving || !!recovery || conflict} onChangeCapture={e => changed(e.target)} onSubmitCapture={e => {
       if (!(e.target instanceof HTMLFormElement) || e.target.getAttribute('action') !== '/post') return

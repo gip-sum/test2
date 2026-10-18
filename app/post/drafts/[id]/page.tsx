@@ -1,4 +1,5 @@
 import { ReloadDraft } from '@/components/drafts/ReloadDraft'
+import { ErrorState } from '@/components/ui/ErrorState'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
@@ -22,7 +23,7 @@ export default async function DraftPage({ params }: { params: Promise<{ id: stri
   let draft
   try { draft = await getDraft(user, id) } catch (e) {
     if (e instanceof DraftError && e.status === 404) notFound()
-    return <PageShell><div className="mx-auto max-w-3xl p-6"><h1 className="text-heading-2">Draft unavailable</h1><p role="alert" className="mt-4">Your draft could not be loaded. It has not been replaced or cleared.</p><ReloadDraft /></div></PageShell>
+    return <PageShell><div className="mx-auto max-w-3xl p-6"><h1 className="text-heading-2">Draft unavailable</h1><ErrorState surface="inline" className="mt-4" action={<ReloadDraft />}>Your draft could not be loaded. It has not been replaced or cleared.</ErrorState></div></PageShell>
   }
   const snapshot = snapshotOf(draft), resolved = resolvePosting(snapshot.input, kolkataToday())
   const photos = snapshot.path === '/post/photos' && resolved.view.stage === 'pricing-review'

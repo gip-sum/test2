@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ErrorState } from '@/components/ui/ErrorState'
 import Link from 'next/link'
 import { notFound,redirect } from 'next/navigation'
 import { getVerifiedUser } from '@/lib/auth/session'
@@ -25,7 +26,7 @@ export default async function PreviewPage({params}:{params:Promise<{id:string}>}
   let result
   try { result=await getPreview(user,id) }catch(e){
     if(e instanceof DraftError&&e.status===404)notFound()
-    return <PageShell><section className="mx-auto max-w-3xl p-6"><h1 className="text-heading-2">Preview unavailable</h1><p role="alert" className="mt-4">We could not load all your saved information. Your draft is unchanged.</p><ReloadDraft/><Link href={`/post/drafts/${id}`} className="ml-4 inline-flex min-h-11 items-center text-brand-700">Back to draft</Link></section></PageShell>
+    return <PageShell><section className="mx-auto max-w-3xl p-6"><h1 className="text-heading-2">Preview unavailable</h1><ErrorState surface="inline" className="mt-4" action={<><ReloadDraft/><Link href={`/post/drafts/${id}`} className="inline-flex min-h-11 items-center text-brand-700 underline">Back to draft</Link></>}>We could not load all your saved information. Your draft is unchanged.</ErrorState></section></PageShell>
   }
   const {model:m,signature,confirmed}=result,edit=`/post/drafts/${id}`
   let job=null,jobError=''

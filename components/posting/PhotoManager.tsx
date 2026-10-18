@@ -4,13 +4,15 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { compressPhoto } from '@/lib/media/compress'
 import { fileError, PHOTO_LIMIT, type Photo } from '@/lib/media/types'
 import { measure, play, type FlipSnapshot } from '@/lib/motion/flip'
+import { Button } from '@/components/ui/Button'
 
 type Item = { id: string; name: string; url?: string; file?: File; photo?: Photo; phase: 'preparing' | 'uploading' | 'processing' | 'ready' | 'error'; progress: number; attempted?: boolean; error?: string }
 // aria-disabled, not disabled (UI-08, the UI-07 Button rule): a control
 // disabled while it has focus sends focus to <body>, and every move used to
 // do exactly that to the button just pressed. Each handler already refuses
-// while busy or at the end of the list.
-const button = 'inline-flex min-h-11 items-center justify-center rounded-md border border-border-strong px-3 text-body-sm font-semibold text-brand-700 disabled:opacity-40 aria-disabled:opacity-40 aria-disabled:cursor-not-allowed'
+// while busy or at the end of the list; the shared Button (secondaryBrand,
+// UI-09) also refuses the press and draws the unavailable state.
+const tool = 'px-3 text-body-sm'
 type Control = 'earlier' | 'later' | 'remove'
 async function jsonRequest(method: string, body?: object) {
   const response = await fetch('/api/posting/photos', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(30_000) })
@@ -151,7 +153,7 @@ export function PhotoManager({ collection }: { collection: string }) {
       <input id="property-photos" type="file" accept="image/jpeg,image/png,image/webp" multiple disabled={busy || loading || loadError || items.length >= PHOTO_LIMIT} aria-describedby="photo-guidance" className="mt-4 block min-h-11 w-full min-w-0 text-body-sm file:mr-3 file:min-h-11 file:rounded-md file:border-0 file:bg-brand-600 file:px-4 file:font-semibold file:text-on-brand" onChange={event => { const files = Array.from(event.target.files ?? []); event.target.value = ''; void add(files) }} />
     </div>
     <p role="status" aria-live="polite" className="mt-4 break-words [overflow-wrap:anywhere] text-body-sm text-ink-700">{loading ? 'Loading your photos…' : notice || `${items.filter(item => item.phase === 'ready').length} photos uploaded. The first photo is your cover.`}</p>
-    {loadError && <button type="button" className={`${button} mt-3`} onClick={() => window.location.reload()}>Reload photos</button>}
+    {loadError && <Button type="button" variant="secondaryBrand" className={`${tool} mt-3`} onClick={() => window.location.reload()}>Reload photos</Button>}
     <ol ref={list} aria-label="Property photos" className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {items.map((item, index) => <li key={item.id} data-flip-key={item.id} className="relative min-w-0 rounded-lg border border-border-subtle bg-surface-000 p-3">
         <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-surface-200">
@@ -165,11 +167,11 @@ export function PhotoManager({ collection }: { collection: string }) {
         {item.phase === 'uploading' && <progress aria-label={`Upload progress for ${item.name}`} value={item.progress} max={100} className="mt-2 w-full accent-brand-600" />}
         {item.error && <p className="mt-2 break-words text-caption text-danger-600">{item.error}</p>}
         <div className="mt-3 flex flex-wrap gap-2">
-          <button type="button" data-control="earlier" className={button} aria-disabled={!canOrder || index === 0 || undefined} aria-label={`Move ${item.name} earlier`} onClick={() => { if (canOrder) void move(index, index - 1, 'earlier') }}>← Earlier</button>
-          <button type="button" data-control="later" className={button} aria-disabled={!canOrder || index === items.length - 1 || undefined} aria-label={`Move ${item.name} later`} onClick={() => { if (canOrder) void move(index, index + 1, 'later') }}>Later →</button>
-          {index > 0 && <button type="button" className={button} aria-disabled={!canOrder || undefined} aria-label={`Make ${item.name} cover`} onClick={() => { if (canOrder) void move(index, 0, 'later') }}>Make cover</button>}
-          {item.phase === 'error' && item.file && <button type="button" className={button} aria-disabled={busy || undefined} onClick={() => { if (!busy) void retry(item) }}>Retry upload</button>}
-          <button type="button" data-control="remove" className={button} aria-disabled={busy || undefined} aria-label={`Remove ${item.name}`} onClick={() => { if (!busy) void remove(item) }}>Remove</button>
+          <Button type="button" variant="secondaryBrand" data-control="earlier" className={tool} aria-disabled={!canOrder || index === 0 || undefined} aria-label={`Move ${item.name} earlier`} onClick={() => { if (canOrder) void move(index, index - 1, 'earlier') }}>← Earlier</Button>
+          <Button type="button" variant="secondaryBrand" data-control="later" className={tool} aria-disabled={!canOrder || index === items.length - 1 || undefined} aria-label={`Move ${item.name} later`} onClick={() => { if (canOrder) void move(index, index + 1, 'later') }}>Later →</Button>
+          {index > 0 && <Button type="button" variant="secondaryBrand" className={tool} aria-disabled={!canOrder || undefined} aria-label={`Make ${item.name} cover`} onClick={() => { if (canOrder) void move(index, 0, 'later') }}>Make cover</Button>}
+          {item.phase === 'error' && item.file && <Button type="button" variant="secondaryBrand" className={tool} aria-disabled={busy || undefined} onClick={() => { if (!busy) void retry(item) }}>Retry upload</Button>}
+          <Button type="button" variant="secondaryBrand" data-control="remove" className={tool} aria-disabled={busy || undefined} aria-label={`Remove ${item.name}`} onClick={() => { if (!busy) void remove(item) }}>Remove</Button>
         </div>
       </li>)}
     </ol>

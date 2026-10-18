@@ -14,8 +14,14 @@ import { publishingConfigured } from '@/lib/listings/queries'
 import { cn } from '@/lib/cn'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { ErrorState } from '@/components/ui/ErrorState'
+import { RestoreFocus } from '@/components/a11y/RestoreFocus'
 
 export const metadata: Metadata = { title: 'My properties', robots: { index: false, follow: false } }
+
+const EMPTY_TITLE: Record<(typeof FILTERS)[number]['key'], string> = {
+  all: 'No properties', draft: 'No drafts', review: 'Nothing under review', active: 'No active listings',
+  expired: 'No expired listings', rejected: 'No rejected listings', corrections: 'Nothing waiting for corrections', withdrawn: 'No withdrawn listings',
+}
 export const dynamic = 'force-dynamic'
 
 /**
@@ -35,6 +41,8 @@ export default async function SellerDashboard({ searchParams }: { searchParams: 
 
   return <OwnerShell current="properties" title="My properties" description="Manage your listings, drafts and next steps." unread={unread}
     actions={<Link href="/post" className={buttonClassName({ variant: 'primary' })}><PlusIcon className="size-4" />Post a property</Link>}>
+    {/* Where focus lands after a card's action refreshes this page (UI-09). */}
+    <RestoreFocus token={crypto.randomUUID()} />
     {!result.ok ? <ErrorState surface="workspace" title="Your properties could not be loaded"
       action={<Link href={dashboardHref(query)} className="inline-flex min-h-11 items-center font-semibold text-brand-700 underline">Reload</Link>}>
       Nothing has changed with your drafts or listings. Please try again.
@@ -76,7 +84,7 @@ function Workspace({ cards, query, publishing }: { cards: Parameters<typeof arra
 
     <section aria-labelledby="properties-heading" className="mt-4">
       <div className="workspace-toolbar">
-        <h2 id="properties-heading" className="text-body font-semibold text-ink-900">{filter.key === 'all' ? 'All properties' : filter.label} <span className="tabular font-normal text-ink-500">({view.total})</span></h2>
+        <h2 id="properties-heading" tabIndex={-1} className="text-body font-semibold text-ink-900">{filter.key === 'all' ? 'All properties' : filter.label} <span className="tabular font-normal text-ink-500">({view.total})</span></h2>
         <nav aria-label="Sort properties" className="flex flex-wrap items-center gap-x-4 text-body-sm">
           <span className="text-ink-700">Sort:</span>
           {SORTS.map((s) => <Link key={s.key} href={dashboardHref({ status: query.status, sort: s.key })} aria-current={s.key === query.sort ? 'page' : undefined}
@@ -84,7 +92,12 @@ function Workspace({ cards, query, publishing }: { cards: Parameters<typeof arra
         </nav>
       </div>
       {view.visible.length === 0
-        ? <p className="workspace-panel workspace-empty text-body-sm text-ink-700">No properties have this status. <Link href={dashboardHref({ sort: query.sort })} className="inline-flex min-h-11 items-center font-semibold text-brand-700 underline">Show all properties</Link></p>
+        // The shared empty state (UI-09), named for the filter: "No drafts"
+        // says what an empty list cannot.
+        ? <EmptyState surface="workspace" heading="h3" title={EMPTY_TITLE[filter.key]}
+          action={<Link href={dashboardHref({ sort: query.sort })} className="inline-flex min-h-11 items-center font-semibold text-brand-700 underline">Show all properties</Link>}>
+          No properties have this status.
+        </EmptyState>
         : <div className="workspace-panel overflow-hidden"><div aria-hidden="true" className="hidden grid-cols-[minmax(0,2.1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)] gap-4 border-b border-border-subtle bg-surface-100 px-4 py-3 text-caption font-semibold text-ink-700 lg:grid"><span>Property</span><span>Price</span><span>Status</span><span>Updated / enquiries</span></div>{view.visible.map((card) => <PropertyCard key={card.draftId} card={card} publishing={publishing} />)}</div>}
       <Pagination page={view.page} pageCount={view.pageCount} hrefForPage={(page) => dashboardHref({ ...query, page })} />
     </section>

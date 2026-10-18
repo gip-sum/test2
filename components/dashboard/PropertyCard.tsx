@@ -29,7 +29,9 @@ export function PropertyCard({ card, publishing }: { card: Card; publishing: boo
       <div className="flex min-w-0 gap-3">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-md border border-border-subtle bg-surface-100 text-brand-700"><BuildingIcon className="size-6" /></span>
         <div className="min-w-0">
-          <h3 id={headingId} className="break-words text-body font-semibold text-ink-900">{title}</h3>
+          {/* Focusable from script only: where focus returns after an action
+              on this card refreshes the page (WithdrawAction, UI-09). */}
+          <h3 id={headingId} tabIndex={-1} className="break-words text-body font-semibold text-ink-900">{title}</h3>
           {card.place && <p className="mt-0.5 break-words text-caption text-ink-700">{card.place}</p>}
           {card.intent && <p className="mt-0.5 text-caption text-ink-500">{card.intent === 'buy' ? 'For sale' : 'For rent'}</p>}
         </div>

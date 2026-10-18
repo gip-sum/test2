@@ -30,7 +30,7 @@ export function StartDraft() {
     finally { setBusy(false) }
   }
   return <div className="mx-auto flex max-w-[1320px] flex-wrap items-center gap-3 px-4 pt-5 text-body-sm lg:px-8">
-    <Button type="button" onClick={start} disabled={busy}>{busy ? 'Creating draft…' : 'Save as draft'}</Button>
+    <Button type="button" onClick={start} loading={busy}>{busy ? 'Creating draft…' : 'Save as draft'}</Button>
     <Link href="/post/drafts" className="inline-flex min-h-11 items-center px-2 font-semibold text-brand-700">My drafts</Link>
     <span className="text-ink-500">Enable autosave and resume later.</span>
     {error && <p role="alert" className="w-full text-danger-600">{error} {login && <Link href={login} className="underline">Login/Register</Link>}</p>}
