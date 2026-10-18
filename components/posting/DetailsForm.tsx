@@ -1,6 +1,7 @@
 import { pricingPairs, type PricingInput } from '@/lib/posting/pricing'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
+import { FormField, FormFieldset, fieldControlClass } from '@/components/ui/FormField'
 import { AREA_UNITS, applicableKeys, hasUnitFloor, type DetailErrors, type DetailInput, type DetailKey } from '@/lib/posting/details'
 import { locationPairs, type LocationInput } from '@/lib/posting/location'
 import { postingUrl } from '@/lib/posting/entry'
@@ -24,19 +25,11 @@ const UNIT_LABEL: Record<(typeof AREA_UNITS)[number], string> = { sqft: 'Sq. ft'
 const COUNTS = Array.from({ length: 10 }, (_, index) => String(index + 1))
 export const fieldId = (key: DetailKey) => `field-${key}`
 
-const inputClass =
-  'mt-2 block min-h-11 w-full min-w-0 rounded-md border bg-surface-000 px-3 text-body text-ink-900 tabular aria-[invalid=true]:border-danger-600 aria-[invalid=true]:border-2 border-border-strong'
-
-function Describe({ name, hint, error }: { name: DetailKey; hint?: string; error?: string }) {
-  return <>
-    {hint && <span id={`${name}-hint`} className="mt-1 block text-caption font-normal text-ink-500">{hint}</span>}
-    {error && <span id={`${name}-error`} className="mt-1.5 block text-body-sm font-semibold text-danger-600"><span className="sr-only">Error: </span>{error}</span>}
-  </>
-}
-
-function describedBy(name: DetailKey, hint?: string, error?: string) {
-  return [hint && `${name}-hint`, error && `${name}-error`].filter(Boolean).join(' ') || undefined
-}
+// Labels, hints, errors and their ARIA come from the shared FormField
+// (UI-09). Inputs were 15px here — Safari on iPhone zooms the page into a
+// field under 16px — and are now the shared 16px, 48px control the location
+// and pricing steps already used. Hint and error names (`carpet-error`) are
+// unchanged: the error summary and the checks point at them.
 
 function ChipGroup({ name, legend, hint, options, values, errors }: {
   name: DetailKey
@@ -48,9 +41,7 @@ function ChipGroup({ name, legend, hint, options, values, errors }: {
 }) {
   const error = errors[name]
   return (
-    <fieldset aria-describedby={describedBy(name, hint, error)} className="min-w-0">
-      <legend className="text-label text-ink-900">{legend}</legend>
-      <Describe name={name} hint={hint} error={error} />
+    <FormFieldset messageId={name} legend={legend} hint={hint} error={error}>
       <div className="mt-3 flex flex-wrap gap-2">
         {options.map((option, index) => (
           // aria-invalid is not valid on a radio; the group's error is read
@@ -69,7 +60,7 @@ function ChipGroup({ name, legend, hint, options, values, errors }: {
           </label>
         ))}
       </div>
-    </fieldset>
+    </FormFieldset>
   )
 }
 
@@ -83,15 +74,10 @@ function TextField({ name, label, hint, values, errors, optional, type = 'text',
   type?: 'text' | 'date' | 'month'
   min?: string
 }) {
-  const error = errors[name]
   return (
-    <div className="min-w-0">
-      <label htmlFor={fieldId(name)} className="block text-label text-ink-900">
-        {label}{optional && <span className="font-normal text-ink-500"> (optional)</span>}
-      </label>
-      <Describe name={name} hint={hint} error={error} />
-      <input
-        id={fieldId(name)}
+    <FormField id={fieldId(name)} messageId={name} label={label} optional={optional} hint={hint} error={errors[name]}>
+      {(control) => <input
+        {...control}
         name={name}
         type={type}
         min={min}
@@ -99,11 +85,9 @@ function TextField({ name, label, hint, values, errors, optional, type = 'text',
         inputMode={type === 'text' ? 'numeric' : undefined}
         autoComplete="off"
         maxLength={type === 'text' ? 12 : undefined}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={describedBy(name, hint, error)}
-        className={inputClass}
-      />
-    </div>
+        className={`${fieldControlClass} tabular`}
+      />}
+    </FormField>
   )
 }
 

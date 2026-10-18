@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/Button'
+import { FormField, fieldControlClass } from '@/components/ui/FormField'
 import { detailPairs, type DetailInput } from '@/lib/posting/details'
 import { locationPairs, type LocationInput } from '@/lib/posting/location'
 import type { CompleteEntry } from '@/lib/posting/flow'
@@ -9,22 +10,15 @@ export const pricingFieldId = (key: PricingKey) => `pricing-${key}`
 export function PricingForm({ entry, carried, location, values, errors }: {
   entry: CompleteEntry; carried: DetailInput; location: LocationInput; values: PricingInput; errors: PricingErrors
 }) {
-  const field = (key: PricingKey, label: string, hint: string, options?: { value: string; label: string }[]) => {
-    const error = errors[key]
-    const common = { id: pricingFieldId(key), name: key, defaultValue: values[key] ?? '',
-      'aria-invalid': error ? true as const : undefined,
-      'aria-describedby': `${key}-pricing-hint${error ? ` ${key}-pricing-error` : ''}`,
-      className: 'mt-2 block min-h-12 w-full min-w-0 rounded-md border border-border-strong bg-surface-000 px-3 py-3 text-base text-ink-900 tabular aria-[invalid=true]:border-danger-600 aria-[invalid=true]:border-2' }
-    return <div className="min-w-0" key={key}>
-      <label htmlFor={common.id} className="block text-label text-ink-900">{label}</label>
-      <p id={`${key}-pricing-hint`} className="mt-1 text-body-sm text-ink-500">{hint}</p>
-      {options ? <select {...common}><option value="">Choose an answer</option>
+  // Label, hint, error and their ARIA come from the shared FormField (UI-09).
+  const field = (key: PricingKey, label: string, hint: string, options?: { value: string; label: string }[]) => (
+    <FormField key={key} id={pricingFieldId(key)} messageId={`${key}-pricing`} label={label} hint={hint} error={errors[key]}>
+      {(control) => options ? <select {...control} name={key} defaultValue={values[key] ?? ''} className={`${fieldControlClass} tabular`}><option value="">Choose an answer</option>
         {values[key] && !options.some((o) => o.value === values[key]) && <option value={values[key]}>Choose again — invalid answer</option>}
         {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select> : <input {...common} type="text" inputMode="numeric" maxLength={24} autoComplete="off" />}
-      {error && <p id={`${key}-pricing-error`} className="mt-2 text-body-sm font-semibold text-danger-600"><span className="sr-only">Error: </span>{error}</p>}
-    </div>
-  }
+      </select> : <input {...control} name={key} defaultValue={values[key] ?? ''} type="text" inputMode="numeric" maxLength={24} autoComplete="off" className={`${fieldControlClass} tabular`} />}
+    </FormField>
+  )
   return <>
     <h1 id="post-heading" className="font-display text-heading-1 text-ink-900 sm:text-[40px] sm:leading-tight">Set the property price.</h1>
     <p className="mt-3 text-body-lg text-ink-700">Enter amounts in whole rupees. We calculate the rate from your carpet area when you review.</p>
