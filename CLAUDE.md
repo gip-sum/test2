@@ -177,6 +177,12 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
    Search). Never stagger with an inline custom property per item: it
    inherits into every descendant and defeats Chrome's style sharing (it
    doubled the Filters sheet's open cost); use `:nth-child` rules.
+   Items that change place (reorder, removal reflow) animate with
+   `lib/motion/flip.ts` — one Web Animations transform per item, the DOM
+   already in its final order — not Motion's `layout`, which measured +42.6
+   KB and slower clicks on the photo manager (UI-08). A confirmation
+   animation plays only for a change confirmed through that control, never
+   when state loads.
 4. **Anime.js** only for a genuine timeline or SVG sequence; it is installed
    with the first feature that needs one. CSS stays CSS (login, 404).
 5. **Bklit UI** for charts of real, measured data only — never decoration,
@@ -190,7 +196,9 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
    technical detail).
    A busy `Button` is `aria-disabled` and refuses the press, never
    `disabled`: disabling the focused control sends focus to `<body>`
-   (UI-07). A multi-step form keeps ONE action state across its steps, so
+   (UI-07). The same holds for every control that can be busy while focused
+   (photo tools, save hearts, UI-08), and a control that unmounts after its
+   own action hands focus to the next sensible one. A multi-step form keeps ONE action state across its steps, so
    every step survives a post without JavaScript; a client `onSubmit` may
    call the same server action to check first, refuse a double submit and
    catch a request that never left the browser. Sign-in sentences come from
