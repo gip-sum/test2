@@ -182,7 +182,9 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
    already in its final order — not Motion's `layout`, which measured +42.6
    KB and slower clicks on the photo manager (UI-08). A confirmation
    animation plays only for a change confirmed through that control, never
-   when state loads.
+   when state loads. Never hide content until it scrolls into view:
+   `animation-timeline: view()` left sections blank in full-page captures
+   and print (UI-14).
 4. **Anime.js** only for a genuine timeline or SVG sequence; it is installed
    with the first feature that needs one. CSS stays CSS (login, 404).
 5. **Bklit UI** for charts of real, measured data only — never decoration,
@@ -198,6 +200,12 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
    between fully measured periods. A current count (saves) is never charted
    as history or put in a funnel.
 6. **Mobile is mandatory**: the widths above, 44px targets, no overflow.
+   A horizontal scroll row is `position: relative` (sr-only text in an
+   unpositioned one escaped its clipping and widened phones to 809px) and,
+   if it snaps, sets `scroll-padding-inline` to the gutter (without it
+   Chrome snaps the first card flush to the screen edge on load). A box
+   that holds a popup never clips it (`overflow: hidden` on the Home hero
+   hid the locality suggestions, UI-14).
    A small control keeps its look and grows its hit area: a square element
    of at least 44px with negative margins handing the space back (Chrome
    hit-tests follow border-radius), proven by hit-testing in `ui-check`.

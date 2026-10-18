@@ -44,7 +44,10 @@ const WIDTHS = [390, 1280]
 // treats like any refusal it must not reveal: as a sent code.
 export const SCENARIOS = [
   { name: 'home', path: '/' },
-  { name: 'home-search-dialog', path: '/', open: '.reference-search-trigger', widths: [390] },
+  // The hero search's two sheets on a phone (UI-14: the search is inline,
+  // so its locality picker and More filters open straight from the page).
+  { name: 'home-locality-picker', path: '/', open: 'form[aria-label="Search properties"] button[aria-haspopup="dialog"]:has-text("Search a locality")', widths: [390] },
+  { name: 'home-filters-sheet', path: '/', open: 'form[aria-label="Search properties"] button[aria-haspopup="dialog"]:has-text("More filters")', widths: [390] },
   { name: 'menu (Phase E)', path: '/', open: 'nav.app-bar-bottom button[aria-haspopup="dialog"]', widths: [390] },
   { name: 'search-buy', path: '/buy/kolkata' },
   { name: 'search-filtered', path: '/buy/kolkata?loc=uttarpara-kotrung,ballygunge&bhk=2,3,4&type=APARTMENT&sort=price_desc' },

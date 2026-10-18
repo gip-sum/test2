@@ -5,11 +5,13 @@
 //   Sheet          enter/exit keyframes by width, focus trap, Escape, focus
 //                  return, outside click, no overflow while it moves
 //   Header panels  short entrance, instant exit, focus back to the toggle
-//   Nested sheets  Escape during a child's exit reaches the parent
+//   Picker sheet   a key during its exit is harmless; focus back to the
+//                  hero field (was nested sheets, before UI-14)
 //   Lightbox       fade in and out, focus in and back
 //   Tabs           indicator glides after a user change only (UI-05)
 //   Results        enter after a filter change, never on server render (UI-06)
 //   Gallery        a new photo fades into the frame; the old one never lingers
+//   Home card      hover lift and zoom under a fine pointer only (UI-14)
 //   Property card  no hover lift on touch (Android stuck hover), press
 //                  feedback, nothing left transformed after Back; lift kept
 //                  for a real mouse
@@ -98,15 +100,15 @@ async function provokeLoading(page) {
   if (!page.prefetched.has(path)) throw new Error(`FAIL ${path} was never prefetched, so its skeleton cannot be provoked`)
   await link.click()
 }
-// The Buy / Rent tabs (components/ui/SmoothTabs.tsx, UI-05) inside the home
-// search sheet, once the sheet has settled and the indicator is measured.
+// The homepage search, inline in the hero since UI-14 (it used to open in
+// a sheet), once hydrated: the tabs mark their measured indicator then.
+async function homeSearch(page) {
+  await page.waitForFunction(() => document.querySelector('form[aria-label="Search properties"] [role=tablist][data-indicator]'))
+  return page.getByRole('form', { name: 'Search properties' })
+}
+// The Buy / Rent tabs (components/ui/SmoothTabs.tsx, UI-05) in that search.
 async function intentTabs(page) {
-  await page.locator('.reference-search-trigger').click()
-  const dialog = page.getByRole('dialog', { name: 'Find your home' })
-  await dialog.waitFor()
-  await dialog.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)))
-  await page.waitForFunction(() => document.querySelector('[role=tablist][data-indicator]'))
-  return dialog.getByRole('tablist', { name: 'Search intent' })
+  return (await homeSearch(page)).getByRole('tablist', { name: 'Search intent' })
 }
 // Which tab the indicator pill covers right now (-1 for none).
 const pillOver = (list) => list.evaluate((el) => {
@@ -182,34 +184,29 @@ try {
     await page.context().close()
   }
 
-  // ── Nested sheets ─────────────────────────────────────────────────────
-  // The home search sheet opens the locality picker on top of itself. A
-  // closing child stays mounted for its 200ms exit; Escape during that time
-  // must reach the parent, not the leaving child.
+  // ── The locality picker from the hero ─────────────────────────────────
+  // This was a nested-sheet check: the picker opened on top of the home
+  // search sheet. The search is inline since UI-14, so no sheet in the
+  // product opens over another now. What it guarded still holds for the
+  // single sheet: a closing sheet stays mounted for its 200ms exit, a key
+  // pressed during that exit must not reach or revive it, and focus must end
+  // on the field that opened it, with the page released.
   {
     const page = await open('/')
-    const hero = page.getByRole('button', { name: 'Search a locality in Kolkata' })
-    await hero.click()
-    const parent = page.getByRole('dialog', { name: 'Find your home' })
-    await parent.waitFor()
-    // The field inside the sheet carries the same words as the hero trigger.
-    const picker = parent.getByRole('button', { name: 'Search a locality in Kolkata' })
-    await picker.click()
-    await page.getByRole('dialog', { name: 'Where are you looking?' }).waitFor()
-    await page.waitForFunction(() => document.querySelectorAll('[data-sheet][data-state="open"]').length === 2)
-    await page.keyboard.press('Escape')
-    await page.waitForFunction(() => document.querySelectorAll('[data-sheet]').length === 1)
-    await page.waitForFunction(() => document.activeElement?.closest('[role="dialog"]') !== null && /Search a locality/.test(document.activeElement.textContent))
-    check('nested: Escape closes only the picker and returns focus to its field', await parent.isVisible())
-    await picker.click()
-    await page.waitForFunction(() => document.querySelectorAll('[data-sheet][data-state="open"]').length === 2)
-    await page.keyboard.press('Escape')
-    await page.waitForFunction(() => document.querySelectorAll('[data-sheet][data-state="open"]').length === 1, null, { polling: 'raf' })
-    await page.keyboard.press('Escape')
-    await page.locator('[data-sheet]').first().waitFor({ state: 'detached' })
-    await page.waitForFunction(() => document.querySelectorAll('[data-sheet]').length === 0 && !document.querySelector('[data-app-root]').inert)
-    await page.waitForFunction(() => /Search a locality/.test(document.activeElement?.textContent ?? ''))
-    check('nested: a second Escape during the picker\'s exit closes the parent and focus returns to the page', true)
+    const field = (await homeSearch(page)).getByRole('button', { name: 'Search a locality in Kolkata' })
+    for (let cycle = 1; cycle <= 3; cycle++) {
+      await field.click()
+      await page.getByRole('dialog', { name: 'Where are you looking?' }).waitFor()
+      await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'combobox')
+      check(`picker ${cycle}: it opens over an inert page with focus in its field`, await page.evaluate(() => document.querySelector('[data-app-root]').inert && !!document.activeElement.closest('[data-sheet]')))
+      await page.keyboard.press('Escape')
+      await page.waitForFunction(() => document.querySelector('[data-sheet]')?.dataset.state === 'closed', null, { polling: 'raf' })
+      await page.keyboard.press('Escape')
+      await page.locator('[data-sheet]').waitFor({ state: 'detached' })
+      await page.waitForFunction(() => !document.querySelector('[data-app-root]').inert)
+      await page.waitForFunction(() => /Search a locality/.test(document.activeElement?.textContent ?? '') && !!document.activeElement.closest('form[aria-label="Search properties"]'))
+      check(`picker ${cycle}: Escape closes it, a second Escape during its exit is harmless, and focus returns to the hero field`, await page.locator('[data-sheet]').count() === 0)
+    }
     await page.context().close()
   }
 
@@ -404,6 +401,29 @@ try {
     await page.context().close()
   }
 
+  // ── Home card (UI-14) on touch and with a mouse ───────────────────────
+  // The homepage's own card lifts 4px and zooms its photo under a fine
+  // pointer only; a tap's lingering :hover on a phone moves nothing.
+  {
+    const page = await open('/', { context: { hasTouch: true, isMobile: true } })
+    const card = page.locator('.home-rail article.home-card').first()
+    await card.scrollIntoViewIfNeeded()
+    const rest = await card.evaluate((el) => getComputedStyle(el).boxShadow)
+    const box = await card.boundingBox()
+    await page.mouse.move(box.x + box.width / 2, box.y + 40)
+    check('touch: :hover on a home card applies no lift, shadow change or zoom', await card.evaluate((el, shadow) => el.matches(':hover') && getComputedStyle(el).transform === 'none' && getComputedStyle(el).boxShadow === shadow && getComputedStyle(el.querySelector('img')).transform === 'none', rest))
+    await page.context().close()
+  }
+  {
+    const page = await open('/', { width: 1280 })
+    const card = page.locator('.home-rail article.home-card').first()
+    await card.hover()
+    await card.evaluate((el) => Promise.all([el, el.querySelector('img')].flatMap((e) => e.getAnimations()).map((a) => a.finished)))
+    const hovered = await card.evaluate((el) => ({ card: getComputedStyle(el).transform, img: getComputedStyle(el.querySelector('img')).transform }))
+    check('1280: mouse hover lifts a home card 4px and zooms its photo', hovered.card === 'matrix(1, 0, 0, 1, 0, -4)' && /^matrix\(1\.04/.test(hovered.img), JSON.stringify(hovered))
+    await page.context().close()
+  }
+
   // ── Property card with a mouse ────────────────────────────────────────
   {
     const page = await open(SEARCH, { width: 1280 })
@@ -527,6 +547,15 @@ try {
     await page.context().close()
 
     const desk = await open('/', { width: 1280, context: reduced })
+    // UI-14: under reduced motion a home card keeps its hover shadow and
+    // border, not its movement.
+    const homeCard = desk.locator('.home-rail article.home-card').first()
+    await homeCard.hover()
+    const still3 = await homeCard.evaluate((el) => ({ card: getComputedStyle(el).transform, img: getComputedStyle(el.querySelector('img')).transform }))
+    check('reduced: hovering a home card neither lifts it nor zooms its photo', still3.card === 'none' && still3.img === 'none', JSON.stringify(still3))
+    await desk.locator('.home-rail-end a').first().hover()
+    check('reduced: the See-all arrow does not slide on hover', await desk.locator('.home-rail-end .home-arrow').first().evaluate((el) => getComputedStyle(el).transform === 'none'))
+    await desk.mouse.move(0, 0)
     const toggle = desk.locator('header.app-bar').getByRole('navigation', { name: 'Marketplace' }).getByRole('button', { name: 'More in Buy' })
     await toggle.click()
     const t = await desk.locator('#nav-panel-buy').evaluate((el) => el.getAnimations().map((a) => a.effect.getTiming().duration))
@@ -545,7 +574,7 @@ try {
     await list.getByRole('tab', { name: 'Rent', exact: true }).focus()
     await tabsPage.keyboard.press('ArrowLeft')
     check('reduced tabs: the keyboard still moves focus and selection', await list.getByRole('tab', { name: 'Buy', exact: true }).evaluate((el) => el === document.activeElement && el.getAttribute('aria-selected') === 'true'))
-    check('reduced tabs: the form behind the tabs is there and usable at once', await tabsPage.getByRole('dialog', { name: 'Find your home' }).getByRole('button', { name: /^Search properties for sale/ }).isEnabled())
+    check('reduced tabs: the form behind the tabs is there and usable at once', await tabsPage.getByRole('form', { name: 'Search properties' }).getByRole('button', { name: /^Search properties for sale/ }).isEnabled())
     await tabsPage.context().close()
 
     // Results under reduced motion: a filter change brings results in at once.

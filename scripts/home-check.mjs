@@ -1,7 +1,8 @@
 // Browser assertions for the homepage (app/page.tsx).
 //
-// Measures what a screenshot can only suggest: that the whole search sits
-// on a phone's first screen, clear of the header and the bottom bar; that
+// Measures what a screenshot can only suggest: that the whole search — the
+// hero's inline panel since UI-14 — sits on a phone's first screen, clear of
+// the header and the bottom bar; that
 // More filters and the locality picker build the right results URL; that
 // the listing rails swipe and snap with the next card in view; that the
 // header and bottom bar stay opaque and on top while the page scrolls under
@@ -39,6 +40,9 @@ async function home(page, path = '/') {
   await page.evaluate(() => document.fonts.ready)
   // The save hearts settle once the saved-state request answers.
   await page.waitForFunction(() => !document.querySelector('button[aria-label="Checking saved status"]'))
+  // The hero search is server-rendered, so its buttons exist before React
+  // owns them; the tabs mark their measured indicator after hydration.
+  await page.waitForFunction(() => document.querySelector('form[aria-label="Search properties"] [role=tablist][data-indicator]'))
 }
 /** The results count the way search-check reads it: "59 properties" under the h1. */
 const resultCount = async (page) => {
@@ -66,12 +70,21 @@ try {
         const r = el.getBoundingClientRect()
         return { top: Math.round(r.top), bottom: Math.round(r.bottom), left: Math.round(r.left), right: Math.round(r.right), height: Math.round(r.height) }
       }
+      const form = document.querySelector('form[aria-label="Search properties"]')
       return {
         header: box(document.querySelector('header')),
         bar: box(document.querySelector('nav.fixed[aria-label="Primary"]')),
-        controls: { 'search launcher': box(document.querySelector('.reference-search-trigger')) },
+        // The whole search, inline in the hero (UI-14): intent, place, More
+        // filters and the Search action. It used to be one launcher button.
+        controls: {
+          'Buy / Rent tabs': box(form.querySelector('[role=tablist]')),
+          'locality field': box([...form.querySelectorAll('button')].find((b) => /Search a locality/.test(b.textContent))),
+          'More filters': box([...form.querySelectorAll('button')].find((b) => /^More filters/.test(b.textContent.trim()))),
+          'Search button': box(form.querySelector('button[type="submit"]')),
+        },
         headline: box(document.querySelector('#home-title')),
-        firstCard: box(document.querySelector('.listing-rail article')),
+        firstRailHeading: box(document.querySelector('#rail-new-sale')),
+        firstCard: box(document.querySelector('.home-rail article')),
       }
     })
     await check(`${name}: the headline is on the first screen`, m.headline && m.headline.top >= m.header.bottom && m.headline.bottom <= m.bar.top)
@@ -79,7 +92,13 @@ try {
       await check(`${name}: ${control} is on the first screen, clear of the header and the bottom bar`,
         box && box.top >= m.header.bottom && box.bottom <= m.bar.top && box.left >= 0 && box.right <= width && box.height >= 40, JSON.stringify(box))
     }
+    // The owner's UI-14 review shortened the phone hero so the first
+    // listings section reaches the first screen: its heading is there on a
+    // 390×844 phone, and on a taller one the first card begins there too.
     if (height >= 844) {
+      await check(`${name}: the first listings section's heading is on the first screen`, m.firstRailHeading && m.firstRailHeading.bottom <= m.bar.top, `heading ends at ${m.firstRailHeading?.bottom}px, bar at ${m.bar.top}px`)
+    }
+    if (height >= 915) {
       await check(`${name}: the first listings begin on the first screen`, m.firstCard && m.firstCard.top < m.bar.top, `first card at ${m.firstCard?.top}px, bar at ${m.bar.top}px`)
     }
     await check(`${name}: no horizontal overflow`, await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1))
@@ -93,7 +112,7 @@ try {
   // ── The header and bottom bar are opaque, and on top, while scrolling ─
   await page.evaluate(() => window.scrollTo(0, 1200))
   await page.waitForTimeout(150)
-  const chrome = await page.evaluate(() => ['.reference-search', 'nav.fixed[aria-label="Primary"]'].map((selector) => {
+  const chrome = await page.evaluate(() => ['header.app-bar', 'nav.fixed[aria-label="Primary"]'].map((selector) => {
     const el = document.querySelector(selector)
     const style = getComputedStyle(el)
     let opacity = 1
@@ -102,7 +121,7 @@ try {
     return { selector, background: style.backgroundColor, backdrop: style.backdropFilter, opacity, top: r.top, bottom: r.bottom }
   }))
   for (const bar of chrome) {
-    const name = bar.selector === '.reference-search' ? 'the header' : 'the bottom bar'
+    const name = bar.selector === 'header.app-bar' ? 'the header' : 'the bottom bar'
     await check(`${name} paints a solid background over the scrolled page`, /^rgb\(\d+, \d+, \d+\)$/.test(bar.background) && (bar.backdrop === 'none' || bar.backdrop === '') && bar.opacity === 1, JSON.stringify(bar))
   }
   await check('the header stays pinned to the top after scrolling', chrome[0].top === 0)
@@ -113,22 +132,21 @@ try {
   // near the top of the page to be scrolled down underneath it.
   for (const where of ['header', 'bar']) {
     const covered = await page.evaluate((where) => {
-      const heart = document.querySelectorAll('.listing-rail')[where === 'header' ? 0 : 1].querySelector('article button[aria-label^="Save"]')
-      const header = document.querySelector('.reference-search').getBoundingClientRect()
+      const heart = document.querySelectorAll('.home-rail')[where === 'header' ? 0 : 1].querySelector('article button[aria-label^="Save"]')
+      const header = document.querySelector('header.app-bar').getBoundingClientRect()
       const bar = document.querySelector('nav.fixed[aria-label="Primary"]')
       const target = where === 'header' ? header.top + header.height / 2 : bar.getBoundingClientRect().top + 20
       const r = heart.getBoundingClientRect()
       window.scrollBy(0, r.top + r.height / 2 - target)
       const now = heart.getBoundingClientRect()
       const hit = document.elementFromPoint(now.left + now.width / 2, now.top + now.height / 2)
-      return where === 'header' ? Boolean(hit?.closest('.reference-search')) : Boolean(hit?.closest('nav.fixed'))
+      return where === 'header' ? Boolean(hit?.closest('header.app-bar')) : Boolean(hit?.closest('nav.fixed'))
     }, where)
     await check(`a save button scrolled under the ${where === 'header' ? 'header' : 'bottom bar'} stays underneath it`, covered)
   }
 
   // ── More filters: a sheet, echoed as chips, then the results URL ─────
   await home(page)
-  await page.locator('.reference-search-trigger').click()
   const more = form.getByRole('button', { name: /^More filters/ })
   await check('More filters announces that it opens a dialog', (await more.getAttribute('aria-haspopup')) === 'dialog')
   await more.click()
@@ -171,7 +189,6 @@ try {
   // Switching intent keeps type and bedrooms, drops a purchase budget, and
   // the sheet's own button is a second way to the results.
   await home(page)
-  await page.locator('.reference-search-trigger').click()
   await more.click()
   sheet = page.getByRole('dialog', { name: 'More filters' })
   for (const option of ['Independent house', '₹1 Cr – ₹2 Cr', '4 BHK']) await sheet.getByRole('button', { name: option, exact: true }).click()
@@ -188,7 +205,6 @@ try {
     url.searchParams.get('type') === 'INDEPENDENT_HOUSE' && url.searchParams.get('bhk') === '4' && url.searchParams.get('pmin') === '20000' && url.searchParams.get('pmax') === '35000', url.search)
 
   await home(page)
-  await page.locator('.reference-search-trigger').click()
   await more.click()
   // Unavailable, but never natively disabled: Clear all empties itself, and
   // disabling it under the keyboard sent focus out of this sheet into the
@@ -222,7 +238,6 @@ try {
   // tab stops; arrows move the active option, Enter toggles it, and each
   // change is said in words.
   await home(page)
-  await page.locator('.reference-search-trigger').click()
   await form.getByRole('button', { name: /Search a locality in Kolkata/ }).click()
   const box = page.getByRole('dialog', { name: 'Where are you looking?' }).getByRole('combobox', { name: 'Search localities' })
   // The sheet hands focus over once its entrance starts; wait for that
@@ -258,43 +273,51 @@ try {
   await page.waitForTimeout(100)
   await check('phone: Escape closes the picker and focus returns to the field that opened it', await page.evaluate(() => document.activeElement?.getAttribute('aria-label')?.startsWith('Localities: ') ?? false))
 
-  // Desktop: the inline combobox inside the search sheet. Escape closes the
-  // suggestions first (the sheet stays open), then the sheet.
+  // Desktop: the combobox inline in the hero's search (UI-14; it used to
+  // sit in a search sheet). Escape closes the suggestions first, then
+  // clears the text; focus never leaves the field.
   {
     const desk = await open(1280, 900)
     await home(desk)
-    await desk.locator('.reference-search-trigger').click()
-    const inline = desk.getByRole('dialog', { name: 'Find your home' }).getByRole('combobox', { name: 'Search localities in Kolkata' })
+    const deskForm = desk.getByRole('form', { name: 'Search properties' })
+    const inline = deskForm.getByRole('combobox', { name: 'Search localities in Kolkata' })
+    await inline.waitFor()
     await inline.click()
     await inline.fill('New')
     await check('desktop: typing opens the suggestions', await inline.getAttribute('aria-expanded') === 'true' && !!(await inline.getAttribute('aria-activedescendant')))
     await desk.keyboard.press('ArrowDown')
     await desk.keyboard.press('ArrowUp')
     await desk.keyboard.press('Enter')
-    await check('desktop: Enter adds the active suggestion as a chip and clears the text', await desk.locator('[data-sheet] ul[aria-label="Chosen localities"] li').count() === 1 && await inline.inputValue() === '')
+    await check('desktop: Enter adds the active suggestion as a chip and clears the text', await deskForm.locator('ul[aria-label="Chosen localities"] li').count() === 1 && await inline.inputValue() === '')
     await inline.fill('Sal')
     await desk.keyboard.press('Escape')
-    await check('desktop: Escape closes the suggestions and leaves the sheet open', await inline.getAttribute('aria-expanded') === 'false' && await desk.getByRole('dialog', { name: 'Find your home' }).isVisible())
+    await check('desktop: Escape closes the suggestions and keeps focus in the field', await inline.getAttribute('aria-expanded') === 'false' && await inline.evaluate((el) => el === document.activeElement) && await inline.inputValue() === 'Sal')
     await desk.keyboard.press('Escape')
     await check('desktop: a second Escape clears the text', await inline.inputValue() === '')
     await desk.keyboard.press('Backspace')
-    await check('desktop: Backspace in the empty field removes the last chip', await desk.locator('[data-sheet] ul[aria-label="Chosen localities"]').count() === 0)
-    await desk.keyboard.press('Escape')
-    await desk.getByRole('dialog', { name: 'Find your home' }).waitFor({ state: 'detached' })
+    await check('desktop: Backspace in the empty field removes the last chip', await deskForm.locator('ul[aria-label="Chosen localities"]').count() === 0)
     await desk.context().close()
   }
 
-  // Without JavaScript the launcher (a sheet trigger) cannot work, so a
-  // link to the results page takes its place.
-  {
-    const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, javaScriptEnabled: false })
+  // Without JavaScript the panel cannot work (its tabs and picker are
+  // scripts), so the hero swaps it for links to the results pages, where
+  // search works without JavaScript (UI-06), at a phone's width and a
+  // desktop's.
+  for (const width of [390, 1280]) {
+    const ctx = await browser.newContext({ viewport: { width, height: 844 }, isMobile: width < 768, hasTouch: width < 768, javaScriptEnabled: false })
     const nojs = await ctx.newPage()
     await nojs.goto(base + '/', { waitUntil: 'load' })
-    const link = nojs.locator('a.reference-search-trigger')
-    await check('no JavaScript: the search launcher is a link to the results', await link.isVisible() && await link.getAttribute('href') === '/buy/kolkata' && !(await nojs.locator('button.reference-search-trigger').isVisible()))
-    await link.click()
+    const card = nojs.locator('.home-search-card')
+    const buy = card.getByRole('link', { name: 'Search homes for sale in Kolkata' })
+    const rent = card.getByRole('link', { name: 'Homes to rent in Kolkata' })
+    await check(`no JavaScript (${width}px): the hero offers links to sale and rent results in place of the form`,
+      await buy.isVisible() && await buy.getAttribute('href') === '/buy/kolkata' && await rent.isVisible() && await rent.getAttribute('href') === '/rent/kolkata' &&
+      !(await nojs.locator('form[aria-label="Search properties"]').isVisible()) && await card.locator('button:visible').count() === 0)
+    const sizes = [await buy.boundingBox(), await rent.boundingBox()]
+    await check(`no JavaScript (${width}px): both links are 44px targets inside the screen`, sizes.every((b) => b.height >= 44 && b.x >= 0 && b.x + b.width <= width), JSON.stringify(sizes))
+    await buy.click()
     await nojs.waitForURL((url) => url.pathname === '/buy/kolkata')
-    await check('no JavaScript: it opens the results page', await nojs.locator('article').count() > 0)
+    await check(`no JavaScript (${width}px): it opens the results page`, await nojs.locator('article').count() > 0)
     await ctx.close()
   }
 
@@ -303,15 +326,15 @@ try {
   // Phase B: the collections the data supports, in page order. With the
   // fixture that is all four; a collection with nothing in it would not
   // render (unit-tested in lib/home/discovery.test.ts).
-  const railIds = await page.locator('ul.listing-rail').evaluateAll((uls) => uls.map((ul) => ul.getAttribute('aria-labelledby')))
+  const railIds = await page.locator('ul.home-rail').evaluateAll((uls) => uls.map((ul) => ul.getAttribute('aria-labelledby')))
   await check(`the collections, in order: ${railIds.join(', ')}`, JSON.stringify(railIds) === JSON.stringify(['rail-new-sale', 'rail-new-rent', 'rail-reduced', 'rail-under-construction']))
-  const railListings = await page.locator('ul.listing-rail').evaluateAll((uls) => uls.map((ul) => [...ul.querySelectorAll('article')].map((a) => ({ href: a.querySelector('a').getAttribute('href'), cover: a.querySelector('img')?.getAttribute('src') ?? '' }))))
+  const railListings = await page.locator('ul.home-rail').evaluateAll((uls) => uls.map((ul) => [...ul.querySelectorAll('article')].map((a) => ({ href: a.querySelector('a').getAttribute('href'), cover: a.querySelector('img')?.getAttribute('src') ?? '' }))))
   const everyListing = railListings.flat().map((c) => c.href)
   await check('no listing appears in two collections', new Set(everyListing).size === everyListing.length, JSON.stringify(everyListing))
   await check('no collection repeats a cover photo', railListings.every((cards) => new Set(cards.map((c) => c.cover)).size === cards.length))
   const client = await page.context().newCDPSession(page)
   for (const [index, id] of railIds.entries()) {
-    const rail = page.locator('ul.listing-rail').nth(index)
+    const rail = page.locator('ul.home-rail').nth(index)
     const section = page.locator(`section[aria-labelledby="${id}"]`)
     await rail.evaluate((ul) => ul.scrollIntoView({ block: 'center', behavior: 'instant' }))
     const m = await rail.evaluate((ul) => {
@@ -321,6 +344,8 @@ try {
       return {
         scrolls: ul.scrollWidth > ul.clientWidth,
         snap: style.scrollSnapType,
+        // The page gutter: where the section's heading starts.
+        gutter: document.getElementById(ul.getAttribute('aria-labelledby')).getBoundingClientRect().left,
         first: { left: items[0].left, right: items[0].right },
         second: { left: items[1].left, right: items[1].right, width: items[1].width },
         widths: [...new Set(cards.map((c) => Math.round(c.width)))],
@@ -329,7 +354,9 @@ try {
       }
     })
     await check(`${id}: scrolls sideways and snaps`, m.scrolls && m.snap.includes('x') && m.snap.includes('mandatory'), m.snap)
-    await check(`${id}: the first card is wholly on screen`, m.first.left >= 0 && m.first.right <= 390)
+    // Chrome snaps a mandatory scroller on load, so the first card rests at
+    // the snap position: on the gutter, never flush with the screen edge.
+    await check(`${id}: the first card rests on the page gutter, in line with the heading, wholly on screen`, Math.abs(m.first.left - m.gutter) <= 1 && m.first.right <= 390, `card at ${m.first.left}px, heading at ${m.gutter}px`)
     const peek = (390 - m.second.left) / m.second.width
     await check(`${id}: the next card shows at the edge`, peek > 0.2 && peek < 0.8, `${Math.round(peek * 100)}% visible`)
     await check(`${id}: every card is the same size`, m.widths.length === 1 && m.heights.length === 1, `widths ${m.widths}, heights ${m.heights}`)
@@ -346,11 +373,8 @@ try {
     }
     await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
     await page.waitForTimeout(700)
-    const landed = await rail.evaluate((ul) => {
-      const edge = ul.getBoundingClientRect().left + parseFloat(getComputedStyle(ul).scrollPaddingLeft || '0')
-      return { scrollLeft: ul.scrollLeft, offsets: [...ul.children].map((li) => Math.round(li.getBoundingClientRect().left - edge)) }
-    })
-    await check(`${id}: a swipe moves on and lands a card cleanly at the edge`, landed.scrollLeft > 0 && landed.offsets.some((o) => Math.abs(o) <= 1), JSON.stringify(landed))
+    const landed = await rail.evaluate((ul, gutter) => ({ scrollLeft: ul.scrollLeft, offsets: [...ul.children].map((li) => Math.round(li.getBoundingClientRect().left - gutter)) }), m.gutter)
+    await check(`${id}: a swipe moves on and lands a later card cleanly on the gutter`, landed.scrollLeft > 0 && landed.offsets.slice(1).some((o) => Math.abs(o) <= 1), JSON.stringify(landed))
     await rail.evaluate((ul) => ul.scrollTo({ left: 0, behavior: 'instant' }))
 
     // Each card: one link to its listing, a named save button, a price, and
@@ -364,45 +388,48 @@ try {
     await check(`${id}: each card is one link to its listing, with a price, a save button and the sample label`,
       cards.length > 0 && cards.every((c) => c.links.length === 1 && c.links[0].startsWith('/property/') && /^Save /.test(c.save) && c.price && c.sample), JSON.stringify(cards[0]))
 
-    const end = rail.locator('li.listing-rail-end a')
+    const end = rail.locator('li.home-rail-end a')
     const endText = (await end.innerText()).replace(/\s+/g, ' ')
-    const claimed = Number(endText.match(/(\d+) listings?/)?.[1])
+    const claimed = Number(endText.match(/(\d+) listings? in Kolkata/)?.[1])
     const endHref = await end.getAttribute('href')
-    const headHref = await section.locator('.home-section-head a').getAttribute('href')
-    await check(`${id}: ends in a "see all" card that goes where the heading's See all goes (${endHref})`, endHref === headHref && endText.startsWith('See all homes'), endText)
+    const headHref = await section.getByRole('link', { name: /^View all homes / }).getAttribute('href')
+    await check(`${id}: ends in a "see all" card that goes where the heading's View all goes (${endHref})`, endHref === headHref && /See all homes /.test(endText) && await rail.evaluate((ul) => ul.lastElementChild.classList.contains('home-rail-end')), endText)
     const results = await open(390, 844)
     await results.goto(base + endHref)
     await check(`${id}: the end card's count (${claimed}) is the count its results page shows`, claimed === (await resultCount(results)), `${claimed} claimed`)
     await results.context().close()
   }
   await check('the first two collections are the newest for sale and to rent',
-    await page.locator('section[aria-labelledby="rail-new-sale"] li.listing-rail-end a').getAttribute('href') === '/buy/kolkata?sort=newest' &&
-    await page.locator('section[aria-labelledby="rail-new-rent"] li.listing-rail-end a').getAttribute('href') === '/rent/kolkata?sort=newest')
+    await page.locator('section[aria-labelledby="rail-new-sale"] li.home-rail-end a').getAttribute('href') === '/buy/kolkata?sort=newest' &&
+    await page.locator('section[aria-labelledby="rail-new-rent"] li.home-rail-end a').getAttribute('href') === '/rent/kolkata?sort=newest')
   const reducedBadges = await page.locator('section[aria-labelledby="rail-reduced"] article').evaluateAll((as) => as.map((a) => a.textContent.includes('Price reduced')))
   const buildingBadges = await page.locator('section[aria-labelledby="rail-under-construction"] article').evaluateAll((as) => as.map((a) => a.textContent.includes('Under construction')))
   await check('every card in the price-reduced and under-construction collections says so on its photo', reducedBadges.every(Boolean) && buildingBadges.every(Boolean) && reducedBadges.length > 0 && buildingBadges.length > 0)
 
   // ── Save, signed out ─────────────────────────────────────────────────
   await home(page)
-  await page.locator('.listing-rail article').first().getByRole('button', { name: /^Save / }).click()
+  await page.locator('.home-rail article').first().getByRole('button', { name: /^Save / }).click()
   await page.waitForURL((url) => url.pathname === '/login')
   await check('saving while signed out asks you to sign in, then returns here', new URL(page.url()).searchParams.get('next') === '/')
 
   // ── Quick routes ─────────────────────────────────────────────────────
   await home(page)
   const quick = page.getByRole('navigation', { name: 'Quick routes' })
-  const routes = await quick.getByRole('link').evaluateAll((links) => links.map((l) => [l.querySelector('.quick-label').textContent, l.getAttribute('href'), l.getBoundingClientRect().height]))
+  const routes = await quick.getByRole('link').evaluateAll((links) => links.map((l) => [l.querySelector('span:not([aria-hidden]):not(.sr-only)').textContent, l.getAttribute('href'), l.getBoundingClientRect().height]))
   await check('quick routes go to Buy, Rent, Localities and Post property',
     JSON.stringify(routes.map(([label, href]) => [label, href])) === JSON.stringify([['Buy', '/buy/kolkata'], ['Rent', '/rent/kolkata'], ['Videos', '/videos'], ['Tools', '/calculators'], ['Localities', '/#localities'], ['Post property', '/post']]), JSON.stringify(routes))
   await check('every quick route is a 44px target', routes.every(([, , h]) => h >= 44))
   await quick.getByRole('link', { name: /Localities/ }).click()
   await page.waitForFunction(() => location.hash === '#localities')
   await page.waitForTimeout(400)
+  // The band lands just below the header (its scroll margin), so its own
+  // padding is the gap between the header and the section's heading.
   const landing = await page.evaluate(() => ({
-    section: document.querySelector('#localities').getBoundingClientRect().top,
-    header: document.querySelector('header').getBoundingClientRect().bottom,
+    section: Math.round(document.querySelector('#localities').getBoundingClientRect().top),
+    heading: Math.round(document.querySelector('#localities p').getBoundingClientRect().top),
+    header: Math.round(document.querySelector('header').getBoundingClientRect().bottom),
   }))
-  await check('Localities scrolls to the localities, not underneath the header', landing.section >= landing.header + 54 && landing.section <= landing.header + 90, JSON.stringify(landing))
+  await check('Localities scrolls to the localities, not underneath the header', landing.section >= landing.header && landing.section <= landing.header + 24 && landing.heading >= landing.header + 32 && landing.heading <= landing.header + 72, JSON.stringify(landing))
   for (const [name, path] of [['Buy', '/buy/kolkata'], ['Rent', '/rent/kolkata']]) {
     await home(page)
     await quick.getByRole('link', { name: new RegExp(`^${name}`) }).click()
@@ -417,49 +444,56 @@ try {
   await check('header controls keep to one line', headerLines.every(([, h]) => h <= 48), JSON.stringify(headerLines))
 
   // ── Every count on the page: a real link, and the number its page shows ──
-  // Localities, property types, budgets and sizes (Phase B). Each figure is
-  // read off the page and checked against the results page it opens.
-  const localityTiles = await page.locator('ul.locality-tiles > li').evaluateAll((lis) => lis.map((li) => ({
-    name: li.querySelector('.locality-tile-name').textContent.trim(),
-    top: Math.round(li.getBoundingClientRect().top),
+  // The hero's shortcuts, neighbourhoods, property types, budgets, sizes,
+  // sellers and possession (Phase B; UI-14 layout). Each figure is read off
+  // the page and checked against the results page it opens.
+  const localityTiles = await page.locator('#localities ul[aria-label^="Popular localities"] > li').evaluateAll((lis) => lis.map((li) => ({
+    name: li.querySelector('h3').textContent.trim(),
+    box: (({ top, left, right }) => ({ top: Math.round(top), left: Math.round(left), right: Math.round(right) }))(li.getBoundingClientRect()),
     links: [...li.querySelectorAll('a')].map((a) => ({ href: a.getAttribute('href'), text: a.textContent.trim() })),
   })))
-  await check('twelve popular localities, each offering its sale and rent results', localityTiles.length === 12 &&
+  await check('eight neighbourhoods, each offering its sale and rent results', localityTiles.length === 8 &&
     localityTiles.every((t) => t.links.length >= 1 && t.links.every((l) => /^\/(buy|rent)\/kolkata\/[a-z-]+$/.test(l.href))), JSON.stringify(localityTiles[0]))
   await check('each locality link names its place for a screen reader', localityTiles.every((t) => t.links.every((l) => l.text.includes(t.name))))
   await check('some localities offer homes to rent as well as for sale', localityTiles.some((t) => t.links.some((l) => l.href.startsWith('/rent/'))))
-  await check('on a phone locality panels scroll with a next-card peek', await page.locator('.locality-panels').evaluate(el => el.scrollWidth > el.clientWidth && el.querySelector('.locality-panel').getBoundingClientRect().width < el.clientWidth))
-  const typeLinks = await page.locator('ul.type-tiles a').evaluateAll((links) => links.map((l) => l.getAttribute('href')))
+  const [one, two, three] = localityTiles.map((t) => t.box)
+  await check('on a phone the neighbourhoods sit two to a row, inside the screen', one.top === two.top && three.top > one.top && localityTiles.every((t) => t.box.left >= 16 && t.box.right <= 374), JSON.stringify([one, two, three]))
+  const typeLinks = await page.locator('ul.home-type-rail a').evaluateAll((links) => links.map((l) => l.getAttribute('href')))
   await check('property types link to their landing pages, for sale and to rent',
     typeLinks.length >= 5 && typeLinks.every((h) => /^\/(buy|rent)\/kolkata\/(flats|independent-houses|builder-floors|villas|studio-apartments)$/.test(h)) && typeLinks.includes('/buy/kolkata/flats') && typeLinks.includes('/rent/kolkata/flats'), JSON.stringify(typeLinks))
-  const countLinks = await page.locator('ul.locality-tiles a, ul.type-tiles a, ul.count-tiles a, .discovery-band li a, .possession-section li a').evaluateAll((links) => links.map((l) => ({
+  // A count link's figure is its last tabular number: a budget pill shows
+  // its band ("Up to ₹25 L") before the count.
+  const countLinks = await page.locator('nav[aria-label="Browse Kolkata"] a, #localities ul[aria-label^="Popular localities"] a, ul.home-type-rail a, section[aria-labelledby="browse-your-way"] li a').evaluateAll((links) => links.map((l) => ({
     href: l.getAttribute('href'),
     text: l.textContent.replace(/\s+/g, ' ').trim(),
+    count: [...l.querySelectorAll('.tabular')].map((n) => parseInt(n.textContent.replace(/,/g, ''), 10)).filter(Number.isFinite).at(-1) ?? null,
     height: l.getBoundingClientRect().height,
     width: l.getBoundingClientRect().width,
   })))
   await check(`every count link is at least 44px tall (${countLinks.length} links)`, countLinks.every((l) => l.height >= 44), JSON.stringify(countLinks.filter((l) => l.height < 44).slice(0, 3)))
-  await check('budget and size tiles cover buying and renting', (await page.locator('section[aria-labelledby="browse-budget"] ul.count-tiles').count()) === 2 && (await page.locator('section[aria-labelledby="browse-size"] ul.count-tiles').count()) === 2)
-  await check('"Up to ₹25 L" goes to its landing page, not a query string', await page.locator('section[aria-labelledby="browse-budget"] a', { hasText: 'Up to ₹25 L' }).getAttribute('href') === '/buy/kolkata/under-25-lakh')
+  const panels = await page.locator('section[aria-labelledby="browse-your-way"] h3').evaluateAll((hs) => hs.map((h) => [h.textContent.trim(), [...h.parentElement.querySelectorAll('p')].map((p) => p.textContent.trim())]))
+  await check('budget and bedrooms each cover buying and renting; seller and possession follow', JSON.stringify(panels) === JSON.stringify([
+    ['Your budget', ['To buy', 'To rent, per month']], ['Bedrooms', ['To buy', 'To rent']], ['Seller and possession', ['Posted by', 'When you can move in']],
+  ]), JSON.stringify(panels))
+  await check('"Up to ₹25 L" goes to its landing page, not a query string', await page.locator('section[aria-labelledby="browse-your-way"] a', { hasText: 'Up to ₹25 L' }).getAttribute('href') === '/buy/kolkata/under-25-lakh')
   const checker = await open(390, 844)
   let matched = 0
   for (const link of countLinks) {
-    const claimed = Number(link.text.match(/(\d+) (for sale|to rent|homes?|[Pp]roperties)/)?.[1])
-    if (!Number.isFinite(claimed)) continue
+    if (link.count === null) continue
     await checker.goto(base + link.href)
     const shown = await resultCount(checker)
-    if (claimed !== shown) await check(`"${link.text}" matches its results page (${link.href})`, false, `${shown} on the page`)
+    if (link.count !== shown) await check(`"${link.text}" matches its results page (${link.href})`, false, `${shown} on the page`)
     matched++
   }
-  await check(`every count on the homepage matches its results page (${matched} counts checked)`, matched >= 40)
+  await check(`every count on the homepage matches its results page (${matched} counts checked)`, matched >= 40 && matched === countLinks.filter((l) => !/^Explore/.test(l.text)).length)
   await checker.context().close()
-  await check('nothing says 0: an empty place, type, band or size is left out, or says Explore', countLinks.every((l) => !/(^|\s)0 (for sale|to rent|homes?|[Pp]roperties)/.test(l.text)))
+  await check('nothing says 0: an empty place, type, band or size is left out, or says Explore', countLinks.every((l) => l.count !== 0))
 
-  const all = page.locator('details.all-localities')
+  const all = page.locator('#localities details')
   await check('the full locality index starts closed', !(await all.evaluate((d) => d.open)))
   await all.locator('summary').click()
   const index = await all.locator('ul a').evaluateAll((links) => links.map((l) => [l.getAttribute('href'), l.getBoundingClientRect().height]))
-  const promised = Number((await all.locator('summary').innerText()).match(/See all (\d+) localities/)?.[1])
+  const promised = Number((await all.locator('summary').innerText()).match(/All (\d+) localities/)?.[1])
   await check('opening it lists every locality it promises, as 44px links', index.length === promised && promised >= 30 && index.every(([href, h]) => href.startsWith('/buy/kolkata/') && h >= 44), `${index.length} of ${promised}`)
 
   // ── Every link on the page resolves ──────────────────────────────────
@@ -476,11 +510,11 @@ try {
   const body = await page.locator('main').innerText()
   const invented = ['RERA', 'Recommended', 'Offer', 'Demand', 'FREE', 'Verified', 'Trending', 'Trusted', 'rated', 'reviews?', 'customers', 'users', 'happy', 'No\\.? ?1', '#1', 'projects?'].filter((word) => new RegExp(`\\b${word}`, 'i').test(body))
   await check('no projects, RERA badges, offers, ratings, user counts or demand figures the product cannot back', invented.length === 0, invented.join(', '))
-  // Phase B's discovery hierarchy, in order, below the search.
+  // The discovery hierarchy, in order, below the search (UI-14 zones).
   const order = await page.locator('main h2').evaluateAll((hs) => hs.map((h) => h.id).filter(Boolean))
   await check(`the homepage sections, in order: ${order.join(' › ')}`, JSON.stringify(order) === JSON.stringify([
-    'rail-new-sale', 'rail-new-rent', 'rail-reduced', 'bhk-choice', 'posted-by', 'possession-title', 'popular-localities', 'browse-type', 'browse-budget', 'browse-size',
-    'rail-under-construction', 'plan-purchase', 'why-us', 'post-cta',
+    'rail-new-sale', 'rail-new-rent', 'popular-localities', 'browse-type', 'rail-reduced', 'rail-under-construction',
+    'browse-your-way', 'plan-purchase', 'why-us', 'post-cta',
   ]))
   // The calculators are real (Phase 40A), so the homepage may point at them.
   const plan = await page.locator('section[aria-labelledby="plan-purchase"] a').evaluateAll((links) => links.map((l) => l.getAttribute('href')))
@@ -493,13 +527,29 @@ try {
   await check('desktop: the quick routes give way to the header', !(await desk.getByRole('navigation', { name: 'Quick routes' }).isVisible()) &&
     JSON.stringify(await desk.locator('header nav .nav-top').allInnerTexts()) === JSON.stringify(['Buy', 'Rent', 'Localities', 'Home loans']) &&
     await desk.locator('header').getByRole('link', { name: 'Post property' }).isVisible())
-  const grid = await desk.locator('ul.listing-rail').evaluateAll((uls) => uls.map((ul) => ({
-    display: getComputedStyle(ul).display,
-    scrolls: ul.scrollWidth > ul.clientWidth,
-    shown: [...ul.children].filter((li) => li.offsetParent).length,
-    rows: new Set([...ul.children].filter((li) => li.offsetParent).map((li) => Math.round(li.getBoundingClientRect().top))).size,
-  })))
-  await check('desktop: each rail is a single row of four, not a scroller', grid.every((g) => g.display === 'grid' && !g.scrolls && g.shown === 4 && g.rows === 1), JSON.stringify(grid))
+  const grid = await desk.locator('ul.home-rail').evaluateAll((uls) => uls.map((ul) => {
+    const shown = [...ul.children].filter((li) => li.offsetParent)
+    return {
+      display: getComputedStyle(ul).display,
+      scrolls: ul.scrollWidth > ul.clientWidth,
+      listings: shown.filter((li) => li.querySelector('article')).length,
+      endLast: shown.at(-1)?.classList.contains('home-rail-end'),
+      rows: new Set(shown.map((li) => Math.round(li.getBoundingClientRect().top))).size,
+    }
+  }))
+  await check('desktop: each rail is one row of three listings and its See-all card, not a scroller', grid.every((g) => g.display === 'grid' && !g.scrolls && g.listings === 3 && g.endLast && g.rows === 1), JSON.stringify(grid))
+  // The approved UI-14 composition: header, page and footer share one
+  // 1400px frame, so their left edges line up at any desktop width.
+  for (const width of [1280, 1440, 1920]) {
+    await desk.setViewportSize({ width, height: 900 })
+    const edges = await desk.evaluate(() => [
+      document.querySelector('header a').getBoundingClientRect().left,
+      document.querySelector('#rail-new-sale').getBoundingClientRect().left,
+      document.querySelector('footer a').getBoundingClientRect().left,
+    ].map(Math.round))
+    await check(`desktop ${width}px: header, sections and footer start on one edge of a 1400px frame`, Math.max(...edges) - Math.min(...edges) <= 1 && edges[0] === Math.max(32, Math.round((width - 1400) / 2) + 32), JSON.stringify(edges))
+  }
+  await desk.setViewportSize({ width: 1280, height: 900 })
 
   // Localities has no page of its own yet (Phases 29–30): from anywhere,
   // the header link opens the homepage's localities, below the header.
@@ -510,28 +560,27 @@ try {
   await desk.waitForTimeout(500)
   const landed = await desk.evaluate(() => ({
     section: Math.round(document.querySelector('#localities').getBoundingClientRect().top),
+    heading: Math.round(document.querySelector('#localities p').getBoundingClientRect().top),
     header: Math.round(document.querySelector('header').getBoundingClientRect().bottom),
   }))
-  await check('desktop: Localities in the header opens the localities from another page, below the header', landed.section >= landed.header + 45 && landed.section <= landed.header + 80, JSON.stringify(landed))
+  await check('desktop: Localities in the header opens the localities from another page, below the header', landed.section >= landed.header && landed.section <= landed.header + 32 && landed.heading >= landed.header + 48 && landed.heading <= landed.header + 112, JSON.stringify(landed))
   await home(desk)
 
-  // The locality dropdown hangs over the first rail: it must paint on top.
-  await desk.locator('.reference-search-trigger').click()
-  const combo = desk.getByRole('combobox')
+  // The locality dropdown hangs out of the hero's search card, over the
+  // shortcuts and the page below it: it must paint on top.
+  const combo = desk.getByRole('form', { name: 'Search properties' }).getByRole('combobox', { name: 'Search localities in Kolkata' })
   await combo.click()
   await combo.fill('sa')
   const listbox = desk.getByRole('listbox')
   await listbox.waitFor()
   const reach = await listbox.evaluate((list) => {
     const r = list.getBoundingClientRect()
-    const rail = document.querySelector('.listing-rail').getBoundingClientRect()
     return {
-      overlapsContent: r.bottom > document.querySelector('.home-content').getBoundingClientRect().top,
+      cardBottom: document.querySelector('.home-search-card').getBoundingClientRect().bottom, listBottom: r.bottom,
       points: [0.25, 0.5, 0.9].map((f) => list.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height * f))),
-      railTop: rail.top, listBottom: r.bottom,
     }
   })
-  await check('desktop: the open locality list paints over the page below it', reach.overlapsContent && reach.points.every(Boolean), JSON.stringify(reach))
+  await check('desktop: the open locality list paints over the page below the search card', reach.listBottom > reach.cardBottom && reach.points.every(Boolean), JSON.stringify(reach))
   await combo.fill('')
 
   // Keyboard: from the search field onward, every stop is visibly focused.
@@ -542,9 +591,11 @@ try {
   await desk.keyboard.press('Tab')
   ring = await focusRing(desk)
   await check('desktop: then Search, with a visible focus ring', /^Search/.test(ring?.text) && ring.visible, JSON.stringify(ring))
-  // Search is now a modal: Tab must remain inside it until dismissed.
+  // The search is part of the page now (UI-14), not a modal: the next stop
+  // is the first shortcut under it, focused visibly on the photograph.
   await desk.keyboard.press('Tab')
-  await check('desktop: search keeps keyboard focus inside its dialog', await desk.evaluate(() => !!document.activeElement?.closest('[role="dialog"]')))
+  ring = await focusRing(desk)
+  await check('desktop: then the first hero shortcut, with a visible focus ring', /^Homes for sale\s*\d+/.test(ring?.text) && ring.visible && await desk.evaluate(() => !!document.activeElement?.closest('nav[aria-label="Browse Kolkata"]')), JSON.stringify(ring))
   await desk.getByRole('form', { name: 'Search properties' }).getByRole('button', { name: /^More filters/ }).click()
   // Measure the dialog at rest, after its 0.97 → 1 entrance (UI-04).
   await desk.getByRole('dialog', { name: 'More filters' }).evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)))
@@ -558,7 +609,6 @@ try {
   for (const [width, height] of [[768, 1024], [1280, 900]]) {
     const p = await open(width, height)
     await home(p)
-    await p.locator('.reference-search-trigger').click()
     await p.getByRole('form', { name: 'Search properties' }).getByRole('button', { name: /^More filters/ }).click()
     const fit = await p.getByRole('dialog', { name: 'More filters' }).evaluate((d) => {
       const body = d.querySelector('fieldset').parentElement.parentElement

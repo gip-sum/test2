@@ -10,7 +10,9 @@ import { BRAND } from '@/lib/brand'
  */
 const STEPS = [
   { title: 'Describe the property', body: 'Type, size with carpet area, location and price.' },
-  { title: 'Review it as buyers will see it', body: 'Check every detail before it goes anywhere.' },
+  // Not "Review": home-check keeps "review(s)" off the page, where it reads
+  // as ratings the product does not have.
+  { title: 'See it as buyers will', body: 'Check every detail before it goes anywhere.' },
   { title: 'Add photos and submit', body: `Your listing is checked by the ${BRAND.shortName} team before it is published.` },
 ]
 

@@ -90,7 +90,7 @@ try {
   // shortlist, the card shows it, and unsaving takes it out again.
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto(BASE + '/')
-  const card = page.locator('.listing-rail article').first()
+  const card = page.locator('.home-rail article').first()
   const href = await card.locator('a[href^="/property/"]').getAttribute('href')
   const railId = `p_${href.slice(href.lastIndexOf('-p') + 2)}`
   await card.getByRole('button', { name: /^Save / }).click()

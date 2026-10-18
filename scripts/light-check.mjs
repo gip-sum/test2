@@ -75,11 +75,12 @@ for (const route of ROUTES) {
     await page.goto(BASE + route, { waitUntil: 'load' })
     await page.evaluate(() => document.fonts.ready)
     // The homepage keeps property type, budget and bedrooms in the More
-    // filters sheet; open it so those surfaces are measured too, instead of
+    // filters sheet of its hero search (inline since UI-14); open it, once
+    // the form is hydrated, so those surfaces are measured too, instead of
     // their probes finding nothing and being skipped.
     if (route === '/') {
-      await page.locator('.reference-search-trigger').click()
-      await page.getByRole('button', { name: /^More filters/ }).click()
+      await page.waitForFunction(() => document.querySelector('form[aria-label="Search properties"] [role=tablist][data-indicator]'))
+      await page.getByRole('form', { name: 'Search properties' }).getByRole('button', { name: /^More filters/ }).click()
       await page.getByRole('dialog', { name: 'More filters' }).waitFor()
     }
 
@@ -109,10 +110,27 @@ for (const route of ROUTES) {
         return `rgb(${r}, ${g}, ${b})`
       }
       const bg = (el) => resolvedColor(el ? painted(el) : null)
+      // Text drawn with an alpha (text-on-forest/80) is only as light as the
+      // surface under it lets it be: blend it over that surface, not white.
+      const over = (css, surface) => {
+        const canvas = document.createElement('canvas')
+        const context = canvas.getContext('2d')
+        context.fillStyle = surface
+        context.fillRect(0, 0, 1, 1)
+        context.fillStyle = css
+        context.fillRect(0, 0, 1, 1)
+        const [r, g, b] = context.getImageData(0, 0, 1, 1).data
+        return `rgb(${r}, ${g}, ${b})`
+      }
+      const onSurface = (surfaceEl, textEl) => {
+        if (!surfaceEl || !textEl) return null
+        const surface = bg(surfaceEl)
+        return { surface, text: over(getComputedStyle(textEl).color, surface) }
+      }
       const q = (s) => document.querySelector(s)
       const byText = (s, re) =>
         [...document.querySelectorAll(s)].find((e) => re.test(e.textContent || ''))
-      const form = q('form')
+      const form = q('form[aria-label="Search properties"]') ?? q('form')
       // Desktop renders a combobox; phones render a button opening a sheet.
       const locationField =
         form?.querySelector('[role="combobox"]') ??
@@ -129,18 +147,18 @@ for (const route of ROUTES) {
           'filter sheet': bg(q('[role="dialog"]')),
           'filter option': bg(q('[role="dialog"] button[aria-pressed="false"]')),
           'inactive tab': bg(q('[role="tab"][aria-selected="false"]')),
-          'quick route': bg(q('nav[aria-label="Quick routes"] .quick-icon')),
+          'quick route': bg(q('nav[aria-label="Quick routes"] a > span[aria-hidden]')),
           'sample notice': bg(q('.sample-notice')),
           'locality chip': bg(q('section[aria-labelledby="popular-localities"] ul a')),
-          'locality index': bg(q('details.all-localities')),
+          'locality index': bg(q('#localities details')),
+          'property type card': bg(q('ul.home-type-rail .home-card')),
           'property card': bg(q('article')),
           // Signed out, the heart has no aria-pressed; find it by its name.
           'save button': bg(q('article button[aria-label^="Save"], article button[aria-pressed]')),
-          'see-all card': bg(q('.rail-end-card')),
-          'browse tile': bg(q('section[aria-labelledby="browse-by"] ul a')),
-          'budget chip': bg(q('.link-chip')),
-          'commitment card': bg(q('section[aria-labelledby="how-it-works"] li')),
-          'footer': bg(q('footer')),
+          'browse panel': bg(q('section[aria-labelledby="browse-your-way"] h3')),
+          'browse pill': bg(q('section[aria-labelledby="browse-your-way"] ul a')),
+          'calculator card': bg(q('section[aria-labelledby="plan-purchase"] ul a')),
+          'why card': bg(q('section[aria-labelledby="why-us"] li')),
           'bottom nav': bg(q('nav.fixed')),
           // Results-page surfaces. Absent on the homepage, where they are
           // skipped rather than failed.
@@ -180,15 +198,22 @@ for (const route of ROUTES) {
           'h1': resolvedColor(getComputedStyle(q('h1')).color),
           'lede': resolvedColor(getComputedStyle(q('h1').nextElementSibling).color),
         },
-        // The editorial seller band intentionally inverts the light page.
-        // Check contrast instead of incorrectly requiring a white surface.
-        seller: q('.seller-invitation') ? {
-          background: bg(q('.seller-invitation')),
-          text: resolvedColor(getComputedStyle(q('.seller-invitation p')).color),
-          button: bg(q('.seller-invitation a')),
-          buttonText: resolvedColor(getComputedStyle(q('.seller-invitation a')).color),
-        } : null,
-        heroText: Boolean(q('.reference-banner')?.contains(q('h1'))),
+        // Surfaces the design paints forest on purpose (UI-14): the footer
+        // on every page, the header's Post property, the homepage's See-all
+        // cards and seller band. They invert the light page by design, so
+        // their text is held to 4.5:1 on them instead of the surface being
+        // required to be white.
+        inverted: {
+          'footer link': onSurface(q('footer'), q('footer li a')),
+          'footer legal line': onSurface(q('footer'), [...document.querySelectorAll('footer p')].at(-1)),
+          'header post': onSurface(q('.header-post'), q('.header-post')),
+          'see-all count': onSurface(q('.home-rail-end a'), q('.home-rail-end a span.text-mint')),
+          'see-all caption': onSurface(q('.home-rail-end a'), q('.home-rail-end a span.text-body-sm')),
+          'seller text': onSurface(q('.home-seller'), q('.home-seller h2 + p')),
+          'seller step': onSurface(q('.home-seller'), q('.home-seller ol span.text-body-sm')),
+          'seller button': onSurface(q('.home-seller a'), q('.home-seller a')),
+        },
+        heroText: Boolean(q('.home-hero')?.contains(q('h1'))),
         colorScheme: getComputedStyle(document.documentElement).colorScheme,
       }
     })
@@ -219,11 +244,11 @@ for (const route of ROUTES) {
       const ok = probes.heroText ? luminance(css) > 0.6 : luminance(css) < 0.25
       report(name, css, ok, probes.heroText ? 'must stay light on hero' : 'must be dark ink')
     }
-    if (probes.seller) {
-      const contrast = (a, b) => (Math.max(luminance(a), luminance(b)) + 0.05) / (Math.min(luminance(a), luminance(b)) + 0.05)
-      const seller = probes.seller
-      report('seller text contrast', seller.text, contrast(seller.background, seller.text) >= 4.5, 'must meet 4.5:1')
-      report('seller button contrast', seller.buttonText, contrast(seller.button, seller.buttonText) >= 4.5, 'must meet 4.5:1')
+    const contrast = (a, b) => (Math.max(luminance(a), luminance(b)) + 0.05) / (Math.min(luminance(a), luminance(b)) + 0.05)
+    for (const [name, pair] of Object.entries(probes.inverted)) {
+      if (pair === null) continue
+      const ratio = contrast(pair.surface, pair.text)
+      report(name, pair.text, luminance(pair.surface) < 0.2 && ratio >= 4.5, `on ${pair.surface}: ${ratio.toFixed(2)}:1, must be a dark surface at 4.5:1`)
     }
     if (probes.colorScheme !== 'light') {
       failures++

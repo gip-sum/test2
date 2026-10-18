@@ -1,5 +1,9 @@
-// Reference-specific regressions: banner, compact search, nested focus,
-// independent menu scrolling, guest view and layouts at the supplied widths.
+// Reference-specific regressions: focus around the homepage's filter sheet,
+// the header while the page scrolls, independent menu scrolling and layouts
+// at the supplied widths. UI-14 replaced the banner carousel and the
+// launcher-opened search sheet with a hero and an inline search, so the
+// carousel checks went with the carousel and the nested-focus checks now
+// cover the one sheet the search opens.
 import { chromium } from 'playwright-core'
 import { mkdirSync } from 'node:fs'
 const base = process.env.BASE_URL ?? 'http://127.0.0.1:3100'
@@ -26,79 +30,44 @@ async function waitFilterFocus(page) {
       throw error
     }
 }
-async function waitSearchFocus(page) {
-  try { await page.waitForFunction(() => document.activeElement === document.querySelector('.reference-search-trigger')) }
-  catch (error) {
-    console.log('search close diagnostics', await page.evaluate(() => ({
-      active: document.activeElement?.outerHTML?.slice(0, 500),
-      inert: document.querySelector('[data-app-root]')?.inert,
-      dialogs: [...document.querySelectorAll('[role="dialog"]')].map(e => ({ title: document.getElementById(e.getAttribute('aria-labelledby'))?.textContent, state: e.getAttribute('data-state') })),
-    })))
-    throw error
-  }
-}
 try {
   for (const width of [360, 390, 412, 768, 1280]) {
     const page = await browser.newPage({ viewport: { width, height: 844 }, reducedMotion: 'reduce' })
     await page.goto(base)
     await page.evaluate(() => document.fonts.ready)
-    await page.getByRole('button', { name: /^Banner 2:/ }).click()
-    check(`${width}: banner changes accessible content`, await page.getByRole('heading', { name: 'Your next move starts here' }).isVisible())
-    check(`${width}: banner destination matches selected slide`, await page.getByRole('link', { name: 'Find a rental' }).getAttribute('href') === '/rent/kolkata')
-    await page.locator('.reference-search-trigger').click()
-    // Visibility precedes Radix's focus-scope effect. Wait for its autofocus
-    // before opening a child, and before sending Escape to that child; otherwise
-    // a fast CI runner can dispatch the key while the parent still owns focus.
-    await page.waitForFunction(() => {
-      const dialog = document.activeElement?.closest('[role="dialog"]')
-      const title = dialog?.getAttribute('aria-labelledby')
-      return title && document.getElementById(title)?.textContent === 'Find your home'
-    })
-    await page.getByRole('button', { name: /^More filters/ }).click()
-    await page.getByRole('dialog', { name: 'More filters' }).waitFor()
-    await page.waitForFunction(() => {
-      const dialog = document.activeElement?.closest('[role="dialog"]')
-      const title = dialog?.getAttribute('aria-labelledby')
-      return title && document.getElementById(title)?.textContent === 'More filters'
-    })
-    await page.keyboard.press('Escape')
-    await page.getByRole('dialog', { name: 'More filters' }).waitFor({ state: 'hidden' })
-    await waitFilterFocus(page)
-    check(`${width}: closing child keeps background inert`, await page.locator('[data-app-root]').evaluate(e => e.inert))
-    await page.keyboard.press('Escape')
-    await waitSearchFocus(page)
-    check(`${width}: closing search releases background`, await page.locator('[data-app-root]').evaluate(e => !e.inert))
-    check(`${width}: closing search returns focus`, await page.locator('.reference-search-trigger').evaluate(e => e === document.activeElement))
-    // Repeat fast reopen/close to exercise delayed nested FocusScope cleanup.
-    for (let cycle = 0; cycle < 3; cycle++) {
-      await page.locator('.reference-search-trigger').click()
-      await page.waitForFunction(() => document.activeElement?.closest('[role="dialog"]')?.getAttribute('data-state') === 'open')
-      await page.getByRole('button', { name: /^More filters/ }).click()
+    const form = page.getByRole('form', { name: 'Search properties' })
+    check(`${width}: the hero states the page and holds the search`, await page.getByRole('heading', { level: 1, name: /^Find your next home in Kolkata$/ }).isVisible() && await form.isVisible())
+    await page.waitForFunction(() => document.querySelector('form[aria-label="Search properties"] [role=tablist][data-indicator]'))
+    const more = form.getByRole('button', { name: /^More filters/ })
+    // Repeat a fast open/close to exercise delayed FocusScope cleanup: each
+    // time, focus must come back to More filters and the page be released.
+    for (let cycle = 1; cycle <= 4; cycle++) {
+      await more.click()
+      await page.getByRole('dialog', { name: 'More filters' }).waitFor()
+      // Visibility precedes Radix's focus-scope effect: wait for its
+      // autofocus before sending Escape, or a fast CI runner can dispatch the
+      // key while the page still owns focus.
       await page.waitForFunction(() => {
         const dialog = document.activeElement?.closest('[role="dialog"]')
         return document.getElementById(dialog?.getAttribute('aria-labelledby'))?.textContent === 'More filters'
       })
+      check(`${width}: More filters ${cycle} makes the page behind it inert`, await page.locator('[data-app-root]').evaluate(e => e.inert))
       await page.keyboard.press('Escape')
       await page.getByRole('dialog', { name: 'More filters' }).waitFor({ state: 'hidden' })
       await waitFilterFocus(page)
-      await page.keyboard.press('Escape')
-      await waitSearchFocus(page)
-      check(`${width}: nested focus restored after reopen ${cycle + 1}`, await page.locator('.reference-search-trigger').evaluate(e => e === document.activeElement))
+      check(`${width}: closing More filters ${cycle} releases the page and returns focus to it`, await page.locator('[data-app-root]').evaluate(e => !e.inert) && await more.evaluate(e => e === document.activeElement))
     }
-    await page.locator('.reference-search-trigger').blur()
-    for (const [name, selector] of [['discovery', '.discovery-band'], ['localities', '#localities'], ['tools', '.reference-tools']]) {
+    await more.blur()
+    for (const [name, selector] of [['localities', '#localities'], ['types', 'section[aria-labelledby="browse-type"]'], ['tools', 'section[aria-labelledby="plan-purchase"]']]) {
       await page.locator(selector).first().evaluate(el => window.scrollTo(0, scrollY + el.getBoundingClientRect().top - 90))
-      if (width < 768) {
-        await page.locator('.reference-search[data-stuck]').waitFor()
-        await page.locator('header.app-bar').waitFor({ state: 'hidden' })
-      }
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
       await page.screenshot({ path: `${out}/${name}-${width}.png` })
       check(`${width}: ${name} no document overflow`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1))
+      // The header stays: pinned, visible, above the page (the old compact
+      // search bar used to replace it on phones).
+      check(`${width}: ${name} keeps the header pinned at the top`, Math.abs((await page.locator('header.app-bar').boundingBox()).y) <= 1 && await page.locator('header.app-bar').isVisible())
     }
     if (width < 768) {
-      check(`${width}: scrolled search at top`, Math.abs((await page.locator('.reference-search').boundingBox()).y) <= 1)
-      check(`${width}: scrolled header replaced by search`, !await page.locator('header.app-bar').isVisible())
       await page.getByRole('navigation', { name: 'Primary', exact: true }).getByRole('button', { name: 'Menu', exact: true }).click()
       const rail = page.locator('.reference-menu-categories')
       await page.getByRole('dialog').waitFor()

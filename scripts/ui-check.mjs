@@ -1,5 +1,6 @@
 // UI-05 core components in the browser: the Kokonut-derived SmoothTabs
-// (Buy / Rent), the 44px touch targets, and the migrated Buttons. UI-06:
+// (Buy / Rent, in the homepage hero's search since UI-14), the 44px touch
+// targets, and the migrated Buttons. UI-06:
 // search without JavaScript, one responsive card per result, card focus. Reduced
 // motion for the tabs is in motion-check. Every assertion reads geometry,
 // hit-testing or ARIA state; nothing trusts a screenshot.
@@ -21,14 +22,19 @@ async function open(path, { width = 390, touch = false, js = true } = {}) {
 }
 const settled = (locator) => locator.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished)))
 
-// Opens the home search sheet and returns its Buy / Rent tab list, at rest.
+// The homepage search, inline in the hero since UI-14 (it used to open in
+// a sheet). Its buttons are server-rendered, so wait for the tabs' measured
+// indicator — set after hydration — before pressing anything.
+async function homeSearch(page) {
+  const form = page.getByRole('form', { name: 'Search properties' })
+  await page.waitForFunction(() => document.querySelector('form[aria-label="Search properties"] [role=tablist][data-indicator]'))
+  return form
+}
+// The Buy / Rent tab list of the home search, at rest.
 async function intentTabs(page) {
-  await page.locator('.reference-search-trigger').click()
-  const dialog = page.getByRole('dialog', { name: 'Find your home' })
-  await dialog.waitFor()
-  await settled(dialog)
-  const list = dialog.getByRole('tablist', { name: 'Search intent' })
-  await page.waitForFunction(() => document.querySelector('[role=tablist][data-indicator]'))
+  const form = await homeSearch(page)
+  const list = form.getByRole('tablist', { name: 'Search intent' })
+  await settled(list)
   return list
 }
 // Where the indicator is, relative to the tabs: which tab it covers, and
@@ -95,7 +101,7 @@ try {
     check(`${width}: ArrowLeft wraps backwards`, await state() === 'Buy:false:-1:false Rent:true:0:true', await state())
     await page.keyboard.press('Tab')
     check(`${width}: Tab leaves the tab list in one stop`, await page.evaluate(() => document.activeElement?.getAttribute('role') !== 'tab'))
-    check(`${width}: switching to Rent changes the form to rent`, await page.getByRole('dialog', { name: 'Find your home' }).getByRole('button', { name: /^Search properties for rent/ }).count() === 1)
+    check(`${width}: switching to Rent changes the form to rent`, await page.getByRole('form', { name: 'Search properties' }).getByRole('button', { name: /^Search properties for rent/ }).count() === 1)
     await page.context().close()
   }
 
@@ -138,10 +144,11 @@ try {
   }
   {
     const page = await open('/', { width: 390, touch: true })
-    await page.locator('.reference-search-trigger').click()
-    const parent = page.getByRole('dialog', { name: 'Find your home' })
-    await parent.waitFor()
-    await parent.getByRole('button', { name: 'Search a locality in Kolkata' }).click()
+    const form = await homeSearch(page)
+    const field = form.getByRole('button', { name: 'Search a locality in Kolkata' })
+    const ft = await target(field)
+    check('390: the hero\'s locality field is a 44px target', isTarget(ft), JSON.stringify(ft))
+    await field.click()
     const picker = page.getByRole('dialog', { name: 'Where are you looking?' })
     await picker.getByRole('combobox', { name: 'Search localities' }).fill('Salt')
     await picker.getByRole('option', { name: /Salt Lake/ }).first().click()

@@ -1460,6 +1460,10 @@ img[data-fade='in'] { opacity: 1; transition: opacity var(--duration-base) var(-
    without competing with the search's filled green. */
 .header-post { background: var(--color-forest); color: var(--color-on-forest); border: 1px solid var(--color-forest); border-radius: var(--radius-full); padding: 0 16px 0 12px; box-shadow: var(--shadow-e1); }
 .header-post svg { color: var(--color-mint); }
+/* Below 360px the plus icon costs the 22px a page with the header's menu
+   button does not have (a property page overflowed at 320px): keep the
+   words and the pre-UI-14 width there. */
+@media (max-width: 359px) { .header-post { padding-inline: 14px; } .header-post svg { display: none; } }
 .header-post:hover { background: var(--color-brand-700); border-color: var(--color-brand-700); }
 .app-bar-top, .app-bar-bottom { box-shadow: none; background: var(--color-surface-000); }
 .bar-item { color: var(--color-graphite-muted); }
@@ -1776,7 +1780,12 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
 
 /* Hero: the photograph under a forest shade that is darkest where the words
    and the search sit, so white type always has its contrast. */
-.home-hero { position: relative; isolation: isolate; overflow: hidden; background: var(--color-forest); color: var(--color-on-forest); }
+/* Never overflow: hidden. The photo and shade are inset to the hero anyway,
+   and clipping cut the open locality list off at the hero's bottom edge on
+   desktop, hiding the last suggestions. z-index (a stacking context for the
+   photo's -z-20) lifts the hero over the positioned cards that follow, so
+   the list paints over them (home-check measures it by hit-testing). */
+.home-hero { position: relative; z-index: 1; background: var(--color-forest); color: var(--color-on-forest); }
 .home-hero-shade {
   position: absolute; inset: 0; z-index: -1;
   background:
@@ -1829,6 +1838,12 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
   .home-card:hover .home-card-photo img { transform: scale(1.04); }
   .home-arrow-card:hover .home-arrow { transform: translateX(4px); }
 }
+/* Reduced motion keeps the shadow and border, not the movement, as for
+   .property-card: the global 0.01ms rule alone would still jump the card
+   4px and scale its photo. */
+@media (prefers-reduced-motion: reduce) {
+  .home-card:hover, .home-card:hover .home-card-photo img, .home-arrow-card:hover .home-arrow { transform: none; }
+}
 .home-arrow { transition: transform var(--duration-base) var(--ease-standard); }
 
 /* Rails: a swipeable row on phones and tablets, a grid from 1024px. */
@@ -1837,9 +1852,12 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
    label in an off-screen card sat at its static place far to the right,
    unclipped, and widened the whole page on phones to 809px. */
 .home-rail, .home-type-rail, .home-hero-links, .home-shortcuts { position: relative; }
-.home-rail { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: -16px; padding: 4px 16px 12px; }
+/* The scroll padding matches the gutter. Without it the snap area starts at
+   the rail's border edge, so Chrome snapped even the first card flush against
+   the screen edge on load (scrollLeft 16) and every swipe landed there. */
+.home-rail { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; scrollbar-width: none; margin-inline: -16px; padding: 4px 16px 12px; }
 .home-rail::-webkit-scrollbar { display: none; }
-@media (min-width: 640px) { .home-rail { margin-inline: -24px; padding-inline: 24px; } }
+@media (min-width: 640px) { .home-rail { margin-inline: -24px; padding-inline: 24px; scroll-padding-inline: 24px; } }
 .home-rail > li { flex: 0 0 min(80%, 300px); min-width: 0; scroll-snap-align: start; }
 .home-rail > li.home-rail-end { flex-basis: min(56%, 220px); }
 @media (min-width: 1024px) {
@@ -1854,10 +1872,10 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
 .home-seller::before { content: ""; position: absolute; inset: 0; z-index: -1; background: radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--color-brand-500) 38%, transparent) 0%, transparent 55%), radial-gradient(80% 70% at 0% 100%, color-mix(in srgb, var(--color-mint) 14%, transparent) 0%, transparent 60%); }
 
 /* Property types: a swipeable row on phones, five across from 768px. */
-.home-type-rail { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: -16px; padding: 4px 16px 12px; }
+.home-type-rail { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; scrollbar-width: none; margin-inline: -16px; padding: 4px 16px 12px; }
 .home-type-rail::-webkit-scrollbar { display: none; }
 .home-type-rail > li { flex: 0 0 min(60%, 220px); min-width: 0; scroll-snap-align: start; }
-@media (min-width: 640px) { .home-type-rail { margin-inline: -24px; padding-inline: 24px; } }
+@media (min-width: 640px) { .home-type-rail { margin-inline: -24px; padding-inline: 24px; scroll-padding-inline: 24px; } }
 @media (min-width: 768px) { .home-type-rail { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; overflow: visible; margin-inline: 0; padding: 4px 0 8px; } }
 .home-type-art .type-art { width: 96px; height: 72px; margin-bottom: 0; }
 

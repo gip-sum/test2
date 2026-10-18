@@ -29,10 +29,10 @@ export const metadata: Metadata = {
 
 /**
  * The homepage (UI-14 visual redesign), backed by the existing discovery
- * and query seams. Bands alternate white, mint and paper so the page has a
- * rhythm instead of one long white column; every figure on it is a count
- * of what is listed. Unsupported project recommendations and demand
- * statistics stay deferred.
+ * and query seams. Listings sit on white and discovery on two soft mint
+ * zones, so the page has a rhythm without a run of coloured blocks; every
+ * figure on it is a count of what is listed. Unsupported project
+ * recommendations and demand statistics stay deferred.
  */
 export default function HomePage() {
   const rail = Object.fromEntries(getHomeCollections().map((c) => [c.id, c])) as Record<CollectionId, ReturnType<typeof getHomeCollections>[number]>
