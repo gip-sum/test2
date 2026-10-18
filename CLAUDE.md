@@ -198,7 +198,14 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
    `disabled`: disabling the focused control sends focus to `<body>`
    (UI-07). The same holds for every control that can be busy while focused
    (photo tools, save hearts, UI-08), and a control that unmounts after its
-   own action hands focus to the next sensible one. A multi-step form keeps ONE action state across its steps, so
+   own action hands focus to the next sensible one. A server-action form's
+   submit is `SubmitButton`. An action that ends in `router.refresh()` calls
+   `afterRefresh` (lib/a11y/after-refresh) with the ids to focus, and its
+   page renders `<RestoreFocus token>` (UI-09). Form fields use
+   `components/ui/FormField` — label, hint, control, error, all wired —
+   with 16px controls. Handwritten `<button>`s are pinned by
+   `lib/design/button-count.test.ts`: lower its ceiling when you migrate,
+   never raise it without a reason. A multi-step form keeps ONE action state across its steps, so
    every step survives a post without JavaScript; a client `onSubmit` may
    call the same server action to check first, refuse a double submit and
    catch a request that never left the browser. Sign-in sentences come from

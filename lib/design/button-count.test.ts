@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest'
 // navigation and menu toggles, tabs, the gallery's icon and thumbnail
 // controls, the save heart, chip and field controls, link-styled text
 // actions inside sentences and alerts, one danger outline (no variant for
-// one use), and admin screens (UI-11).
+// one use), and admin screens (a later stage).
 //
 // Lower the ceiling when a stage migrates more. Raising it needs a reason.
 const CEILING = 41
