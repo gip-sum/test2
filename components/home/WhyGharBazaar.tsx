@@ -41,7 +41,7 @@ const POINTS: Point[] = [
 
 export function WhyGharBazaar() {
   return (
-    <section aria-labelledby="why-us" className="home-band home-band-paper">
+    <section aria-labelledby="why-us" className="home-band">
       <div className="home-container grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
         <div>
           <p className="flex items-center gap-2 text-overline uppercase text-brand-600">

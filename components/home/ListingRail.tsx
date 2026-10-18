@@ -4,7 +4,6 @@ import { HomePropertyCard } from './HomePropertyCard'
 import { ArrowRightIcon } from '@/components/ui/icons'
 import type { Collection } from '@/lib/home/discovery'
 import { LAUNCH_CITY } from '@/lib/brand'
-import { cn } from '@/lib/cn'
 
 /**
  * A collection of live listings, as a swipeable rail.
@@ -37,7 +36,6 @@ export function ListingRail({
   noun,
   invite = false,
   priority = false,
-  band,
 }: {
   collection: Collection
   eyebrow: string
@@ -47,12 +45,10 @@ export function ListingRail({
   noun: string
   invite?: boolean
   priority?: boolean
-  /** The band's surface; white when omitted. */
-  band?: 'mint' | 'paper'
 }) {
   const { id, listings, total, href } = collection
   const headingId = `rail-${id}`
-  const frame = cn('home-band', band && `home-band-${band}`)
+  const frame = 'home-band'
 
   if (listings.length === 0) {
     if (!invite) return null

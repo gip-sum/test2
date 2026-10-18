@@ -32,7 +32,7 @@ export function Footer() {
     // Forest, the brand's deepest green, so the page ends on the same note
     // the homepage hero opens on (UI-14).
     <footer className="site-footer mt-12 bg-forest text-on-forest">
-      <div className="mx-auto max-w-[1320px] px-4 pb-10 pt-12 sm:px-6 lg:px-8 lg:pt-16">
+      <div className="mx-auto max-w-[1400px] px-4 pb-10 pt-12 sm:px-6 lg:px-8 lg:pt-16">
         <div className="flex flex-col gap-6 border-b border-forest-line pb-10 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <Link href="/" aria-label={`${BRAND.name} — home`} className="inline-block">

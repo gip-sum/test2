@@ -47,9 +47,13 @@ export default function HomePage() {
     <PageShell footer={<Footer />}>
       <HomeHero links={heroLinks} />
       <QuickRoutes />
-      <div className="home-container pt-6 lg:pt-8">
+      <div className="home-container pt-1 lg:pt-8">
         <DevDataNotice />
       </div>
+
+      {/* Zones, not blocks (owner review): listings on white, discovery on
+          one soft mint, more listings, planning on mint, then the case for
+          the product and the seller invitation. */}
       <ListingRail
         collection={rail['new-sale']}
         eyebrow={`New for sale in ${LAUNCH_CITY.name}`}
@@ -59,7 +63,6 @@ export default function HomePage() {
         invite
         priority
       />
-      <PopularLocalities {...localities} />
       <ListingRail
         collection={rail['new-rent']}
         eyebrow={`New to rent in ${LAUNCH_CITY.name}`}
@@ -68,19 +71,18 @@ export default function HomePage() {
         noun="to rent"
         invite
       />
-      <PropertyTypes tiles={getTypeDiscovery()} />
+
+      <div className="home-zone-mint">
+        <PopularLocalities {...localities} />
+        <PropertyTypes tiles={getTypeDiscovery()} />
+      </div>
+
       <ListingRail
         collection={rail.reduced}
         eyebrow="Price reduced"
         title="Now asking less"
         description="Homes for sale whose sellers have lowered the price."
         noun="with a reduced price"
-      />
-      <BrowseYourWay
-        budget={getBudgetDiscovery()}
-        size={getSizeDiscovery()}
-        sellers={getSellerDiscovery()}
-        possession={getPossessionDiscovery()}
       />
       <ListingRail
         collection={rail['under-construction']}
@@ -89,7 +91,17 @@ export default function HomePage() {
         description="For sale in developments that are not finished yet. Ask the seller when possession is expected."
         noun="under construction"
       />
-      <PlanTiles />
+
+      <div className="home-zone-mint">
+        <BrowseYourWay
+          budget={getBudgetDiscovery()}
+          size={getSizeDiscovery()}
+          sellers={getSellerDiscovery()}
+          possession={getPossessionDiscovery()}
+        />
+        <PlanTiles />
+      </div>
+
       <WhyGharBazaar />
       <SupplyCta />
     </PageShell>

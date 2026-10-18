@@ -14,7 +14,7 @@ import { LAUNCH_CITY } from '@/lib/brand'
 export function PopularLocalities({ popular, all }: { popular: LocalityTile[]; all: Array<{ name: string; href: string }> }) {
   const shown = popular.slice(0, 8)
   return (
-    <section id="localities" aria-labelledby="popular-localities" className="home-band home-band-mint home-anchor">
+    <section id="localities" aria-labelledby="popular-localities" className="home-band home-anchor">
       <div className="home-container">
         <SectionHeading
           id="popular-localities"
@@ -34,12 +34,12 @@ export function PopularLocalities({ popular, all }: { popular: LocalityTile[]; a
               <h3 className="mt-7 truncate px-4 font-display text-heading-3 text-ink-900 lg:px-5">{l.name}</h3>
               <p className="ml-2 mt-1 flex flex-wrap items-center pb-2 lg:ml-3">
                 {l.forSale && (
-                  <Link href={l.forSale.href} className="inline-flex min-h-11 items-center gap-1 rounded-md px-2 text-body-sm text-ink-700 hover:bg-brand-50 hover:text-brand-700">
+                  <Link href={l.forSale.href} className="inline-flex min-h-11 items-center gap-1 rounded-md px-2 text-body-sm text-ink-700 hover:bg-brand-50 hover:text-brand-700 lg:text-body">
                     <span className="tabular font-semibold text-ink-900">{l.forSale.count}</span> for sale<span className="sr-only"> in {l.name}</span>
                   </Link>
                 )}
                 {l.toRent && (
-                  <Link href={l.toRent.href} className="inline-flex min-h-11 items-center gap-1 rounded-md px-2 text-body-sm text-ink-700 hover:bg-brand-50 hover:text-brand-700">
+                  <Link href={l.toRent.href} className="inline-flex min-h-11 items-center gap-1 rounded-md px-2 text-body-sm text-ink-700 hover:bg-brand-50 hover:text-brand-700 lg:text-body">
                     <span className="tabular font-semibold text-ink-900">{l.toRent.count}</span> to rent<span className="sr-only"> in {l.name}</span>
                   </Link>
                 )}

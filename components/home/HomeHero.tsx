@@ -44,11 +44,11 @@ export function HomeHero({ links }: { links: HeroLink[] }) {
           <MapPinIcon className="size-4" />
           {LAUNCH_CITY.name} · West Bengal
         </p>
-        <h1 id="home-title" className="mt-4 max-w-3xl font-display text-heading-1 sm:text-display-1 lg:mt-6 lg:text-display-xl">
+        <h1 id="home-title" className="max-w-3xl font-display sm:mt-4 text-heading-1 sm:text-display-1 lg:mt-6 lg:text-display-xl">
           Find your next home <span className="home-hero-accent">in {LAUNCH_CITY.name}</span>
         </h1>
         {/* A phone gets the short line: the search must reach the first screen. */}
-        <p className="mt-3 max-w-xl text-body text-on-forest/80 lg:mt-5 lg:text-body-lg">
+        <p className="mt-2 max-w-xl text-body text-on-forest/80 sm:mt-3 lg:mt-5 lg:text-body-lg">
           <span className="sm:hidden">Flats, houses and villas to buy or rent across {LAUNCH_CITY.name}.</span>
           <span className="max-sm:hidden">Flats, houses and villas to buy or rent — with carpet area shown on its own and the owner, agent or builder named on every listing.</span>
         </p>
@@ -69,11 +69,11 @@ export function HomeHero({ links }: { links: HeroLink[] }) {
         </div>
 
         {links.length > 0 && (
-          <nav aria-label={`Browse ${LAUNCH_CITY.name}`} className="mt-5 lg:mt-6">
+          <nav aria-label={`Browse ${LAUNCH_CITY.name}`} className="mt-4 lg:mt-6">
             <ul className="home-hero-links">
               {links.map((l) => (
                 <li key={l.href} className="flex-none">
-                  <Link href={l.href} className="home-hero-link text-body-sm">
+                  <Link href={l.href} className="home-hero-link text-body-sm lg:text-body">
                     <span className="font-semibold">{l.label}</span>
                     <span className="tabular text-mint">{l.count}</span>
                     <span className="sr-only"> {l.context}</span>

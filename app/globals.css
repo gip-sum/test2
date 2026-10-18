@@ -139,9 +139,6 @@
   --color-graphite: #292929;         /* Phase E current item and headings */
   --color-graphite-muted: #737373;   /* Phase E inactive labels */
   --color-surface-grey: #f2f2f2;     /* Phase E category rail */
-  /* The homepage's warm neutral band (UI-14): between white and cream, so a
-     section reads as a change of room, not as a coloured box. */
-  --color-paper: #f7f5ef;
   /* Discovery tiles: neighbouring tiles take different tints so a row of
      places or property types reads as separate things, and the type
      drawings take their roofs, trim and lit windows from Kolkata's own
@@ -1759,17 +1756,23 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
    a photographic hero with the search as its strongest element, and cards
    that lift under a pointer. Everything here is Home's; the header, footer
    and notice it shares with other pages keep their own rules. */
-.home-container { max-width: 1320px; margin-inline: auto; padding-inline: 16px; }
+/* 1400px: at a 1440px laptop the old 1320px frame left 92px of empty
+   margin each side and squeezed four cards into 297px (owner review). The
+   header and footer share this width so their edges line up. */
+.home-container { max-width: 1400px; margin-inline: auto; padding-inline: 16px; }
 @media (min-width: 640px) { .home-container { padding-inline: 24px; } }
 @media (min-width: 1024px) { .home-container { padding-inline: 32px; } }
 
-.home-band { padding-block: 40px; }
-@media (min-width: 768px) { .home-band { padding-block: 64px; } }
-@media (min-width: 1280px) { .home-band { padding-block: 80px; } }
-.home-band + .home-band:not(.home-band-mint, .home-band-paper, .home-band-forest) { padding-top: 8px; }
-@media (min-width: 768px) { .home-band + .home-band:not(.home-band-mint, .home-band-paper, .home-band-forest) { padding-top: 16px; } }
-.home-band-mint { background: var(--color-brand-50); }
-.home-band-paper { background: var(--color-paper); }
+/* Sections sit in a few large zones rather than each in its own coloured
+   block (owner review): white for listings, one soft mint for discovery
+   and planning. Inside a zone, a section follows the last at a shorter
+   step, so related sections read as one room. */
+.home-band { padding-block: 32px; }
+@media (min-width: 768px) { .home-band { padding-block: 56px; } }
+@media (min-width: 1280px) { .home-band { padding-block: 72px; } }
+.home-band + .home-band { padding-top: 8px; }
+@media (min-width: 768px) { .home-band + .home-band { padding-top: 8px; } }
+.home-zone-mint { background: linear-gradient(180deg, var(--color-brand-50) 0%, color-mix(in srgb, var(--color-brand-50) 60%, var(--color-surface-000)) 100%); border-block: 1px solid color-mix(in srgb, var(--color-brand-100) 60%, transparent); }
 
 /* Hero: the photograph under a forest shade that is darkest where the words
    and the search sit, so white type always has its contrast. */
@@ -1794,16 +1797,21 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
         transparent 86%);
   }
 }
-.home-hero-inner { padding-block: 24px 24px; }
+.home-hero-inner { padding-block: 20px 20px; }
 @media (min-width: 768px) { .home-hero-inner { padding-block: 64px 48px; } }
 @media (min-width: 1024px) { .home-hero-inner { padding-block: 88px 64px; } }
 .home-hero-eyebrow { display: inline-flex; align-items: center; gap: 8px; border-radius: var(--radius-full); padding: 6px 12px 6px 8px; background: color-mix(in srgb, var(--color-on-forest) 12%, transparent); box-shadow: inset 0 0 0 1px var(--color-forest-line); color: var(--color-mint); }
 .home-hero-accent { color: var(--color-mint); }
+/* On a phone the headline already names the city; the eyebrow's height
+   goes to the search instead (owner review). In CSS, not max-sm:hidden:
+   the display above is unlayered and would beat the utility. */
+@media (max-width: 639px) { .home-hero-eyebrow { display: none; } }
 
 /* The search card: white, wide and lifted off the photograph. */
-.home-search-card { margin-top: 24px; border-radius: var(--radius-lg); background: var(--color-surface-000); color: var(--color-ink-900); box-shadow: var(--shadow-hero); padding: 12px; }
+.home-search-card { margin-top: 16px; border-radius: var(--radius-lg); background: var(--color-surface-000); color: var(--color-ink-900); box-shadow: var(--shadow-hero); padding: 12px; }
 @media (min-width: 640px) { .home-search-card { padding: 16px; } }
-@media (min-width: 1024px) { .home-search-card { margin-top: 40px; max-width: 1000px; padding: 20px 24px 24px; } }
+@media (min-width: 640px) { .home-search-card { margin-top: 24px; } }
+@media (min-width: 1024px) { .home-search-card { margin-top: 40px; max-width: 1120px; padding: 24px 28px 28px; } }
 
 /* Shortcuts on the photograph: real places with their real counts. */
 .home-hero-links { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
@@ -1835,7 +1843,8 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
 .home-rail > li { flex: 0 0 min(80%, 300px); min-width: 0; scroll-snap-align: start; }
 .home-rail > li.home-rail-end { flex-basis: min(56%, 220px); }
 @media (min-width: 1024px) {
-  .home-rail { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; overflow: visible; margin-inline: 0; padding: 4px 0 8px; }
+  /* Three listings with room to read, and a narrower See-all card. */
+  .home-rail { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 0.72fr); gap: 24px; overflow: visible; margin-inline: 0; padding: 4px 0 8px; }
   .home-rail > li:nth-child(n + 4):not(.home-rail-end) { display: none; }
 }
 

@@ -43,33 +43,31 @@ export function HomePropertyCard({ property, priority }: { property: PropertySum
           isSample={cover?.isSample}
           sampleTag="right"
           priority={priority}
-          sizes="(min-width: 1024px) 300px, 300px"
+          sizes="(min-width: 1024px) 340px, 300px"
         />
         <CardBadges badges={listingBadges(property, { construction: true })} />
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col px-4 pb-4 pt-3">
-        <div className="flex items-start justify-between gap-2">
-          <PriceDisplay amount={price} intent={intent} size="detail" />
-          <span className="mt-1 shrink-0 rounded-full bg-brand-50 px-2 py-0.5 text-caption text-brand-700">
-            {intent === 'rent' ? 'For rent' : 'For sale'}
-          </span>
-        </div>
-        <h3 className="mt-1.5 truncate text-body font-semibold text-ink-900">
+      {/* One reading order, five steps, each its own weight: the price,
+          largest; the name; the place; the figures; then who and when,
+          quietest (UI-14 polish). */}
+      <div className="flex min-w-0 flex-1 flex-col px-4 pb-4 pt-3 lg:px-5 lg:pb-5">
+        <PriceDisplay amount={price} intent={intent} size="detail" />
+        <h3 className="mt-1 truncate text-body-lg font-semibold text-ink-900">
           <CardTitleLink href={propertyPath(slug, publicId)}>{name}</CardTitleLink>
         </h3>
-        <p className="mt-0.5 flex min-w-0 items-center gap-1 text-body-sm text-ink-500">
-          <MapPinIcon className="size-3.5 shrink-0" />
+        <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-body-sm text-ink-500 lg:text-body">
+          <MapPinIcon className="size-4 shrink-0 text-ink-500" />
           <span className="truncate">{localityName}, {cityName}</span>
         </p>
 
-        <ul className="mt-3 flex flex-wrap gap-1.5 text-caption text-ink-700" aria-label="Key facts">
-          <li className="inline-flex items-center gap-1.5 rounded-sm bg-surface-200 px-2 py-1">
-            <BedIcon className="size-3.5 text-brand-700" />
-            {configuration ?? PROPERTY_TYPE_LABEL[propertyType]}
+        <ul className="mt-3 flex flex-wrap gap-2 text-body-sm text-ink-900" aria-label="Key facts">
+          <li className="inline-flex items-center gap-1.5 rounded-sm bg-surface-200 px-2.5 py-1">
+            <BedIcon className="size-4 text-brand-700" />
+            <span className="font-semibold">{configuration ?? PROPERTY_TYPE_LABEL[propertyType]}</span>
           </li>
-          <li className="inline-flex items-center gap-1.5 rounded-sm bg-surface-200 px-2 py-1">
-            <AreaIcon className="size-3.5 text-brand-700" />
+          <li className="inline-flex items-center gap-1.5 rounded-sm bg-surface-200 px-2.5 py-1">
+            <AreaIcon className="size-4 text-brand-700" />
             <AreaDisplay value={carpetArea} unit={areaUnit} basis={areaBasis} className="whitespace-nowrap" />
           </li>
         </ul>
@@ -77,7 +75,7 @@ export function HomePropertyCard({ property, priority }: { property: PropertySum
         {/* Grows, so the footer lines up across a row of cards. */}
         <div className="min-h-3 flex-1" />
         <p className="flex items-center justify-between gap-2 border-t border-border-subtle pt-3 text-caption text-ink-500">
-          <span className="font-semibold text-ink-700">{SELLER_LABEL[sellerType]}</span>
+          <span>{SELLER_LABEL[sellerType]}</span>
           <span>{formatPostedAt(postedAt)}</span>
         </p>
       </div>

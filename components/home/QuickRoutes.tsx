@@ -24,12 +24,12 @@ const ROUTES: Route[] = [
  */
 export function QuickRoutes() {
   return (
-    <nav aria-label="Quick routes" className="home-container pt-6 lg:hidden">
+    <nav aria-label="Quick routes" className="home-container pt-3 lg:hidden">
       <ul className="home-shortcuts -mx-4 flex gap-1 overflow-x-auto px-3 [scrollbar-width:none] sm:-mx-6 sm:px-5">
         {ROUTES.map(({ href, label, hint, Icon, supply }) => (
           <li key={label} className="w-20 shrink-0">
-            <Link href={href} className="flex min-h-11 flex-col items-center gap-2 rounded-md px-1 py-1.5 text-center">
-              <span className={supply ? 'grid size-13 place-items-center rounded-md bg-supply-100 text-supply-700' : 'grid size-13 place-items-center rounded-md bg-brand-50 text-brand-700 ring-1 ring-brand-100'} aria-hidden="true">
+            <Link href={href} className="flex min-h-11 flex-col items-center gap-1.5 rounded-md px-1 py-1.5 text-center">
+              <span className={supply ? 'grid size-12 place-items-center rounded-md bg-supply-100 text-supply-700' : 'grid size-12 place-items-center rounded-md bg-brand-50 text-brand-700 ring-1 ring-brand-100'} aria-hidden="true">
                 <Icon className="size-6" />
               </span>
               <span className="text-caption font-semibold leading-tight text-ink-900">{label}</span>

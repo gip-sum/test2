@@ -17,7 +17,7 @@ export function AppHeader({ bottomNavForced = false }: { bottomNavForced?: boole
       className="app-bar app-bar-top sticky z-50 border-b border-border-subtle"
       style={{ top: 'env(safe-area-inset-top, 0px)' }}
     >
-      <div className="relative mx-auto flex h-16 max-w-[1320px] items-center gap-3 px-4 md:gap-5 lg:h-20 lg:px-8">
+      <div className="relative mx-auto flex h-16 max-w-[1400px] items-center gap-3 px-4 sm:px-6 md:gap-5 lg:h-20 lg:px-8">
         <Wordmark />
         <HeaderNav nav={nav} />
 

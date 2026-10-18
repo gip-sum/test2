@@ -17,7 +17,7 @@ const NOUN: Record<Intent, string> = { buy: 'for sale', rent: 'to rent' }
 export function PropertyTypes({ tiles }: { tiles: TypeTile[] }) {
   if (tiles.length === 0) return null
   return (
-    <section aria-labelledby="browse-type" className="home-band home-band-paper">
+    <section aria-labelledby="browse-type" className="home-band">
       <div className="home-container">
         <SectionHeading
           id="browse-type"
@@ -33,7 +33,7 @@ export function PropertyTypes({ tiles }: { tiles: TypeTile[] }) {
                   <PropertyTypeArt type={t.type} />
                 </div>
                 <div className="flex flex-1 flex-col px-3 pb-2 pt-3">
-                  <h3 className="px-1 text-body font-semibold text-ink-900">{t.label}</h3>
+                  <h3 className="px-1 text-body font-semibold text-ink-900 lg:text-body-lg">{t.label}</h3>
                   <p className="mt-auto flex flex-wrap pt-1">
                     {(['buy', 'rent'] as const).map((intent) => {
                       const link = intent === 'buy' ? t.forSale : t.toRent
@@ -108,7 +108,7 @@ export function BrowseYourWay({ budget, size, sellers, possession }: {
   const hasMarket = sellers.length + possession.length > 0
   if (!hasBudget && !hasSize && !hasMarket) return null
   return (
-    <section aria-labelledby="browse-your-way" className="home-band home-band-mint">
+    <section aria-labelledby="browse-your-way" className="home-band">
       <div className="home-container">
         <SectionHeading
           id="browse-your-way"

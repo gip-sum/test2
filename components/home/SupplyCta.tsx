@@ -16,7 +16,7 @@ const STEPS = [
 
 export function SupplyCta() {
   return (
-    <section aria-labelledby="post-cta" className="pb-10 pt-10 md:pb-16 md:pt-16 xl:pt-20">
+    <section aria-labelledby="post-cta" className="pb-10 pt-0 md:pb-16">
       <div className="home-container">
         <div className="home-seller grid gap-8 p-6 sm:p-10 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)] lg:items-center lg:gap-14 lg:p-14">
           <div>
