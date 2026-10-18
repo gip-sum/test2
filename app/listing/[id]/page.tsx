@@ -23,6 +23,8 @@ export default async function ListingPage({params}:{params:Promise<{id:string}>}
   <PublishedProperty model={r.model} postedAt={r.listing.activated_at!} save={own?undefined:<SaveButton id={r.listing.id} title={r.model.title} className="shrink-0"/>} contact={own
    ?<div className="rounded-lg border border-border-subtle bg-surface-000 p-4"><p className="font-semibold text-ink-900">This is your listing</p><p className="mt-1 text-body-sm text-ink-700">Buyer enquiries arrive in your seller inbox.</p><Link href={`/dashboard/enquiries?listing=${r.listing.id}`} className="mt-2 inline-flex min-h-11 items-center font-semibold text-brand-700 underline">Enquiries for this listing</Link><Link href="/dashboard" className="ml-4 inline-flex min-h-11 items-center font-semibold text-brand-700 underline">My properties</Link></div>
    :<div className="hidden lg:block"><ListingContactCard {...contact}/></div>}/>
+  {/* Without JavaScript the phone sheet cannot open; the same form is here instead (UI-12). */}
+  {!own&&<noscript><div className="mx-auto max-w-xl px-4 pb-28 pt-2 lg:hidden"><ListingContactCard {...contact}/></div></noscript>}
   {!own&&<ListingContactBar {...contact}/>}
   {!own&&<ViewBeacon listingId={r.listing.id}/>}
  </PageShell>

@@ -233,6 +233,10 @@ export default async function PropertyPage(props: Props) {
       {/* Reserves the strip the fixed bar occupies, so the disclaimer and
           the footer are never trapped underneath it. */}
       <div className="h-20 lg:hidden" aria-hidden />
+      {/* Below 1024px the form lives in a sheet, which needs JavaScript; without
+          it the same server-action form is here, so a phone can still enquire
+          (UI-12). <noscript> content is inert while scripts run. */}
+      <noscript><div className="mx-auto max-w-xl px-4 pb-28 pt-2 lg:hidden"><ContactCard property={property} /></div></noscript>
       <StickyContactBar property={property} />
 
       <script

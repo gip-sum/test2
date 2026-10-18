@@ -1,14 +1,20 @@
 'use client'
 
-import { useActionState, useEffect, useId, useRef } from 'react'
+import { startTransition, useActionState, useEffect, useId, useRef, useState, useTransition, type FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
-import { cn } from '@/lib/cn'
+import { fieldControlClass, FormField } from '@/components/ui/FormField'
+import { validateEnquiry } from '@/lib/enquiry/validate'
+import type { EnquiryFieldError } from '@/lib/enquiry/types'
 import {
   submitEnquiry,
   type EnquiryFormState,
 } from '@/app/property/actions'
 
 const EMPTY_ENQUIRY_STATE: EnquiryFormState = { status: 'idle' }
+type Field = 'name' | 'phone' | 'message'
+// A request that never reached the server: never shown as a failure of ours.
+const OFFLINE = 'Your enquiry was not sent. Check your connection and try again; what you typed is still here.'
+const UNREACHED = 'Your enquiry could not be sent. Please try again; what you typed is still here.'
 
 /**
  * Three fields, because every extra one costs leads.
@@ -17,10 +23,27 @@ const EMPTY_ENQUIRY_STATE: EnquiryFormState = { status: 'idle' }
  * calls back, they do not write. Not a budget, not a preferred time, not a
  * "how did you hear about us".
  *
- * WORKS WITHOUT JAVASCRIPT. `useActionState` wraps a real form posting to a
- * server action, so the submit path exists before hydration. Everything the
- * client adds — pending state, focus management, inline errors — is on top
- * of something already functional.
+ * TWO PATHS, ONE ACTION (UI-12, as the sign-in form in UI-07). The form
+ * posts to the `submitEnquiry` server action through `useActionState`, so
+ * without JavaScript it is an ordinary POST: the page comes back with the
+ * errors beside their fields and everything typed, or with the
+ * confirmation. With JavaScript, `onSubmit` takes over (React skips a form
+ * action whose submit event was cancelled) and calls the same action itself
+ * to:
+ *   - check the fields first with the server's own rules and wording
+ *     (lib/enquiry/validate), so a typo costs no round trip;
+ *   - refuse a second submission while one is in flight (the busy Button
+ *     refuses the press too, and keeps focus);
+ *   - catch a request that never reached the server. Through the form
+ *     action a lost connection threw into the property page's error
+ *     boundary and the typed message was gone; here it is a message above
+ *     the form, with every field intact.
+ *
+ * Fields use the shared frame (FormField): visible labels, errors under
+ * each field tied to it, 16px controls. After a failed submit the summary
+ * takes focus and links to each field, as the posting forms do. The
+ * confirmation that replaces the form takes focus, so the submit button
+ * that had it does not drop it to <body>.
  *
  * No seller phone number is returned. The confirmation reports whether an
  * assigned seller actually has an in-app notification for this enquiry.
@@ -38,29 +61,58 @@ export function EnquiryForm({
   | { listingPublicId: string; listingId?: undefined }
   | { listingId: string; listingPublicId?: undefined }
 )) {
-  const [state, formAction, pending] = useActionState<EnquiryFormState, FormData>(
-    submitEnquiry,
-    EMPTY_ENQUIRY_STATE,
-  )
+  const [serverState, formAction] = useActionState<EnquiryFormState, FormData>(submitEnquiry, EMPTY_ENQUIRY_STATE)
+  const [clientState, setClientState] = useState<EnquiryFormState | null>(null)
+  const [pending, startSubmit] = useTransition()
+  // Set synchronously, so two submit events in one frame cannot both pass
+  // before React re-renders with `pending`.
+  const inFlight = useRef(false)
+  // Each result is a new attempt: the same error twice moves focus again.
+  const [attempt, setAttempt] = useState(0)
   const ids = useId()
   const summaryRef = useRef<HTMLDivElement>(null)
+  const state = clientState ?? serverState
 
-  // A failed submit moves focus to the error summary. Without this, a
-  // screen-reader user is left at the submit button with no indication that
-  // anything changed further up the form.
   useEffect(() => {
     if (state.status === 'error') summaryRef.current?.focus()
-  }, [state])
+  }, [state, attempt])
+
+  function show(result: EnquiryFormState) {
+    setClientState(result)
+    setAttempt((n) => n + 1)
+  }
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (inFlight.current || pending) return
+    const data = new FormData(event.currentTarget)
+    const values = { name: String(data.get('name') ?? ''), phone: String(data.get('phone') ?? ''), message: String(data.get('message') ?? '') }
+    // The listing is known to the form, so only the buyer's fields are checked here.
+    const { errors } = validateEnquiry({ listingPublicId: listingPublicId ?? listingId ?? '', ...values })
+    if (Object.keys(errors).length) { show({ status: 'error', errors, values }); return }
+    inFlight.current = true
+    startSubmit(async () => {
+      try {
+        const result = await submitEnquiry(state, data)
+        startTransition(() => show(result))
+      } catch {
+        startTransition(() => show({ status: 'error', errors: { listing: navigator.onLine ? UNREACHED : OFFLINE }, values }))
+      } finally {
+        inFlight.current = false
+      }
+    })
+  }
 
   if (state.status === 'success') {
     return <EnquirySent duplicate={state.duplicate === true} sellerNotified={state.sellerNotified === true} sellerLabel={sellerLabel} />
   }
 
-  const errors = state.errors ?? {}
+  const errors: Partial<Record<EnquiryFieldError, string>> = state.errors ?? {}
   const values = state.values
+  const fieldId = (field: Field) => `${ids}-${field}`
 
   return (
-    <form action={formAction} className="flex flex-col gap-3">
+    <form action={formAction} onSubmit={submit} noValidate aria-busy={pending || undefined} className="flex flex-col gap-4">
       {listingId
         ? <input type="hidden" name="listingId" value={listingId} />
         : <input type="hidden" name="listingPublicId" value={listingPublicId} />}
@@ -70,53 +122,38 @@ export function EnquiryForm({
           ref={summaryRef}
           tabIndex={-1}
           role="alert"
+          // Without JavaScript the page is rendered afresh from the result;
+          // autoFocus is how focus gets to the summary there.
+          autoFocus={!clientState}
           className="rounded-md border border-danger-600/30 bg-danger-100 p-3 text-body-sm text-ink-900"
         >
-          <p className="font-semibold text-danger-600">Please check the form</p>
+          <p className="font-semibold text-danger-600">{errors.listing && Object.keys(errors).length === 1 ? 'Your enquiry was not sent' : 'Please check the form'}</p>
           <ul className="mt-1 list-inside list-disc">
-            {(Object.entries(errors) as Array<[string, string]>).map(([field, message]) => (
-              <li key={field}>{message}</li>
+            {(Object.entries(errors) as Array<[EnquiryFieldError, string]>).map(([field, message]) => (
+              <li key={field}>{field === 'listing' || (compact && field === 'message')
+                ? message
+                : <a href={`#${fieldId(field)}`} className="underline underline-offset-2">{message}</a>}</li>
             ))}
           </ul>
         </div>
       )}
 
-      <Field
-        id={`${ids}-name`}
-        name="name"
-        label="Your name"
-        autoComplete="name"
-        defaultValue={values?.name}
-        error={errors.name}
-      />
-      <Field
-        id={`${ids}-phone`}
-        name="phone"
-        label="Mobile number"
-        type="tel"
-        inputMode="numeric"
-        autoComplete="tel"
-        placeholder="10-digit mobile number"
-        defaultValue={values?.phone}
-        error={errors.phone}
-      />
-
+      <FormField id={fieldId('name')} label="Your name" error={errors.name}>
+        {(control) => <input {...control} name="name" autoComplete="name" defaultValue={values?.name} className={fieldControlClass} />}
+      </FormField>
+      <FormField id={fieldId('phone')} label="Mobile number" error={errors.phone} hint="10-digit Indian mobile number. Only the seller of this property sees it.">
+        {(control) => <input {...control} name="phone" type="tel" inputMode="tel" autoComplete="tel" defaultValue={values?.phone} className={fieldControlClass} />}
+      </FormField>
       {!compact && (
-        <Field
-          id={`${ids}-message`}
-          name="message"
-          label="Message"
-          optional
-          multiline
-          placeholder="Ask about possession, parking, or anything else."
-          defaultValue={values?.message}
-          error={errors.message}
-        />
+        <FormField id={fieldId('message')} label="Message" optional error={errors.message}>
+          {(control) => <textarea {...control} name="message" rows={3} placeholder="Ask about possession, parking, or anything else." defaultValue={values?.message} className={fieldControlClass} />}
+        </FormField>
       )}
 
       <Button type="submit" variant="primary" size="lg" fullWidth loading={pending}>
         {pending ? 'Sending…' : 'Send enquiry'}
       </Button>
+      <p role="status" className="sr-only">{pending ? 'Sending your enquiry.' : ''}</p>
 
       <p className="text-caption text-ink-500">
         Your enquiry is stored securely. If this listing has an assigned seller,
@@ -126,67 +163,16 @@ export function EnquiryForm({
   )
 }
 
-function Field({
-  id,
-  name,
-  label,
-  error,
-  optional,
-  multiline,
-  defaultValue,
-  ...rest
-}: {
-  id: string
-  name: string
-  label: string
-  error?: string
-  optional?: boolean
-  multiline?: boolean
-  defaultValue?: string
-} & React.InputHTMLAttributes<HTMLInputElement>) {
-  const errorId = `${id}-error`
-  const shared = {
-    id,
-    name,
-    defaultValue,
-    'aria-invalid': error ? (true as const) : undefined,
-    'aria-describedby': error ? errorId : undefined,
-    className: cn(
-      'w-full rounded-md border bg-surface-000 px-3 text-body text-ink-900 placeholder:text-ink-500',
-      'hover:border-border-strong',
-      error ? 'border-danger-600' : 'border-border-subtle',
-      multiline ? 'min-h-24 py-2' : 'h-12',
-    ),
-  }
-
-  return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-label text-ink-900">
-        {label}
-        {optional && <span className="ml-1 font-normal text-ink-500">(optional)</span>}
-      </label>
-      {multiline ? (
-        <textarea {...shared} rows={3} placeholder={rest.placeholder} />
-      ) : (
-        <input {...shared} {...rest} />
-      )}
-      {error && (
-        <p id={errorId} className="text-caption text-danger-600">
-          {error}
-        </p>
-      )}
-    </div>
-  )
-}
-
 /**
- * The confirmation.
- *
- * States exactly what happened based on the database response.
+ * The confirmation. States exactly what happened based on the database
+ * response, and takes focus when it replaces the form (UI-12): it is a
+ * status, so it is also announced. No animation: the change is the message.
  */
 function EnquirySent({ duplicate, sellerNotified, sellerLabel }: { duplicate: boolean; sellerNotified: boolean; sellerLabel: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => { ref.current?.focus() }, [])
   return (
-    <div role="status" className="rounded-lg border border-trust-600/30 bg-trust-100 p-4">
+    <div ref={ref} tabIndex={-1} role="status" data-enquiry-sent className="rounded-lg border border-trust-600/30 bg-trust-100 p-4">
       <p className="flex items-center gap-2 text-body font-semibold text-trust-600">
         <svg viewBox="0 0 24 24" className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M5 13l4 4L19 7" />
