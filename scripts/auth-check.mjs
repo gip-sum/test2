@@ -158,20 +158,26 @@ try {
     // Record the swell as it starts: at 200ms it can be over before a poll
     // sees it.
     await heart.evaluate((el) => { window.__heart = []; el.addEventListener('animationstart', (e) => window.__heart.push({ name: e.animationName, d: getComputedStyle(e.target).animationDuration })) })
+    // The page has other hearts (similar homes), so every later step reads
+    // this button — the element stays mounted; only its icon is re-keyed —
+    // never "the first heart with a label".
+    const own = await heart.elementHandle()
     savedDelay = 600
     await heart.focus()
     await page.keyboard.press('Enter')
     await page.waitForTimeout(200)
-    check('save: while the save is in flight the heart is busy, refuses presses and keeps focus', await heart.getAttribute('aria-busy') === 'true' && await heart.getAttribute('aria-disabled') === 'true' && await heart.evaluate((el) => el === document.activeElement))
-    const saved = page.getByRole('button', { name: /^Remove .* from saved$/ }).first()
-    await saved.waitFor()
-    const confirmed = await saved.evaluate((el) => ({ focus: el === document.activeElement, pressed: el.getAttribute('aria-pressed'), heart: el.querySelector('svg').dataset.heart, started: window.__heart }))
+    check('save: while the save is in flight the heart is busy, refuses presses and keeps focus', await own.evaluate((el) => el.getAttribute('aria-busy') === 'true' && el.getAttribute('aria-disabled') === 'true' && el === document.activeElement))
+    await page.waitForFunction((el) => el.getAttribute('aria-pressed') === 'true', own)
+    // The swell starts on the frame after the confirmed state renders.
+    await page.waitForFunction(() => window.__heart.length >= 1, null, { timeout: 2000 }).catch(() => {})
+    const confirmed = await own.evaluate((el) => ({ focus: el === document.activeElement, pressed: el.getAttribute('aria-pressed'), heart: el.querySelector('svg').dataset.heart, started: window.__heart }))
     check('save: when the server confirms, the heart fills and swells once (200ms); state, label and focus are all there without it', confirmed.focus && confirmed.pressed === 'true' && confirmed.heart === 'save' &&
       JSON.stringify(confirmed.started) === JSON.stringify([{ name: 'motion-heart-save', d: '0.2s' }]) && savedHomes.has('p_8f3c2a'), JSON.stringify(confirmed))
     savedDelay = 0
     await page.keyboard.press('Space')
-    await page.getByRole('button', { name: /^Save / }).first().waitFor()
-    const unsaved = await page.getByRole('button', { name: /^Save / }).first().evaluate((el) => ({ focus: el === document.activeElement, heart: el.querySelector('svg').dataset.heart, started: window.__heart.map((a) => a.name) }))
+    await page.waitForFunction((el) => el.getAttribute('aria-pressed') === 'false' && el.querySelector('svg').dataset.heart === 'unsave', own)
+    await page.waitForFunction(() => window.__heart.length >= 2, null, { timeout: 2000 }).catch(() => {})
+    const unsaved = await own.evaluate((el) => ({ focus: el === document.activeElement, heart: el.querySelector('svg').dataset.heart, started: window.__heart.map((a) => a.name) }))
     check('save: Space on the same heart unsaves it, with a smaller settle; focus stays', unsaved.focus && unsaved.heart === 'unsave' && unsaved.started.at(-1) === 'motion-heart-unsave' && !savedHomes.has('p_8f3c2a'), JSON.stringify(unsaved))
     savedHomes.add('p_8f3c2a')
     await page.reload()

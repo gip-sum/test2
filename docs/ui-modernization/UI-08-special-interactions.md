@@ -285,6 +285,18 @@ compositor.
 | full suite | all pass with unchanged counts: phase-e 64, moderation 34, users 92, listing 23, dashboard 72, performance 102, admin 124, description 28, preview 24, shots (no overflow at any width), light-check, search 64, calculator 43, shell 355, ui 128, pricing 46, post 87, draft 27, login 117 / 179 with auth |
 | login and 404 | no scene file in the diff; `protected-scenes.test.ts` fingerprints unchanged; style-diff reports the login and 404 scene markup and every non-UI keyframe identical on every login screen and the 404 page; `login-check` (117, and 179 with auth, timing beats included) and `notfound-check` (36) pass |
 
+**A race in the new heart check, found by CI.** The first CI run (#85)
+failed the unsave step of `auth-check`. Two causes, both in the test:
+- it located "the first heart labelled Save…", and the property page has
+  other hearts (similar homes), one of which matched before ours updated;
+- it read the `animationstart` record in the frame the confirmed state
+  rendered, while the swell starts one frame later.
+
+Locally both passed by timing. The check now holds the button element
+itself (it stays mounted; only its icon is re-keyed) and waits for the
+swell to start before asserting. It passed 5 of 5 runs, and it still fails
+if no swell plays.
+
 **Known failures:** identical failure points to UI-07, compared line by line — `home-check` (locally; `home-check.mjs:200`, passes in CI), `property-check` (the same two assertions), `media-check` (the same fallback case), `lead-check` (`lead-check.mjs:70`), `saved-check` (`saved-check.mjs:61`: it defaults to the public server, which has no Auth backend, and is not in CI). None was modified.
 
 ## 11. Remaining risks
