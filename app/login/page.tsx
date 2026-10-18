@@ -8,6 +8,7 @@ import { getVerifiedUser } from '@/lib/auth/session'
 import { safeReturnPath } from '@/lib/auth/validation'
 import { authConfig } from '@/lib/auth/provider'
 import { googleAvailable } from '@/lib/auth/google'
+import { googleProblem } from '@/lib/auth/messages'
 import { BRAND } from '@/lib/brand'
 import './login.css'
 
@@ -44,7 +45,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
               next={returnPath}
               configured={Boolean(authConfig())}
               googleConfigured={googleAvailable()}
-              googleError={error === 'google'}
+              googleProblem={googleProblem(error)}
             />
           </div>
         </div>

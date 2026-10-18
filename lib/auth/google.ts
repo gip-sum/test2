@@ -1,6 +1,7 @@
 import 'server-only'
 import { createHash, randomBytes } from 'node:crypto'
 import { authConfig } from './provider'
+import { GOOGLE_ERROR } from './messages'
 
 export const OAUTH_VERIFIER_COOKIE = 'gb-google-verifier'
 export const OAUTH_RETURN_COOKIE = 'gb-google-return'
@@ -41,4 +42,16 @@ export function googleAuthorizeUrl(base: string, origin: string, challenge: stri
   url.searchParams.set('code_challenge', challenge)
   url.searchParams.set('code_challenge_method', 's256')
   return url.toString()
+}
+
+/**
+ * Where a failed or cancelled Google attempt lands: back on /login with
+ * what went wrong and, when it was not the default, the page the visitor
+ * was heading for, so "try again" still ends up there. `returnPath` has
+ * already been through safeReturnPath.
+ */
+export function googleErrorPath(kind: keyof typeof GOOGLE_ERROR, returnPath: string): string {
+  const params = new URLSearchParams({ error: GOOGLE_ERROR[kind] })
+  if (returnPath !== '/account') params.set('next', returnPath)
+  return `/login?${params}`
 }

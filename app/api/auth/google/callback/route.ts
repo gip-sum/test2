@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { authRequest, validSession, type AuthSession } from '@/lib/auth/provider'
-import { authSiteOrigin, OAUTH_RETURN_COOKIE, OAUTH_VERIFIER_COOKIE } from '@/lib/auth/google'
+import { authSiteOrigin, googleErrorPath, OAUTH_RETURN_COOKIE, OAUTH_VERIFIER_COOKIE } from '@/lib/auth/google'
 import { ACCESS_COOKIE, REFRESH_COOKIE, cookieOptions } from '@/lib/auth/session'
 import { safeReturnPath } from '@/lib/auth/validation'
 
@@ -19,7 +19,12 @@ export async function GET(request: NextRequest) {
     const result = await authRequest<AuthSession>('/token?grant_type=pkce', 'POST', { auth_code: code, code_verifier: verifier })
     if (result.ok && validSession(result.data)) session = result.data
   }
-  const response = NextResponse.redirect(new URL(session ? returnPath : '/login?error=google', origin))
+  // Google sends `error=access_denied` when the visitor backs out on its
+  // consent screen: a choice, not a fault, and the message says so. Any
+  // other outcome without a session is a failure. The provider's own error
+  // text is never passed on.
+  const failure = request.nextUrl.searchParams.get('error') === 'access_denied' ? 'cancelled' : 'failed'
+  const response = NextResponse.redirect(new URL(session ? returnPath : googleErrorPath(failure, returnPath), origin))
   response.cookies.delete(OAUTH_VERIFIER_COOKIE)
   response.cookies.delete(OAUTH_RETURN_COOKIE)
   if (session) {
