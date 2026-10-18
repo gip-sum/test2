@@ -82,6 +82,7 @@ export function SearchLayout({
   }
 
   const activeCount = active.length
+  const clearHref = buildSearchUrl(withFilterChange(query, clearAllPatch()))
   // This search at page 1 without a sort: the no-JavaScript sort form's target.
   const sortBase = new URL(buildSearchUrl({ ...query, sort: 'relevance', page: 1 }), 'http://localhost')
 
@@ -89,7 +90,9 @@ export function SearchLayout({
     <div ref={frame} className="mx-auto max-w-[1320px] px-4 py-5 lg:px-8 lg:py-6">
       <header>
         <h1 className="font-display text-heading-2 text-ink-900 lg:text-heading-1">{heading}</h1>
-        <p className="mt-1 text-body-sm text-ink-700" aria-live="polite">
+        {/* Focusable from script: removing the last filter chip, or Clear
+            all, hands focus here, and the new count is then read out. */}
+        <p id="results-count" tabIndex={-1} className="mt-1 text-body-sm text-ink-700" aria-live="polite">
           {/* The count is the first thing a returning user checks after a
               filter change, so it is announced rather than silently redrawn. */}
           {pending ? (
@@ -106,7 +109,7 @@ export function SearchLayout({
       </header>
 
       {activeCount > 0 && (
-        <div className="active-filters mt-3 flex flex-wrap items-center gap-x-2 gap-y-3">
+        <div data-chip-group className="active-filters mt-3 flex flex-wrap items-center gap-x-2 gap-y-3">
           <h2 className="sr-only">Active filters</h2>
           {active.map((f) => (
             <Chip
@@ -116,22 +119,10 @@ export function SearchLayout({
               removeLabel={`Remove filter: ${f.label}`}
               onRemove={() => apply(f.remove)}
               removeHref={buildSearchUrl(withFilterChange(query, f.remove))}
+              focusAfterRemove="results-count"
             />
           ))}
-          {/* A link to the unfiltered URL, so it works without JavaScript; a
-              plain click keeps the in-place transition. A 44px target around
-              the 32px pill, as on the chips beside it. */}
-          <a
-            href={buildSearchUrl(withFilterChange(query, clearAllPatch()))}
-            onClick={(event) => {
-              if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-              event.preventDefault()
-              apply(clearAllPatch())
-            }}
-            className="group -my-1.5 inline-flex h-11 items-center text-label text-brand-600 outline-none"
-          >
-            <span className="inline-flex h-8 items-center rounded-full px-3 group-hover:bg-brand-100 group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-focus-ring">Clear all</span>
-          </a>
+          <ClearAll href={clearHref} onClear={() => apply(clearAllPatch())} focusAfter="results-count" />
         </div>
       )}
 
@@ -166,12 +157,14 @@ export function SearchLayout({
           {[...sortBase.searchParams].map(([name, value]) => <input key={name} type="hidden" name={name} value={value} />)}
           <label className="flex min-w-0 max-w-full items-center gap-2 text-body-sm text-ink-700">
             <span className="hidden sm:inline">Sort by</span>
+            {/* 16px: a smaller select zooms the page on iPhone when it is
+                tapped (UI-13). */}
             <select
               name="sort"
               value={query.sort}
               onChange={(e) => sortTo(e.target.value as SortKey)}
               aria-label="Sort results"
-              className="h-11 min-w-0 max-w-[14rem] rounded-md border border-border-subtle bg-surface-000 px-3 text-body-sm text-ink-900 hover:border-border-strong"
+              className="h-11 min-w-0 max-w-[16rem] rounded-md border border-border-subtle bg-surface-000 px-3 text-base text-ink-900 hover:border-border-strong"
             >
               {SORT_ORDER.map((k) => (
                 <option key={k} value={k}>
@@ -229,19 +222,15 @@ export function SearchLayout({
             count in the footer is always the truth about what is behind the
             sheet. A staged sheet would need a second copy of the filter
             state, which is the thing this whole design avoids. */}
-        <div className="px-4">
+        {/* Focusable from script: Clear all removes itself, and focus must
+            stay inside the sheet rather than fall to <body>. */}
+        <div id="filters-sheet-body" tabIndex={-1} className="px-4 outline-none">
           {activeCount > 0 && (
             <div className="flex items-center justify-between gap-2 border-b border-border-subtle py-3">
               <span className="text-body-sm text-ink-700">
                 {activeCount} {activeCount === 1 ? 'filter' : 'filters'} applied
               </span>
-              <button
-                type="button"
-                onClick={() => apply(clearAllPatch())}
-                className="-my-1 h-11 rounded-md px-3 text-label text-brand-600 hover:bg-brand-100"
-              >
-                Clear all
-              </button>
+              <ClearAll href={clearHref} onClear={() => apply(clearAllPatch())} focusAfter="filters-sheet-body" />
             </div>
           )}
           <FilterControls
@@ -254,6 +243,32 @@ export function SearchLayout({
         </div>
       </Sheet>
     </div>
+  )
+}
+
+/**
+ * Clear all, beside the chips and in the filter sheet: one control.
+ *
+ * A link to the unfiltered URL, so it works without JavaScript; a plain
+ * click keeps the in-place transition. A 44px target around the 32px pill,
+ * as on the chips beside it. Clearing removes the link itself, so focus is
+ * handed to `focusAfter` first (UI-13); the sheet's copy used to be a
+ * separate button that dropped focus to <body>.
+ */
+function ClearAll({ href, onClear, focusAfter }: { href: string; onClear: () => void; focusAfter: string }) {
+  return (
+    <a
+      href={href}
+      onClick={(event) => {
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+        event.preventDefault()
+        if (document.activeElement === event.currentTarget) document.getElementById(focusAfter)?.focus()
+        onClear()
+      }}
+      className="group -my-1.5 inline-flex h-11 shrink-0 items-center text-label text-brand-600 outline-none"
+    >
+      <span className="inline-flex h-8 items-center rounded-full px-3 group-hover:bg-brand-100 group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-focus-ring">Clear all</span>
+    </a>
   )
 }
 

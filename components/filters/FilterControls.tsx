@@ -2,6 +2,7 @@
 
 import { useId, useState, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
+import { ToggleChip } from '@/components/ui/ToggleChip'
 import {
   AMENITY_LABEL,
   AMENITY_ORDER,
@@ -39,8 +40,9 @@ import {
  *
  * Counts come from the server with exclusion semantics already applied, so
  * a row showing "(0)" genuinely means ticking it would empty the results —
- * it is disabled rather than hidden, because a facet that disappears when
- * it reaches zero makes the list jump under the user's finger.
+ * it is marked unavailable rather than hidden, because a facet that
+ * disappears when it reaches zero makes the list jump under the user's
+ * finger.
  */
 export type FilterPatch = Partial<SearchQuery>
 
@@ -139,11 +141,13 @@ export function FilterControls({ query, facets, localityNames, onChange, idPrefi
           {[1, 2, 3, 4, 5].map((n) => (
             <ToggleChip
               key={n}
-              label={`${n} BHK`}
+              pressed={query.bedrooms.includes(n)}
               count={facets.bedrooms.get(n) ?? 0}
-              checked={query.bedrooms.includes(n)}
+              unavailable={!facets.bedrooms.get(n) && !query.bedrooms.includes(n)}
               onToggle={() => onChange({ bedrooms: toggle(query.bedrooms, n) })}
-            />
+            >
+              {n} BHK
+            </ToggleChip>
           ))}
         </ChipRow>
       </Group>
@@ -196,10 +200,11 @@ export function FilterControls({ query, facets, localityNames, onChange, idPrefi
           {[1, 2, 3, 4].map((n) => (
             <ToggleChip
               key={n}
-              label={`${n}+`}
-              checked={query.bathroomsMin === n}
+              pressed={query.bathroomsMin === n}
               onToggle={() => onChange({ bathroomsMin: query.bathroomsMin === n ? undefined : n })}
-            />
+            >
+              {n}+
+            </ToggleChip>
           ))}
         </ChipRow>
       </Group>
@@ -271,11 +276,13 @@ export function FilterControls({ query, facets, localityNames, onChange, idPrefi
           {FACING_ORDER.map((f) => (
             <ToggleChip
               key={f}
-              label={FACING_LABEL[f]}
+              pressed={query.facing.includes(f)}
               count={facets.facing.get(f) ?? 0}
-              checked={query.facing.includes(f)}
+              unavailable={!facets.facing.get(f) && !query.facing.includes(f)}
               onToggle={() => onChange({ facing: toggle(query.facing, f) })}
-            />
+            >
+              {FACING_LABEL[f]}
+            </ToggleChip>
           ))}
         </ChipRow>
       </Group>
@@ -298,10 +305,11 @@ export function FilterControls({ query, facets, localityNames, onChange, idPrefi
           {[1, 5, 10, 20].map((n) => (
             <ToggleChip
               key={n}
-              label={n === 1 ? 'Under 1 year' : `Up to ${n} years`}
-              checked={query.ageMax === n}
+              pressed={query.ageMax === n}
               onToggle={() => onChange({ ageMax: query.ageMax === n ? undefined : n })}
-            />
+            >
+              {n === 1 ? 'Under 1 year' : `Up to ${n} years`}
+            </ToggleChip>
           ))}
         </ChipRow>
         <p className="mt-2 text-caption text-ink-500">
@@ -443,8 +451,10 @@ function CheckRow({
       <button
         type="button"
         aria-pressed={checked}
-        disabled={empty}
-        onClick={onToggle}
+        // Not `disabled`: a row pressed off can come back with a zero count,
+        // and disabling it under the keyboard drops focus to <body> (UI-13).
+        aria-disabled={empty || undefined}
+        onClick={empty ? undefined : onToggle}
         className={cn(
           'flex min-h-11 w-full items-center gap-2.5 rounded-md px-2 text-left text-body-sm',
           empty ? 'cursor-not-allowed text-ink-500 opacity-55' : 'text-ink-900 hover:bg-surface-100',
@@ -471,39 +481,6 @@ function CheckRow({
         {count != null && <span className="shrink-0 text-caption text-ink-500 tabular">{count}</span>}
       </button>
     </li>
-  )
-}
-
-function ToggleChip({
-  label,
-  count,
-  checked,
-  onToggle,
-}: {
-  label: string
-  count?: number
-  checked: boolean
-  onToggle: () => void
-}) {
-  const empty = count === 0 && !checked
-  return (
-    <button
-      type="button"
-      aria-pressed={checked}
-      disabled={empty}
-      onClick={onToggle}
-      className={cn(
-        'inline-flex h-10 items-center gap-1.5 rounded-full border px-3.5 text-label transition-colors',
-        checked
-          ? 'border-brand-600 bg-brand-100 text-brand-600'
-          : empty
-            ? 'cursor-not-allowed border-border-subtle bg-surface-000 text-ink-500 opacity-55'
-            : 'border-border-subtle bg-surface-000 text-ink-900 hover:border-border-strong',
-      )}
-    >
-      {label}
-      {count != null && <span className="text-caption text-ink-500 tabular">{count}</span>}
-    </button>
   )
 }
 
@@ -569,7 +546,7 @@ function RangeFields({
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), commit())}
               placeholder="Min"
               aria-label={`${legend} — minimum`}
-              className="h-11 w-full min-w-0 rounded-md border border-border-subtle bg-surface-000 px-3 text-body-sm text-ink-900 tabular placeholder:text-ink-500 hover:border-border-strong"
+              className="h-11 w-full min-w-0 rounded-md border border-border-subtle bg-surface-000 px-3 text-base text-ink-900 tabular placeholder:text-ink-500 hover:border-border-strong"
             />
             <span aria-hidden className="text-ink-500">–</span>
           </>
@@ -583,7 +560,7 @@ function RangeFields({
           onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), commit())}
           placeholder="Max"
           aria-label={`${legend} — maximum`}
-          className="h-11 w-full min-w-0 rounded-md border border-border-subtle bg-surface-000 px-3 text-body-sm text-ink-900 tabular placeholder:text-ink-500 hover:border-border-strong"
+          className="h-11 w-full min-w-0 rounded-md border border-border-subtle bg-surface-000 px-3 text-base text-ink-900 tabular placeholder:text-ink-500 hover:border-border-strong"
         />
       </div>
     </fieldset>
@@ -610,7 +587,7 @@ function DateField({
         type="date"
         value={value ?? ''}
         onChange={(e) => onCommit(e.target.value || undefined)}
-        className="h-11 w-full rounded-md border border-border-subtle bg-surface-000 px-3 text-body-sm text-ink-900 hover:border-border-strong"
+        className="h-11 w-full rounded-md border border-border-subtle bg-surface-000 px-3 text-base text-ink-900 hover:border-border-strong"
       />
     </label>
   )

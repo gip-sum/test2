@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react'
 import { cn } from '@/lib/cn'
 
 /**
@@ -55,6 +55,8 @@ const SIZE: Record<Size, string> = {
 }
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
+  /** A dialog's trigger passes one so focus returns to it (React 19 passes refs as props). */
+  ref?: Ref<HTMLButtonElement>
   variant?: Variant
   size?: Size
   fullWidth?: boolean

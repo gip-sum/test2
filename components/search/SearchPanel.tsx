@@ -14,6 +14,7 @@ import { PROPERTY_TYPE_LABEL, PROPERTY_TYPE_ORDER } from '@/lib/property/types'
 import { BUY_BUDGET_BANDS, RENT_BUDGET_BANDS, buildSearchUrl } from '@/lib/search/query'
 import { LAUNCH_CITY } from '@/lib/brand'
 import { Button } from '@/components/ui/Button'
+import { ToggleChip } from '@/components/ui/ToggleChip'
 
 const BHK_OPTIONS = [1, 2, 3, 4] as const
 
@@ -102,16 +103,16 @@ export function SearchPanel() {
           <LocationField selected={localities} onChange={setLocalities} />
         </div>
         <div className="flex gap-2.5">
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            id="more-filters"
             ref={filtersTrigger}
             onClick={() => setFiltersOpen(true)}
             aria-haspopup="dialog"
             className={cn(
-              'inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-md border px-4 text-label transition-colors',
-              filterCount
-                ? 'border-brand-600 bg-brand-100 text-brand-700'
-                : 'border-border-strong bg-surface-000 text-ink-900 hover:border-ink-500',
+              'h-12 shrink-0',
+              filterCount ? 'border-brand-600 bg-brand-100 text-brand-700 hover:border-brand-600' : 'bg-surface-000',
             )}
           >
             <SlidersIcon className="size-4.5" />
@@ -122,32 +123,31 @@ export function SearchPanel() {
                 <span className="sr-only"> selected</span>
               </span>
             )}
-          </button>
-          <button
-            type="submit"
-            className="inline-flex h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-md bg-brand-600 px-6 text-label text-on-brand shadow-e1 transition-colors hover:bg-brand-700 lg:flex-none"
-          >
+          </Button>
+          <Button type="submit" size="lg" className="h-12 min-w-0 flex-1 text-label shadow-e1 lg:flex-none">
             <SearchIcon className="size-4.5" />
             Search<span className="sr-only"> properties {scope}</span>
-          </button>
+          </Button>
         </div>
       </div>
 
       {filterCount > 0 && (
-        <ul aria-label="Selected filters" className="mt-3 flex flex-wrap gap-x-2 gap-y-3">
+        // Removing a chip hands focus to the next one, or to More filters
+        // after the last (Chip, UI-13).
+        <ul aria-label="Selected filters" data-chip-group className="mt-3 flex flex-wrap gap-x-2 gap-y-3">
           {propertyTypes.map((t) => (
             <li key={t}>
-              <Chip label={PROPERTY_TYPE_LABEL[t]} onRemove={() => toggleType(t)} removeLabel={`Remove filter: ${PROPERTY_TYPE_LABEL[t]}`} />
+              <Chip label={PROPERTY_TYPE_LABEL[t]} onRemove={() => toggleType(t)} removeLabel={`Remove filter: ${PROPERTY_TYPE_LABEL[t]}`} focusAfterRemove="more-filters" />
             </li>
           ))}
           {band && (
             <li>
-              <Chip label={band.label} onRemove={() => setBandIndex(null)} removeLabel={`Remove filter: ${band.label}`} />
+              <Chip label={band.label} onRemove={() => setBandIndex(null)} removeLabel={`Remove filter: ${band.label}`} focusAfterRemove="more-filters" />
             </li>
           )}
           {[...bedrooms].sort((a, b) => a - b).map((n) => (
             <li key={n}>
-              <Chip label={`${n} BHK`} onRemove={() => toggleBhk(n)} removeLabel={`Remove filter: ${n} BHK`} />
+              <Chip label={`${n} BHK`} onRemove={() => toggleBhk(n)} removeLabel={`Remove filter: ${n} BHK`} focusAfterRemove="more-filters" />
             </li>
           ))}
         </ul>
@@ -161,14 +161,20 @@ export function SearchPanel() {
         description={`Property type, ${intent === 'buy' ? 'budget' : 'monthly rent'} and bedrooms`}
         footer={
           <div className="flex items-center gap-3">
-            <button
+            {/* aria-disabled, not disabled: Clear all empties itself, and
+                disabling the pressed control sent focus out of this sheet to
+                the dialog behind it, where Escape then closed neither (UI-13;
+                home-check's local failure). */}
+            <Button
               type="button"
+              variant="tertiary"
+              size="lg"
               onClick={clearFilters}
-              disabled={filterCount === 0}
-              className="h-12 rounded-md px-4 text-label text-brand-600 hover:bg-brand-100 disabled:text-ink-500 disabled:hover:bg-transparent"
+              aria-disabled={filterCount === 0}
+              className="h-12 px-4 text-label"
             >
               Clear all
-            </button>
+            </Button>
             <Button
               type="button"
               size="lg"
@@ -186,21 +192,21 @@ export function SearchPanel() {
         <div className="space-y-6 p-4">
           <FilterGroup legend="Property type">
             {PROPERTY_TYPE_ORDER.map((t) => (
-              <ToggleChip key={t} pressed={propertyTypes.includes(t)} onClick={() => toggleType(t)}>
+              <ToggleChip key={t} pressed={propertyTypes.includes(t)} onToggle={() => toggleType(t)}>
                 {PROPERTY_TYPE_LABEL[t]}
               </ToggleChip>
             ))}
           </FilterGroup>
           <FilterGroup legend={intent === 'buy' ? 'Budget' : 'Monthly rent'}>
             {bands.map((b, i) => (
-              <ToggleChip key={b.label} pressed={bandIndex === i} onClick={() => setBandIndex(bandIndex === i ? null : i)}>
+              <ToggleChip key={b.label} pressed={bandIndex === i} onToggle={() => setBandIndex(bandIndex === i ? null : i)}>
                 <span className="tabular">{b.label}</span>
               </ToggleChip>
             ))}
           </FilterGroup>
           <FilterGroup legend="Bedrooms">
             {BHK_OPTIONS.map((n) => (
-              <ToggleChip key={n} pressed={bedrooms.includes(n)} onClick={() => toggleBhk(n)}>
+              <ToggleChip key={n} pressed={bedrooms.includes(n)} onToggle={() => toggleBhk(n)}>
                 {n} BHK
               </ToggleChip>
             ))}
@@ -217,29 +223,5 @@ function FilterGroup({ legend, children }: { legend: string; children: ReactNode
       <legend className="text-label font-semibold text-ink-900">{legend}</legend>
       <div className="mt-3 flex flex-wrap gap-2">{children}</div>
     </fieldset>
-  )
-}
-
-/** A filter value that is on or off. Pressed state is shown by fill, border and weight, not colour alone. */
-function ToggleChip({ pressed, onClick, children }: { pressed: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={pressed}
-      onClick={onClick}
-      className={cn(
-        'inline-flex h-11 items-center gap-1.5 rounded-full border px-4 text-label transition-colors',
-        pressed
-          ? 'border-2 border-brand-600 bg-brand-100 px-[15px] font-semibold text-brand-700'
-          : 'border-border-strong bg-surface-000 text-ink-900 hover:border-ink-500',
-      )}
-    >
-      {pressed && (
-        <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M5 13l4 4L19 7" />
-        </svg>
-      )}
-      {children}
-    </button>
   )
 }

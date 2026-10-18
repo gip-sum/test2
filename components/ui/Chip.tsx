@@ -14,6 +14,12 @@ import { cn } from '@/lib/cn'
  * URL without that filter, so it works without JavaScript and opens in a new
  * tab on a modified click, while a plain click still runs `onRemove` (and
  * its in-place transition) instead of a full navigation (UI-06).
+ *
+ * Removing a chip removes the control that had focus, which dropped a
+ * keyboard user at <body> (UI-13). So focus moves first: to the next chip's
+ * remove control in the same `data-chip-group`, else the previous one, else
+ * the element `focusAfterRemove` names (the field the chips belong to, the
+ * button that opened their filters, the result count).
  */
 export function Chip({
   label,
@@ -23,6 +29,7 @@ export function Chip({
   labelClassName,
   removeHref,
   className,
+  focusAfterRemove,
 }: {
   label: ReactNode
   onRemove?: () => void
@@ -34,6 +41,8 @@ export function Chip({
   tone?: 'brand' | 'neutral'
   /** Extra classes for the label, such as a narrower truncation width. */
   labelClassName?: string
+  /** Id of the element to focus when the last chip in its group is removed. */
+  focusAfterRemove?: string
 }) {
   return (
     <span
@@ -50,6 +59,7 @@ export function Chip({
           label={removeLabel ?? `Remove ${typeof label === 'string' ? label : 'filter'}`}
           onRemove={onRemove}
           href={removeHref}
+          fallback={focusAfterRemove}
         />
       )}
     </span>
@@ -63,7 +73,17 @@ export function Chip({
 // never overlap.
 const REMOVE = 'group -mx-2.5 -my-1.5 grid size-11 shrink-0 place-items-center outline-none'
 
-function RemoveControl({ label, onRemove, href }: { label: string; onRemove: () => void; href?: string }) {
+/** Hands focus on before the focused remove control disappears. */
+function moveFocusFrom(control: HTMLElement, fallback?: string) {
+  if (document.activeElement !== control) return
+  const group = control.closest('[data-chip-group]')
+  const controls = group ? [...group.querySelectorAll<HTMLElement>('[data-chip-remove]')] : []
+  const at = controls.indexOf(control)
+  const next = controls[at + 1] ?? controls[at - 1] ?? (fallback ? document.getElementById(fallback) : null)
+  next?.focus()
+}
+
+function RemoveControl({ label, onRemove, href, fallback }: { label: string; onRemove: () => void; href?: string; fallback?: string }) {
   const glyph = (
     <span className="grid size-6 place-items-center rounded-full group-hover:bg-brand-600/15 group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-focus-ring">
       <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
@@ -71,12 +91,16 @@ function RemoveControl({ label, onRemove, href }: { label: string; onRemove: () 
       </svg>
     </span>
   )
-  if (!href) return <button type="button" onClick={onRemove} aria-label={label} className={REMOVE}>{glyph}</button>
+  const remove = (event: MouseEvent<HTMLElement>) => {
+    moveFocusFrom(event.currentTarget, fallback)
+    onRemove()
+  }
+  if (!href) return <button type="button" onClick={remove} aria-label={label} data-chip-remove className={REMOVE}>{glyph}</button>
   const click = (event: MouseEvent<HTMLAnchorElement>) => {
     // A modified or middle click keeps the browser's own behaviour (new tab).
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
     event.preventDefault()
-    onRemove()
+    remove(event)
   }
-  return <a href={href} onClick={click} aria-label={label} className={REMOVE}>{glyph}</a>
+  return <a href={href} onClick={click} aria-label={label} data-chip-remove className={REMOVE}>{glyph}</a>
 }
