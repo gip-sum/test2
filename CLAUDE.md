@@ -87,6 +87,11 @@ that changes it is a link or a GET form first, with JavaScript enhancing the
 transition (filter chips, Clear all, sort): search works with JavaScript off,
 and `ui-check` proves it.
 
+**Return paths go through `safeReturnPath`, and only it.** It checks the
+path after the URL parser normalises it: `/.//host` passes a raw-string
+check and redirects off-site (UI-07). Never build a redirect from a query
+value or a cookie another way.
+
 **Nothing claims more than it knows.** No invented counts, statistics,
 testimonials, reviews, verification badges or marketplace metrics. When the
 platform has not verified something, the interface does not imply it has.
@@ -183,6 +188,14 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
    Listing status renders through `components/ui/StatusBadge`; empty and
    failed sections through `EmptyState` / `ErrorState` (copy only, never
    technical detail).
+   A busy `Button` is `aria-disabled` and refuses the press, never
+   `disabled`: disabling the focused control sends focus to `<body>`
+   (UI-07). A multi-step form keeps ONE action state across its steps, so
+   every step survives a post without JavaScript; a client `onSubmit` may
+   call the same server action to check first, refuse a double submit and
+   catch a request that never left the browser. Sign-in sentences come from
+   `lib/auth/messages.ts`; a provider's own error text never reaches the
+   page.
 7. **No new dependency** without a reason recorded in the phase spec and a
    `npm run bundle-report` comparison.
 8. **Green identity through tokens.** `lib/design/raw-colour.test.ts` fails

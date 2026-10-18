@@ -28,7 +28,7 @@ An original property marketplace for Kolkata, built around one loop:
 | 14 | Property pricing form | Implemented; review pending |
 | E | 99acres interface redesign from client screenshots | Implemented and verified locally; publication pending |
 | Workspace addon | Compact admin and property-owner interface, selected concept 1 | Implemented and verified; see [specification and evidence](docs/phases/ADDON-WORKSPACE-interface.md) |
-| UI track | UI modernization UI-01 … UI-14, outside the 75-phase numbering | UI-01 audit, UI-02 foundation, UI-03 design-system cleanup, UI-04 animation system, UI-05 core components and UI-06 search & cards complete; see [docs/ui-modernization](docs/ui-modernization/) |
+| UI track | UI modernization UI-01 … UI-14, outside the 75-phase numbering | UI-01 audit, UI-02 foundation, UI-03 design-system cleanup, UI-04 animation system, UI-05 core components, UI-06 search & cards and UI-07 auth UI complete; see [docs/ui-modernization](docs/ui-modernization/) |
 
 The authoritative 75-phase roadmap is [Phases.txt](Phases.txt). Acceptance
 criteria are in [the Phase 4 spec](docs/phases/PHASE-04-property-detail.md)
@@ -71,7 +71,7 @@ npm run dev          # http://localhost:3000
 | `npm run lead-check` | Browser assertions for guest enquiries, repeat leads, buyer history and seller notifications |
 | `npm run media-check` | Browser assertions for gallery navigation, touch, image loading and fallbacks |
 | `npm run auth-check` | Browser assertions using a local Auth API simulator (requires the environment below) |
-| `npm run login-check` | Login screen: layout at four widths, controls reachable on phones, layout stability, the scene's story beats and reduced-motion picture; with the Auth API simulator environment below, every real sign-in state |
+| `npm run login-check` | Login screen: layout at four widths, controls reachable on phones, layout stability, the scene's story beats and reduced-motion picture; with the Auth API simulator environment below, every real sign-in state, the whole flow without JavaScript and by keyboard alone, a lost connection, duplicate presses, the Google button's busy state, and 44px targets at eight widths |
 | `npm run post-check` | Browser assertions for the seller posting flow |
 | `npm run notfound-check` | The animated 404: status codes, both actions, keyboard focus, motion and reduced motion |
 | `npm run motion-check` | The motion layer: Sheet enter/exit, focus and Escape (nested too), header panels, lightbox, card touch and hover, skeleton and photo fade, the search results and chip entrance, gallery photo changes, no-JS pages, and all of it under reduced motion |
