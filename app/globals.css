@@ -1282,7 +1282,17 @@ img[data-fade='in'] { opacity: 1; transition: opacity var(--duration-base) var(-
   [data-enter] .active-filters > .chip-enter {
     transition: opacity var(--duration-base) var(--ease-enter), transform var(--duration-base) var(--ease-enter);
   }
-  [data-enter] .results-list > li { transition-delay: calc(min(var(--i, 0), 6) * var(--stagger-step)); }
+  /* The stagger is by position, in CSS. It used to be an inline --i on each
+     item; a custom property inherits, so every element of every card carried
+     a different value and Chrome could no longer share computed styles
+     between cards — a sheet opening on search spent twice as long restyling
+     (measured: 52ms → 27ms of style recalculation without it). */
+  [data-enter] .results-list > li:nth-child(2) { transition-delay: var(--stagger-step); }
+  [data-enter] .results-list > li:nth-child(3) { transition-delay: calc(2 * var(--stagger-step)); }
+  [data-enter] .results-list > li:nth-child(4) { transition-delay: calc(3 * var(--stagger-step)); }
+  [data-enter] .results-list > li:nth-child(5) { transition-delay: calc(4 * var(--stagger-step)); }
+  [data-enter] .results-list > li:nth-child(6) { transition-delay: calc(5 * var(--stagger-step)); }
+  [data-enter] .results-list > li:nth-child(n + 7) { transition-delay: calc(6 * var(--stagger-step)); }
   @starting-style {
     [data-enter] .results-list > li { opacity: 0; transform: translateY(6px); }
     [data-enter] .active-filters > .chip-enter { opacity: 0; transform: scale(0.96); }

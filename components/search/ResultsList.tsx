@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react'
 import { PropertyCard } from '@/components/property/PropertyCard'
 import type { PropertySummary } from '@/lib/property/types'
 
@@ -24,7 +23,7 @@ export function ResultsList({ results }: { results: PropertySummary[] }) {
           the page and the fixed bottom bar by 8px. */}
       <ul className="results-list grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
         {results.map((p, i) => (
-          <li key={p.id} style={{ '--i': i } as CSSProperties}>
+          <li key={p.id}>
             <PropertyCard property={p} layout="responsive" priority={i < 3} />
           </li>
         ))}
