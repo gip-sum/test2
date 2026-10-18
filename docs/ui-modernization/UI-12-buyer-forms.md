@@ -520,7 +520,8 @@ reading (box identical; recorded since UI-06).
 | `auth-check` | 48 | **63** (profile: sizing, autofill, validation focus, busy, one write, success focus, failure, offline, no-JS, 8 widths) |
 | `search-check` | 64 | **65** (zero-result exits are links) |
 | `property-check` (not in CI) | 65/67 | **67/67** |
-| Rest of the CI suite | — | SUITE_PLACEHOLDER |
+| Rest of the CI suite | — | all unchanged: phase-e 64, moderation 61, users 170, listing 23, dashboard 124, performance 225, admin 286, description 28, preview 24, draft 27, photo 48, login 117 / 179, shots, light-check, calculator 43, shell 355, motion 101, ui 128, pricing 46, post 89, notfound 36 |
+| Copy link (scripted browser probe, not committed) | — | 12/12: 44px; "Link copied" in a status with focus kept and the public URL on the clipboard; with the clipboard refused, no "copied", the link selected in a focused 16px field, no overflow |
 
 ## 19. Known failures remaining
 
