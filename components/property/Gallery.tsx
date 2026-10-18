@@ -65,7 +65,11 @@ export function Gallery({ photos, title }: { photos: PropertyMedia[]; title: str
           {...touch}
           className="relative aspect-[4/3] min-w-0 touch-pan-y overflow-hidden rounded-lg bg-media-ground lg:aspect-[16/10]"
         >
-          <MediaPhoto media={current} failed={failed.has(current.id)} onError={() => markFailed(current.id)} sizes="(min-width: 1024px) 760px, (min-width: 768px) 768px, 100vw" priority={index === 0} />
+          {/* Keyed by photo, so a new photo mounts fresh and fades into the
+              reserved frame when it arrives (UI-04's image fade), instead of
+              the previous photo staying on screen under a counter and a
+              screen-reader status that already name the next one. */}
+          <MediaPhoto key={current.id} media={current} failed={failed.has(current.id)} onError={() => markFailed(current.id)} sizes="(min-width: 1024px) 760px, (min-width: 768px) 768px, 100vw" priority={index === 0} />
           <button
             type="button"
             onClick={(event) => show(index, event.currentTarget)}
@@ -141,7 +145,7 @@ export function Gallery({ photos, title }: { photos: PropertyMedia[]; title: str
             </header>
             <Dialog.Description className="sr-only">Property photos. Use arrow keys or swipe to change image; Escape closes the gallery.</Dialog.Description>
             <div className="relative min-h-0 flex-1 touch-pan-y" {...touch}>
-              <MediaPhoto media={current} failed={failed.has(current.id)} onError={() => markFailed(current.id)} sizes="100vw" contain priority />
+              <MediaPhoto key={current.id} media={current} failed={failed.has(current.id)} onError={() => markFailed(current.id)} sizes="100vw" contain priority />
               {multi && (
                 <>
                   <NavButton side="left" onClick={() => go(-1)} label="Previous full-screen photo" />
