@@ -115,8 +115,8 @@ export function DraftEditor({ initial, children }: { initial: Draft; children: R
         </div>
       </div>
       <noscript><p>JavaScript is required to edit and autosave this draft. <Link href="/post/drafts">Return to drafts</Link>.</p></noscript>
-      {error && <div role="alert" className="mt-3 rounded-md border border-border-strong p-4 text-danger-600"><p>{error}</p>{conflict ? <button type="button" onClick={reload} className="min-h-11 underline">Discard unsent edits and load latest</button> : <button type="button" onClick={async () => { if (await flush()) { if (leaving.current) router.refresh() } }} className="min-h-11 underline">Retry save</button>}</div>}
-      {recovery && <div role="alert" className="mt-3 rounded-md border border-border-strong p-4 text-ink-900"><p>Unsent changes were recovered from this tab. They are not saved to your account.</p><Button type="button" variant="secondaryBrand" onClick={restore} className="mt-2">Restore unsent changes</Button><button type="button" onClick={reload} className="min-h-11 px-3 underline">Keep account version</button></div>}
+      {error && <div role="alert" className="mt-3 rounded-md border border-border-strong p-4 text-danger-600"><p>{error}</p>{conflict ? <Button type="button" variant="text" onClick={reload}>Discard unsent edits and load latest</Button> : <Button type="button" variant="text" onClick={async () => { if (await flush()) { if (leaving.current) router.refresh() } }}>Retry save</Button>}</div>}
+      {recovery && <div role="alert" className="mt-3 rounded-md border border-border-strong p-4 text-ink-900"><p>Unsent changes were recovered from this tab. They are not saved to your account.</p><Button type="button" variant="secondaryBrand" onClick={restore} className="mt-2">Restore unsent changes</Button><Button type="button" variant="text" onClick={reload} className="ml-3">Keep account version</Button></div>}
     </div>
     <div inert={moving || !!recovery || conflict} onChangeCapture={e => changed(e.target)} onSubmitCapture={e => {
       if (!(e.target instanceof HTMLFormElement) || e.target.getAttribute('action') !== '/post') return

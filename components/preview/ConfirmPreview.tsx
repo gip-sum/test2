@@ -28,6 +28,6 @@ export function ConfirmPreview({id,signature,canConfirm,confirmed}:{id:string;si
     </>}
     <p className="mt-3 text-caption text-ink-500">Changes to saved details, photos or your display name require a new review. Submit the confirmed preview from the publishing status page.</p>
     <Link href={`/post/drafts/${id}/lifecycle`} className="mt-3 inline-flex min-h-11 items-center font-semibold text-brand-700 underline">Publishing status →</Link>
-    {error&&<div role="alert" className="mt-3 text-body-sm text-danger-600"><p>{error}</p><button type="button" onClick={()=>window.location.reload()} className="min-h-11 underline">Reload preview</button></div>}
+    {error&&<div role="alert" className="mt-3 text-body-sm text-danger-600"><p>{error}</p><Button type="button" variant="text" onClick={()=>window.location.reload()}>Reload preview</Button></div>}
   </section>
 }

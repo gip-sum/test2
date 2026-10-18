@@ -47,7 +47,7 @@ export function WithdrawAction({ draftId, version, title, configured }: { draftI
   }
 
   if (done) return <p ref={doneRef} tabIndex={-1} role="status" className="text-body-sm font-semibold text-ink-900">Withdrawn. Updating your dashboard…</p>
-  if (!confirming) return <button type="button" onClick={() => setConfirming(true)} className="inline-flex min-h-11 items-center font-semibold text-danger-600 underline underline-offset-4">Withdraw<span className="sr-only"> {title}</span></button>
+  if (!confirming) return <Button type="button" variant="text" onClick={() => setConfirming(true)} className="text-danger-600">Withdraw<span className="sr-only"> {title}</span></Button>
   return <div role="group" aria-labelledby={questionId} className="basis-full rounded-md border border-border-strong bg-surface-100 p-3">
     <p id={questionId} ref={questionRef} tabIndex={-1} className="break-words text-body-sm text-ink-900">Withdraw “{title}”? It leaves public view immediately and must be reviewed again before it can return.</p>
     <div className="mt-2 flex flex-wrap gap-3">
@@ -55,6 +55,6 @@ export function WithdrawAction({ draftId, version, title, configured }: { draftI
       <Button type="button" variant="secondary" aria-disabled={busy || undefined} onClick={() => { if (busy) return; setConfirming(false); setError('') }}>Cancel</Button>
     </div>
     {busy && <p role="status" className="mt-2 text-body-sm text-ink-700">Withdrawing…</p>}
-    {error && <div role="alert" className="mt-2 text-body-sm text-danger-600"><p>{error}</p><button type="button" onClick={() => window.location.reload()} className="min-h-11 font-semibold underline">Reload dashboard</button></div>}
+    {error && <div role="alert" className="mt-2 text-body-sm text-danger-600"><p>{error}</p><Button type="button" variant="text" onClick={() => window.location.reload()}>Reload dashboard</Button></div>}
   </div>
 }

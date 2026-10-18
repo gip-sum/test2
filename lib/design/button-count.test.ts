@@ -17,10 +17,12 @@ import { describe, expect, it } from 'vitest'
 // actions inside sentences and alerts, one danger outline (no variant for
 // one use). UI-11 moved the admin review and account forms' Refresh
 // buttons onto Button; no handwritten button remains in app/admin or
-// components/admin.
+// components/admin. UI-12 moved ten text actions (Reload…, Try again, Copy
+// link, Withdraw, Retry save, Sign out…) onto Button's `text` variant and
+// made the zero-results exits links (they change the URL).
 //
 // Lower the ceiling when a stage migrates more. Raising it needs a reason.
-const CEILING = 39
+const CEILING = 27
 const root = process.cwd()
 const walk = (dir: string): string[] => readdirSync(dir).flatMap((name) => {
   const path = join(dir, name)

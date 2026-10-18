@@ -17,11 +17,13 @@ import { cn } from '@/lib/cn'
  *             than `outline`, and not named after it, because the border
  *             is not brand.
  *   danger    destructive
+ *   text      an action inside a sentence or an alert — Reload status, Try
+ *             again, Copy link (UI-12)
  *
  * Exactly ONE filled primary per surface. Two competing filled buttons
  * measurably reduce clicks on both.
  */
-type Variant = 'primary' | 'supply' | 'secondary' | 'secondaryBrand' | 'tertiary' | 'outline' | 'danger'
+type Variant = 'primary' | 'supply' | 'secondary' | 'secondaryBrand' | 'tertiary' | 'outline' | 'danger' | 'text'
 type Size = 'sm' | 'md' | 'lg'
 
 const VARIANT: Record<Variant, string> = {
@@ -34,7 +36,16 @@ const VARIANT: Record<Variant, string> = {
   tertiary: 'bg-transparent text-brand-600 border-transparent hover:bg-brand-100',
   outline: 'bg-transparent text-brand-700 border-brand-700 hover:bg-brand-100',
   danger: 'bg-danger-600 text-on-danger border-transparent hover:brightness-95',
+  // An action that reads as part of a sentence or an alert: "Reload status",
+  // "Try again", "Copy link" (UI-12). Underlined, in the colour of the text
+  // around it (a caller may set one), at the size of that text, with the
+  // 44px target kept. Eight hand-drawn copies of this looked nearly alike.
+  text: 'bg-transparent text-current border-transparent underline underline-offset-4 hover:decoration-2',
 }
+
+// The text variant takes its size from the sentence it sits in; only the
+// touch target is fixed.
+const TEXT_SIZE = 'min-h-11 px-0'
 
 // 44px minimum touch target on md and lg; sm is for dense desktop toolbars only.
 const SIZE: Record<Size, string> = {
@@ -73,7 +84,7 @@ export function buttonClassName({
     // disabled does. A busy button (aria-busy too) keeps its full colour.
     '[&[aria-disabled=true]:not([aria-busy=true])]:cursor-not-allowed [&[aria-disabled=true]:not([aria-busy=true])]:opacity-45',
     VARIANT[variant],
-    SIZE[size],
+    variant === 'text' ? TEXT_SIZE : SIZE[size],
     fullWidth && 'w-full',
     className,
   )

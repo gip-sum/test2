@@ -79,3 +79,13 @@ describe('StatusBadge for accounts (UI-11)', () => {
     expect(html(StatusBadge, { status: 'ACTIVE' })).toContain('>Active</span>')
   })
 })
+
+describe('Button text variant (UI-12)', () => {
+  it('reads as text in its sentence: no border or padding, its colour and size, the 44px target kept', () => {
+    const cls = buttonClassName({ variant: 'text' })
+    for (const token of ['border-transparent', 'bg-transparent', 'underline', 'min-h-11', 'px-0', 'text-current']) expect(cls).toContain(token)
+    expect(cls).not.toMatch(/\btext-label\b|\bpx-4\b/)
+    // A caller's colour wins (tailwind-merge).
+    expect(buttonClassName({ variant: 'text', className: 'text-brand-700' })).not.toContain('text-current')
+  })
+})

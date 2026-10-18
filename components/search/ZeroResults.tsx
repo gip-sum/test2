@@ -1,8 +1,5 @@
-'use client'
-
-import { useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/Button'
+import Link from 'next/link'
+import { buttonClassName } from '@/components/ui/Button'
 import type { NearbyLocality, Relaxation } from '@/lib/property/search'
 import { clearAllPatch } from '@/lib/search/describe'
 import { buildSearchUrl, withFilterChange, type SearchQuery } from '@/lib/search/query'
@@ -35,14 +32,14 @@ export function ZeroResults({
   totalUnfiltered: number
   localityNames: Record<string, string>
 }) {
-  const router = useRouter()
-  const [pending, startTransition] = useTransition()
-
-  const go = (patch: Partial<SearchQuery>) => {
-    startTransition(() => {
-      router.push(buildSearchUrl(withFilterChange(query, patch)), { scroll: false })
-    })
-  }
+  // Every exit is a link to the search it leads to (UI-12), like the filter
+  // chips and Clear all in the results header (UI-06): it works before and
+  // without JavaScript, and nothing is disabled under a focused control
+  // while the next page loads. These were buttons pushing the router and
+  // disabled while pending, so a keyboard user lost focus and a visitor
+  // without JavaScript got controls that did nothing.
+  const href = (patch: Partial<SearchQuery>) => buildSearchUrl(withFilterChange(query, patch))
+  const chip = 'inline-flex min-h-11 items-center gap-2 rounded-full border border-border-subtle bg-surface-000 px-4 text-body-sm text-ink-900 hover:border-brand-600 hover:text-brand-600'
 
   const dropKeyPatch: Record<string, Partial<SearchQuery>> = {
     locality: { localities: [] },
@@ -87,17 +84,12 @@ export function ZeroResults({
           <ul className="mt-2.5 flex flex-wrap gap-2">
             {relaxations.slice(0, 5).map((r) => (
               <li key={r.key}>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => go(dropKeyPatch[r.key] ?? {})}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border-subtle bg-surface-000 px-4 text-body-sm text-ink-900 hover:border-brand-600 hover:text-brand-600 disabled:opacity-55"
-                >
+                <Link href={href(dropKeyPatch[r.key] ?? {})} scroll={false} className={chip}>
                   <span>Without {r.label}</span>
                   <span className="text-caption text-ink-500 tabular">
                     {r.resultsIfDropped.toLocaleString('en-IN')}
                   </span>
-                </button>
+                </Link>
               </li>
             ))}
           </ul>
@@ -113,17 +105,12 @@ export function ZeroResults({
           <ul className="mt-2.5 flex flex-wrap gap-2">
             {nearbyLocalities.map((l) => (
               <li key={l.slug}>
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => go({ localities: [l.slug] })}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border-subtle bg-surface-000 px-4 text-body-sm text-ink-900 hover:border-brand-600 hover:text-brand-600 disabled:opacity-55"
-                >
+                <Link href={href({ localities: [l.slug] })} scroll={false} className={chip}>
                   <span className="max-w-[12rem] truncate">{localityNames[l.slug] ?? l.slug}</span>
                   <span className="text-caption text-ink-500 tabular">
                     {l.count.toLocaleString('en-IN')}
                   </span>
-                </button>
+                </Link>
               </li>
             ))}
           </ul>
@@ -131,12 +118,12 @@ export function ZeroResults({
       )}
 
       <div className="mt-6 border-t border-border-subtle pt-4">
-        <Button variant="primary" loading={pending} onClick={() => go(clearAllPatch())}>
+        <Link href={href(clearAllPatch())} scroll={false} className={buttonClassName({ variant: 'primary' })}>
           Clear all filters
           <span className="font-normal opacity-80 tabular">
             ({totalUnfiltered.toLocaleString('en-IN')})
           </span>
-        </Button>
+        </Link>
       </div>
     </section>
   )
