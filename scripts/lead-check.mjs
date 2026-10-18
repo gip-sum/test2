@@ -1,9 +1,19 @@
-/** Phase 9 browser flow with isolated Auth and Data API responses. */
+/**
+ * Phase 9 browser flow with isolated Auth and Data API responses; the
+ * enquiry form's validation, busy, no-JavaScript, failure and focus
+ * behaviour (UI-12).
+ *
+ * Needs the app started against this simulator (port 3101 in CI:
+ * SUPABASE_URL=http://127.0.0.1:3300 …). It defaulted to the public app on
+ * 3100, which has no Supabase configured, so every enquiry write failed
+ * and the check stopped at its first confirmation — the "local failure"
+ * recorded from UI-06 to UI-11 (docs/ui-modernization/UI-12).
+ */
 import http from 'node:http'
 import { randomUUID } from 'node:crypto'
 import { chromium } from 'playwright-core'
 
-const BASE = process.env.BASE_URL ?? 'http://127.0.0.1:3100'
+const BASE = process.env.BASE_URL ?? 'http://localhost:3101'
 const CHROME = process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
 const buyer = { id: 'a9140f33-a429-46f3-9514-3e8f32f18189', email: 'buyer@example.com' }
 const seller = { id: 'b9140f33-a429-46f3-9514-3e8f32f18189', email: 'seller@example.com' }
@@ -13,7 +23,8 @@ const leads = []
 const events = []
 const notifications = []
 let sellerAssigned = false
-let failing = false
+let failing = false, enquiryDelay = 0
+const submits = []
 const mock = http.createServer(async (request, response) => {
   const chunks = []
   for await (const chunk of request) chunks.push(chunk)
@@ -26,6 +37,8 @@ const mock = http.createServer(async (request, response) => {
   if (url.pathname === '/rest/v1/rpc/my_account_access') return send(200, true)
   if (url.pathname === '/rest/v1/saved_properties') return send(user ? 200 : 401, [])
   if (url.pathname === '/rest/v1/rpc/submit_enquiry') {
+    submits.push(body)
+    if (enquiryDelay) await new Promise((r) => setTimeout(r, enquiryDelay))
     if (failing) return send(503, {})
     const previous = leads.find((lead) => lead.listing_public_id === body.p_listing_public_id && lead.buyer_phone === body.p_phone)
     const lead = { id: randomUUID(), listing_public_id: body.p_listing_public_id, listing_title: body.p_listing_title,
@@ -97,7 +110,10 @@ try {
   await sellerContext.addCookies([{ name: 'gb-access', value: 'b'.repeat(48), url: BASE, httpOnly: true }])
   const inbox = await sellerContext.newPage()
   await inbox.goto(BASE + '/dashboard/enquiries')
-  check('seller inbox shows assigned lead and notification', await inbox.getByText('1 unread notification').isVisible() && await inbox.getByText('Follow-up').first().isVisible())
+  // Scoped to the lead card: the first "Follow-up" on the page is the
+  // column header, aria-hidden and not displayed below 1024px, so
+  // `.first()` measured an invisible element at 390px and this always failed.
+  check('seller inbox shows assigned lead and notification', await inbox.getByText('1 unread notification').isVisible() && await inbox.locator('article').getByText(/^Follow-up ·/).isVisible())
   await inbox.getByRole('button', { name: 'Mark notifications read' }).click()
   await inbox.getByText('0 unread notifications').waitFor()
   check('seller can acknowledge notification', notifications[0].read_at !== null)
@@ -118,6 +134,90 @@ try {
   await sent.getByRole('textbox', { name: 'Mobile number' }).first().fill('9876543211')
   await sent.getByRole('button', { name: 'Send enquiry' }).first().click()
   check('failed write does not claim success', await sent.getByRole('alert').getByText(/could not be saved/).waitFor().then(() => true).catch(() => false))
+  check('a failed write keeps what was typed', await sent.getByRole('textbox', { name: 'Mobile number' }).first().inputValue() === '9876543211' && await sent.getByRole('textbox', { name: 'Your name' }).first().inputValue() === 'Test Buyer')
+  failing = false
+
+  // ── UI-12: the enquiry form on the shared system ─────────────────────────
+  // The visible enquiry form: the sidebar card from 1024px, the sheet (or, without JavaScript, the inline fallback) below.
+  const form = (page) => page.locator('form').filter({ has: page.getByRole('button', { name: /Send enquiry|Sending/ }) }).filter({ visible: true }).first()
+  const js = await browser.newContext({ viewport: { width: 1280, height: 900 } }), p = await js.newPage()
+  await p.goto(BASE + path)
+  const f = form(p), name = f.getByRole('textbox', { name: 'Your name' }), phone = f.getByRole('textbox', { name: 'Mobile number' }), message = f.getByRole('textbox', { name: /Message/ })
+  check('fields are 16px and at least 44px tall, with autofill semantics', await f.locator('input:not([type=hidden]), textarea').evaluateAll((els) => els.every((e) => parseFloat(getComputedStyle(e).fontSize) >= 16 && e.getBoundingClientRect().height >= 44))
+    && await name.getAttribute('autocomplete') === 'name' && await phone.getAttribute('autocomplete') === 'tel' && await phone.getAttribute('type') === 'tel' && await phone.getAttribute('inputmode') === 'tel')
+  check('the optional message says so in its label', (await f.locator('label').allInnerTexts()).some((t) => /Message\s*\(optional\)/.test(t)))
+  let before = submits.length
+  await phone.fill('12345'); await message.fill('Is parking included?')
+  await f.getByRole('button', { name: 'Send enquiry' }).click()
+  const summary = f.getByRole('alert')
+  await summary.waitFor()
+  check('invalid input sends nothing', submits.length === before)
+  check('the summary takes focus and links to each field', await summary.evaluate((e) => e === document.activeElement) && await summary.getByRole('link').count() === 2)
+  check('each error sits under its field and is tied to it', await name.getAttribute('aria-invalid') === 'true' && (await name.getAttribute('aria-describedby')).split(' ').some((id) => id.endsWith('-name-error'))
+    && (await f.locator(`#${(await phone.getAttribute('id')).replace(/:/g, '\\:')}-error`).innerText()).includes('valid 10-digit') && (await phone.getAttribute('aria-describedby')).includes('-phone-error'))
+  check('the server\'s wording is the client\'s wording', (await summary.innerText()).includes('Enter your name so the seller knows who is asking.') && (await summary.innerText()).includes('Enter a valid 10-digit Indian mobile number.'))
+  check('typed answers stay', await phone.inputValue() === '12345' && await message.inputValue() === 'Is parking included?')
+  await summary.getByRole('link').first().click()
+  check('a summary link moves to its field', await name.evaluate((e) => e === document.activeElement))
+
+  await name.fill('Keyboard Buyer'); await phone.fill('98765 43212')
+  enquiryDelay = 700; before = submits.length
+  // Keyboard-only: focus the button and press Enter (Enter in a field also
+  // submits, and leaves focus in that field, which loses nothing).
+  await f.getByRole('button', { name: 'Send enquiry' }).focus()
+  await p.keyboard.press('Enter')
+  const busy = f.getByRole('button', { name: 'Sending…' })
+  await busy.waitFor()
+  check('the busy button keeps focus, is unavailable but not disabled, and progress is announced', await busy.evaluate((e) => e === document.activeElement && !e.disabled && e.getAttribute('aria-disabled') === 'true' && e.getAttribute('aria-busy') === 'true')
+    && (await f.getByRole('status').innerText()).includes('Sending your enquiry'))
+  await p.keyboard.press('Enter'); await busy.click({ force: true }).catch(() => {})
+  const sentBox = p.locator('[data-enquiry-sent]')
+  await sentBox.waitFor(); enquiryDelay = 0
+  check('a second press while sending is refused: one request', submits.length === before + 1, String(submits.length - before))
+  check('keyboard-only: the confirmation replaces the form and takes focus, and is a status', await sentBox.evaluate((e) => e === document.activeElement && e.getAttribute('role') === 'status') && (await sentBox.innerText()).includes('Enquiry sent'))
+  check('no other page state was cleared', await p.getByRole('heading', { level: 1 }).count() === 1)
+  check('the request carries no seller: the server decides who receives it', Object.keys(submits.at(-1)).every((k) => !/seller/.test(k)))
+
+  // A request that never reaches the server keeps the form and what was typed.
+  await p.goto(BASE + path)
+  await form(p).getByRole('textbox', { name: 'Your name' }).fill('Offline Buyer'); await form(p).getByRole('textbox', { name: 'Mobile number' }).fill('9876543213')
+  before = submits.length; await js.setOffline(true)
+  await form(p).getByRole('button', { name: 'Send enquiry' }).click()
+  await form(p).getByRole('alert').waitFor()
+  check('offline: an explained alert, no request, the page not replaced, everything typed kept', submits.length === before && (await form(p).getByRole('alert').innerText()).includes('Check your connection')
+    && await form(p).getByRole('textbox', { name: 'Your name' }).inputValue() === 'Offline Buyer' && await p.getByRole('heading', { level: 1 }).count() === 1)
+  await js.setOffline(false)
+
+  // A tampered listing identity is refused by the server and stores nothing.
+  await p.goto(BASE + path)
+  await form(p).locator('input[name=listingPublicId]').evaluate((e) => { e.value = 'p_nonexistent' })
+  await form(p).getByRole('textbox', { name: 'Your name' }).fill('Tamper Buyer'); await form(p).getByRole('textbox', { name: 'Mobile number' }).fill('9876543214')
+  before = submits.length
+  await form(p).getByRole('button', { name: 'Send enquiry' }).click()
+  await form(p).getByRole('alert').waitFor()
+  check('an enquiry for a listing that does not exist is refused, nothing stored', submits.length === before && !leads.some((l) => l.buyer_name === 'Tamper Buyer'))
+  for (const width of [320, 360, 375, 390, 412, 430, 768, 1280]) {
+    await p.setViewportSize({ width, height: 844 }); await p.goto(BASE + path)
+    if (width < 1024) { await p.getByRole('button', { name: /^Contact / }).click(); await form(p).waitFor(); await p.waitForTimeout(400) }
+    const fit = await form(p).evaluate((el) => ({ page: document.documentElement.scrollWidth <= innerWidth, form: el.getBoundingClientRect().right <= innerWidth, small: [...el.querySelectorAll('button, input:not([type=hidden]), a')].filter((c) => c.getBoundingClientRect().height > 0 && c.getBoundingClientRect().height < 44).length }))
+    check(`enquiry form fits at ${width}px with 44px controls`, fit.page && fit.form && fit.small === 0)
+  }
+  await js.close()
+
+  // Without JavaScript: an ordinary POST, errors beside fields, answers kept, then the confirmation.
+  const nojs = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } }), n = await nojs.newPage()
+  await n.goto(BASE + path)
+  await form(n).getByRole('textbox', { name: 'Mobile number' }).fill('98765 43215'); await form(n).getByRole('textbox', { name: /Message/ }).fill('No script here')
+  before = submits.length
+  await Promise.all([n.waitForLoadState('load'), form(n).getByRole('button', { name: 'Send enquiry' }).click()])
+  await form(n).getByRole('alert').waitFor()
+  check('no JavaScript: a missing name comes back beside its field, nothing stored, answers kept', submits.length === before && (await n.locator('[id$="-name-error"]').first().innerText()).includes('Enter your name')
+    && await form(n).getByRole('textbox', { name: 'Mobile number' }).inputValue() === '98765 43215' && await form(n).getByRole('textbox', { name: /Message/ }).inputValue() === 'No script here')
+  await form(n).getByRole('textbox', { name: 'Your name' }).fill('No Script Buyer')
+  await Promise.all([n.waitForLoadState('load'), form(n).getByRole('button', { name: 'Send enquiry' }).click()])
+  await n.getByRole('status').getByText(/Enquiry sent/).first().waitFor()
+  check('no JavaScript: a valid enquiry is stored and confirmed', submits.length === before + 1 && leads.some((l) => l.buyer_name === 'No Script Buyer'))
+  await nojs.close()
   await buyerContext.close(); await sellerContext.close()
 } finally { await browser.close(); await new Promise((resolve) => mock.close(resolve)) }
 console.log(`${total - failed}/${total} lead checks passed`)

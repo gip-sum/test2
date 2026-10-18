@@ -1,8 +1,16 @@
-/** Phase 8 browser flow against an isolated Auth and REST provider. */
+/**
+ * Phase 8 browser flow against an isolated Auth and REST provider, plus
+ * removing homes from the Saved list (UI-12).
+ *
+ * Needs the app started against this simulator (port 3101 in CI). It
+ * defaulted to the public app on 3100, which has no Supabase configured,
+ * so the first signed-in save never registered — the "local failure"
+ * recorded from UI-06 to UI-11; it is unrelated to the list's reflow.
+ */
 import http from 'node:http'
 import { chromium } from 'playwright-core'
 
-const BASE = process.env.BASE_URL ?? 'http://127.0.0.1:3100'
+const BASE = process.env.BASE_URL ?? 'http://localhost:3101'
 const CHROME = process.env.CHROME_PATH ?? '/opt/pw-browsers/chromium-1194/chrome-linux/chrome'
 const users = {
   ['a'.repeat(48)]: { id: 'a9140f33-a429-46f3-9514-3e8f32f18189', email: 'first@example.com' },
@@ -64,7 +72,7 @@ try {
   check('saved heart survives reload', await page.getByRole('button', { name: /Remove .* from saved/ }).first().waitFor({ timeout: 5000 }).then(() => true).catch(() => false))
   await page.goto(BASE + '/account/saved')
   check('shortlist contains saved property', await page.getByRole('heading', { name: 'Saved properties' }).isVisible() && await page.getByRole('button', { name: /Remove .* from saved/ }).first().waitFor({ timeout: 5000 }).then(() => true).catch(() => false))
-  for (const width of [390, 412, 768, 1280]) {
+  for (const width of [320, 360, 375, 390, 412, 430, 768, 1280]) {
     await page.setViewportSize({ width, height: 844 })
     const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth])
     check(`shortlist fits ${width}px`, scroll <= client)
@@ -91,6 +99,44 @@ try {
   await card.getByRole('button', { name: /Remove .* from saved/ }).click()
   await card.getByRole('button', { name: /^Save / }).waitFor()
   check('unsaving from the homepage rail removes it', !records.get(users['a'.repeat(48)].id)?.has(railId))
+  // ── UI-12: removing from the Saved list ──────────────────────────────────
+  const uid = users['a'.repeat(48)].id
+  const removeFlow = async (context, label) => {
+    records.set(uid, new Set(['p_8f3c2a', railId]))
+    const pg = await context.newPage()
+    await pg.goto(BASE + '/account/saved')
+    const hearts = pg.getByRole('button', { name: /Remove .* from saved/ })
+    await hearts.nth(1).waitFor()
+    const order = await pg.locator('[data-flip-key]').evaluateAll((els) => els.map((e) => e.dataset.flipKey))
+    await pg.evaluate(() => { window.__flips = 0; const animate = Element.prototype.animate; Element.prototype.animate = function (...a) { if (a[1]?.id === 'flip') window.__flips++; return animate.apply(this, a) } })
+    await hearts.first().focus(); await pg.keyboard.press('Enter')
+    await pg.waitForFunction((id) => document.activeElement?.id === id, `save-${order[1]}`)
+    await pg.waitForFunction(() => document.getElementById('a11y-announcer')?.textContent)
+    const result = { removed: !records.get(uid).has(order[0]), announced: (await pg.locator('#a11y-announcer').textContent()).includes('removed from your saved properties'), count: (await pg.locator('#saved-count').innerText()).trim(), flips: await pg.evaluate(() => window.__flips) }
+    await pg.keyboard.press('Enter')
+    await pg.waitForFunction(() => document.activeElement?.id === 'saved-empty')
+    result.empty = await pg.getByRole('heading', { name: 'Your shortlist is empty' }).isVisible()
+    await pg.close()
+    return result
+  }
+  const moving = await removeFlow(first, 'motion')
+  check('removing a saved home (server-confirmed) hands keyboard focus to the next home\'s heart', moving.removed)
+  check('the removal is announced and the count follows', moving.announced && moving.count === '1 saved property')
+  check('the remaining card travels to its new place instead of jumping', moving.flips >= 1, String(moving.flips))
+  check('removing the last home hands focus to the empty shortlist', moving.empty)
+  const still = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' })
+  await still.addCookies([{ name: 'gb-access', value: 'a'.repeat(48), url: BASE, httpOnly: true }])
+  const quiet = await removeFlow(still, 'reduced')
+  check('reduced motion: nothing travels, focus and the announcement still follow', quiet.flips === 0 && quiet.removed && quiet.announced && quiet.empty)
+  await still.close()
+  records.set(uid, new Set(['p_8f3c2a']))
+  await page.goto(BASE + '/account/saved')
+  const keep = page.getByRole('button', { name: /Remove .* from saved/ }).first()
+  await keep.waitFor(); failing = true
+  await keep.focus(); await page.keyboard.press('Enter'); await page.waitForTimeout(600)
+  check('a removal that fails is never shown as removed: the home stays and its heart keeps focus', records.get(uid).has('p_8f3c2a') && await page.locator('[data-flip-key]').count() === 1 && await keep.evaluate((e) => e === document.activeElement))
+  failing = false
+
   await page.goto(BASE + '/account/saved')
   failing = true
   await page.reload()
