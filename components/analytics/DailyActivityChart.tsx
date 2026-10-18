@@ -43,10 +43,11 @@
  *
  * Split in two so only the interaction is client code: this server component
  * draws everything a reader sees before JavaScript, and `ChartScrubber`
- * (client) wraps it with the slider, crosshair and readout. Drawn as one
- * client component, the whole chart hydrated and re-rendered once more for
- * the slider role: +53 ms total blocking time on the overview at 4x CPU,
- * against +N ms split (UI-10 record, section 11).
+ * (client) wraps it with the slider, crosshair and readout. As one client
+ * component the whole chart shipped as JavaScript, hydrated, and rendered
+ * again for the slider role; split, the route pays 1.99 KB gzip instead of
+ * 3.50 KB and a 90-day listing page +14 ms total blocking time at 4x CPU
+ * instead of +28 ms (UI-10 record, section 11).
  *
  * The figures are also in the page's daily table and summary, so nothing
  * here is the only way to read a value.
