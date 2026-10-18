@@ -68,6 +68,21 @@ export function buttonClassName({
   )
 }
 
+/**
+ * A busy button refuses the press instead of becoming `disabled` (UI-07).
+ *
+ * Disabling the focused button made Chrome move focus to <body> for the
+ * whole wait — a keyboard or screen-reader user was dropped at the top of
+ * the page just after submitting. `aria-disabled` keeps focus where it was
+ * and still says the control is unavailable. Cancelling the click also
+ * cancels a form submission, including the one Enter makes in a field (the
+ * browser's implicit submission clicks the default button), so a busy form
+ * cannot be sent twice.
+ */
+function refuseWhileBusy(event: React.MouseEvent<HTMLButtonElement>) {
+  event.preventDefault()
+}
+
 export function Button({
   variant = 'primary',
   size = 'md',
@@ -76,14 +91,17 @@ export function Button({
   disabled,
   className,
   children,
+  onClick,
   ...rest
 }: Props) {
   return (
     <button
       {...rest}
-      disabled={disabled || loading}
+      disabled={disabled}
+      aria-disabled={loading || undefined}
       aria-busy={loading || undefined}
-      className={buttonClassName({ variant, size, fullWidth, className })}
+      onClick={loading ? refuseWhileBusy : onClick}
+      className={buttonClassName({ variant, size, fullWidth, className: cn(loading && 'cursor-progress', className) })}
     >
       {/* The button keeps its width while loading — a shrinking button
           moves everything beside it. */}
