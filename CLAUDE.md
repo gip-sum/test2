@@ -82,7 +82,10 @@ Swapping fixtures for Prisma must not touch anything above that line.
 address bar and nowhere else. No component mirrors a filter in local state.
 This is what makes back, forward, refresh and a shared link work without
 any of them being special-cased — and it is what makes saved searches and
-alerts a table rather than a rewrite.
+alerts a table rather than a rewrite. Because every state is a URL, a control
+that changes it is a link or a GET form first, with JavaScript enhancing the
+transition (filter chips, Clear all, sort): search works with JavaScript off,
+and `ui-check` proves it.
 
 **Nothing claims more than it knows.** No invented counts, statistics,
 testimonials, reviews, verification badges or marketplace metrics. When the
@@ -161,7 +164,14 @@ Every phase builds on this; `docs/ui-modernization/` holds the details.
    closes waits for its animation or unmount instead of the first frame.
    Prefer a CSS transition to Motion unless Motion's capability is needed and
    measured: Kokonut's tabs ship CSS-driven (`SmoothTabs`) because the Motion
-   version cost +20.5 KB gzip on Home for a spring we do not want.
+   version cost +20.5 KB gzip on Home for a spring we do not want; the
+   results entrance is `@starting-style` because the Motion version cost
+   +17.9 KB plus a 28.4 KB lazy chunk on Search (UI-06). Entrances are gated
+   by a marker an effect sets after hydration, never by state whose server
+   and client values differ (that re-renders the tree: +100 ms blocking on
+   Search). Never stagger with an inline custom property per item: it
+   inherits into every descendant and defeats Chrome's style sharing (it
+   doubled the Filters sheet's open cost); use `:nth-child` rules.
 4. **Anime.js** only for a genuine timeline or SVG sequence; it is installed
    with the first feature that needs one. CSS stays CSS (login, 404).
 5. **Bklit UI** for charts of real, measured data only — never decoration,
