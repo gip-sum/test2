@@ -215,6 +215,25 @@ try {
   const replay = await googlePage.request.get(BASE + '/api/auth/google/callback?code=google-code', { maxRedirects: 0 })
   check('callback replay cannot exchange code', replay.status() === 307 && replay.headers().location?.includes('/login?error=google') && pkceExchanges === 1)
   await googleContext.close()
+
+  // UI-07: a cancelled Google attempt keeps where the visitor was going,
+  // so trying again still ends there; and a return path that only becomes
+  // "//host" once the URL parser normalises it never leaves the site.
+  const returnContext = await browser.newContext({ viewport: { width: 390, height: 844 } })
+  const returnPage = await returnContext.newPage()
+  googleMode = 'cancel'
+  await returnPage.goto(BASE + '/login?next=%2Faccount%2Fsaved')
+  await returnPage.getByRole('link', { name: 'Continue with Google' }).click()
+  await returnPage.getByRole('alert').getByText('Google sign-in was cancelled. You can try again or use your email.').waitFor()
+  check('cancelled Google sign-in keeps the requested page for the next attempt', new URL(returnPage.url()).searchParams.get('next') === '/account/saved' &&
+    await returnPage.getByRole('link', { name: 'Continue with Google' }).getAttribute('href') === '/api/auth/google/start?next=%2Faccount%2Fsaved')
+  googleMode = 'success'
+  for (const crafted of ['/.//evil.example', '/a/..//evil.example', '/%2e//evil.example']) {
+    const start = await returnPage.request.get(BASE + '/api/auth/google/start?next=' + encodeURIComponent(crafted), { maxRedirects: 0 })
+    const stored = /gb-google-return=([^;]*)/.exec(start.headers()['set-cookie'] ?? '')?.[1]
+    check(`a crafted return path (${crafted}) is replaced by /account before Google starts`, decodeURIComponent(stored ?? '') === '/account', String(stored))
+  }
+  await returnContext.close()
 } finally {
   await browser.close()
   await new Promise((resolve) => mock.close(resolve))

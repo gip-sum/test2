@@ -36,7 +36,12 @@ const AUTH_BASE = process.env.AUTH_BASE
 const WIDTHS = [390, 1280]
 
 // Representative screens. `open` clicks a control first (an interaction
-// state); `auth` needs AUTH_BASE and a fixture session.
+// state); `auth` needs AUTH_BASE and a fixture session. `server: 'auth'`
+// renders on AUTH_BASE without a session — the sign-in form exists only
+// where sign-in is configured (UI-07). `fill` types into fields and
+// `submit` clicks, then waits for `waitFor`: a form state reached the way a
+// visitor reaches it. The simulator does not answer /otp, which the app
+// treats like any refusal it must not reveal: as a sent code.
 export const SCENARIOS = [
   { name: 'home', path: '/' },
   { name: 'home-search-dialog', path: '/', open: '.reference-search-trigger', widths: [390] },
@@ -50,6 +55,11 @@ export const SCENARIOS = [
   { name: 'property-2', path: '/property/2-bhk-builder-floor-for-sale-in-behala-p9c17f4' },
   { name: 'login', path: '/login' },
   { name: 'login-register', path: '/login?mode=register' },
+  { name: 'login-configured', path: '/login', server: 'auth' },
+  { name: 'login-register-configured', path: '/login?mode=register', server: 'auth' },
+  { name: 'login-google-error', path: '/login?error=google', server: 'auth', widths: [390] },
+  { name: 'login-email-error', path: '/login', server: 'auth', widths: [390], fill: { '#auth-email': 'buyer@' }, submit: 'form button[type="submit"]', waitFor: '[role="alert"]' },
+  { name: 'login-code-step', path: '/login', server: 'auth', fill: { '#auth-email': 'buyer@example.com' }, submit: 'form button[type="submit"]', waitFor: '#auth-code' },
   { name: 'not-found', path: '/this-page-does-not-exist' },
   { name: 'post', path: '/post' },
   { name: 'post-details', path: '/post?role=OWNER&intent=buy&type=APARTMENT' },
@@ -185,8 +195,9 @@ async function capture(out) {
   const browser = await chromium.launch({ executablePath: EXECUTABLE, args: ['--no-sandbox'] })
   const result = { capturedAt: new Date().toISOString(), base: BASE, authBase: AUTH_BASE ?? null, props: PROPS, scenarios: {} }
   for (const s of SCENARIOS) {
-    if (s.auth && !AUTH_BASE) { console.log(`skip ${s.name} (no AUTH_BASE)`); continue }
-    const origin = s.auth ? AUTH_BASE : BASE
+    const onAuth = Boolean(s.auth) || s.server === 'auth'
+    if (onAuth && !AUTH_BASE) { console.log(`skip ${s.name} (no AUTH_BASE)`); continue }
+    const origin = onAuth ? AUTH_BASE : BASE
     for (const width of s.widths ?? WIDTHS) {
       const ctx = await browser.newContext({ viewport: { width, height: 900 }, deviceScaleFactor: 1, isMobile: width < 768, hasTouch: width < 768, reducedMotion: 'no-preference' })
       if (s.auth) await ctx.addCookies([{ name: 'gb-access', value: s.auth, url: origin }])
@@ -197,6 +208,14 @@ async function capture(out) {
         await settle(page, inflight)
         await page.locator(s.open).first().click()
         await page.waitForSelector('[role="dialog"]', { state: 'visible' })
+      }
+      if (s.submit) {
+        await settle(page, inflight)
+        for (const [field, value] of Object.entries(s.fill ?? {})) await page.fill(field, value)
+        await page.locator(s.submit).first().click()
+        // A state the old form never reaches (its browser bubble blocked the
+        // submit) is captured as it stands, and the report shows the change.
+        await page.waitForSelector(s.waitFor, { state: 'visible', timeout: 5000 }).catch(() => console.log(`  ${s.name}: ${s.waitFor} never appeared`))
       }
       await settle(page, inflight)
       const data = await page.evaluate(readPage, { props: PROPS, protectedSelectors: PROTECTED })

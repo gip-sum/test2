@@ -47,6 +47,7 @@ const mock = http.createServer(async (request, response) => {
     if (provider.otp === 'slow') await wait(1500)
     if (provider.otp === 'throttled') return send(429, { msg: 'rate limited' })
     if (provider.otp === 'down') return send(503, { msg: 'unavailable' })
+    if (provider.otp === 'refused') return send(400, { code: 400, error_code: 'email_address_invalid', msg: 'Email address "x" is invalid' })
     return send(200, {})
   }
   if (url.pathname === '/auth/v1/verify') {
@@ -596,41 +597,62 @@ try {
     }
 
     // ── Email step: rejected, throttled, provider down ────────────────
+    // (The server's own check, without JavaScript, is in the UI-07 section.)
     const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
     await page.goto(`${BASE}/login?next=%2Faccount`)
     const email = page.getByRole('textbox', { name: 'Email address' })
-    // Past the browser's own check, to prove the server's.
-    await page.locator('form:has(#auth-email)').evaluate((form) => { form.noValidate = true })
+    await check('the browser\'s own validation bubble is replaced by the form\'s messages', await page.locator('form:has(#auth-email)').evaluate((form) => form.noValidate) &&
+      await email.getAttribute('type') === 'email' && await email.getAttribute('required') !== null)
+    await page.getByRole('button', { name: 'Send sign-in code' }).click()
+    await page.getByRole('alert').getByText('Enter your email address.').waitFor()
+    await check('an empty address is named beside the field before anything is sent, focus on the field', await page.evaluate(() => document.activeElement?.id) === 'auth-email' && provider.otpRequests === 0)
     await email.fill('not-an-email')
     await page.getByRole('button', { name: 'Send sign-in code' }).click()
-    await page.getByRole('alert').getByText('Enter a valid email address.').waitFor()
-    await check('a malformed address is rejected by the server, and focus returns to the field', await page.evaluate(() => document.activeElement?.id) === 'auth-email' &&
-      await email.getAttribute('aria-invalid') === 'true' && (await email.getAttribute('aria-describedby')).includes('auth-email-message') && provider.otpRequests === 0)
+    await page.getByRole('alert').getByText('Enter a valid email address, like name@example.com.').waitFor()
+    await check('a malformed address is caught before sending, beside the field: invalid, described by the error, focused', await page.evaluate(() => document.activeElement?.id) === 'auth-email' &&
+      await email.getAttribute('aria-invalid') === 'true' && (await email.getAttribute('aria-describedby')) === 'auth-email-hint auth-email-error' &&
+      await page.locator('#auth-email-error').innerText() === 'Enter a valid email address, like name@example.com.' && provider.otpRequests === 0)
+    await check('what was typed is kept for correcting', await email.inputValue() === 'not-an-email')
+
+    provider.otp = 'refused'
+    await email.fill('buyer@example.com')
+    await email.press('Enter')
+    await page.locator('#auth-email-error').getByText('This email address can’t be used to sign in. Check it for typos, or use another address.').waitFor()
+    await check('an address the provider refuses is reported beside the field, in our words, never the provider\'s', await page.evaluate(() => document.activeElement?.id) === 'auth-email' &&
+      !(await page.locator('.login-card').innerText()).includes('is invalid') && await email.inputValue() === 'buyer@example.com')
 
     provider.otp = 'throttled'
     await email.fill('buyer@example.com')
-    await page.getByRole('button', { name: 'Send sign-in code' }).click()
-    await page.getByRole('alert').getByText('Please wait before requesting another code.').waitFor()
-    await check('a throttled provider is reported, focus back on the email', await page.evaluate(() => document.activeElement?.id) === 'auth-email')
+    await email.press('Enter')
+    await page.getByRole('alert').getByText('Please wait a minute before requesting another code.').waitFor()
+    await check('a throttled provider is reported as an alert about the attempt; focus stays in the field Enter was pressed in', await page.evaluate(() => document.activeElement?.id) === 'auth-email' &&
+      await email.getAttribute('aria-invalid') === null && await email.inputValue() === 'buyer@example.com')
 
     provider.otp = 'down'
     await email.fill('buyer@example.com')
     await page.getByRole('button', { name: 'Send sign-in code' }).click()
-    await page.getByRole('alert').getByText('We could not reach email authentication. Please try again.').waitFor()
+    await page.getByRole('alert').getByText('We couldn’t reach the sign-in service. Please try again in a moment.').waitFor()
     await check('a provider outage is reported, never as a sent code', await page.getByRole('textbox', { name: 'Six-digit code' }).count() === 0)
 
     // ── Pending, then the code step ────────────────────────────────────
     provider.otp = 'slow'
     await email.fill('buyer@example.com')
     const send = page.getByRole('button', { name: 'Send sign-in code' })
+    const before = provider.otpRequests
     await send.click()
     await page.waitForTimeout(300)
-    await check('while the code is requested, the button is busy and disabled', await send.getAttribute('aria-busy') === 'true' && await send.isDisabled())
+    await check('while the code is requested, the button is busy and unavailable, keeps focus, and progress is spoken', await send.getAttribute('aria-busy') === 'true' && await send.getAttribute('aria-disabled') === 'true' &&
+      await send.evaluate((el) => el === document.activeElement) && (await page.locator('.login-card [role="status"].sr-only').innerText()) === 'Sending your code…')
+    // A second press, Enter in the field and a third press while busy.
+    await send.click({ force: true })
+    await email.press('Enter')
+    await send.click({ force: true })
     const code = page.getByRole('textbox', { name: 'Six-digit code' })
     await code.waitFor()
     await check('code step: the status is announced and focus moves to the code field', await page.getByRole('status').getByText('If this address can sign in, a six-digit code has been emailed to it.').isVisible() &&
       await page.evaluate(() => document.activeElement?.id) === 'auth-code' && await page.getByText('buyer@example.com').isVisible())
     await check('login asks for a code without creating an account', provider.lastOtp?.email === 'buyer@example.com' && provider.lastOtp?.create_user === false)
+    await check('a busy form sent the request once, however often it was pressed', provider.otpRequests - before === 1, `${provider.otpRequests - before} requests`)
     await check('the code field is a one-time-code, numeric field', await code.getAttribute('autocomplete') === 'one-time-code' && await code.getAttribute('inputmode') === 'numeric')
     await check('390px code step fits the width', await noOverflow(page))
 
@@ -644,7 +666,8 @@ try {
     const verify = page.getByRole('button', { name: 'Verify and continue' })
     await verify.click()
     await page.waitForTimeout(300)
-    await check('while the code is verified, the button is busy and disabled', await verify.getAttribute('aria-busy') === 'true' && await verify.isDisabled())
+    await check('while the code is verified, the button is busy and unavailable and keeps focus', await verify.getAttribute('aria-busy') === 'true' && await verify.getAttribute('aria-disabled') === 'true' &&
+      await verify.evaluate((el) => el === document.activeElement))
     await page.waitForURL('**/account')
     await check('the right code signs in and returns to the requested page', new URL(page.url()).pathname === '/account' && await page.getByText(USER.email).isVisible())
     await page.close()
@@ -661,13 +684,174 @@ try {
     await fresh.getByRole('button', { name: 'Create account with email' }).click()
     await fresh.getByRole('textbox', { name: 'Six-digit code' }).waitFor()
     await check('register asks the provider to create the account', provider.lastOtp?.create_user === true)
-    await fresh.getByRole('button', { name: 'Use another email or request a new code' }).click()
+    await fresh.getByRole('link', { name: 'Change email' }).click()
     await fresh.getByRole('textbox', { name: 'Email address' }).waitFor()
-    await check('"Use another email" returns to a fresh email step', await fresh.getByRole('textbox', { name: 'Six-digit code' }).count() === 0)
+    await check('"Change email" returns to the email step with the address kept and focused', await fresh.getByRole('textbox', { name: 'Six-digit code' }).count() === 0 &&
+      await fresh.getByRole('textbox', { name: 'Email address' }).inputValue() === 'new.buyer@example.com' && await fresh.evaluate(() => document.activeElement?.id) === 'auth-email')
     await fresh.goto(`${BASE}/login?error=google`)
-    await check('a failed Google sign-in is explained, with email still offered', await fresh.getByRole('alert').getByText('Google sign-in was cancelled or could not be completed. You can try again or use email.').isVisible() &&
+    await check('a failed Google sign-in is explained, with email still offered', await fresh.getByRole('alert').getByText('Google sign-in could not be completed. You can try again or use your email.').isVisible() &&
       await fresh.getByRole('textbox', { name: 'Email address' }).isVisible())
+    await fresh.goto(`${BASE}/login?error=google-cancelled`)
+    await check('a cancelled Google sign-in is told apart from a failure', await fresh.getByRole('alert').getByText('Google sign-in was cancelled. You can try again or use your email.').isVisible())
+    await fresh.goto(`${BASE}/login?error=%3Cb%3Eraw%3C%2Fb%3E`)
+    // Inside the card: Next's own route announcer is also an alert.
+    await check('an unknown error value is ignored, never echoed', await fresh.locator('.login-card').getByRole('alert').count() === 0 && !(await fresh.content()).includes('raw</b>'))
     await fresh.close()
+
+    // ── UI-07: without JavaScript, every step is a plain form post ─────
+    // The page must render meaningfully, and each step must come back in
+    // the state the server returned — including a wrong code, which before
+    // UI-07 came back as an empty email step with no error.
+    {
+      const context = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } })
+      const nojs = await context.newPage()
+      const requestsBefore = provider.otpRequests
+      await nojs.goto(`${BASE}/login?next=%2Faccount`)
+      await check('no JS: the form renders with its label, hint and Google link; the scene is drawn', await nojs.getByRole('heading', { level: 1, name: 'Log in' }).isVisible() &&
+        await nojs.getByText('Email address', { exact: true }).isVisible() && await nojs.getByText('We’ll email you a six-digit code to sign in.').isVisible() &&
+        await nojs.getByRole('link', { name: 'Continue with Google' }).isVisible() && await nojs.locator('.login-art svg.wh-scene').isVisible())
+      await nojs.fill('#auth-email', 'not-an-email')
+      await nojs.click('button[value="request"]')
+      await nojs.waitForLoadState('load')
+      await check('no JS: the server rejects a malformed address beside the field, keeps it, and focuses it', await nojs.locator('#auth-email-error').innerText() === 'Enter a valid email address, like name@example.com.' &&
+        await nojs.inputValue('#auth-email') === 'not-an-email' && await nojs.evaluate(() => document.activeElement?.id) === 'auth-email' && provider.otpRequests === requestsBefore)
+      await nojs.fill('#auth-email', 'buyer@example.com')
+      await nojs.click('button[value="request"]')
+      await nojs.waitForLoadState('load')
+      await check('no JS: a requested code opens the code step, announced, with focus in the code field', await nojs.getByRole('status').getByText('If this address can sign in, a six-digit code has been emailed to it.').isVisible() &&
+        await nojs.evaluate(() => document.activeElement?.id) === 'auth-code')
+      await nojs.fill('#auth-code', '000000')
+      await nojs.click('button[value="verify"]')
+      await nojs.waitForLoadState('load')
+      await check('no JS: a wrong code stays on the code step, with the error beside the field and focus on it', await nojs.locator('#auth-code-error').innerText() === 'That code is invalid or expired. Check your email, or send a new code.' &&
+        await nojs.locator('#auth-code').getAttribute('aria-invalid') === 'true' && await nojs.evaluate(() => document.activeElement?.id) === 'auth-code' && await nojs.getByText('buyer@example.com').isVisible())
+      await nojs.click('button[value="resend"]')
+      await nojs.waitForLoadState('load')
+      await check('no JS: "Send a new code" asks again for the same address and says so', provider.lastOtp?.email === 'buyer@example.com' &&
+        await nojs.getByRole('status').getByText('If this address can sign in, a new six-digit code has been emailed to it. Use the newest code.').isVisible())
+      await nojs.fill('#auth-code', '123 456')
+      await nojs.click('button[value="verify"]')
+      await nojs.waitForURL('**/account')
+      await check('no JS: the right code — pasted with a space — signs in and returns to the requested page', new URL(nojs.url()).pathname === '/account')
+      await context.close()
+    }
+
+    // ── UI-07: keyboard only, the whole flow ───────────────────────────
+    {
+      const page = await browser.newPage({ viewport: { width: 1280, height: 900 } })
+      await page.goto(`${BASE}/login?next=%2Faccount`)
+      const stops = []
+      for (let i = 0; i < 40; i++) {
+        await page.keyboard.press('Tab')
+        stops.push(await page.evaluate(() => ({ inScene: Boolean(document.activeElement?.closest('.login-art')), id: document.activeElement?.id, body: document.activeElement === document.body })))
+      }
+      await check('Tab never enters the decorative scene, and nothing in it can take focus', stops.every((s) => !s.inScene) &&
+        await page.locator('.login-art :is(a, button, input, select, textarea, [tabindex]:not([tabindex="-1"]))').count() === 0)
+      await page.getByRole('textbox', { name: 'Email address' }).focus()
+      await page.keyboard.type('buyer@example.com')
+      await page.keyboard.press('Enter')
+      await page.getByRole('textbox', { name: 'Six-digit code' }).waitFor()
+      await check('keyboard: Enter in the email field sends the code and lands in the code field', await page.evaluate(() => document.activeElement?.id) === 'auth-code')
+      await page.keyboard.type('000000')
+      await page.keyboard.press('Enter')
+      await page.locator('#auth-code-error').waitFor()
+      await check('keyboard: Enter submits the code; the error is read out and the code is selected to retype', await page.evaluate(() => document.activeElement?.id === 'auth-code' && document.activeElement.selectionStart === 0 && document.activeElement.selectionEnd === 6))
+      const order = []
+      for (let i = 0; i < 4; i++) {
+        await page.keyboard.press('Tab')
+        order.push(await page.evaluate(() => document.activeElement?.textContent?.trim()))
+      }
+      await check('keyboard: from the code, Tab reaches verify, then "Send a new code", then the way to register', JSON.stringify(order.slice(0, 3)) === JSON.stringify(['Verify and continue', 'Send a new code', 'Create an account']), JSON.stringify(order))
+      await page.getByRole('textbox', { name: 'Six-digit code' }).focus()
+      await page.keyboard.press('Control+A')
+      await page.keyboard.type('123456')
+      await page.keyboard.press('Enter')
+      await page.waitForURL('**/account')
+      await check('keyboard: the right code signs in', new URL(page.url()).pathname === '/account')
+      await page.close()
+    }
+
+    // ── UI-07: a lost connection keeps what was typed ──────────────────
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 } })
+      const page = await context.newPage()
+      const errors = []
+      page.on('pageerror', (e) => errors.push(e.message))
+      await page.goto(`${BASE}/login?next=%2Faccount`)
+      await page.getByRole('textbox', { name: 'Email address' }).fill('buyer@example.com')
+      await page.getByRole('button', { name: 'Send sign-in code' }).click()
+      const code = page.getByRole('textbox', { name: 'Six-digit code' })
+      await code.waitFor()
+      await code.fill('123456')
+      await context.setOffline(true)
+      await page.getByRole('button', { name: 'Verify and continue' }).click()
+      await page.getByRole('alert').getByText('You seem to be offline. Check your connection and try again — what you entered is still here.').waitFor({ timeout: 8000 })
+      await check('offline: the form says so beside itself; the page, the step and the typed code survive', await page.getByRole('heading', { level: 1, name: 'Log in' }).isVisible() &&
+        await code.inputValue() === '123456' && await page.getByText('buyer@example.com').isVisible() && errors.length === 0, errors.join('; '))
+      await check('offline: the verify button is ready again for the retry', await page.getByRole('button', { name: 'Verify and continue' }).getAttribute('aria-busy') === null)
+      await context.setOffline(false)
+      await page.getByRole('button', { name: 'Verify and continue' }).click()
+      await page.waitForURL('**/account')
+      await check('back online, the same code signs in', new URL(page.url()).pathname === '/account')
+      await context.close()
+    }
+
+    // ── UI-07: Google button ───────────────────────────────────────────
+    {
+      const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
+      await page.goto(`${BASE}/login?next=%2Faccount`)
+      const google = page.getByRole('link', { name: 'Continue with Google', exact: true })
+      const box = await google.boundingBox()
+      await google.focus()
+      const ring = await google.evaluate((el) => { const s = getComputedStyle(el); return s.outlineStyle !== 'none' && parseFloat(s.outlineWidth) >= 2 })
+      await check(`Google: one accessible name, ${Math.round(box.height)}px tall, full width, a visible focus ring`, box.height >= 44 && box.width >= 300 && ring)
+      let starts = 0
+      page.on('request', (r) => { if (r.url().includes('/api/auth/google/start')) starts++ })
+      // A start that never leaves the page (204 cancels the navigation) —
+      // what the visitor sees when they press Stop — so the busy state can
+      // be read in the same document.
+      await page.route('**/api/auth/google/start**', (route) => route.fulfill({ status: 204 }))
+      await google.click({ noWaitAfter: true })
+      await page.waitForTimeout(300)
+      await check('Google: once pressed it shows it is working and refuses a second press', await google.getAttribute('aria-busy') === 'true' && await google.getAttribute('aria-disabled') === 'true')
+      await google.click({ force: true, noWaitAfter: true })
+      await page.waitForTimeout(500)
+      await check('Google: two presses start one sign-in', starts === 1, `${starts} starts`)
+      await page.waitForTimeout(10_000)
+      await check('Google: a sign-in that never left re-arms the button for a retry', await google.getAttribute('aria-busy') === null)
+      await page.close()
+    }
+
+    // ── UI-07: touch targets and widths, both steps ────────────────────
+    for (const width of [320, 360, 375, 390, 412, 430, 768, 1280]) {
+      const page = await browser.newPage({ viewport: { width, height: 900 }, hasTouch: width < 768, isMobile: width < 768 })
+      await page.goto(`${BASE}/login?next=%2Faccount`)
+      const targets = async () => page.evaluate(() => [...document.querySelectorAll('.login-card :is(a, button, input:not([type="hidden"]))')].map((el) => {
+        // elementFromPoint sees only the viewport.
+        el.scrollIntoView({ block: 'center' })
+        const r = el.getBoundingClientRect()
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2
+        // The corners of a 44px square around the centre must land on the
+        // control (UI-05's hit-test: Chrome follows border-radius).
+        const hit = [[-21, -21], [21, -21], [-21, 21], [21, 21]].every(([dx, dy]) => {
+          const at = document.elementFromPoint(cx + dx, cy + dy)
+          return at === el || el.contains(at)
+        })
+        return { name: el.getAttribute('aria-label') || el.textContent?.trim() || el.id, hit }
+      }).filter((t) => !t.hit))
+      const emailStep = await targets()
+      await page.getByRole('textbox', { name: 'Email address' }).fill('buyer@example.com')
+      await page.getByRole('button', { name: 'Send sign-in code' }).click()
+      await page.getByRole('textbox', { name: 'Six-digit code' }).waitFor()
+      await page.getByRole('textbox', { name: 'Six-digit code' }).fill('12')
+      await page.getByRole('button', { name: 'Verify and continue' }).click()
+      await page.locator('#auth-code-error').waitFor()
+      const codeStep = await targets()
+      await check(`${width}px every sign-in control is a 44px target, on both steps`, emailStep.length === 0 && codeStep.length === 0, JSON.stringify([...emailStep, ...codeStep]))
+      await check(`${width}px code step with an error: no horizontal overflow, the error wraps inside the card`, await noOverflow(page) &&
+        await page.evaluate(() => { const card = document.querySelector('.login-card').getBoundingClientRect(); const e = document.querySelector('#auth-code-error').getBoundingClientRect(); return e.right <= card.right && e.left >= card.left }))
+      await page.close()
+    }
   }
 } finally {
   await browser.close()
