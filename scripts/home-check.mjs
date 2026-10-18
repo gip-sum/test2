@@ -164,7 +164,9 @@ try {
   await check('Search opens the results with exactly those filters',
     url.searchParams.get('type') === 'APARTMENT' && url.searchParams.get('bhk') === '2' && url.searchParams.get('pmin') === '5000000' && url.searchParams.get('pmax') === '7500000' && [...url.searchParams.keys()].length === 4, url.search)
   await page.locator('h1 + p').first().waitFor()
-  await check('the results page shows them as its own filters', (await page.getByRole('button', { name: /^Remove filter/ }).count()) >= 3)
+  // On the results page a chip's remove control is a link to the URL without
+  // that filter (UI-06), so it works without JavaScript.
+  await check('the results page shows them as its own filters', (await page.getByRole('link', { name: /^Remove filter/ }).count()) >= 3)
 
   // Switching intent keeps type and bedrooms, drops a purchase budget, and
   // the sheet's own button is a second way to the results.

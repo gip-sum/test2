@@ -147,7 +147,7 @@ for (const route of ROUTES) {
           'filter rail': bg(q('aside[aria-label="Filters"]')),
           'rail facet row': bg(q('aside[aria-label="Filters"] button[aria-pressed]')),
           'rail range input': bg(q('aside[aria-label="Filters"] input')),
-          'active filter chip': bg(q('button[aria-label^="Remove filter"]')?.parentElement),
+          'active filter chip': bg(q('a[aria-label^="Remove filter"]')?.parentElement),
           'sort select': bg(q('select[aria-label="Sort results"]')),
           'pagination link': bg(q('nav[aria-label="Pagination"] a:not([aria-current])')),
           'zero-result panel': bg(q('section[aria-labelledby="zero-results"]')),

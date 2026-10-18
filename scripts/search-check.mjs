@@ -61,7 +61,7 @@ const total = async () => {
 /** The active filters, read the way a screen reader would announce them. */
 const chipLabels = () =>
   p
-    .locator('button[aria-label^="Remove filter"]')
+    .locator('a[aria-label^="Remove filter"]')
     .evaluateAll((els) => els.map((e) => e.getAttribute('aria-label').replace('Remove filter: ', '')))
 
 console.log('\n1. Normal search')
@@ -90,7 +90,7 @@ check('every filter shows a chip', (await chipLabels()).length >= 5, (await chip
 console.log('\n4 & 5. Applying and removing filters via chips')
 const before = await total()
 const firstChip = (await chipLabels())[0]
-await p.locator('button[aria-label^="Remove filter"]').first().click()
+await p.locator('a[aria-label^="Remove filter"]').first().click()
 await p.waitForFunction(() => {
   const el = document.querySelector('h1 + p')
   return el && !el.textContent.includes('Updating')
@@ -256,7 +256,7 @@ for (const width of [390, 412, 768, 1280]) {
     })(),
     filterBtn: [...document.querySelectorAll('button')].some(
       (b) => /^Filters/.test(b.textContent.trim()) && b.getBoundingClientRect().height > 0),
-    chips: document.querySelectorAll('button[aria-label^="Remove filter"]').length,
+    chips: document.querySelectorAll('a[aria-label^="Remove filter"]').length,
   }))
   check(`@${width} no horizontal overflow`, m.scroll === m.client, `${m.scroll} vs ${m.client}`)
   check(`@${width} ${width >= 1024 ? 'rail shown' : 'rail hidden'}`, width >= 1024 ? m.rail : !m.rail)

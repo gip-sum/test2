@@ -1,5 +1,6 @@
 // UI-05 core components in the browser: the Kokonut-derived SmoothTabs
-// (Buy / Rent), the 44px touch targets, and the migrated Buttons. Reduced
+// (Buy / Rent), the 44px touch targets, and the migrated Buttons. UI-06:
+// search without JavaScript, one responsive card per result, card focus. Reduced
 // motion for the tabs is in motion-check. Every assertion reads geometry,
 // hit-testing or ARIA state; nothing trusts a screenshot.
 import { chromium } from 'playwright-core'
@@ -114,7 +115,8 @@ try {
   // ── Touch targets ─────────────────────────────────────────────────────
   for (const width of [320, 390]) {
     const page = await open('/buy/kolkata?bhk=2,3&type=APARTMENT', { width, touch: true })
-    const removes = page.getByRole('button', { name: /^Remove filter:/ })
+    // Links on the results page (UI-06): removing a filter is navigation.
+    const removes = page.getByRole('link', { name: /^Remove filter:/ })
     await removes.first().waitFor()
     const chips = await removes.evaluateAll((els) => els.length)
     for (let i = 0; i < chips; i++) {
@@ -122,7 +124,8 @@ try {
       check(`${width}: filter-chip remove button ${i + 1} is a 44px target`, isTarget(t), JSON.stringify(t))
     }
     check(`${width}: chips themselves stay 32px tall`, (await removes.evaluateAll((els) => els.map((e) => e.parentElement.getBoundingClientRect().height))).every((h) => Math.abs(h - 32) < 0.5))
-    const clear = page.getByRole('button', { name: 'Clear all', exact: true }).first()
+    // A link beside the chips (UI-06: it navigates to the unfiltered URL).
+    const clear = page.getByRole('link', { name: 'Clear all', exact: true }).first()
     const ct = await target(clear)
     check(`${width}: Clear all is a 44px-tall target`, ct.h >= 43.5 && ct.hits >= 3, JSON.stringify(ct))
     await page.getByRole('button', { name: /^Filters/ }).first().click()
@@ -176,6 +179,63 @@ try {
         await page.context().close()
       }
     }
+  }
+
+  // ── Search without JavaScript (UI-06) ────────────────────────────────
+  {
+    const page = await open('/buy/kolkata?bhk=2,3', { width: 390, js: false })
+    check('no JavaScript: the search page shows its heading and results, not the skeleton', await page.locator('h1').first().isVisible() &&
+      !(await page.locator('[data-search-fallback]').isVisible()) && await page.locator('article.property-card:visible').count() > 0)
+    const before = await page.locator('article.property-card:visible').count()
+    await page.getByRole('link', { name: 'Remove filter: 3 BHK' }).click()
+    await page.waitForLoadState('load')
+    check('no JavaScript: removing a filter chip navigates to the URL without it', new URL(page.url()).search === '?bhk=2' && await page.locator('article.property-card:visible').count() !== before, page.url())
+    await page.locator('select[aria-label="Sort results"]').selectOption('price_asc')
+    await page.getByRole('button', { name: 'Sort', exact: true }).click()
+    await page.waitForLoadState('load')
+    check('no JavaScript: Sort submits the current search with the new order', new URL(page.url()).search === '?bhk=2&sort=price_asc' && await page.locator('select[aria-label="Sort results"]').inputValue() === 'price_asc', page.url())
+    await page.goto(base + '/buy/kolkata', { waitUntil: 'load' })
+    await page.getByRole('navigation', { name: 'Pagination' }).getByRole('link').last().click()
+    await page.waitForLoadState('load')
+    check('no JavaScript: pagination links work', new URL(page.url()).searchParams.get('page') === '2' && await page.locator('article.property-card:visible').count() > 0, page.url())
+    await page.context().close()
+  }
+  {
+    const page = await open('/buy/kolkata', { width: 390 })
+    check('with JavaScript the Sort button does not exist (the select applies on change)', await page.getByRole('button', { name: 'Sort', exact: true }).count() === 0)
+    await page.context().close()
+  }
+
+  // ── Results: one card per listing, responsive (UI-06) ──────────────────
+  for (const width of WIDTHS) {
+    const page = await open('/buy/kolkata', { width })
+    await page.waitForFunction(() => document.querySelector('article.property-card')?.getBoundingClientRect().width > 0)
+    const cards = await page.locator('article.property-card').evaluateAll((els) => ({
+      all: els.length,
+      visible: els.filter((e) => e.getBoundingClientRect().width > 0).length,
+      unique: new Set(els.map((e) => e.querySelector('h3 a').getAttribute('href'))).size,
+      direction: [...new Set(els.map((e) => getComputedStyle(e).flexDirection))],
+    }))
+    check(`${width}: every result is rendered once, and visible`, cards.all === cards.unique && cards.all === cards.visible, JSON.stringify(cards))
+    check(`${width}: the card is ${width < 768 ? 'horizontal' : 'vertical'}`, cards.direction.length === 1 && cards.direction[0] === (width < 768 ? 'row' : 'column'), JSON.stringify(cards))
+    const save = await target(page.locator('article.property-card').first().getByRole('button'))
+    check(`${width}: the card's save heart is a 44px target`, isTarget(save), JSON.stringify(save))
+    check(`${width}: no horizontal overflow on the results page`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1))
+    await page.context().close()
+  }
+  {
+    const page = await open('/buy/kolkata', { width: 1280 })
+    const card = page.locator('article.property-card').first()
+    const ring = () => card.evaluate((el) => getComputedStyle(el).outlineStyle)
+    // After hydration (which would move focus), and a key press first so the
+    // programmatic focus counts as keyboard focus.
+    await page.waitForFunction(() => document.querySelector('[data-enter]'))
+    await page.keyboard.press('Shift')
+    await card.locator('h3 a').focus()
+    check('the card draws its focus ring when its link has keyboard focus', await ring() === 'solid', await ring())
+    await page.keyboard.press('Tab')
+    check('…and focus moves to its save heart next, which lights only itself', await card.getByRole('button').evaluate((el) => el === document.activeElement) && await ring() === 'none', await ring())
+    await page.context().close()
   }
 
   check('no page errors', errors.length === 0, errors.join('\n'))

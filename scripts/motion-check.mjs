@@ -8,6 +8,8 @@
 //   Nested sheets  Escape during a child's exit reaches the parent
 //   Lightbox       fade in and out, focus in and back
 //   Tabs           indicator glides after a user change only (UI-05)
+//   Results        enter after a filter change, never on server render (UI-06)
+//   Gallery        a new photo fades into the frame; the old one never lingers
 //   Property card  no hover lift on touch (Android stuck hover), press
 //                  feedback, nothing left transformed after Back; lift kept
 //                  for a real mouse
@@ -244,6 +246,64 @@ try {
     await page.context().close()
   }
 
+  // ── Results entrance (UI-06) ───────────────────────────────────────────
+  // Server-rendered results never animate; results that arrive after a
+  // filter change fade in, staggered and capped; the new chip arrives too.
+  {
+    const page = await open(SEARCH, { width: 1280 })
+    await page.waitForFunction(() => document.querySelector('[data-enter]'))
+    check('entrance: server-rendered results do not animate', await page.evaluate(() => [...document.querySelectorAll('.results-list > li')].every((li) => li.getAnimations().length === 0 && getComputedStyle(li).opacity === '1')))
+    await page.evaluate(() => {
+      window.__arrived = []
+      new MutationObserver((records) => {
+        for (const r of records) for (const n of r.addedNodes) {
+          if (n.nodeType !== 1) continue
+          const found = n.matches('.results-list > li, .active-filters > .chip-enter') ? [n] : [...n.querySelectorAll('.results-list > li, .active-filters > .chip-enter')]
+          for (const el of found) requestAnimationFrame(() => window.__arrived.push({ chip: el.tagName === 'SPAN', timing: el.getAnimations().map((a) => ({ p: a.transitionProperty, d: a.effect.getTiming().duration, delay: a.effect.getTiming().delay })) }))
+        }
+      }).observe(document.body, { childList: true, subtree: true })
+    })
+    await page.locator('aside[aria-label="Filters"] button[aria-pressed]:has-text("2 BHK")').first().click()
+    await page.waitForURL('**bhk=2**')
+    await page.waitForTimeout(500)
+    const arrived = await page.evaluate(() => window.__arrived)
+    const items = arrived.filter((a) => !a.chip), chips = arrived.filter((a) => a.chip)
+    check('entrance: new results fade in for 200ms', items.length > 0 && items.every((a) => a.timing.some((t) => t.p === 'opacity' && t.d === 200)), JSON.stringify(items.slice(0, 3)))
+    check('entrance: the stagger is capped at 180ms', items.every((a) => a.timing.every((t) => t.delay <= 180)), JSON.stringify(items.map((a) => a.timing[0]?.delay)))
+    check('entrance: the new filter chip arrives with a short fade', chips.length === 1 && chips[0].timing.some((t) => t.p === 'opacity'), JSON.stringify(chips))
+    await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.effect?.getTiming().iterations !== Infinity).map((a) => a.finished)))
+    check('entrance: every result ends fully opaque and in place', await page.evaluate(() => [...document.querySelectorAll('.results-list > li')].every((li) => getComputedStyle(li).opacity === '1' && getComputedStyle(li).transform === 'none')))
+    await page.context().close()
+  }
+
+  // ── Gallery photo change (UI-06) ───────────────────────────────────────
+  // With photos held back, Next must not leave the previous photo on screen
+  // under a counter that already names the next one.
+  {
+    // The first listing in the results with more than one photo.
+    const html = await (await fetch(base + SEARCH)).text()
+    const hrefs = [...new Set([...html.matchAll(/href="(\/property\/[^"]+)"/g)].map((m) => m[1]))]
+    let page
+    for (const href of hrefs) {
+      page = await open(href, { width: 1280 })
+      if (await page.getByRole('button', { name: 'Next photo' }).count()) break
+      await page.context().close()
+    }
+    let release
+    const held = new Promise((r) => { release = r })
+    const frame = page.getByRole('group', { name: /^Photos of/ })
+    await frame.locator('img').first().waitFor()
+    const first = await frame.locator('img').first().getAttribute('src')
+    await page.route('**/_next/image**', async (route) => { await held; await route.continue() })
+    await page.getByRole('button', { name: 'Next photo' }).click()
+    const shown = await frame.locator('img').evaluateAll((els) => els.map((e) => ({ src: e.getAttribute('src'), fade: e.dataset.fade ?? null, opacity: getComputedStyle(e).opacity })))
+    check('gallery: the previous photo leaves at once; the next waits transparent in the frame', shown.length === 1 && shown[0].src !== first && shown[0].fade === 'pending' && shown[0].opacity === '0', JSON.stringify(shown))
+    release()
+    await page.waitForFunction(() => document.querySelector('[aria-roledescription="carousel"] img')?.dataset.fade === 'in')
+    check('gallery: and fades in when it arrives', true)
+    await page.context().close()
+  }
+
   // ── Property card on touch ────────────────────────────────────────────
   {
     const page = await open(SEARCH, { context: { hasTouch: true, isMobile: true } })
@@ -413,6 +473,16 @@ try {
     check('reduced tabs: the keyboard still moves focus and selection', await list.getByRole('tab', { name: 'Buy', exact: true }).evaluate((el) => el === document.activeElement && el.getAttribute('aria-selected') === 'true'))
     check('reduced tabs: the form behind the tabs is there and usable at once', await tabsPage.getByRole('dialog', { name: 'Find your home' }).getByRole('button', { name: /^Search properties for sale/ }).isEnabled())
     await tabsPage.context().close()
+
+    // Results under reduced motion: a filter change brings results in at once.
+    const rmSearch = await open(SEARCH, { width: 1280, context: reduced })
+    await rmSearch.waitForFunction(() => document.querySelector('[data-enter]'))
+    await rmSearch.evaluate(() => { window.__moved = 0; new MutationObserver((rs) => { for (const r of rs) for (const n of r.addedNodes) if (n.nodeType === 1 && n.matches('.results-list > li')) requestAnimationFrame(() => { window.__moved += n.getAnimations().length }) }).observe(document.body, { childList: true, subtree: true }) })
+    await rmSearch.locator('aside[aria-label="Filters"] button[aria-pressed]:has-text("2 BHK")').first().click()
+    await rmSearch.waitForURL('**bhk=2**')
+    await rmSearch.waitForTimeout(400)
+    check('reduced: results that arrive after a filter change do not animate', await rmSearch.evaluate(() => window.__moved === 0 && [...document.querySelectorAll('.results-list > li')].every((li) => getComputedStyle(li).opacity === '1')))
+    await rmSearch.context().close()
 
     let release
     const held = new Promise((r) => { release = r })
