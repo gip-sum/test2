@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { AdminShell, Unreadable } from '@/components/admin/AdminShell'
 import { ListingRows } from '@/components/admin/ListingRows'
 import { Pagination } from '@/components/ui/Pagination'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { requireStaff } from '@/lib/admin/queries'
 import { moderationQueue } from '@/lib/moderation/queries'
 import { ADMIN_PAGE_SIZE, parseListingsQuery } from '@/lib/admin/model'
@@ -21,7 +22,8 @@ export default async function ModerationPage({ searchParams }: { searchParams: P
       <h2 className="font-display text-heading-3 text-ink-900">Waiting for review{result && <span className="tabular font-normal text-ink-500"> ({result.total})</span>}</h2>
       <p className="text-caption text-ink-700">Oldest submission first. Waits over 2 days are marked.</p>
     </div>
-    <div className="workspace-panel overflow-hidden rounded-lg border border-border-subtle bg-surface-000">{!result ? <div className="p-4"><Unreadable what="The queue" /></div> : result.rows.length === 0 ? <p className="workspace-empty p-6 text-body-sm text-ink-700">Nothing is waiting for review.</p> : <ListingRows rows={result.rows} queue now={now} />}</div>
+    {result?.rows.length === 0 ? <EmptyState surface="workspace" heading="h3" title="The queue is empty">Nothing is waiting for review.</EmptyState>
+    : <div className="workspace-panel overflow-hidden rounded-lg border border-border-subtle bg-surface-000">{!result ? <div className="p-4"><Unreadable what="The queue" /></div> : <ListingRows rows={result.rows} queue now={now} />}</div>}
     {result && <Pagination page={Math.min(page, pageCount)} pageCount={pageCount} hrefForPage={(p) => p > 1 ? `/admin/moderation?page=${p}` : '/admin/moderation'} />}
   </AdminShell>
 }

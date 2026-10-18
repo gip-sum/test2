@@ -15,10 +15,12 @@ import { describe, expect, it } from 'vitest'
 // navigation and menu toggles, tabs, the gallery's icon and thumbnail
 // controls, the save heart, chip and field controls, link-styled text
 // actions inside sentences and alerts, one danger outline (no variant for
-// one use), and admin screens (a later stage).
+// one use). UI-11 moved the admin review and account forms' Refresh
+// buttons onto Button; no handwritten button remains in app/admin or
+// components/admin.
 //
 // Lower the ceiling when a stage migrates more. Raising it needs a reason.
-const CEILING = 41
+const CEILING = 39
 const root = process.cwd()
 const walk = (dir: string): string[] => readdirSync(dir).flatMap((name) => {
   const path = join(dir, name)

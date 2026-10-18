@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { AdminShell, Unreadable } from '@/components/admin/AdminShell'
 import { ReviewDecision } from '@/components/admin/ReviewDecision'
+import { RestoreFocus } from '@/components/a11y/RestoreFocus'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { Gallery } from '@/components/property/Gallery'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { KeyDetails } from '@/components/property/KeyDetails'
@@ -33,7 +35,9 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
   const photos = m.media.map(photo => ({ ...photo, url: `/api/admin/moderation/${id}/photos/${photo.id}?submission=${s.id}` }))
   return <AdminShell current="moderation" title="Review submitted listing" role={role}>
     <div className="flex flex-wrap items-center justify-between gap-3"><Link href="/admin/moderation" className="inline-flex min-h-11 items-center gap-2 text-body-sm font-semibold text-ink-700 hover:text-brand-700 hover:underline underline-offset-4"><span aria-hidden="true">←</span> Back to review queue</Link>
-    <StatusBadge role="status" status={effectiveStatus(listing, now)} className="px-3 py-1.5" /></div>
+    {/* Focusable from script: a decision refreshes the page and focus returns here (UI-11). */}
+    <p id="listing-status" tabIndex={-1}><StatusBadge role="status" status={effectiveStatus(listing, now)} className="px-3 py-1.5" /></p></div>
+    <RestoreFocus token={crypto.randomUUID()} />
     <div className="mt-3 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_21rem]">
       <section className="workspace-panel min-w-0 rounded-lg border border-border-subtle bg-surface-000" aria-labelledby="submitted-heading">
         <div className="border-b border-border-subtle p-5"><h2 id="submitted-heading" className="break-words font-display text-heading-2 text-ink-900">{s.title}</h2>
@@ -52,7 +56,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
         <h3 className="mt-5 border-t border-border-subtle pt-4 text-body font-semibold text-ink-900">Description</h3><p className="mt-2 whitespace-pre-wrap break-words text-body-sm text-ink-700">{s.description || 'No description was supplied.'}</p></div>
       </section>
       <aside className="min-w-0 xl:sticky xl:top-20 xl:self-start">
-        {canDecide(review, user.id) ? <ReviewDecision key={`${s.id}:${listing.version}`} listing={id} submission={s.id} version={listing.version} /> : <div className="rounded-md border border-border-subtle p-4"><h2 className="font-display text-heading-3">Decision unavailable</h2><p className="mt-2 text-body-sm text-ink-700">{listing.owner_id === user.id ? 'Another staff member must review your listing.' : 'This copy is no longer waiting for review. Its saved decision history remains below.'}</p></div>}
+        {canDecide(review, user.id) ? <ReviewDecision key={`${s.id}:${listing.version}`} listing={id} submission={s.id} version={listing.version} /> : <EmptyState surface="workspace" title="Decision unavailable">{listing.owner_id === user.id ? 'Another staff member must review your listing.' : 'This copy is no longer waiting for review. Its saved decision history remains below.'}</EmptyState>}
         {listing.rejection_reason && <p className="mt-4 whitespace-pre-wrap break-words rounded-md bg-warn-100 p-4 text-body-sm text-ink-900"><strong>Reason for seller: </strong>{listing.rejection_reason}</p>}
         {listing.status === 'ACTIVE' && <Link href={`/listing/${id}`} className="mt-3 inline-flex min-h-11 items-center text-brand-700 underline">View public listing</Link>}
       </aside>

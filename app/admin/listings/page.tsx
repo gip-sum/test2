@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { AdminShell, Unreadable } from '@/components/admin/AdminShell'
 import { ListingRows } from '@/components/admin/ListingRows'
 import { Pagination } from '@/components/ui/Pagination'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { adminListings, adminOverview, requireStaff } from '@/lib/admin/queries'
 import { ADMIN_FILTERS, ADMIN_PAGE_SIZE, listingsHref, parseListingsQuery } from '@/lib/admin/model'
 import { cn } from '@/lib/cn'
@@ -29,7 +30,9 @@ export default async function AdminListingsPage({ searchParams }: { searchParams
       <h2 className="font-display text-heading-3 text-ink-900">{filter.key === 'all' ? 'All submitted listings' : filter.label}{result && <span className="tabular font-normal text-ink-500"> ({result.total})</span>}</h2>
       <p className="text-caption text-ink-700">{filter.key === 'review' ? 'Oldest submission first.' : 'Most recently changed first.'}</p>
     </div>
-    <div className="workspace-panel overflow-hidden rounded-lg border border-border-subtle bg-surface-000">{!result ? <div className="p-4"><Unreadable what="Listings" /></div> : result.rows.length === 0 ? <p className="workspace-empty p-6 text-body-sm text-ink-700">No listings have this status.</p> : <ListingRows rows={result.rows} queue={filter.key === 'review'} now={now} />}</div>
+    {result?.rows.length === 0 ? <EmptyState surface="workspace" heading="h3" title={query.page > 1 ? 'No listings on this page' : 'No listings here'}
+      action={filter.key !== 'all' || query.page > 1 ? <Link href={listingsHref({ status: 'all' })} className="inline-flex min-h-11 items-center text-body-sm font-semibold text-brand-700 underline underline-offset-4">Show all listings</Link> : undefined}>No listings have this status.</EmptyState>
+    : <div className="workspace-panel overflow-hidden rounded-lg border border-border-subtle bg-surface-000">{!result ? <div className="p-4"><Unreadable what="Listings" /></div> : <ListingRows rows={result.rows} queue={filter.key === 'review'} now={now} />}</div>}
     <p className="mt-3 text-caption text-ink-500">Private drafts that were never submitted are not listed.</p>
     {result && <Pagination page={Math.min(query.page, pageCount)} pageCount={pageCount} hrefForPage={(page) => listingsHref({ ...query, page })} />}
   </AdminShell>

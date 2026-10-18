@@ -2,19 +2,58 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ACCOUNT_STATUSES, SELLER_ROLES, type AccountStatus, type SellerRole } from '@/lib/users/model'
+import { afterRefresh } from '@/lib/a11y/after-refresh'
 import { Button } from '@/components/ui/Button'
+import { fieldControlClass, FormCheckbox, FormField } from '@/components/ui/FormField'
 
+type Field = 'change' | 'reason' | 'accepted'
+const FIELD_ID: Record<Field, string> = { change: 'account-status', reason: 'account-reason', accepted: 'account-confirm' }
+const statusText = (s: AccountStatus) => (s === 'ACTIVE' ? 'Active' : 'Suspended')
+const roleText = (r: string) => (r === 'OWNER' ? 'Owner' : r === 'AGENT' ? 'Agent' : r === 'BUILDER' ? 'Builder' : 'Unassigned')
+
+/**
+ * An admin's change to one account's status and seller role (Phase 23;
+ * busy and focus, UI-11).
+ *
+ * As in ReviewDecision: fields stay enabled while saving (edits are
+ * refused), the button keeps focus and refuses a second press, and pressing
+ * it with something missing marks the field and focuses it — the button no
+ * longer sits disabled without saying why.
+ *
+ * A recorded change refreshes the page; the profile's changed value
+ * (`account-status-value` or `account-role-value`) takes focus and the
+ * change is announced, because this form is remounted for the new version.
+ * A stale or missing account (409/404) locks the form until it is
+ * refreshed; Refresh account re-reads the server page in place, focus
+ * returning to this form's heading.
+ */
 export function AccountControls({ id, version, status: initialStatus, role: initialRole }: { id: string; version: number; status: AccountStatus; role: SellerRole | null }) {
   const router = useRouter(), request = useRef<string | null>(null)
   const [status, setStatus] = useState(initialStatus), [role, setRole] = useState(initialRole ?? '')
   const [reason, setReason] = useState(''), [accepted, setAccepted] = useState(false), [busy, setBusy] = useState(false)
   const [saved, setSaved] = useState(false), [error, setError] = useState(''), [conflict, setConflict] = useState(false)
+  const [problems, setProblems] = useState<Partial<Record<Field, string>>>({})
+  const locked = busy || saved || conflict
   const length = Array.from(reason.trim()).length
-  const valid = (status !== initialStatus || (role || null) !== initialRole) && length >= 5 && length <= 2000
-  const reset = () => { request.current = null; setAccepted(false); setError('') }
+  const changed = status !== initialStatus || (role || null) !== initialRole
+  const edit = (field: Field, apply: () => void) => {
+    if (locked) return
+    request.current = null; setAccepted(false); setError('')
+    setProblems((p) => { const next = { ...p }; delete next[field]; return next })
+    apply()
+  }
+
   async function submit(event: React.FormEvent) {
     event.preventDefault()
-    if (!valid || !accepted || busy || saved || conflict) return
+    if (locked) return
+    const found: Partial<Record<Field, string>> = {}
+    if (!changed) found.change = 'Choose a different status or seller role to save a change.'
+    if (length < 5) found.reason = 'Give a reason of at least 5 characters.'
+    else if (length > 2000) found.reason = 'Shorten the reason to 2,000 characters or fewer.'
+    if (!accepted) found.accepted = 'Confirm this change for this account.'
+    setProblems(found)
+    const first = (['change', 'reason', 'accepted'] as const).find((f) => found[f])
+    if (first) { document.getElementById(FIELD_ID[first])?.focus(); return }
     request.current ??= crypto.randomUUID()
     setBusy(true); setError('')
     try {
@@ -25,28 +64,44 @@ export function AccountControls({ id, version, status: initialStatus, role: init
         if (response.status === 409 || response.status === 404) setConflict(true)
         throw new Error(value.error || 'The change could not be confirmed. Retry the same change.')
       }
-      setSaved(true); router.refresh()
+      setSaved(true)
+      afterRefresh([status !== initialStatus ? 'account-status-value' : 'account-role-value', 'identity-title'],
+        `Account change recorded. Marketplace status: ${statusText(status)}. Seller role: ${roleText(role)}.`)
+      router.refresh()
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'The change could not be confirmed. Retry the same change.') }
     finally { setBusy(false) }
   }
-  return <form onSubmit={submit} aria-busy={busy} className="rounded-lg border border-border-subtle bg-surface-000 p-5">
-    <h2 className="font-display text-heading-2 text-ink-900">Manage account</h2>
-    <fieldset disabled={busy || saved || conflict} className="mt-4 space-y-4">
+
+  // A newer version remounts this form (its key); if the version is the
+  // same after all, the lock must not outlive the refresh either.
+  function refresh() {
+    setConflict(false); setSaved(false); setError(''); request.current = null; setAccepted(false)
+    afterRefresh(['manage-account-heading', 'identity-title'])
+    router.refresh()
+  }
+
+  return <form onSubmit={submit} noValidate aria-busy={busy} className="rounded-lg border border-border-subtle bg-surface-000 p-5">
+    <h2 id="manage-account-heading" tabIndex={-1} className="font-display text-heading-2 text-ink-900">Manage account</h2>
+    <fieldset aria-disabled={locked || undefined} className="mt-4 min-w-0 space-y-4">
       <legend className="sr-only">Account change</legend>
-      <div><label htmlFor="account-status" className="block text-label font-semibold">Marketplace status</label>
-        <select id="account-status" value={status} onChange={e => { reset(); setStatus(e.target.value as AccountStatus) }} className="mt-2 min-h-11 w-full rounded-md border border-border-strong bg-surface-000 px-3 text-ink-900">{ACCOUNT_STATUSES.map(s => <option key={s} value={s}>{s === 'ACTIVE' ? 'Active' : 'Suspended'}</option>)}</select>
-        <p className="mt-2 text-body-sm text-ink-700">Suspension blocks protected marketplace actions immediately, including existing sessions. Provider sign-in and already published listings remain available. Restoring access does not verify the account.</p></div>
-      <div><label htmlFor="seller-role" className="block text-label font-semibold">Assigned seller role</label>
-        <select id="seller-role" value={role} onChange={e => { reset(); setRole(e.target.value) }} className="mt-2 min-h-11 w-full rounded-md border border-border-strong bg-surface-000 px-3 text-ink-900"><option value="">Unassigned</option>{SELLER_ROLES.map(r => <option key={r} value={r}>{r === 'OWNER' ? 'Owner' : r === 'AGENT' ? 'Agent' : 'Builder'}</option>)}</select>
-        <p className="mt-2 text-body-sm text-ink-700">An administrative classification. It grants no staff access or verification and does not change the seller type recorded on a listing.</p></div>
-      <div><label htmlFor="account-reason" className="block text-label font-semibold">Reason (required)</label>
-        <textarea id="account-reason" rows={4} value={reason} onChange={e => { reset(); setReason(e.target.value) }} aria-describedby="account-reason-help" className="mt-2 w-full rounded-md border border-border-strong bg-surface-000 p-3 text-ink-900" />
-        <p id="account-reason-help" className="mt-1 text-body-sm text-ink-700">5–2,000 characters. Recorded in the private admin history. {length}/2,000</p></div>
-      <label className="flex min-h-11 items-center gap-3 text-body-sm text-ink-900"><input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)} className="size-5 shrink-0 accent-brand-600" />I confirm this change for this account.</label>
+      <FormField id={FIELD_ID.change} label="Marketplace status" error={problems.change}
+        hint="Suspension blocks protected marketplace actions immediately, including existing sessions. Provider sign-in and already published listings remain available. Restoring access does not verify the account.">
+        {(control) => <select {...control} value={status} onChange={(e) => edit('change', () => setStatus(e.target.value as AccountStatus))} className={fieldControlClass}>{ACCOUNT_STATUSES.map((s) => <option key={s} value={s}>{statusText(s)}</option>)}</select>}
+      </FormField>
+      <FormField id="seller-role" label="Assigned seller role"
+        hint="An administrative classification. It grants no staff access or verification and does not change the seller type recorded on a listing.">
+        {(control) => <select {...control} value={role} onChange={(e) => edit('change', () => setRole(e.target.value))} className={fieldControlClass}><option value="">Unassigned</option>{SELLER_ROLES.map((r) => <option key={r} value={r}>{roleText(r)}</option>)}</select>}
+      </FormField>
+      <FormField id={FIELD_ID.reason} label="Reason (required)" error={problems.reason} hint={<>5–2,000 characters. Recorded in the private admin history. {length}/2,000</>}>
+        {(control) => <textarea {...control} rows={4} value={reason} onChange={(e) => edit('reason', () => setReason(e.target.value))} className={fieldControlClass} />}
+      </FormField>
+      <FormCheckbox id={FIELD_ID.accepted} label="I confirm this change for this account." error={problems.accepted}>
+        {(control) => <input {...control} type="checkbox" checked={accepted} onChange={(e) => { if (locked) return; setAccepted(e.target.checked); setProblems((p) => { const next = { ...p }; delete next.accepted; return next }) }} className="size-5 shrink-0 accent-brand-600" />}
+      </FormCheckbox>
     </fieldset>
-    <Button type="submit" disabled={!valid || !accepted || busy || saved || conflict} className="mt-4 px-5">{busy ? 'Saving change…' : 'Save account change'}</Button>
+    <Button type="submit" loading={busy} aria-disabled={saved || conflict || undefined} className="mt-4 px-5">{busy ? 'Saving change…' : 'Save account change'}</Button>
     <p role="status" className="mt-3 text-body-sm text-ink-700">{saved ? 'Account change recorded.' : busy ? 'Saving account change.' : ''}</p>
-    {error && <div role="alert" className="mt-3 text-body-sm text-danger-600"><p>{error}</p></div>}
-    {(error || saved) && <button type="button" onClick={() => window.location.reload()} className="min-h-11 font-semibold text-ink-900 underline">Refresh account</button>}
+    {error && <div role="alert" className="mt-3 text-body-sm text-danger-600"><p>{error}</p>
+      <Button type="button" variant="secondaryBrand" className="mt-2 px-3" onClick={refresh}>Refresh account</Button></div>}
   </form>
 }
