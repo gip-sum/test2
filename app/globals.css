@@ -73,6 +73,11 @@
      chart step is validated against the chart surface for lightness band
      and contrast (dataviz validate_palette.js), and the dark step differs. */
   --color-chart-1: #117744;
+  /* The second series (enquiries beside views, UI-10). A blue, not the EMI
+     ochre: the ochre is under 3:1 on white, and darkening it fails the CVD
+     check against chart-1. Validated: CVD ΔE 20.3, normal ΔE 22.3, both
+     over 3:1. */
+  --color-chart-2: #3d68c4;
 
   /* ---- Supply: the SELLER's action. Orange, a different hue on purpose.
      TWO steps because one orange cannot do both jobs: 600 is bright
@@ -294,6 +299,7 @@
   --color-brand-100: #123522;
   --color-on-brand: #064e3b;
   --color-chart-1: #34a96b;
+  --color-chart-2: #5a86dc;
   --color-supply-600: #f59b55;
   --color-supply-700: #f9b782;
   --color-supply-100: #3a2210;
@@ -1655,6 +1661,13 @@ img[data-fade='in'] { opacity: 1; transition: opacity var(--duration-base) var(-
 .workspace-tabs ul { display: flex; flex-wrap: wrap; gap: 4px 16px; }
 .workspace-tabs a { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; border-bottom: 2px solid transparent; border-radius: 0; padding: 8px 2px; font-size: var(--text-body-sm); color: var(--color-ink-700); }
 .workspace-tabs a[aria-current='page'] { border-bottom-color: var(--color-brand-600); color: var(--color-brand-700); font-weight: 600; }
+/* Seller analytics (UI-10): while another period loads, the figures dim
+   and keep their place, as search results do; nothing blanks or jumps. */
+.analytics-body { min-width: 0; transition: opacity var(--duration-base) var(--ease-standard); }
+main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events: none; }
+/* A day whose views were not counted: a hatched band, not an empty one, so
+   it cannot be read as a day of zero views, in colour, greyscale or print. */
+.chart-untracked { background: repeating-linear-gradient(135deg, var(--color-neutral-100) 0 4px, var(--color-border-subtle) 4px 5px); }
 .workspace-summary { display: flex; min-width: 0; flex-wrap: wrap; border: 1px solid var(--color-border-subtle); border-radius: 8px; background: var(--color-surface-000); }
 .workspace-summary > * { min-width: 0; flex: 1 1 140px; padding: 14px 18px; }
 .workspace-summary > * + * { border-left: 1px solid var(--color-border-subtle); }
