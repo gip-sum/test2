@@ -162,6 +162,11 @@ check('offers clear all with a real count', /Clear all filters/.test(await p.loc
 await go('/buy/kolkata?loc=tollygunge&bhk=1')
 const zr = await p.locator('section[aria-labelledby="zero-results"]').innerText().catch(() => '')
 check('offers per-filter relaxations when one helps', /Remove one filter|Try another locality/.test(zr), zr.split('\n').slice(0, 3).join(' / '))
+// UI-12: each way out is a link to its URL (works without JavaScript, and
+// nothing is disabled under the keyboard while the next page loads).
+const zrExits = await p.locator('section[aria-labelledby="zero-results"] a[href^="/buy/"]').count()
+const zrButtons = await p.locator('section[aria-labelledby="zero-results"] button').count()
+check('zero-result exits are links, not buttons', zrExits >= 2 && zrButtons === 0, `${zrExits} links, ${zrButtons} buttons`)
 
 console.log('\n12 & 13. Long locality and title')
 await go('/buy/kolkata?loc=uttarpara-kotrung')

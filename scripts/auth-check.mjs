@@ -22,6 +22,8 @@ const sessions = new Set()
 // the session back. Without this the simulator is laxer than the provider.
 const revokedRefreshTokens = new Set()
 let savedProfile = null
+// UI-12: profile writes counted, slowed and failed on demand.
+let profileWrites = 0, profileDelay = 0, profileFailing = false
 const savedHomes = new Set()
 let savedDelay = 0
 const mock = http.createServer(async (request, response) => {
@@ -62,6 +64,9 @@ const mock = http.createServer(async (request, response) => {
     if (!sessions.has(request.headers.authorization?.slice(7))) return send(401, {})
     if (request.method === 'GET') return send(200, savedProfile ? [savedProfile] : [])
     if (request.method === 'POST' && body.id === USER.id && url.searchParams.get('on_conflict') === 'id') {
+      profileWrites++
+      if (profileDelay) await new Promise((r) => setTimeout(r, profileDelay))
+      if (profileFailing) return send(503, {})
       savedProfile = body
       return send(201, [savedProfile])
     }
@@ -134,10 +139,57 @@ try {
   check('profile and preferences persist after reload', await page.getByRole('textbox', { name: 'Full name' }).inputValue() === 'Ananya Roy' &&
     await page.getByLabel('I am interested in').inputValue() === 'buy' &&
     await page.getByLabel('Preferred locality').inputValue() === 'new-town')
-  for (const width of [390, 412, 768, 1280]) {
+  // ── UI-12: the profile form on the shared system ─────────────────────────
+  const fullName = page.getByRole('textbox', { name: 'Full name' }), phoneBox = page.getByRole('textbox', { name: /Contact number/ }), saveButton = () => page.getByRole('button', { name: /Save changes|Saving/ })
+  check('profile fields are 16px and 48px with autofill semantics', await page.locator('form input:not([type=checkbox]):not([type=hidden]), form select').evaluateAll((els) => els.filter((e) => e.name).every((e) => parseFloat(getComputedStyle(e).fontSize) >= 16 && e.getBoundingClientRect().height >= 44))
+    && await fullName.getAttribute('autocomplete') === 'name' && await phoneBox.getAttribute('autocomplete') === 'tel' && await phoneBox.getAttribute('type') === 'tel')
+  let writes = profileWrites
+  await fullName.fill('Ananya R'); await phoneBox.fill('12ab')
+  await page.getByRole('button', { name: 'Save changes' }).click()
+  await page.waitForFunction(() => document.activeElement?.name === 'contact_phone')
+  check('an invalid number is refused before sending, marked on its field and focused', profileWrites === writes && await phoneBox.getAttribute('aria-invalid') === 'true'
+    && (await page.locator('#profile-phone-error').innerText()).includes('10 to 15 digits') && (await phoneBox.getAttribute('aria-describedby')).includes('profile-phone-error'))
+  check('what was typed stays', await fullName.inputValue() === 'Ananya R' && await phoneBox.inputValue() === '12ab')
+  await phoneBox.fill('+919876543211'); profileDelay = 700
+  await saveButton().focus(); await page.keyboard.press('Enter')
+  const busySave = page.getByRole('button', { name: 'Saving…' }); await busySave.waitFor()
+  check('the busy Save keeps focus, is unavailable but not disabled, and saving is announced', await busySave.evaluate((e) => e === document.activeElement && !e.disabled && e.getAttribute('aria-disabled') === 'true')
+    && (await page.locator('#profile-status').innerText()).includes('Saving your details'))
+  check('fields stay focusable while saving', await fullName.evaluate((e) => !e.disabled))
+  await page.keyboard.press('Enter')
+  await page.locator('#profile-status').getByText(/details have been saved/).waitFor(); profileDelay = 0
+  check('a second press while saving sent one write', profileWrites === writes + 1, String(profileWrites - writes))
+  check('a save moves focus to the announced confirmation', await page.locator('#profile-status').evaluate((e) => e === document.activeElement && e.getAttribute('role') === 'status') && savedProfile.contact_phone === '+919876543211')
+  writes = profileWrites; profileFailing = true
+  await fullName.fill('Ananya Changed')
+  await page.getByRole('button', { name: 'Save changes' }).click()
+  await page.getByRole('alert').getByText('We could not save your profile. Please try again.').waitFor()
+  check('a failed save keeps the change being made (it used to reset to the saved profile) and keeps focus on Save', await fullName.inputValue() === 'Ananya Changed' && await page.getByRole('button', { name: 'Save changes' }).evaluate((e) => e === document.activeElement) && savedProfile.full_name !== 'Ananya Changed')
+  profileFailing = false
+  await context.setOffline(true)
+  await page.getByRole('button', { name: 'Save changes' }).click()
+  await page.getByRole('alert').getByText(/Check your connection/).waitFor()
+  check('offline: explained, nothing lost, the page not replaced', await fullName.inputValue() === 'Ananya Changed' && await page.getByRole('heading', { name: 'Your details' }).isVisible())
+  await context.setOffline(false)
+  // Without JavaScript the same form posts: a problem comes back on its field with what was typed.
+  const plain = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 390, height: 844 } })
+  await plain.addCookies(await context.cookies())
+  const pp = await plain.newPage(); await pp.goto(BASE + '/account')
+  await pp.getByRole('textbox', { name: 'Full name' }).fill('No Script Name'); await pp.getByRole('textbox', { name: /Contact number/ }).fill('bad')
+  writes = profileWrites
+  await Promise.all([pp.waitForLoadState('load'), pp.getByRole('button', { name: 'Save changes' }).click()])
+  await pp.locator('#profile-phone-error').waitFor()
+  check('no JavaScript: the error returns beside its field, nothing written, answers kept', profileWrites === writes && await pp.getByRole('textbox', { name: 'Full name' }).inputValue() === 'No Script Name' && await pp.getByRole('textbox', { name: /Contact number/ }).inputValue() === 'bad')
+  await pp.getByRole('textbox', { name: /Contact number/ }).fill('+919876543210')
+  await Promise.all([pp.waitForLoadState('load'), pp.getByRole('button', { name: 'Save changes' }).click()])
+  await pp.getByText(/details have been saved/).waitFor()
+  check('no JavaScript: a valid save is written and confirmed', savedProfile.full_name === 'No Script Name')
+  await plain.close()
+  await page.reload()
+  for (const width of [320, 360, 375, 390, 412, 430, 768, 1280]) {
     await page.setViewportSize({ width, height: 844 })
-    const size = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth])
-    check(`account view fits ${width}px`, size[0] <= size[1])
+    const size = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth, [...document.querySelectorAll('main form button, main form input, main form select')].filter((c) => c.offsetHeight > 0 && c.type !== 'checkbox' && c.type !== 'hidden' && c.getBoundingClientRect().height < 44).length])
+    check(`account view fits ${width}px with 44px form controls`, size[0] <= size[1] && size[2] === 0)
   }
   const c = await context.cookies()
   check('tokens stored in HTTP-only cookies', c.some((cookie) => cookie.name === 'gb-access' && cookie.httpOnly && cookie.sameSite === 'Lax') &&
