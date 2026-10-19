@@ -17,6 +17,9 @@ async function open(width, height, path) {
   const context = await browser.newContext({ viewport: { width, height } })
   const page = await context.newPage()
   await page.goto(base + path)
+  // A results page streams behind a loading shell that has its own header
+  // (UI-15); check the page React swaps in, not the fallback.
+  await page.waitForFunction(() => !document.querySelector('[data-search-fallback]'))
   await page.locator('header.app-bar').waitFor()
   await page.evaluate(() => document.fonts.ready)
   return page

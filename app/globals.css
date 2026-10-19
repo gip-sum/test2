@@ -1843,6 +1843,10 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
    Android keeps :hover after a tap (UI-04). */
 .home-card { transition: transform var(--duration-base) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard); }
 .home-card-photo img { transition: transform var(--duration-deliberate) var(--ease-standard); }
+/* Keep the photo's fade-in (UI-04): the rule above comes later than
+   img[data-fade='in'] at the same specificity and replaced its opacity
+   transition, so card photos popped in instead of fading. */
+.home-card-photo img[data-fade='in'] { transition: opacity var(--duration-base) var(--ease-enter), transform var(--duration-deliberate) var(--ease-standard); }
 @media (hover: hover) and (pointer: fine) {
   .home-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lift); border-color: var(--color-border-strong); }
   .home-card:hover .home-card-photo img { transform: scale(1.04); }

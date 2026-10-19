@@ -93,7 +93,7 @@ const scenarios = [
       const cdp = await p.context().newCDPSession(p)
       await cdp.send('DOM.enable'); await cdp.send('CSS.enable')
       const { root } = await cdp.send('DOM.getDocument')
-      const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: '.property-card' })
+      const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: '.result-card' })
       await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: ['active'] }); await p.waitForTimeout(150)
       await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] }); await p.waitForTimeout(250)
     },
@@ -116,7 +116,7 @@ const scenarios = [
       release()
       // Ends when the first held photo has arrived and had time to fade
       // (written without data-fade so a pre-UI-04 build measures too).
-      await p.waitForFunction(() => [...document.querySelectorAll('.property-card img')].some((i) => i.complete && i.naturalWidth > 0), null, { timeout: 15000 })
+      await p.waitForFunction(() => [...document.querySelectorAll('.result-card img')].some((i) => i.complete && i.naturalWidth > 0), null, { timeout: 15000 })
       await p.waitForTimeout(400)
     },
   },
@@ -133,7 +133,7 @@ try {
         if (s.hold) await q.route('**/buy/kolkata/2-bhk**', async (route) => { const h = route.request().headers(); if (h.rsc && !h['next-router-prefetch']) await held; await route.continue() })
         if (s.holdImages) await q.route('**/_next/image**', async (route) => { await held; await route.continue() })
       })
-      if (s.holdImages) await p.waitForFunction(() => document.querySelector('.property-card img'), null, { timeout: 15000 })
+      if (s.holdImages) await p.waitForFunction(() => document.querySelector('.result-card img'), null, { timeout: 15000 })
       if (s.prepare) await s.prepare(p)
       await startFrames(p)
       await s.measure(p, release)

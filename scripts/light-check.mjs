@@ -206,13 +206,16 @@ for (const route of ROUTES) {
         inverted: {
           'footer link': onSurface(q('footer'), q('footer li a')),
           'footer legal line': onSurface(q('footer'), [...document.querySelectorAll('footer p')].at(-1)),
-          'header post': onSurface(q('.header-post'), q('.header-post')),
           'see-all count': onSurface(q('.home-rail-end a'), q('.home-rail-end a span.text-mint')),
           'see-all caption': onSurface(q('.home-rail-end a'), q('.home-rail-end a span.text-body-sm')),
           'seller text': onSurface(q('.home-seller'), q('.home-seller h2 + p')),
           'seller step': onSurface(q('.home-seller'), q('.home-seller ol span.text-body-sm')),
           'seller button': onSurface(q('.home-seller a'), q('.home-seller a')),
         },
+        // The header's Post property: forest from 640px, an outlined white
+        // pill below it, where the bottom bar also carries Sell/Rent and a
+        // filled pill outweighed the page (UI-15). 4.5:1 either way.
+        headerPost: onSurface(q('.header-post'), q('.header-post')),
         heroText: Boolean(q('.home-hero')?.contains(q('h1'))),
         colorScheme: getComputedStyle(document.documentElement).colorScheme,
       }
@@ -249,6 +252,12 @@ for (const route of ROUTES) {
       if (pair === null) continue
       const ratio = contrast(pair.surface, pair.text)
       report(name, pair.text, luminance(pair.surface) < 0.2 && ratio >= 4.5, `on ${pair.surface}: ${ratio.toFixed(2)}:1, must be a dark surface at 4.5:1`)
+    }
+    if (probes.headerPost) {
+      const { surface, text } = probes.headerPost
+      const ratio = contrast(surface, text)
+      const dark = width >= 640
+      report('header post', text, (dark ? luminance(surface) < 0.2 : luminance(surface) > 0.5) && ratio >= 4.5, `on ${surface}: ${ratio.toFixed(2)}:1, must be ${dark ? 'forest' : 'an outlined light pill'} at 4.5:1`)
     }
     if (probes.colorScheme !== 'light') {
       failures++

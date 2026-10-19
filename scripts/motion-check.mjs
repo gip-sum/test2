@@ -12,7 +12,7 @@
 //   Results        enter after a filter change, never on server render (UI-06)
 //   Gallery        a new photo fades into the frame; the old one never lingers
 //   Home card      hover lift and zoom under a fine pointer only (UI-14)
-//   Property card  no hover lift on touch (Android stuck hover), press
+//   Results card   no hover lift on touch (Android stuck hover), press
 //                  feedback, nothing left transformed after Back; lift kept
 //                  for a real mouse
 //   Skeleton       shimmer runs on a stable box (provoked by holding the
@@ -375,11 +375,11 @@ try {
     await page.context().close()
   }
 
-  // ── Property card on touch ────────────────────────────────────────────
+  // ── Results card on touch (UI-15; .property-card before) ────────────────────────────────────────────
   {
     const page = await open(SEARCH, { context: { hasTouch: true, isMobile: true } })
     check('touch: the device reports no hover', await page.evaluate(() => matchMedia('(hover: none)').matches && !matchMedia('(hover: hover) and (pointer: fine)').matches))
-    const card = page.locator('.property-card').first()
+    const card = page.locator('.result-card').first()
     await card.scrollIntoViewIfNeeded()
     const rest = await card.evaluate((el) => ({ shadow: getComputedStyle(el).boxShadow, top: el.getBoundingClientRect().top }))
     // A tap leaves :hover set on Android. Reproduce that state and require
@@ -387,7 +387,7 @@ try {
     const box = await card.boundingBox()
     await page.mouse.move(box.x + box.width / 2, box.y + 40)
     check('touch: :hover on a card applies no lift and no shadow change', await card.evaluate((el, r) => el.matches(':hover') && getComputedStyle(el).transform === 'none' && getComputedStyle(el).boxShadow === r.shadow && getComputedStyle(el.querySelector('img')).transform === 'none', rest))
-    const press = await pressedTransform(page, '.property-card')
+    const press = await pressedTransform(page, '.result-card')
     check('touch: pressing a card scales it slightly (0.985)', /^matrix\(0\.985, 0, 0, 0\.985, 0, 0\)$/.test(press.transform), JSON.stringify(press))
     check('touch: releasing the press restores the card', press.released === 'none', JSON.stringify(press))
     const href = await card.locator('a[href^="/property/"]').first().getAttribute('href')
@@ -395,9 +395,9 @@ try {
     await page.waitForURL('**' + href)
     await page.goBack()
     await page.waitForURL('**' + SEARCH)
-    await page.locator('.property-card').first().waitFor()
+    await page.locator('.result-card').first().waitFor()
     await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.transitionProperty).map((a) => a.finished)))
-    check('touch: after Back no card is left transformed or lifted', await page.locator('.property-card').evaluateAll((els, r) => els.every((el) => getComputedStyle(el).transform === 'none' && getComputedStyle(el).boxShadow === r.shadow), rest))
+    check('touch: after Back no card is left transformed or lifted', await page.locator('.result-card').evaluateAll((els, r) => els.every((el) => getComputedStyle(el).transform === 'none' && getComputedStyle(el).boxShadow === r.shadow), rest))
     await page.context().close()
   }
 
@@ -424,15 +424,17 @@ try {
     await page.context().close()
   }
 
-  // ── Property card with a mouse ────────────────────────────────────────
+  // ── Results card with a mouse ────────────────────────────────────────
   {
     const page = await open(SEARCH, { width: 1280 })
-    const card = page.locator('.property-card:visible').first()
+    const card = page.locator('.result-card:visible').first()
     await card.hover()
     await card.evaluate((el) => Promise.all([el, el.querySelector('img')].flatMap((e) => e.getAnimations()).map((a) => a.finished)))
     const hovered = await card.evaluate((el) => ({ card: getComputedStyle(el).transform, img: getComputedStyle(el.querySelector('img')).transform }))
-    check('1280: mouse hover still lifts the card 3px', hovered.card === 'matrix(1, 0, 0, 1, 0, -3)', JSON.stringify(hovered))
-    check('1280: mouse hover still zooms the photo', /^matrix\(1\.03/.test(hovered.img), JSON.stringify(hovered))
+    // The results card is in the homepage card family (UI-15): the same 4px
+    // lift and 1.04 photo zoom under a mouse.
+    check('1280: mouse hover lifts the results card 4px', hovered.card === 'matrix(1, 0, 0, 1, 0, -4)', JSON.stringify(hovered))
+    check('1280: mouse hover zooms its photo', /^matrix\(1\.04/.test(hovered.img), JSON.stringify(hovered))
     await page.context().close()
   }
 
@@ -462,7 +464,7 @@ try {
     check('skeleton: no horizontal overflow', await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1))
     release()
     await page.waitForURL('**/buy/kolkata/2-bhk')
-    await page.locator('.property-card').first().waitFor()
+    await page.locator('.result-card').first().waitFor()
     await page.context().close()
   }
 
@@ -482,7 +484,7 @@ try {
         await p.route('**/_next/image**', async (route) => { await held; await route.continue() })
       },
     })
-    const img = page.locator('.property-card img[data-fade="pending"]').first()
+    const img = page.locator('.result-card img[data-fade="pending"]').first()
     await img.waitFor({ state: 'attached' })
     check('photos: a still-loading photo is transparent in its reserved box', await img.evaluate((el) => getComputedStyle(el).opacity === '0' && el.getBoundingClientRect().height > 0))
     const handle = await img.elementHandle()
@@ -493,7 +495,11 @@ try {
       new MutationObserver((_, o) => { if (el.dataset.fade === 'in') { o.disconnect(); done() } }).observe(el, { attributes: true })
     }))
     const fade = await handle.evaluate((el) => ({ property: getComputedStyle(el).transitionProperty, duration: getComputedStyle(el).transitionDuration, timing: getComputedStyle(el).transitionTimingFunction }))
-    check('photos: when it arrives it fades in over 200ms on the enter curve', fade.property === 'opacity' && fade.duration === '0.2s' && /^cubic-bezier/.test(fade.timing), JSON.stringify(fade))
+    // The opacity entry of the transition list: a card that also zooms its
+    // photo on hover lists transform beside it (UI-14 card family).
+    const at = fade.property.split(', ').indexOf('opacity')
+    const pick = (v) => v.split(/,\s*(?![^()]*\))/)[at]
+    check('photos: when it arrives it fades in over 200ms on the enter curve', at >= 0 && pick(fade.duration) === '0.2s' && /^cubic-bezier/.test(pick(fade.timing) ?? ''), JSON.stringify(fade))
     await handle.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)))
     check('photos: and ends fully opaque', await handle.evaluate((el) => getComputedStyle(el).opacity === '1'))
     const after = await handle.boundingBox()
@@ -541,7 +547,7 @@ try {
     await page.locator('[data-sheet]').waitFor({ state: 'detached', timeout: 500 })
     await page.waitForFunction(() => /^Filters/.test(document.activeElement?.textContent?.trim() ?? ''))
     check('reduced: Escape closes at once and focus returns', true)
-    const press = await pressedTransform(page, '.property-card')
+    const press = await pressedTransform(page, '.result-card')
     check('reduced: a pressed card is not scaled', press.transform === 'none', JSON.stringify(press))
     check('reduced: every running animation or transition on the page is near-instant', await page.evaluate(() => document.getAnimations().every((a) => Number(a.effect.getTiming().duration) <= 0.01)), JSON.stringify(await page.evaluate(() => document.getAnimations().map((a) => [a.animationName ?? a.transitionProperty, a.effect.getTiming().duration]))))
     await page.context().close()

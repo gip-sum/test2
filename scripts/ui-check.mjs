@@ -192,11 +192,11 @@ try {
   {
     const page = await open('/buy/kolkata?bhk=2,3', { width: 390, js: false })
     check('no JavaScript: the search page shows its heading and results, not the skeleton', await page.locator('h1').first().isVisible() &&
-      !(await page.locator('[data-search-fallback]').isVisible()) && await page.locator('article.property-card:visible').count() > 0)
-    const before = await page.locator('article.property-card:visible').count()
+      !(await page.locator('[data-search-fallback]').isVisible()) && await page.locator('article.result-card:visible').count() > 0)
+    const before = await page.locator('article.result-card:visible').count()
     await page.getByRole('link', { name: 'Remove filter: 3 BHK' }).click()
     await page.waitForLoadState('load')
-    check('no JavaScript: removing a filter chip navigates to the URL without it', new URL(page.url()).search === '?bhk=2' && await page.locator('article.property-card:visible').count() !== before, page.url())
+    check('no JavaScript: removing a filter chip navigates to the URL without it', new URL(page.url()).search === '?bhk=2' && await page.locator('article.result-card:visible').count() !== before, page.url())
     await page.locator('select[aria-label="Sort results"]').selectOption('price_asc')
     await page.getByRole('button', { name: 'Sort', exact: true }).click()
     await page.waitForLoadState('load')
@@ -204,7 +204,7 @@ try {
     await page.goto(base + '/buy/kolkata', { waitUntil: 'load' })
     await page.getByRole('navigation', { name: 'Pagination' }).getByRole('link').last().click()
     await page.waitForLoadState('load')
-    check('no JavaScript: pagination links work', new URL(page.url()).searchParams.get('page') === '2' && await page.locator('article.property-card:visible').count() > 0, page.url())
+    check('no JavaScript: pagination links work', new URL(page.url()).searchParams.get('page') === '2' && await page.locator('article.result-card:visible').count() > 0, page.url())
     await page.context().close()
   }
   {
@@ -216,23 +216,28 @@ try {
   // ── Results: one card per listing, responsive (UI-06) ──────────────────
   for (const width of WIDTHS) {
     const page = await open('/buy/kolkata', { width })
-    await page.waitForFunction(() => document.querySelector('article.property-card')?.getBoundingClientRect().width > 0)
-    const cards = await page.locator('article.property-card').evaluateAll((els) => ({
+    await page.waitForFunction(() => document.querySelector('article.result-card')?.getBoundingClientRect().width > 0)
+    const cards = await page.locator('article.result-card').evaluateAll((els) => ({
       all: els.length,
       visible: els.filter((e) => e.getBoundingClientRect().width > 0).length,
       unique: new Set(els.map((e) => e.querySelector('h3 a').getAttribute('href'))).size,
       direction: [...new Set(els.map((e) => getComputedStyle(e).flexDirection))],
+      photo: (() => { const e = els[0]; const c = e.getBoundingClientRect(); const p = e.querySelector('.home-card-photo').getBoundingClientRect(); return { ratio: Math.round((p.width / p.height) * 100) / 100, fill: Math.round(p.width / c.width * 100) / 100, above: p.bottom <= e.querySelector('h3').getBoundingClientRect().top } })(),
     }))
     check(`${width}: every result is rendered once, and visible`, cards.all === cards.unique && cards.all === cards.visible, JSON.stringify(cards))
-    check(`${width}: the card is ${width < 768 ? 'horizontal' : 'vertical'}`, cards.direction.length === 1 && cards.direction[0] === (width < 768 ? 'row' : 'column'), JSON.stringify(cards))
-    const save = await target(page.locator('article.property-card').first().getByRole('button'))
+    // UI-15 (owner review): vertical at every width — the side-by-side phone
+    // card cut seller names and attributes short — with the photo across the
+    // card, 16:10 on a phone and 3:2 in the grid, above the facts.
+    check(`${width}: the card is vertical, its photo across the card above the facts`, cards.direction.length === 1 && cards.direction[0] === 'column' && cards.photo.fill >= 0.9 && cards.photo.above, JSON.stringify(cards))
+    check(`${width}: the photo is ${width < 768 ? '16:10' : '3:2'}`, Math.abs(cards.photo.ratio - (width < 768 ? 1.6 : 1.5)) <= 0.02, JSON.stringify(cards.photo))
+    const save = await target(page.locator('article.result-card').first().getByRole('button'))
     check(`${width}: the card's save heart is a 44px target`, isTarget(save), JSON.stringify(save))
     check(`${width}: no horizontal overflow on the results page`, await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1))
     await page.context().close()
   }
   {
     const page = await open('/buy/kolkata', { width: 1280 })
-    const card = page.locator('article.property-card').first()
+    const card = page.locator('article.result-card').first()
     const ring = () => card.evaluate((el) => getComputedStyle(el).outlineStyle)
     // After hydration (which would move focus), and a key press first so the
     // programmatic focus counts as keyboard focus.

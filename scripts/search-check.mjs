@@ -339,7 +339,46 @@ console.log('\nUI-13. Filters by keyboard: focus, 16px fields, 44px toggles')
   await sheet.waitFor({ state: 'detached' })
   await ph.waitForTimeout(100)
   check('phone: Escape closes the sheet and focus returns to Filters', await ph.evaluate(() => /^Filters/.test(document.activeElement?.textContent?.trim() ?? '')))
+
+  // UI-15: a filter that moves the URL to another path (one locality's
+  // landing page and back to ?loc=) gives the page a new route segment, so
+  // React replaces the results frame. The sheet used to close under the
+  // finger and desktop focus fell to <body>; both are put back now.
+  await ph.goto(B + '/buy/kolkata', { waitUntil: 'load' })
+  await ph.waitForFunction(() => document.querySelector('[data-enter]'), null, { timeout: 15000 })
+  await filtersButton.click()
+  await sheet.waitFor()
+  await sheet.getByRole('button', { name: /^Salt Lake/ }).click()
+  await ph.waitForURL((u) => u.pathname === '/buy/kolkata/salt-lake', { timeout: 8000 })
+  await ph.waitForFunction(() => document.activeElement?.dataset?.restore === 'sheet/Locality/Salt Lake', null, { timeout: 4000 }).catch(() => {})
+  check('phone: a filter that changes the path keeps the sheet open, focus on the same control',
+    await sheet.isVisible() && await ph.evaluate(() => document.activeElement?.dataset?.restore === 'sheet/Locality/Salt Lake' && document.activeElement.getAttribute('aria-pressed') === 'true'))
+  check('phone: the sheet put back does not replay its entrance', await ph.locator('[data-sheet]').evaluate((el) => el.hasAttribute('data-reopened') && el.getAnimations().every((a) => Number(a.effect.getTiming().duration) === 0)))
+  await sheet.getByRole('button', { name: /^New Town/ }).click()
+  await ph.waitForURL((u) => u.searchParams.get('loc')?.split(',').length === 2, { timeout: 8000 })
+  await ph.waitForTimeout(400)
+  check('phone: and back to the query form, still open and focused', await sheet.isVisible() && await ph.evaluate(() => document.activeElement?.dataset?.restore === 'sheet/Locality/New Town'))
+  await ph.keyboard.press('Escape')
+  await sheet.waitFor({ state: 'detached' })
+  await ph.waitForTimeout(100)
+  check('phone: closing the put-back sheet returns focus to Filters', await ph.evaluate(() => /^Filters/.test(document.activeElement?.textContent?.trim() ?? '')))
   await phone.close()
+
+  const deskCtx = await browser.newContext({ viewport: { width: 1280, height: 900 } })
+  const dk = await deskCtx.newPage()
+  await dk.goto(B + '/buy/kolkata', { waitUntil: 'load' })
+  await dk.waitForFunction(() => document.querySelector('[data-enter]'), null, { timeout: 15000 })
+  await dk.locator('aside[aria-label="Filters"]').getByRole('button', { name: /^Salt Lake/ }).focus()
+  await dk.keyboard.press('Enter')
+  await dk.waitForURL((u) => u.pathname === '/buy/kolkata/salt-lake', { timeout: 8000 })
+  await dk.waitForFunction(() => document.activeElement?.dataset?.restore === 'rail/Locality/Salt Lake', null, { timeout: 4000 }).catch(() => {})
+  check('desktop: a rail filter that changes the path keeps keyboard focus on it', await dk.evaluate(() => document.activeElement?.dataset?.restore === 'rail/Locality/Salt Lake'))
+  await dk.getByRole('link', { name: 'Remove filter: Salt Lake' }).focus()
+  await dk.keyboard.press('Enter')
+  await dk.waitForURL((u) => u.pathname === '/buy/kolkata', { timeout: 8000 })
+  await dk.waitForFunction(() => document.activeElement?.id === 'results-count', null, { timeout: 4000 }).catch(() => {})
+  check('desktop: removing the last chip across a path change hands focus to the result count', await dk.evaluate(() => document.activeElement?.id === 'results-count'))
+  await deskCtx.close()
   await ctx13.close()
 }
 
