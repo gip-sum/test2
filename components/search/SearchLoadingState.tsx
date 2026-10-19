@@ -1,4 +1,5 @@
-import { PropertyCardSkeleton } from '@/components/property/PropertyCardSkeleton'
+import { PageShell } from '@/components/layout/PageShell'
+import { ResultCardSkeleton } from './ResultCardSkeleton'
 import { Skeleton } from '@/components/ui/Skeleton'
 
 /**
@@ -28,35 +29,52 @@ import { Skeleton } from '@/components/ui/Skeleton'
 const NO_SCRIPT_REVEAL = '[data-search-fallback]{display:none!important}@layer theme{div[hidden][id^="S:"]{display:block!important}}'
 
 export function SearchLoadingState() {
+  // Inside the page shell (UI-15), so the header and bottom bar are there
+  // while the results stream and stay put when they arrive; it used to be a
+  // bare skeleton with no way back to the rest of the site. The fallback
+  // marker wraps the shell, so without JavaScript the whole of it gives way
+  // to the streamed page, which has its own.
   return (
-    <div data-search-fallback="" className="mx-auto max-w-[1320px] px-4 py-5 lg:px-8 lg:py-6" aria-busy>
+    <div data-search-fallback="" aria-busy>
       <noscript><style>{NO_SCRIPT_REVEAL}</style></noscript>
+      <PageShell>
       <span className="sr-only" role="status">
         Loading properties
       </span>
-      <Skeleton className="h-8 w-3/4 max-w-lg" />
-      <Skeleton className="mt-2 h-4 w-40" />
-
-      {/* Sized like the real Filters button (126px) and sort select (195px)
-          and wrapping like SearchLayout's toolbar, so on narrow phones the
-          results do not jump a row when they arrive. */}
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <Skeleton className="h-11 w-32 lg:hidden" />
-        <Skeleton className="ml-auto h-11 w-48" />
+      {/* The search band, sized like the real one (UI-15). */}
+      <div className="search-band">
+        <div className="home-container pb-5 pt-3 lg:pb-8 lg:pt-5">
+          <Skeleton className="h-9 w-full rounded-md" />
+          <div className="mt-4 flex items-center justify-between gap-3 lg:mt-6">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-9 w-32 rounded-full" />
+          </div>
+          <Skeleton className="mt-3 h-8 w-3/4 max-w-xl lg:h-11" />
+          <Skeleton className="mt-2.5 h-5 w-36" />
+        </div>
       </div>
 
-      <div className="mt-5 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-7">
-        <div className="hidden lg:block">
-          <Skeleton className="h-[32rem] w-full rounded-lg" />
-        </div>
-        <div className="min-w-0">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4 xl:grid-cols-3">
-            {Array.from({ length: 6 }, (_, i) => (
-              <PropertyCardSkeleton key={i} layout="responsive" />
-            ))}
+      <div className="home-container pb-12 pt-4 lg:pt-8">
+        <div className="lg:grid lg:grid-cols-[18.5rem_minmax(0,1fr)] lg:items-start lg:gap-8">
+          <div className="hidden lg:block">
+            <Skeleton className="h-[34rem] w-full rounded-lg" />
+          </div>
+          <div className="min-w-0">
+            {/* Filters and Sort on one row, as in SearchLayout's toolbar. */}
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-11 w-32 rounded-full lg:hidden" />
+              <Skeleton className="max-lg:hidden h-5 w-40" />
+              <Skeleton className="ml-auto h-11 min-w-0 flex-1 rounded-full lg:w-60 lg:flex-none" />
+            </div>
+            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5 lg:mt-5 xl:grid-cols-3">
+              {Array.from({ length: 6 }, (_, i) => (
+                <ResultCardSkeleton key={i} />
+              ))}
+            </div>
           </div>
         </div>
       </div>
+      </PageShell>
     </div>
   )
 }

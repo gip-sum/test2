@@ -29,19 +29,23 @@ export function Pagination({
   page,
   pageCount,
   hrefForPage,
+  variant = 'square',
 }: {
   page: number
   pageCount: number
   hrefForPage: (page: number) => string
+  /** 'pill' is the results page's (UI-15): round pages on a white bar, Previous / Next worded from 640px. */
+  variant?: 'square' | 'pill'
 }) {
   if (pageCount <= 1) return null
   const items = pageWindow(page, pageCount)
+  const pill = variant === 'pill'
 
   return (
-    <nav aria-label="Pagination" className="mt-8 flex justify-center">
-      <ul className="flex flex-wrap items-center gap-1.5">
+    <nav aria-label="Pagination" className={cn('flex justify-center', pill ? 'mt-10' : 'mt-8')}>
+      <ul className={cn('flex flex-wrap items-center gap-1.5', pill && 'search-pages')}>
         <li>
-          <Edge href={page > 1 ? hrefForPage(page - 1) : undefined} label="Previous page" glyph="M15 6l-6 6 6 6" />
+          <Edge href={page > 1 ? hrefForPage(page - 1) : undefined} label="Previous page" glyph="M15 6l-6 6 6 6" pill={pill} word="Previous" />
         </li>
         {items.map((item, i) =>
           item === 'gap' ? (
@@ -55,10 +59,13 @@ export function Pagination({
                 aria-label={`Page ${item}`}
                 aria-current={item === page ? 'page' : undefined}
                 className={cn(
-                  'grid h-11 min-w-11 place-items-center rounded-md border px-3 text-label tabular',
+                  'grid h-11 min-w-11 place-items-center border px-3 text-label tabular',
+                  pill ? 'rounded-full' : 'rounded-md',
                   item === page
                     ? 'border-brand-600 bg-brand-600 text-on-brand'
-                    : 'border-border-subtle bg-surface-000 text-ink-900 hover:border-brand-600',
+                    : pill
+                      ? 'border-transparent text-ink-900 hover:bg-brand-50 hover:text-brand-700'
+                      : 'border-border-subtle bg-surface-000 text-ink-900 hover:border-brand-600',
                 )}
               >
                 {item}
@@ -67,7 +74,7 @@ export function Pagination({
           ),
         )}
         <li>
-          <Edge href={page < pageCount ? hrefForPage(page + 1) : undefined} label="Next page" glyph="M9 6l6 6-6 6" />
+          <Edge href={page < pageCount ? hrefForPage(page + 1) : undefined} label="Next page" glyph="M9 6l6 6-6 6" pill={pill} word="Next" after />
         </li>
       </ul>
     </nav>
@@ -75,13 +82,24 @@ export function Pagination({
 }
 
 /** Disabled at the ends: rendered as a span, because a dead link is worse. */
-function Edge({ href, label, glyph }: { href?: string; label: string; glyph: string }) {
-  const shape = (
+function Edge({ href, label, glyph, pill, word, after }: { href?: string; label: string; glyph: string; pill?: boolean; word?: string; after?: boolean }) {
+  const icon = (
     <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d={glyph} />
     </svg>
   )
-  const base = 'grid size-11 place-items-center rounded-md border'
+  // The pill bar words its ends from 640px; the accessible name stays
+  // "Previous page" / "Next page" either way.
+  const shape = pill ? (
+    <>
+      {!after && icon}
+      <span aria-hidden className="max-sm:hidden">{word}</span>
+      {after && icon}
+    </>
+  ) : icon
+  const base = pill
+    ? 'inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border px-3 text-label sm:px-4'
+    : 'grid size-11 place-items-center rounded-md border'
   if (!href) {
     return (
       <span aria-hidden className={cn(base, 'border-border-subtle bg-surface-000 text-ink-500 opacity-45')}>

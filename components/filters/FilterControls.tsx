@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState, type ReactNode } from 'react'
+import { createContext, useContext, useId, useState, type ComponentProps, type ReactNode } from 'react'
 import { cn } from '@/lib/cn'
 import { ToggleChip } from '@/components/ui/ToggleChip'
 import {
@@ -88,6 +88,7 @@ export function FilterControls({ query, facets, localityNames, onChange, idPrefi
     )
 
   return (
+    <RestoreScope.Provider value={idPrefix}>
     <div className="flex flex-col">
       <Group title="Locality" defaultOpen count={query.localities.length}>
         <div className="max-h-72 overflow-y-auto pr-1">
@@ -139,15 +140,16 @@ export function FilterControls({ query, facets, localityNames, onChange, idPrefi
       <Group title="Bedrooms" defaultOpen count={query.bedrooms.length}>
         <ChipRow>
           {[1, 2, 3, 4, 5].map((n) => (
-            <ToggleChip
+            <FilterToggle
               key={n}
+              restore={`${n} BHK`}
               pressed={query.bedrooms.includes(n)}
               count={facets.bedrooms.get(n) ?? 0}
               unavailable={!facets.bedrooms.get(n) && !query.bedrooms.includes(n)}
               onToggle={() => onChange({ bedrooms: toggle(query.bedrooms, n) })}
             >
               {n} BHK
-            </ToggleChip>
+            </FilterToggle>
           ))}
         </ChipRow>
       </Group>
@@ -198,13 +200,14 @@ export function FilterControls({ query, facets, localityNames, onChange, idPrefi
       <Group title="Bathrooms" count={query.bathroomsMin != null ? 1 : 0}>
         <ChipRow>
           {[1, 2, 3, 4].map((n) => (
-            <ToggleChip
+            <FilterToggle
               key={n}
+              restore={`${n}+`}
               pressed={query.bathroomsMin === n}
               onToggle={() => onChange({ bathroomsMin: query.bathroomsMin === n ? undefined : n })}
             >
               {n}+
-            </ToggleChip>
+            </FilterToggle>
           ))}
         </ChipRow>
       </Group>
@@ -274,15 +277,16 @@ export function FilterControls({ query, facets, localityNames, onChange, idPrefi
       <Group title="Facing" count={query.facing.length}>
         <ChipRow>
           {FACING_ORDER.map((f) => (
-            <ToggleChip
+            <FilterToggle
               key={f}
+              restore={f}
               pressed={query.facing.includes(f)}
               count={facets.facing.get(f) ?? 0}
               unavailable={!facets.facing.get(f) && !query.facing.includes(f)}
               onToggle={() => onChange({ facing: toggle(query.facing, f) })}
             >
               {FACING_LABEL[f]}
-            </ToggleChip>
+            </FilterToggle>
           ))}
         </ChipRow>
       </Group>
@@ -303,13 +307,14 @@ export function FilterControls({ query, facets, localityNames, onChange, idPrefi
       <Group title="Property age" count={query.ageMax != null ? 1 : 0}>
         <ChipRow>
           {[1, 5, 10, 20].map((n) => (
-            <ToggleChip
+            <FilterToggle
               key={n}
+              restore={String(n)}
               pressed={query.ageMax === n}
               onToggle={() => onChange({ ageMax: query.ageMax === n ? undefined : n })}
             >
               {n === 1 ? 'Under 1 year' : `Up to ${n} years`}
-            </ToggleChip>
+            </FilterToggle>
           ))}
         </ChipRow>
         <p className="mt-2 text-caption text-ink-500">
@@ -373,6 +378,7 @@ export function FilterControls({ query, facets, localityNames, onChange, idPrefi
         </Rows>
       </Group>
     </div>
+    </RestoreScope.Provider>
   )
 }
 
@@ -396,9 +402,11 @@ function Group({
   defaultOpen?: boolean
   count?: number
 }) {
+  const scope = useContext(RestoreScope)
   return (
-    <details open={defaultOpen} className="border-b border-border-subtle last:border-b-0">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-2 py-3 text-label text-ink-900 marker:hidden [&::-webkit-details-marker]:hidden">
+    <GroupScope.Provider value={`${scope}/${title}`}>
+    <details open={defaultOpen} className="group/f border-b border-border-subtle last:border-b-0">
+      <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-2 py-2 text-body font-semibold text-ink-900 marker:hidden [&::-webkit-details-marker]:hidden">
         <span className="flex items-center gap-2">
           {title}
           {count ? (
@@ -407,13 +415,30 @@ function Group({
             </span>
           ) : null}
         </span>
-        <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-ink-500 transition-transform [details[open]_&]:rotate-180" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full bg-surface-100 text-ink-700 transition-colors group-hover/f:bg-brand-50 group-hover/f:text-brand-700">
+          <svg viewBox="0 0 24 24" className="size-4 transition-transform [details[open]_&]:rotate-180" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </span>
       </summary>
-      <div className="pb-4">{children}</div>
+      <div className="pb-5">{children}</div>
     </details>
+    </GroupScope.Provider>
   )
+}
+
+/**
+ * Names for putting focus back (UI-15). A filter that moves the URL to
+ * another path — /buy/kolkata to /buy/kolkata/salt-lake — remounts the
+ * results page, and the control that had focus is replaced by a new one;
+ * SearchLayout finds its successor by this key ("rail/Locality/Salt Lake").
+ */
+const RestoreScope = createContext('f')
+const GroupScope = createContext('f')
+
+function FilterToggle({ restore, ...props }: Omit<ComponentProps<typeof ToggleChip>, 'restoreKey'> & { restore: string }) {
+  const group = useContext(GroupScope)
+  return <ToggleChip {...props} restoreKey={`${group}/${restore}`} />
 }
 
 function Rows({ children }: { children: ReactNode }) {
@@ -446,24 +471,26 @@ function CheckRow({
   shape?: 'check' | 'radio'
 }) {
   const empty = count === 0 && !checked
+  const group = useContext(GroupScope)
   return (
     <li>
       <button
         type="button"
+        data-restore={`${group}/${label}`}
         aria-pressed={checked}
         // Not `disabled`: a row pressed off can come back with a zero count,
         // and disabling it under the keyboard drops focus to <body> (UI-13).
         aria-disabled={empty || undefined}
         onClick={empty ? undefined : onToggle}
         className={cn(
-          'flex min-h-11 w-full items-center gap-2.5 rounded-md px-2 text-left text-body-sm',
-          empty ? 'cursor-not-allowed text-ink-500 opacity-55' : 'text-ink-900 hover:bg-surface-100',
+          'flex min-h-11 w-full items-center gap-3 rounded-md px-2.5 text-left text-body-sm transition-colors',
+          empty ? 'cursor-not-allowed text-ink-500 opacity-55' : checked ? 'bg-brand-50 font-semibold text-brand-700' : 'text-ink-900 hover:bg-surface-100',
         )}
       >
         <span
           aria-hidden
           className={cn(
-            'grid size-5 shrink-0 place-items-center border',
+            'grid size-5 shrink-0 place-items-center border-[1.5px] bg-surface-000',
             shape === 'radio' ? 'rounded-full' : 'rounded-sm',
             checked ? 'border-brand-600 bg-brand-600 text-on-brand' : 'border-border-strong',
           )}
@@ -478,7 +505,9 @@ function CheckRow({
             ))}
         </span>
         <span className="min-w-0 flex-1 truncate">{label}</span>
-        {count != null && <span className="shrink-0 text-caption text-ink-500 tabular">{count}</span>}
+        {count != null && (
+          <span className={cn('shrink-0 rounded-full px-2 py-0.5 text-caption font-normal tabular', checked ? 'bg-surface-000 text-brand-700' : 'bg-surface-100 text-ink-500')}>{count}</span>
+        )}
       </button>
     </li>
   )
@@ -533,7 +562,7 @@ function RangeFields({
 
   return (
     <fieldset className={cn('min-w-0', hideMin ? '' : 'mt-3')}>
-      <legend className="mb-1.5 text-caption text-ink-500">{legend}</legend>
+      <legend className="mb-2 text-caption font-semibold text-ink-700">{legend}</legend>
       <div className="flex items-center gap-2">
         {!hideMin && (
           <>
@@ -546,7 +575,7 @@ function RangeFields({
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), commit())}
               placeholder="Min"
               aria-label={`${legend} — minimum`}
-              className="h-11 w-full min-w-0 rounded-md border border-border-subtle bg-surface-000 px-3 text-base text-ink-900 tabular placeholder:text-ink-500 hover:border-border-strong"
+              className="h-11 w-full min-w-0 rounded-md border border-border-subtle bg-surface-100 px-3 text-base text-ink-900 tabular placeholder:text-ink-500 hover:border-border-strong focus:bg-surface-000"
             />
             <span aria-hidden className="text-ink-500">–</span>
           </>
@@ -560,7 +589,7 @@ function RangeFields({
           onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), commit())}
           placeholder="Max"
           aria-label={`${legend} — maximum`}
-          className="h-11 w-full min-w-0 rounded-md border border-border-subtle bg-surface-000 px-3 text-base text-ink-900 tabular placeholder:text-ink-500 hover:border-border-strong"
+          className="h-11 w-full min-w-0 rounded-md border border-border-subtle bg-surface-100 px-3 text-base text-ink-900 tabular placeholder:text-ink-500 hover:border-border-strong focus:bg-surface-000"
         />
       </div>
     </fieldset>

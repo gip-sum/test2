@@ -265,3 +265,13 @@ export function AreaIcon({ className }: IconProps) {
 export function CheckIcon({ className }: IconProps) {
   return <svg {...base} className={className}><path d="M5 13l4 4L19 7" /></svg>
 }
+
+/** Bathrooms, on a results card's specification row (UI-15). */
+export function BathIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><path d="M4 12h16v2a5 5 0 01-5 5H9a5 5 0 01-5-5v-2zM6 12V6.5A2.5 2.5 0 018.5 4c1 0 1.8.6 2.2 1.4M7 19l-1 2M17 19l1 2" /></svg>
+}
+
+/** A photo count over a listing photo (UI-15). */
+export function CameraIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><path d="M4 8.5A1.5 1.5 0 015.5 7h2l1.5-2h6l1.5 2h2A1.5 1.5 0 0120 8.5v9a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 014 17.5z" /><circle cx="12" cy="13" r="3.25" /></svg>
+}

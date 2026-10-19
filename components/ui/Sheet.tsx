@@ -24,6 +24,8 @@ export function Sheet({
   footer,
   size = 'default',
   returnFocusRef,
+  reopened = false,
+  initialFocus,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -35,6 +37,14 @@ export function Sheet({
   size?: 'default' | 'wide' | 'marketplace' | 'search'
   /** Controlled openers can lose activeElement while nested focus effects mount. */
   returnFocusRef?: RefObject<HTMLElement | null>
+  /**
+   * The sheet was already open and is being put back after its page
+   * remounted (a results filter that moved the URL to another path, UI-15):
+   * it appears in place, without its entrance.
+   */
+  reopened?: boolean
+  /** Where focus starts when the sheet opens, if not its first control or [data-autofocus]. */
+  initialFocus?: () => HTMLElement | null
 }) {
   // Radix hands focus back only to its own Dialog.Trigger, and every sheet
   // here is opened by an ordinary button beside it (a controlled `open`).
@@ -104,10 +114,11 @@ export function Sheet({
             nothing about focus, Escape or the inert lock. A Motion version
             measured +16.6 KB gzip on every route, because Sheet is in the
             header menu. */}
-        <Dialog.Overlay className="sheet-overlay fixed inset-0 z-50 bg-overlay" />
+        <Dialog.Overlay data-reopened={reopened || undefined} className="sheet-overlay fixed inset-0 z-50 bg-overlay" />
         <Dialog.Content
           ref={content}
           data-sheet=""
+          data-reopened={reopened || undefined}
           aria-modal="true"
           // Radix updates its document Escape listener in an effect. A fast
           // keypress after opening a child can still reach the parent's old
@@ -119,7 +130,7 @@ export function Sheet({
           // the locality picker — marks its field `data-autofocus` and
           // opens with focus there (UI-13).
           onOpenAutoFocus={(event) => {
-            const field = content.current?.querySelector<HTMLElement>('[data-autofocus]')
+            const field = initialFocus?.() ?? content.current?.querySelector<HTMLElement>('[data-autofocus]')
             if (field) { event.preventDefault(); field.focus({ preventScroll: true }) }
           }}
           onCloseAutoFocus={(event) => {

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/Button'
+import { Button, buttonClassName } from '@/components/ui/Button'
 import { BRAND, LAUNCH_CITY } from '@/lib/brand'
 
 /**
@@ -28,13 +28,16 @@ export function SearchErrorState({
     console.error('Search failed', error)
   }, [error])
 
+  // On the search band's mint, in the 1400px frame (UI-15), so a failed
+  // search still looks like the page it replaces.
   return (
-    <div className="mx-auto max-w-[1320px] px-4 py-10 lg:px-8">
+    <div className="search-band">
+      <div className="home-container py-10 lg:py-16">
       <section
         role="alert"
-        className="mx-auto max-w-xl rounded-lg border border-border-subtle bg-surface-000 p-6 text-center shadow-e1"
+        className="mx-auto max-w-xl rounded-lg border border-border-subtle bg-surface-000 p-6 text-center shadow-e2 sm:p-8"
       >
-        <span aria-hidden className="mx-auto grid size-11 place-items-center rounded-full bg-danger-100 text-danger-600">
+        <span aria-hidden className="mx-auto grid size-12 place-items-center rounded-full bg-danger-100 text-danger-600">
           <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" aria-hidden>
             <path d="M12 8v5M12 17h.01" />
             <circle cx="12" cy="12" r="9" />
@@ -50,11 +53,13 @@ export function SearchErrorState({
         </p>
 
         <div className="mt-5 flex flex-wrap justify-center gap-2">
-          <Button variant="primary" onClick={reset}>
+          <Button variant="primary" className="rounded-full" onClick={reset}>
             Try again
           </Button>
-          <Link href={`/buy/${LAUNCH_CITY.slug}`}>
-            <Button variant="secondary">Start a new search</Button>
+          {/* A link styled as a button: a <button> inside a link is two
+              nested controls, announced twice and tabbed to once. */}
+          <Link href={`/buy/${LAUNCH_CITY.slug}`} className={buttonClassName({ variant: 'secondary', className: 'rounded-full' })}>
+            Start a new search
           </Link>
         </div>
 
@@ -67,6 +72,7 @@ export function SearchErrorState({
           If this keeps happening, contact {BRAND.supportEmail}.
         </p>
       </section>
+      </div>
     </div>
   )
 }

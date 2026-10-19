@@ -1249,6 +1249,8 @@
    through to the page, and Escape (Sheet's handler only looks at open
    layers) reaches the next layer down. */
 .sheet-overlay[data-state='closed'], [data-sheet][data-state='closed'] { pointer-events: none; }
+/* A sheet put back after its page remounted appears in place (UI-15). */
+.sheet-overlay[data-reopened][data-state='open'], [data-sheet][data-reopened][data-state='open'] { animation-duration: 0s; }
 
 /* The photo lightbox (components/property/Gallery.tsx): a plain fade; the
    photo itself is the content, so it should not move. */
@@ -1894,3 +1896,48 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
 .home-map-1 { background-color: var(--color-tint-sand); }
 .home-map-2 { background-color: var(--color-tint-sky); }
 .home-map-3 { background-color: var(--color-tint-rose); }
+
+/* ── Search results (UI-15) ─────────────────────────────────────────────
+   The results page in the homepage's language: the same 1400px frame
+   (.home-container), mint for the band that says where you are, white for
+   the work, forest only where something is chosen. */
+.search-band { background: linear-gradient(180deg, var(--color-brand-50) 0%, color-mix(in srgb, var(--color-brand-50) 45%, var(--color-surface-000)) 100%); border-bottom: 1px solid color-mix(in srgb, var(--color-brand-100) 70%, transparent); }
+.search-band .sample-notice { margin-top: 0; }
+
+/* Locality shortcuts: a swipeable row on phones (positioned, so the sr-only
+   counts inside are clipped by it — UI-14), wrapping from 640px. */
+.search-shortcuts { position: relative; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding: 2px 16px 4px; }
+.search-shortcuts::-webkit-scrollbar { display: none; }
+@media (min-width: 640px) { .search-shortcuts { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding-inline: 0; } }
+.search-shortcut { display: inline-flex; min-height: 44px; align-items: center; gap: 8px; border-radius: var(--radius-full); background: var(--color-surface-000); padding: 4px 6px 4px 16px; font-size: var(--text-body-sm); font-weight: 600; color: var(--color-ink-900); box-shadow: var(--shadow-e1), inset 0 0 0 1px var(--color-border-subtle); transition: box-shadow var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard); }
+.search-shortcut-count { display: grid; height: 28px; min-width: 28px; place-items: center; border-radius: var(--radius-full); background: var(--color-brand-50); padding-inline: 8px; font-size: var(--text-caption); color: var(--color-brand-700); }
+@media (hover: hover) and (pointer: fine) { .search-shortcut:hover { color: var(--color-brand-700); box-shadow: var(--shadow-e1), inset 0 0 0 1px var(--color-brand-500); } }
+
+/* Buy / Rent: a segmented pair of links on a white track. 36px to look at,
+   44px to hit: the link is the full-height box, the pill is drawn inside. */
+.search-intent { display: inline-flex; flex: none; border-radius: var(--radius-full); background: var(--color-surface-000); padding: 2px; box-shadow: var(--shadow-e1), inset 0 0 0 1px var(--color-border-subtle); }
+.search-intent-link { display: grid; min-width: 64px; height: 44px; margin-block: -6px; place-items: center; outline: none; }
+.search-intent-link > span { display: grid; height: 32px; place-items: center; border-radius: var(--radius-full); padding-inline: 16px; font-size: var(--text-label); font-weight: 600; color: var(--color-ink-700); transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard); }
+.search-intent-link[aria-current="page"] > span { background: var(--color-forest); color: var(--color-on-forest); }
+.search-intent-link:focus-visible > span { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { .search-intent-link:not([aria-current]):hover > span { background: var(--color-brand-50); color: var(--color-brand-700); } }
+
+/* Sort: the native select (it opens the platform's own picker, and works
+   without JavaScript through its GET form) dressed as a pill. */
+.search-sort { position: relative; display: inline-flex; min-width: 0; max-width: 100%; height: 44px; align-items: center; gap: 8px; border-radius: var(--radius-full); border: 1px solid var(--color-border-subtle); background: var(--color-surface-000); padding-left: 16px; font-size: var(--text-body-sm); box-shadow: var(--shadow-e1); }
+.search-sort:hover { border-color: var(--color-border-strong); }
+.search-sort:focus-within { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
+
+/* The rail: a white card that stays beside the results while they scroll,
+   scrolling inside itself when the filters are taller than the screen. */
+.search-rail { position: sticky; top: 96px; max-height: calc(100dvh - 112px); overflow-y: auto; overscroll-behavior: contain; border-radius: var(--radius-lg); border: 1px solid var(--color-border-subtle); background: var(--color-surface-000); box-shadow: var(--shadow-e1); scrollbar-width: thin; }
+.search-rail > div:first-child { position: sticky; top: 0; z-index: 1; background: var(--color-surface-000); }
+
+/* Pages: one white bar, round page numbers, the current one filled. */
+.search-pages { gap: 4px; border-radius: var(--radius-full); background: var(--color-surface-000); padding: 4px; box-shadow: var(--shadow-e1), inset 0 0 0 1px var(--color-border-subtle); }
+.search-pages a[aria-label$="page"], .search-pages span[aria-hidden].inline-flex { border-color: transparent; background: transparent; }
+
+/* A results card gives under a finger, as .property-card did (UI-04):
+   pressing scales it slightly, and only where there is no hover. */
+@media (hover: none) { .result-card { transition: transform var(--duration-fast) var(--ease-standard); } .result-card:active { transform: scale(0.985); } }
+@media (prefers-reduced-motion: reduce) { .result-card:active { transform: none; } }

@@ -87,7 +87,6 @@ export async function SearchPage({ intent, ...props }: { intent: Intent } & Sear
 
   return (
     <PageShell footer={<Footer />}>
-      <DevDataNotice />
       {/* The clamped page from the engine, not the requested one: asking for
           page 99 of a three-page set must not put 99 in the pagination. */}
       <SearchLayout
@@ -95,7 +94,9 @@ export async function SearchPage({ intent, ...props }: { intent: Intent } & Sear
         facets={outcome.facets}
         total={outcome.total}
         heading={heading}
+        cityName={cityName}
         localityNames={localityNames}
+        notice={<DevDataNotice />}
       >
         {outcome.total === 0 ? (
           <ZeroResults
@@ -109,11 +110,12 @@ export async function SearchPage({ intent, ...props }: { intent: Intent } & Sear
           <>
             <ResultsList results={outcome.results} />
             <Pagination
+              variant="pill"
               page={outcome.page}
               pageCount={outcome.pageCount}
               hrefForPage={(page) => buildSearchUrl({ ...query, page })}
             />
-            <p className="mt-4 text-center text-caption text-ink-500">
+            <p className="mt-4 text-center text-body-sm text-ink-500">
               Showing {(outcome.page - 1) * outcome.perPage + 1}–
               {Math.min(outcome.page * outcome.perPage, outcome.total)} of{' '}
               <span className="tabular">{outcome.total.toLocaleString('en-IN')}</span> in {cityName}

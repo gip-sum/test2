@@ -38,7 +38,8 @@ export function Chip({
   className?: string
   /** Full sentence for assistive tech: "Remove 2 BHK filter". */
   removeLabel?: string
-  tone?: 'brand' | 'neutral'
+  /** 'outline' is the results page's active filter (UI-15): white, ringed, quieter than a filled pill. */
+  tone?: 'brand' | 'neutral' | 'outline'
   /** Extra classes for the label, such as a narrower truncation width. */
   labelClassName?: string
   /** Id of the element to focus when the last chip in its group is removed. */
@@ -49,7 +50,7 @@ export function Chip({
       className={cn(
         'inline-flex h-8 max-w-full items-center gap-1 rounded-full py-0 pl-3 text-body-sm font-medium',
         onRemove ? 'pr-1' : 'pr-3',
-        tone === 'brand' ? 'bg-brand-100 text-brand-600' : 'bg-surface-200 text-ink-700',
+        tone === 'brand' ? 'bg-brand-100 text-brand-600' : tone === 'outline' ? 'bg-surface-000 text-ink-900 shadow-e1 ring-1 ring-inset ring-brand-200' : 'bg-surface-200 text-ink-700',
         className,
       )}
     >

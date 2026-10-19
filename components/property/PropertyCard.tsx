@@ -16,7 +16,8 @@ import {
 import { propertyPath } from '@/lib/property/public-id'
 import { cn } from '@/lib/cn'
 
-// The two layouts, as class sets rather than branches through the markup.
+// The layout, as a class set rather than branches through the markup (it
+// had a second, responsive one until the results card replaced it, UI-15).
 // The photo's 1.55:1 ratio used to be a global `.property-card .aspect-[4/3]`
 // override in globals.css; it is the card's own decision, so it lives here.
 const LAYOUT = {
@@ -29,19 +30,6 @@ const LAYOUT = {
     save: 'right-3 top-3',
     saveLook: 'shadow-e1',
   },
-  // Horizontal below 768px — three or four results per phone screen with the
-  // photo still large enough to judge — and the vertical card from 768px.
-  // The heart sits in the card's top-right corner in both: beside the price
-  // on a phone, on the photo in the grid.
-  responsive: {
-    article: 'flex md:flex-col',
-    media: 'relative w-[38%] max-w-[190px] shrink-0 self-stretch md:w-full md:max-w-none md:self-auto',
-    image: { mode: 'responsive', className: 'md:aspect-[1.55]', sizes: '(min-width: 1280px) 400px, (min-width: 768px) 45vw, 190px' },
-    body: 'p-3 md:p-5',
-    price: 'pr-10 md:pr-0',
-    save: 'right-2 top-2 md:right-3 md:top-3',
-    saveLook: 'border-0 bg-transparent md:border md:bg-surface-000/95 md:shadow-e1',
-  },
 } as const
 
 /**
@@ -52,10 +40,8 @@ const LAYOUT = {
  * configuration with its area basis, then title, then location, then a
  * short attribute line, then who is selling and how fresh it is.
  *
- * `layout="responsive"` is the results card: horizontal on a phone, where a
- * vertical card shows about 1.5 results per screen and a horizontal one
- * three or four, and vertical in the grid from 768px. One card, so the
- * results list renders each listing once (UI-06).
+ * The results page has its own card since UI-15 (components/search/
+ * ResultCard); this one remains the Saved homes card.
  *
  * Badges, the stretched title link and the focus ring are shared with
  * CompactPropertyCard (CardParts, lib/property/badges).

@@ -22,6 +22,7 @@ export function ToggleChip({
   onToggle,
   unavailable = false,
   count,
+  restoreKey,
   children,
 }: {
   pressed: boolean
@@ -29,11 +30,14 @@ export function ToggleChip({
   unavailable?: boolean
   /** Results this value would give, from the server's facet counts. */
   count?: number
+  /** A stable name for putting focus back if the page remounts (results filters, UI-15). */
+  restoreKey?: string
   children: ReactNode
 }) {
   return (
     <button
       type="button"
+      data-restore={restoreKey}
       aria-pressed={pressed}
       aria-disabled={unavailable || undefined}
       onClick={unavailable ? undefined : onToggle}
