@@ -21,11 +21,16 @@ export function AreaBreakdown({ property }: { property: Pick<PropertyDetail, 'ca
 
   return (
     <div>
-      <ul className="grid gap-2 sm:grid-cols-3">
+      {/* One panel, the carpet basis marked as the one the rate uses (UI-16;
+          it was three equal boxes, and nothing said which one mattered). */}
+      <ul className="grid divide-y divide-border-subtle overflow-hidden rounded-lg border border-border-subtle bg-surface-000 sm:grid-flow-col sm:auto-cols-fr sm:divide-x sm:divide-y-0">
         {bases.map((b) => (
-          <li key={b.basis} className="rounded-md border border-border-subtle bg-surface-000 px-3 py-2.5">
-            <p className="text-caption text-ink-500">{b.label}</p>
-            <p className="mt-0.5 text-body font-semibold text-ink-900 tabular">
+          <li key={b.basis} className={b.basis === 'carpet' ? 'bg-brand-50 px-4 py-3' : 'px-4 py-3'}>
+            <p className="flex flex-wrap items-center gap-x-2 text-caption text-ink-500">
+              {b.label}
+              {b.basis === 'carpet' && <span className="font-semibold text-brand-700">Rate basis</span>}
+            </p>
+            <p className="mt-0.5 text-body-lg font-semibold text-ink-900 tabular">
               <AreaDisplay value={b.value!} unit={property.areaUnit} basis={b.basis} variant="compact" />
             </p>
           </li>

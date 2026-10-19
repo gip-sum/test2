@@ -28,49 +28,59 @@ export function LocationBlock({
     { label: 'City', value: property.cityName },
   ].filter(Boolean) as Array<{ label: string; value: string }>
 
+  // An address card and the seller's landmarks side by side (UI-16). No
+  // map, painted or embedded: a drawing of a pin would claim a precision
+  // this page does not have, and a paid map is not in this release.
   return (
-    <div className="flex flex-col gap-4">
-      <dl className="grid gap-2 sm:grid-cols-3">
-        {rows.map((row) => (
-          <div key={row.label} className="min-w-0 rounded-md border border-border-subtle bg-surface-000 px-3 py-2.5">
-            <dt className="text-caption text-ink-500">{row.label}</dt>
-            <dd className="mt-0.5 truncate text-body-sm font-semibold text-ink-900">{row.value}</dd>
-          </div>
-        ))}
-      </dl>
-
+    <div className="grid gap-4 md:grid-cols-2">
+      <div className="flex min-w-0 flex-col rounded-lg border border-border-subtle bg-surface-000 p-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-700">
+            <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0113 0c0 5.4-6.5 11-6.5 11z" />
+              <circle cx="12" cy="10" r="2.5" />
+            </svg>
+          </span>
+          <dl className="min-w-0 flex-1">
+            {rows.map((row) => (
+              <div key={row.label} className="flex items-baseline justify-between gap-4 border-b border-border-subtle py-2 first:pt-0 last:border-b-0">
+                <dt className="text-body-sm text-ink-500">{row.label}</dt>
+                <dd className="min-w-0 text-right text-body font-semibold text-ink-900 [overflow-wrap:anywhere]">{row.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+        <p className="mt-3 text-caption text-ink-500">The exact address is not shown on this page.</p>
+        <Link
+          href={buildLandingUrl({
+            intent: property.intent,
+            city: 'kolkata',
+            locality: property.localitySlug,
+          })}
+          className="mt-auto inline-flex min-h-11 w-fit items-center gap-1.5 rounded-md pt-2 text-label text-brand-700 hover:underline"
+        >
+          See more in {property.localityName}
+          <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+        </Link>
+      </div>
       {property.nearbyLandmarks.length > 0 && (
-        <div>
-          <h3 className="text-overline uppercase text-ink-500">Nearby</h3>
-          <ul className="mt-2 flex flex-wrap gap-2">
+        <div className="min-w-0 rounded-lg bg-surface-200 p-4 sm:p-5">
+          <h3 className="text-overline uppercase text-ink-500">Nearby, in the seller&rsquo;s words</h3>
+          <ul className="mt-2 flex flex-col gap-2">
             {property.nearbyLandmarks.map((landmark) => (
-              <li
-                key={landmark}
-                className="rounded-full border border-border-subtle bg-surface-000 px-3 py-1.5 text-body-sm text-ink-700"
-              >
-                {landmark}
+              <li key={landmark} className="flex items-start gap-2.5 text-body text-ink-900">
+                <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-brand-600" />
+                <span className="min-w-0">{landmark}</span>
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-caption text-ink-500">
+          <p className="mt-3 text-caption text-ink-500">
             Landmarks are described by the seller. We have not measured distances to them.
           </p>
         </div>
       )}
-
-      <Link
-        href={buildLandingUrl({
-          intent: property.intent,
-          city: 'kolkata',
-          locality: property.localitySlug,
-        })}
-        className="inline-flex min-h-11 w-fit items-center gap-1.5 rounded-md text-label text-brand-600 hover:underline"
-      >
-        See more in {property.localityName}
-        <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M9 6l6 6-6 6" />
-        </svg>
-      </Link>
     </div>
   )
 }

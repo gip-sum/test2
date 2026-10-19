@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { cn } from '@/lib/cn'
 
 /**
  * Where this page sits in the place hierarchy.
@@ -10,14 +11,19 @@ import Link from 'next/link'
  */
 export type Crumb = { label: string; href?: string }
 
-export function Breadcrumbs({ items }: { items: Crumb[] }) {
+/**
+ * `currentFromSm` drops the current page's crumb below 640px (UI-16): on a
+ * property page it is a long sentence that repeats the heading, and it
+ * wrapped the trail to a second line above the photos.
+ */
+export function Breadcrumbs({ items, currentFromSm }: { items: Crumb[]; currentFromSm?: boolean }) {
   return (
     <nav aria-label="Breadcrumb" className="min-w-0">
       <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-body-sm text-ink-500">
         {items.map((item, i) => {
           const last = i === items.length - 1
           return (
-            <li key={`${item.label}-${i}`} className="flex min-w-0 items-center gap-1.5">
+            <li key={`${item.label}-${i}`} className={cn('flex min-w-0 items-center gap-1.5', currentFromSm && last && 'max-sm:hidden')}>
               {item.href && !last ? (
                 // 44px tall to the finger (UI-05), 20px to the layout: the
                 // padding is handed back by equal negative margins.
@@ -30,7 +36,7 @@ export function Breadcrumbs({ items }: { items: Crumb[] }) {
                 </span>
               )}
               {!last && (
-                <svg viewBox="0 0 24 24" className="size-3.5 shrink-0 text-ink-500" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <svg viewBox="0 0 24 24" className={cn('size-3.5 shrink-0 text-ink-500', currentFromSm && i === items.length - 2 && 'max-sm:hidden')} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M9 6l6 6-6 6" />
                 </svg>
               )}

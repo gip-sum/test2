@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PageShell } from '@/components/layout/PageShell'
 import { Footer } from '@/components/navigation/Footer'
@@ -14,11 +13,8 @@ import { LocationBlock } from '@/components/property/LocationBlock'
 import { SellerBlock } from '@/components/property/SellerBlock'
 import { SimilarProperties } from '@/components/property/SimilarProperties'
 import { PropertyDisclaimer } from '@/components/property/PropertyDisclaimer'
-import { PriceDisplay } from '@/components/property/PriceDisplay'
+import { PropertyOverview } from '@/components/property/PropertyOverview'
 import { SaveButton } from '@/components/property/SaveButton'
-import { Badge } from '@/components/ui/Badge'
-import { CalculatorIcon } from '@/components/ui/icons'
-import { emiCalculatorHref } from '@/lib/finance/params'
 import { ContactCard, StickyContactBar } from '@/components/enquiry/ContactPanel'
 import { getPropertyDetail } from '@/lib/property/queries'
 import { getSimilarProperties } from '@/lib/property/similar'
@@ -26,7 +22,7 @@ import { parsePropertyHandle, propertyPath } from '@/lib/property/public-id'
 import { getLocationById } from '@/lib/location/queries'
 import { buildLandingUrl } from '@/lib/search/query'
 import { formatConfiguration } from '@/lib/format/area'
-import { formatPostedAt, isNewListing } from '@/lib/format/date'
+import { cn } from '@/lib/cn'
 import { BRAND, LAUNCH_CITY } from '@/lib/brand'
 import { PROPERTY_TYPE_LABEL, type PropertyDetail } from '@/lib/property/types'
 
@@ -109,91 +105,46 @@ export default async function PropertyPage(props: Props) {
     { label: title },
   ]
 
+  const wide = property.photos.filter((m) => m.url).length >= 5
+  const name = property.society ?? property.title
+
   return (
     <PageShell footer={<Footer />}>
-      <DevDataNotice />
-
-      <article className="mx-auto max-w-[1320px] px-4 pb-8 pt-4 lg:px-8 lg:pt-5">
-        <Breadcrumbs items={crumbs} />
-
-        <div className="mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-8">
-          <div className="min-w-0">
-            <Gallery photos={property.photos} title={title} />
-
-            {/* Header block — §5 item 3 */}
-            <header className="mt-5">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <PriceDisplay
-                    amount={property.price}
-                    intent={property.intent}
-                    size="detail"
-                    areaForRate={property.intent === 'buy' ? property.carpetArea : undefined}
-                  />
-                  {(property.deposit != null ||
-                    property.maintenanceMonthly != null ||
-                    property.isNegotiable) && (
-                    <p className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-body-sm text-ink-700">
-                      {property.deposit != null && (
-                        <span className="tabular">
-                          Deposit ₹{property.deposit.toLocaleString('en-IN')}
-                        </span>
-                      )}
-                      {property.maintenanceMonthly != null && (
-                        <span className="tabular">
-                          Maintenance ₹{property.maintenanceMonthly.toLocaleString('en-IN')}/mo
-                        </span>
-                      )}
-                      {property.isNegotiable && <span>Negotiable</span>}
-                    </p>
-                  )}
-                  {/* A link to the calculator, not an EMI figure: a figure here
-                      would need a rate, and no rate on this page would be the
-                      buyer's own. */}
-                  {property.intent === 'buy' && property.price > 0 && (
-                    <Link href={emiCalculatorHref(property.price)} className="mt-1 inline-flex min-h-11 items-center gap-1.5 rounded-md text-label text-brand-600 hover:underline">
-                      <CalculatorIcon className="size-4.5" />
-                      Estimate the monthly EMI
-                    </Link>
-                  )}
-                </div>
-                <SaveButton id={property.publicId} title={title} className="shrink-0" />
-              </div>
-
-              <h1 className="mt-3 font-display text-heading-2 text-ink-900 lg:text-heading-1">
-                {property.society ?? property.title}
-              </h1>
-              <p className="mt-1 text-body text-ink-700">
-                {formatConfiguration(property.bedrooms, property.bathrooms)} ·{' '}
-                {PROPERTY_TYPE_LABEL[property.propertyType]}
-              </p>
-              <p className="mt-0.5 text-body-sm text-ink-500">
-                {society ? `${society.name}, ` : ''}
-                {property.localityName}, {property.cityName}
-              </p>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                {isNewListing(property.postedAt) && <Badge tone="brand">New</Badge>}
-                {property.isPriceReduced && <Badge tone="supply">Price reduced</Badge>}
-                <span className="text-caption text-ink-500">{formatPostedAt(property.postedAt)}</span>
-              </div>
-            </header>
-
-            {/* Contact, inline on desktop only — the phone path is the
-                sticky bar below, which would duplicate this on mobile. */}
-            <div className="mt-5 lg:hidden">
-              <SellerBlock property={property} />
+      <article>
+        {/* The band (UI-16): the results page's mint, in the 1400px frame,
+            holding where you are and the photos — the listing is framed
+            the way its search was. */}
+        <div className="property-band">
+          <div className="home-container pt-3 sm:pb-6 lg:pb-8">
+            <DevDataNotice />
+            <div className="mt-3 lg:mt-4">
+              <Breadcrumbs items={crumbs} currentFromSm />
             </div>
+            {/* Below the mosaic's five photos the lead photo keeps the
+                content column's width, so the card beside the summary
+                lines up with it either way. */}
+            <div className={cn('mt-3', !wide && 'lg:max-w-[calc(100%-26.5rem)] xl:max-w-[calc(100%-28rem)]')}>
+              <Gallery
+                photos={property.photos}
+                title={title}
+                layout="wide"
+                overlay={<SaveButton id={property.publicId} title={name} visualClassName="bg-surface-000 shadow-e2" />}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="home-container pb-10 pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-x-10 lg:pb-14 lg:pt-7 xl:grid-cols-[minmax(0,1fr)_25.5rem]">
+          <div className="min-w-0">
+            <PropertyOverview property={property} societyName={society?.name} />
 
             <Section id="details" title="Property details">
               <KeyDetails property={property} />
+              <h3 id="area-heading" className="mt-7 text-body-lg font-semibold text-ink-900">Area breakdown</h3>
+              <div className="mt-3">
+                <AreaBreakdown property={property} />
+              </div>
             </Section>
-
-            {property.amenities.length > 0 && (
-              <Section id="amenities" title="Amenities">
-                <AmenityList amenities={property.amenities} />
-              </Section>
-            )}
 
             {property.description && (
               <Section id="description" title="About this property">
@@ -201,31 +152,39 @@ export default async function PropertyPage(props: Props) {
               </Section>
             )}
 
-            <Section id="area" title="Area breakdown">
-              <AreaBreakdown property={property} />
-            </Section>
+            {property.amenities.length > 0 && (
+              <Section id="amenities" title="Amenities">
+                <AmenityList amenities={property.amenities} />
+              </Section>
+            )}
 
             <Section id="location" title="Location">
               <LocationBlock property={property} societyName={society?.name} />
             </Section>
 
-            <div className="mt-8">
+            {/* Who is selling, in the reading order on a phone; on desktop
+                the contact card beside the content carries it. */}
+            <Section id="seller" title="Listed by" className="lg:hidden">
+              <SellerBlock property={property} />
+            </Section>
+
+            <div className="mt-10">
               <PropertyDisclaimer />
             </div>
           </div>
 
-          {/* Desktop: sticky contact and seller. */}
-          <aside className="hidden lg:sticky lg:top-20 lg:block">
-            <ContactCard property={property} />
-            <div className="mt-4">
-              <SellerBlock property={property} />
-            </div>
+          {/* Desktop: the contact card stays beside the content as it
+              scrolls. Below 1024px the bar and its sheet take over. */}
+          <aside aria-labelledby="contact-heading" className="hidden lg:sticky lg:top-24 lg:block">
+            <ContactCard property={property} headingId="contact-heading" />
           </aside>
         </div>
 
         {similar.results.length > 0 && (
-          <div className="mt-10">
-            <SimilarProperties results={similar.results} />
+          <div className="border-t border-border-subtle bg-surface-100">
+            <div className="home-container pb-12 pt-10 lg:pb-16 lg:pt-12">
+              <SimilarProperties results={similar.results} />
+            </div>
           </div>
         )}
       </article>
@@ -249,21 +208,29 @@ export default async function PropertyPage(props: Props) {
   )
 }
 
+/**
+ * One content section: a rule above, the heading in the display face and
+ * the content under it (UI-16). Rules rather than a card per section: the
+ * page reads as one document, and the contact card stays the one raised
+ * surface on it.
+ */
 function Section({
   id,
   title,
+  className,
   children,
 }: {
   id: string
   title: string
+  className?: string
   children: React.ReactNode
 }) {
   return (
-    <section aria-labelledby={`${id}-heading`} className="mt-8">
-      <h2 id={`${id}-heading`} className="font-display text-heading-3 text-ink-900">
+    <section aria-labelledby={`${id}-heading`} className={cn('mt-10 border-t border-border-subtle pt-8', className)}>
+      <h2 id={`${id}-heading`} className="font-display text-heading-2 text-ink-900">
         {title}
       </h2>
-      <div className="mt-3">{children}</div>
+      <div className="mt-4">{children}</div>
     </section>
   )
 }

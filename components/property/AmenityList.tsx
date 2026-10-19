@@ -34,20 +34,21 @@ export function AmenityList({ amenities }: { amenities: AmenityCode[] }) {
   const other = AMENITY_ORDER.filter((c) => present.has(c) && !grouped.has(c))
   if (other.length) groups.push({ title: 'Other', codes: other })
 
+  // A short checklist per group (UI-16), in columns: what the seller
+  // stated, one per row with a mark, rather than a wall of pills.
   return (
-    <div className="flex flex-col gap-4">
+    <div className="grid gap-x-10 gap-y-5 sm:grid-cols-2 xl:grid-cols-3">
       {groups.map((group) => (
-        <div key={group.title}>
+        <div key={group.title} className="min-w-0">
           <h3 className="text-overline uppercase text-ink-500">{group.title}</h3>
-          <ul className="mt-2 flex flex-wrap gap-2">
+          <ul className="mt-2 flex flex-col gap-2">
             {group.codes.map((code) => (
-              <li
-                key={code}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-surface-000 px-3 py-1.5 text-body-sm text-ink-900"
-              >
-                <svg viewBox="0 0 24 24" className="size-4 shrink-0 text-trust-600" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M5 13l4 4L19 7" />
-                </svg>
+              <li key={code} className="flex items-center gap-2.5 text-body text-ink-900">
+                <span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-full bg-brand-50 text-brand-700">
+                  <svg viewBox="0 0 24 24" className="size-3.5" fill="none" stroke="currentColor" strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
                 {AMENITY_LABEL[code]}
               </li>
             ))}

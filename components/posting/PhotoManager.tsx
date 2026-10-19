@@ -5,8 +5,9 @@ import { compressPhoto } from '@/lib/media/compress'
 import { fileError, PHOTO_LIMIT, type Photo } from '@/lib/media/types'
 import { measure, play, type FlipSnapshot } from '@/lib/motion/flip'
 import { Button } from '@/components/ui/Button'
+import { PhotoFallback } from '@/components/property/PhotoFallback'
 
-type Item = { id: string; name: string; url?: string; file?: File; photo?: Photo; phase: 'preparing' | 'uploading' | 'processing' | 'ready' | 'error'; progress: number; attempted?: boolean; error?: string }
+type Item = { id: string; name: string; url?: string; file?: File; photo?: Photo; phase: 'preparing' | 'uploading' | 'processing' | 'ready' | 'error'; progress: number; attempted?: boolean; error?: string; previewFailed?: boolean }
 // aria-disabled, not disabled (UI-08, the UI-07 Button rule): a control
 // disabled while it has focus sends focus to <body>, and every move used to
 // do exactly that to the button just pressed. Each handler already refuses
@@ -157,9 +158,11 @@ export function PhotoManager({ collection }: { collection: string }) {
     <ol ref={list} aria-label="Property photos" className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {items.map((item, index) => <li key={item.id} data-flip-key={item.id} className="relative min-w-0 rounded-lg border border-border-subtle bg-surface-000 p-3">
         <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-surface-200">
+          {/* A preview that fails is the shared PhotoFallback (UI-16), not the browser's broken icon. */}
           {/* Local blobs and authenticated private image endpoints cannot use the public image optimizer. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {item.url && <img src={item.url} alt={`Preview of ${item.name}`} className="h-full w-full object-cover" onError={() => patch(item.id, { error: 'Preview unavailable. Reload photos to try again.' })} />}
+          {item.url && !item.previewFailed && <img src={item.url} alt={`Preview of ${item.name}`} className="h-full w-full object-cover" onError={() => patch(item.id, { previewFailed: true, error: 'Preview unavailable. Reload photos to try again.' })} />}
+          {item.url && item.previewFailed && <PhotoFallback alt={`Preview of ${item.name}`} size="compact" />}
           {index === 0 && item.phase === 'ready' && <span className="absolute left-2 top-2 rounded-full bg-brand-600 px-3 py-1 text-caption font-semibold text-on-brand">Cover photo</span>}
         </div>
         <p className="mt-3 break-all text-body-sm font-semibold text-ink-900">{index + 1}. {item.name}</p>

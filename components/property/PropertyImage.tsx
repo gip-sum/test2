@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { cn } from '@/lib/cn'
 import { markPendingImage, revealImage } from '@/lib/motion/image-fade'
+import { PhotoFallback } from './PhotoFallback'
 
 /**
  * Listing photo, with a deliberate empty state.
@@ -22,7 +23,8 @@ import { markPendingImage, revealImage } from '@/lib/motion/image-fade'
  *
  * A listing with no photo is common and must not look broken: the
  * placeholder is a token-coloured architectural form that reads as "no
- * photo yet", never as a failed image.
+ * photo yet", never as a failed image. A photo that fails is the shared
+ * PhotoFallback (UI-16), which keeps the box and says what happened.
  */
 export function PropertyImage({
   src,
@@ -55,11 +57,11 @@ export function PropertyImage({
     >
       {src && failedSrc !== src ? (
         <>
-          <Image ref={markPendingImage} onLoad={revealImage} src={src} alt={alt} fill sizes={sizes} priority={priority} onError={() => setFailedSrc(src)} className="object-cover" />
+          <Image ref={markPendingImage} onLoad={revealImage} data-photo="" src={src} alt={alt} fill sizes={sizes} priority={priority} onError={() => setFailedSrc(src)} className="object-cover" />
           {isSample && <span className={cn('absolute bottom-2 rounded-sm bg-ink-900/85 px-1.5 py-0.5 text-caption font-semibold text-ink-inverse', sampleTag === 'right' ? 'right-2' : 'left-2')}>Sample</span>}
         </>
       ) : src ? (
-        <div role="img" aria-label={`${alt} — image could not load`} className="absolute inset-0 grid place-items-center px-2 text-center text-caption text-ink-700">Image could not load</div>
+        <PhotoFallback alt={alt} />
       ) : (
         <Placeholder alt={alt} />
       )}

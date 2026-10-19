@@ -38,7 +38,9 @@ export function DescriptionBlock({ text }: { text: string }) {
         id={id}
         data-description={long ? '' : undefined}
         className={cn(
-          'whitespace-pre-line text-body text-ink-700',
+          // A reading measure and a little more air (UI-16): seller prose
+          // ran the full column at 15px and read as a block.
+          'max-w-[68ch] whitespace-pre-line text-body-lg text-ink-700',
           long && !open && 'line-clamp-6',
         )}
       >
@@ -56,7 +58,7 @@ export function DescriptionBlock({ text }: { text: string }) {
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-controls={id}
-            className="mt-2 gap-1 text-label text-brand-600 no-underline hover:underline"
+            className="mt-2 gap-1 text-label text-brand-700 no-underline hover:underline"
           >
             {open ? 'Show less' : 'Read more'}<span className="sr-only"> of the description</span>
             <svg viewBox="0 0 24 24" className={cn('size-4 transition-transform', open && 'rotate-180')} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>

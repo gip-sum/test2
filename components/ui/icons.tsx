@@ -275,3 +275,23 @@ export function BathIcon({ className }: IconProps) {
 export function CameraIcon({ className }: IconProps) {
   return <svg {...base} className={className}><path d="M4 8.5A1.5 1.5 0 015.5 7h2l1.5-2h6l1.5 2h2A1.5 1.5 0 0120 8.5v9a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 014 17.5z" /><circle cx="12" cy="13" r="3.25" /></svg>
 }
+
+/** A photo that did not arrive: a frame with a slash (UI-16). */
+export function ImageOffIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><path d="M3 3l18 18M8.5 4H18.5A1.5 1.5 0 0120 5.5V15.5M20 20H5.5A1.5 1.5 0 014 18.5V8M4 16l4.5-4.5 3 3M14.5 10.5l1-1L20 14" /></svg>
+}
+
+/** Full screen: four corners pointing out (UI-16). */
+export function ExpandIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" /></svg>
+}
+
+/** A link, for Copy link (UI-16). */
+export function LinkIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1" /></svg>
+}
+
+/** A photo grid, for "View all photos" (UI-16). */
+export function PhotosIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><rect x="3.5" y="3.5" width="7" height="7" rx="1" /><rect x="13.5" y="3.5" width="7" height="7" rx="1" /><rect x="3.5" y="13.5" width="7" height="7" rx="1" /><rect x="13.5" y="13.5" width="7" height="7" rx="1" /></svg>
+}

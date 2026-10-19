@@ -1252,10 +1252,9 @@
 /* A sheet put back after its page remounted appears in place (UI-15). */
 .sheet-overlay[data-reopened][data-state='open'], [data-sheet][data-reopened][data-state='open'] { animation-duration: 0s; }
 
-/* The photo lightbox (components/property/Gallery.tsx): a plain fade; the
-   photo itself is the content, so it should not move. */
-.lightbox-layer[data-state='open'] { animation: motion-fade-in var(--duration-base) var(--ease-enter); }
-.lightbox-layer[data-state='closed'] { animation: motion-fade-out var(--duration-fast) var(--ease-exit); pointer-events: none; }
+/* The photo lightbox (components/property/Gallery.tsx) is animated by
+   Motion since UI-16: the photo grows out of its box and the ground fades
+   with it. Its old CSS fade lived here. */
 
 /* Header panels (components/navigation/HeaderNav.tsx) are shown with the
    `hidden` attribute. They arrive with a 150ms fade and a 4px drop —
@@ -1285,18 +1284,32 @@
    no JavaScript — or before it runs — photos show the moment they load. */
 img[data-fade='pending'] { opacity: 0; }
 img[data-fade='in'] { opacity: 1; transition: opacity var(--duration-base) var(--ease-enter); }
+/* A listing photo that fails before React can swap in PhotoFallback —
+   without JavaScript, or before hydration — must not show the browser's
+   broken-image icon or its alt text. Only a FAILED image draws ::before (a
+   loaded image is a replaced element and renders no pseudo-elements), so
+   this paints the media ground over exactly that case, in the box the
+   photo reserved; the alt text still reaches assistive technology (UI-16). */
+img[data-photo]::before { content: ''; position: absolute; inset: 0; background: var(--color-media-ground); }
 
-/* Gallery direction (components/property/Gallery.tsx, UI-08): the photo
-   that replaces another arrives 16px from the side it came from — next from
-   the right, previous from the left — composing with the fade above when it
-   is still loading. Transform only, inside the frame's overflow, so nothing
-   moves the layout and the image is never held back. The frame carries no
-   direction until the first change, so the first photo never slides. */
-@keyframes motion-photo-next { from { transform: translateX(16px); } }
-@keyframes motion-photo-prev { from { transform: translateX(-16px); } }
-@media (prefers-reduced-motion: no-preference) {
-  [data-photo-frame][data-direction='1'] > img { animation: motion-photo-next var(--duration-base) var(--ease-enter); }
-  [data-photo-frame][data-direction='-1'] > img { animation: motion-photo-prev var(--duration-base) var(--ease-enter); }
+/* Gallery direction (UI-08's 16px CSS arrival) moved to Motion in UI-16:
+   the photo follows a swipe and arrives from the side it came from
+   (components/property/Gallery.tsx, gallery-motion.ts). */
+
+/* Inline gallery arrows (UI-16): under a pointer that hovers they wait out
+   of sight and appear while the frame is hovered or holds keyboard focus;
+   on touch they are always shown, as nothing could reveal them. Opacity
+   only — they keep their place and their 44px target. The mosaic's tiles
+   zoom a little under the pointer, as a card photo does; the list repeats
+   the UI-04 fade so the zoom does not replace it (the UI-15 cascade
+   defect), and nothing moves under reduced motion. */
+@media (hover: hover) and (pointer: fine) {
+  .gallery-nav { opacity: 0; transition: opacity var(--duration-fast) var(--ease-standard); }
+  .gallery-frame:hover .gallery-nav, .gallery-frame:focus-within .gallery-nav { opacity: 1; }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .gallery-tile img, .gallery-tile img[data-fade='in'] { transition: opacity var(--duration-base) var(--ease-enter), transform var(--duration-deliberate) var(--ease-standard); }
+  .gallery-tile:hover img { transform: scale(1.03); }
 }
 
 /* Save confirmation (components/property/SaveButton.tsx, UI-08): when the
@@ -1872,6 +1885,10 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
 .home-rail { display: flex; gap: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; scrollbar-width: none; margin-inline: -16px; padding: 4px 16px 12px; }
 .home-rail::-webkit-scrollbar { display: none; }
 @media (min-width: 640px) { .home-rail { margin-inline: -24px; padding-inline: 24px; scroll-padding-inline: 24px; } }
+/* Similar properties on a phone (UI-16): a swipe row that snaps to the
+   gutter, not the screen edge, like the homepage rails. */
+.similar-row { scroll-padding-inline: 16px; scrollbar-width: none; }
+@media (min-width: 640px) { .similar-row { scroll-padding-inline: 24px; } }
 .home-rail > li { flex: 0 0 min(80%, 300px); min-width: 0; scroll-snap-align: start; }
 .home-rail > li.home-rail-end { flex-basis: min(56%, 220px); }
 @media (min-width: 1024px) {
@@ -1913,8 +1930,9 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
    The results page in the homepage's language: the same 1400px frame
    (.home-container), mint for the band that says where you are, white for
    the work, forest only where something is chosen. */
-.search-band { background: linear-gradient(180deg, var(--color-brand-50) 0%, color-mix(in srgb, var(--color-brand-50) 45%, var(--color-surface-000)) 100%); border-bottom: 1px solid color-mix(in srgb, var(--color-brand-100) 70%, transparent); }
-.search-band .sample-notice { margin-top: 0; }
+/* The property page's band (UI-16) is the same mint. */
+.search-band, .property-band { background: linear-gradient(180deg, var(--color-brand-50) 0%, color-mix(in srgb, var(--color-brand-50) 45%, var(--color-surface-000)) 100%); border-bottom: 1px solid color-mix(in srgb, var(--color-brand-100) 70%, transparent); }
+.search-band .sample-notice, .property-band .sample-notice { margin-top: 0; }
 
 /* Locality shortcuts: a swipeable row on phones (positioned, so the sr-only
    counts inside are clipped by it — UI-14), wrapping from 640px. */

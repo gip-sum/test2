@@ -106,7 +106,7 @@ try {
   let blocked = 0
   await errorPage.route('**/_next/image?**', (route) => {
     const src = new URL(route.request().url()).searchParams.get('url')
-    if (src?.endsWith('/living-warm.png')) { blocked++; return route.fulfill({ status: 500, body: 'unavailable' }) }
+    if (src?.endsWith('/living-warm.webp')) { blocked++; return route.fulfill({ status: 500, body: 'unavailable' }) }
     return route.continue()
   })
   await visit(errorPage, MANY)
