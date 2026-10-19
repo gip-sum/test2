@@ -66,7 +66,7 @@ export function SearchLoadingState() {
               <Skeleton className="max-lg:hidden h-5 w-40" />
               <Skeleton className="ml-auto h-11 min-w-0 flex-1 rounded-full lg:w-60 lg:flex-none" />
             </div>
-            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5 lg:mt-5 xl:grid-cols-3">
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 lg:mt-5 xl:grid-cols-3">
               {Array.from({ length: 6 }, (_, i) => (
                 <ResultCardSkeleton key={i} />
               ))}

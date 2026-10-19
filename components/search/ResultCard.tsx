@@ -23,9 +23,8 @@ import { cn } from '@/lib/cn'
  * construction, furnishing and floor line, the seller's name and the
  * photo count.
  *
- * One card at every width, rendered once (UI-06): horizontal on a phone,
- * where it shows three results a screen with the photo still large enough
- * to judge, and vertical in the grid from 768px.
+ * One card at every width, rendered once (UI-06): vertical everywhere,
+ * one column on a phone and a grid from 768px.
  *
  * The title's ::after makes the whole card one link, so the save heart
  * stays its own control; the card draws that link's focus ring only.
@@ -54,18 +53,19 @@ export function ResultCard({ property, priority }: { property: PropertySummary; 
   const spec = 'flex min-w-0 items-center gap-1.5'
 
   return (
-    <article className={cn('result-card home-card group relative flex h-full rounded-lg border border-border-subtle bg-surface-000 shadow-e1 md:flex-col', CARD_FOCUS)}>
-      {/* Phones: a framed photo column as tall as the text beside it.
-          From 768px: a 3:2 photo across the top of the card. */}
-      <div className="home-card-photo relative m-2 w-[38%] max-w-[180px] shrink-0 self-stretch overflow-hidden rounded-md md:mb-0 md:w-auto md:max-w-none md:self-auto">
+    <article className={cn('result-card home-card group relative flex h-full flex-col rounded-lg border border-border-subtle bg-surface-000 shadow-e1', CARD_FOCUS)}>
+      {/* A framed photo across the card: 16:10 on a phone, where a taller
+          one would push the facts off the screen, 3:2 in the grid. Phones
+          had a side-by-side card until the owner's UI-15 review: its text
+          column was 180px wide and cut seller names and attributes short. */}
+      <div className="home-card-photo relative m-2 mb-0 overflow-hidden rounded-md">
         <PropertyImage
           src={cover?.url}
           alt={cover?.alt ?? title}
           isSample={cover?.isSample}
           priority={priority}
-          mode="responsive"
-          className="md:aspect-[3/2]"
-          sizes="(min-width: 1280px) 330px, (min-width: 768px) 45vw, 180px"
+          className="aspect-[16/10] md:aspect-[3/2]"
+          sizes="(min-width: 1280px) 330px, (min-width: 768px) 45vw, 100vw"
         />
         <CardBadges badges={listingBadges(property)} />
         {photos.length > 1 && (
@@ -75,13 +75,9 @@ export function ResultCard({ property, priority }: { property: PropertySummary; 
         )}
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col py-3 pl-1 pr-3 md:px-4 md:pb-4 md:pt-3">
-        {/* The heart sits over the photo from 768px; on a phone it is in
-            the text column's corner, so the price leaves it room. */}
-        <div className="pr-10 md:pr-0">
-          <PriceDisplay amount={price} intent={intent} size="detail" areaForRate={intent === 'buy' ? carpetArea : undefined} />
-        </div>
-        <h3 className="mt-1 line-clamp-2 text-body font-semibold text-ink-900 md:text-body-lg">
+      <div className="flex min-w-0 flex-1 flex-col px-4 pb-4 pt-3">
+        <PriceDisplay amount={price} intent={intent} size="detail" areaForRate={intent === 'buy' ? carpetArea : undefined} />
+        <h3 className="mt-1 line-clamp-2 text-body-lg font-semibold text-ink-900">
           <CardTitleLink href={propertyPath(slug, publicId)}>{name}</CardTitleLink>
         </h3>
         <p className="mt-0.5 flex min-w-0 items-center gap-1 text-body-sm text-ink-500">
@@ -105,7 +101,7 @@ export function ResultCard({ property, priority }: { property: PropertySummary; 
         </ul>
 
         {attributes.length > 0 && (
-          <p className="mt-2 line-clamp-2 text-caption text-ink-700 md:line-clamp-1 md:text-body-sm">{attributes.join(' · ')}</p>
+          <p className="mt-2 line-clamp-2 text-body-sm text-ink-700 md:line-clamp-1">{attributes.join(' · ')}</p>
         )}
 
         {/* Grows, so the footers line up across a row of the grid. */}
@@ -121,8 +117,8 @@ export function ResultCard({ property, priority }: { property: PropertySummary; 
 
       {/* Last in the DOM: keyboard and screen-reader order is the listing,
           then its save action. SaveButton's size-11 is the 44px target. */}
-      <div className="absolute right-1 top-1 z-10 md:right-4 md:top-4">
-        <SaveButton id={publicId} title={name} visualClassName="border-0 bg-transparent md:border md:bg-surface-000 md:shadow-e2" />
+      <div className="absolute right-4 top-4 z-10">
+        <SaveButton id={publicId} title={name} visualClassName="bg-surface-000 shadow-e2" />
       </div>
     </article>
   )

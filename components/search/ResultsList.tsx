@@ -7,7 +7,7 @@ import type { PropertySummary } from '@/lib/property/types'
  * A server component with no interactivity, so the listings never enter the
  * client bundle — SearchLayout takes this as `children`.
  *
- * One list of ResultCards (UI-15): horizontal on phones, a grid from md up. It
+ * One list of ResultCards (UI-15): one column on phones, a grid from md up. It
  * used to be two lists, one hidden by CSS at each width, which put every
  * listing in the page twice — double the DOM a sheet opening restyles, and
  * the grid's priority photos preloaded on phones that never showed them
@@ -21,7 +21,7 @@ export function ResultsList({ results }: { results: PropertySummary[] }) {
           replaces was `auto`, which never shrinks below a card's min-content:
           at 320px a price row that cannot break further widened the column,
           the page and the fixed bottom bar by 8px. */}
-      <ul className="results-list grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-5 xl:grid-cols-3">
+      <ul className="results-list grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-3">
         {results.map((p, i) => (
           <li key={p.id}>
             <ResultCard property={p} priority={i < 3} />

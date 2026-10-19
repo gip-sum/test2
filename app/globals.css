@@ -1467,6 +1467,14 @@ img[data-fade='in'] { opacity: 1; transition: opacity var(--duration-base) var(-
    words and the pre-UI-14 width there. */
 @media (max-width: 359px) { .header-post { padding-inline: 14px; } .header-post svg { display: none; } }
 .header-post:hover { background: var(--color-brand-700); border-color: var(--color-brand-700); }
+/* On phones the bottom bar carries Sell/Rent as well, and a filled forest
+   pill in the header outweighed the page under it (UI-15 owner review):
+   outlined there, same size and target. */
+@media (max-width: 639px) {
+  .header-post { background: var(--color-surface-000); color: var(--color-forest); border-color: var(--color-border-strong); box-shadow: none; }
+  .header-post svg { color: var(--color-brand-700); }
+  .header-post:hover { background: var(--color-brand-50); border-color: var(--color-brand-600); }
+}
 .app-bar-top, .app-bar-bottom { box-shadow: none; background: var(--color-surface-000); }
 .bar-item { color: var(--color-graphite-muted); }
 .bar-item[aria-current], .bar-item[aria-expanded='true'] { color: var(--color-graphite); }
