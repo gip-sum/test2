@@ -368,10 +368,20 @@ try {
     // On the photo itself: a press on an arrow is a button press, never a drag.
     const r = await frame.boundingBox(), y = r.y + r.height / 2, x0 = r.x + r.width * 0.7
     await touches(page, [['touchStart', [{ x: x0, y }]], ['touchMove', [{ x: x0 - 20, y: y + 1 }]], ['touchMove', [{ x: x0 - 120, y: y + 2 }]]])
+    // Chrome delivers touch moves aligned to the next frame, so the last move
+    // may not have landed when dispatch returns: wait for it (bounded), then
+    // read. Reading at once saw the first move's -20 on a slower CI runner.
+    await page.waitForFunction(() => { const t = getComputedStyle(document.querySelector('[data-photo-frame] > div')).transform; return t !== 'none' && new DOMMatrixReadOnly(t).m41 <= -100 }, null, { timeout: 1500, polling: 'raf' }).catch(() => {})
     const mid = await track(page)
     check('gallery swipe: the photo follows the finger', mid.x < -100 && mid.x > -140, JSON.stringify(mid))
     await touches(page, [['touchEnd', []]])
-    check('gallery swipe: released past the threshold, the next photo comes, from the right', (await track(page)).x > 0 && await page.locator('[role="status"]').filter({ hasText: /^Image 2 of/ }).count() === 1)
+    // A frame at which the status names photo 2 and that photo is still on
+    // its way in from the right (the arrival takes 300ms).
+    const arrived = await page.waitForFunction(() => {
+      const t = getComputedStyle(document.querySelector('[data-photo-frame] > div')).transform
+      return /^Image 2 of/.test(document.querySelector('section[aria-label="Property photos"] > p[role="status"]')?.textContent ?? '') && t !== 'none' && new DOMMatrixReadOnly(t).m41 > 0
+    }, null, { timeout: 1500, polling: 'raf' }).then(() => true).catch(() => false)
+    check('gallery swipe: released past the threshold, the next photo comes, from the right', arrived)
     await settled(page)
     await touches(page, [['touchStart', [{ x: r.x + 200, y }]], ['touchMove', [{ x: r.x + 205, y: y + 10 }]], ['touchMove', [{ x: r.x + 210, y: y + 140 }]], ['touchEnd', []]])
     await settled(page)
@@ -398,6 +408,7 @@ try {
     await page.getByRole('button', { name: /^View all \d+ photos$/ }).click()
     await page.waitForTimeout(700)
     await touches(page, [['touchStart', [{ x: 195, y: 420 }]], ['touchMove', [{ x: 196, y: 430 }]], ['touchMove', [{ x: 198, y: 580 }]]])
+    await page.waitForFunction(() => document.querySelector('[role="dialog"] .absolute.overflow-hidden').getBoundingClientRect().top > 300, null, { timeout: 1500, polling: 'raf' }).catch(() => {})
     const pulled = await page.evaluate(() => { const r = document.querySelector('[role="dialog"] .absolute.overflow-hidden').getBoundingClientRect(); return { w: r.width, top: r.top } })
     check('viewer: pulling the photo down shrinks it and moves it with the finger', pulled.w < 380 && pulled.top > 300, JSON.stringify(pulled))
     await touches(page, [['touchEnd', []]])
@@ -681,9 +692,11 @@ try {
     const rf = await rmGallery.getByRole('group', { name: /^Photos of/ }).boundingBox()
     const rx = rf.x + rf.width * 0.6
     await touches(rmGallery, [['touchStart', [{ x: rx, y: rf.y + 100 }]], ['touchMove', [{ x: rx - 20, y: rf.y + 101 }]], ['touchMove', [{ x: rx - 160, y: rf.y + 102 }]]])
+    await rmGallery.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r)))))
     const unmoved = await track(rmGallery)
     await touches(rmGallery, [['touchEnd', []]])
-    check('reduced: a swipe changes the photo without the photo following the finger', unmoved.x === 0 && await rmGallery.locator('[role="status"]').filter({ hasText: /^Image 3 of/ }).count() === 1, JSON.stringify(unmoved))
+    const third = await rmGallery.locator('[role="status"]').filter({ hasText: /^Image 3 of/ }).waitFor({ timeout: 1500 }).then(() => true).catch(() => false)
+    check('reduced: a swipe changes the photo without the photo following the finger', unmoved.x === 0 && third, JSON.stringify(unmoved))
     await rmGallery.getByRole('button', { name: /^View all \d+ photos$/ }).click()
     const rmOpen = await rmGallery.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => {
       const el = document.querySelector('[role="dialog"] .absolute.overflow-hidden'), cs = getComputedStyle(el)
