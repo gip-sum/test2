@@ -12,6 +12,7 @@ import {
   PROPERTY_TYPE_LABEL,
   SELLER_LABEL,
   type PropertySummary,
+  type ResultCardData,
 } from '@/lib/property/types'
 import { propertyPath } from '@/lib/property/public-id'
 import { cn } from '@/lib/cn'
@@ -30,10 +31,17 @@ import { cn } from '@/lib/cn'
  * stays its own control; the card draws that link's focus ring only.
  * It lifts under a pointer (.home-card) and gives under a finger
  * (.result-card), never both.
+ *
+ * Search and Similar pass a demo summary; Saved (UI-19) passes a real
+ * published listing's card data as well, so a shortlisted home is the same
+ * card it was in the results. `heading` follows the page's outline: h3
+ * under a results heading, h2 directly under Saved's h1.
  */
-export function ResultCard({ property, priority }: { property: PropertySummary; priority?: boolean }) {
+export function ResultCard({ property, priority, heading = 'h3' }: { property: PropertySummary | ResultCardData; priority?: boolean; heading?: 'h2' | 'h3' }) {
+  const { href, saveId } = 'href' in property ? property : { href: propertyPath(property.slug, property.publicId), saveId: property.publicId }
+  const Heading = heading
   const {
-    publicId, slug, title, society, localityName, cityName, intent, price, bedrooms, bathrooms,
+    title, society, localityName, cityName, intent, price, bedrooms, bathrooms,
     carpetArea, areaUnit, areaBasis, propertyType, furnishing, constructionStatus, floor, totalFloors,
     sellerType, sellerName, postedAt, photos,
   } = property
@@ -77,9 +85,9 @@ export function ResultCard({ property, priority }: { property: PropertySummary; 
 
       <div className="flex min-w-0 flex-1 flex-col px-4 pb-4 pt-3">
         <PriceDisplay amount={price} intent={intent} size="detail" areaForRate={intent === 'buy' ? carpetArea : undefined} />
-        <h3 className="mt-1 line-clamp-2 text-body-lg font-semibold text-ink-900">
-          <CardTitleLink href={propertyPath(slug, publicId)}>{name}</CardTitleLink>
-        </h3>
+        <Heading className="mt-1 line-clamp-2 text-body-lg font-semibold text-ink-900">
+          <CardTitleLink href={href}>{name}</CardTitleLink>
+        </Heading>
         <p className="mt-0.5 flex min-w-0 items-center gap-1 text-body-sm text-ink-500">
           <MapPinIcon className="size-4 shrink-0" />
           <span className="truncate">{localityName}, {cityName}</span>
@@ -118,7 +126,7 @@ export function ResultCard({ property, priority }: { property: PropertySummary; 
       {/* Last in the DOM: keyboard and screen-reader order is the listing,
           then its save action. SaveButton's size-11 is the 44px target. */}
       <div className="absolute right-4 top-4 z-10">
-        <SaveButton id={publicId} title={name} visualClassName="bg-surface-000 shadow-e2" />
+        <SaveButton id={saveId} title={name} visualClassName="bg-surface-000 shadow-e2" />
       </div>
     </article>
   )

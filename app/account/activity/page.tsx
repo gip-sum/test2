@@ -7,22 +7,11 @@ import { ChevronRightIcon, HeartIcon, HomeIcon, MailIcon } from '@/components/ui
 import { getVerifiedUser } from '@/lib/auth/session'
 import { countUnreadNotifications, listLeads } from '@/lib/enquiry/queries'
 import { listSaved, listSavedListings } from '@/lib/saved/queries'
+import { describeCount as describe, describeUnread } from '@/lib/account/counts'
 
 export const metadata: Metadata = { title: 'Your activity', robots: { index: false, follow: false } }
 
-// listLeads and the notification count stop at 100 rows; a full page is
-// "100 or more", never a precise-looking 100.
-const LIMIT = 100
-
 type Row = { href: string; title: string; body: string; status: string | null; Icon: ComponentType<{ className?: string }>; supply?: boolean }
-
-/** What a count can truthfully say; null when it could not be read. */
-function describe(count: number | null, one: string, many: string): string | null {
-  if (count === null) return null
-  if (count === 0) return 'None yet'
-  if (count >= LIMIT) return `${LIMIT} or more ${many}`
-  return `${count} ${count === 1 ? one : many}`
-}
 
 /**
  * The Activity tab's hub (Phase D): the minimum shell the phone bar needs.
@@ -63,7 +52,7 @@ export default async function ActivityPage() {
     {
       href: '/dashboard/enquiries', title: 'Enquiries on your listings', body: 'Buyers and tenants who got in touch about a home you listed.', Icon: MailIcon, supply: true,
       // Unread only: the inbox's own "new" figure. Nothing unread says nothing.
-      status: unread ? (unread >= LIMIT ? `${LIMIT} or more new` : `${unread} new`) : null,
+      status: describeUnread(unread),
     },
   ]
 

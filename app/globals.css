@@ -1806,6 +1806,26 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
    on the narrowest phones they wrap under each other instead of pushing
    the page sideways (320px measured 7px of overflow). Owner workspace only. */
 [data-workspace='owner'] .workspace-page-actions { min-width: 0; flex-shrink: 1; }
+/* The seller inbox (UI-19): the enquiry list beside the selected enquiry
+   from 1024px; on a phone one or the other (the page decides which). The
+   detail keeps its place while a long list scrolls. */
+.inbox-grid { display: grid; min-width: 0; gap: 16px; align-items: start; }
+@media (min-width: 1024px) {
+  .inbox-grid { grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr); gap: 20px; }
+  .inbox-detail { position: sticky; top: 16px; }
+}
+@media (min-width: 1440px) { .inbox-grid { grid-template-columns: 25rem minmax(0, 1fr); } }
+.inbox-list { overflow: hidden; }
+.inbox-rows > li:last-child .inbox-row { border-bottom: 0; }
+/* The selected enquiry: tinted, and marked with a bar — shape as well as colour. */
+.inbox-row { position: relative; }
+.inbox-row[aria-current='true']::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--color-brand-600); }
+/* The newest enquiry, open beside the list when none was chosen: marked only where it is open. */
+@media (min-width: 1024px) {
+  .inbox-row[data-shown] { background: var(--color-brand-50); }
+  .inbox-row[data-shown]::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--color-brand-600); }
+}
+.inbox-row:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: -2px; }
 /* A card's "More" menu: the open control reads as pressed. */
 .card-menu[open] > summary { border-color: var(--color-brand-600); background: var(--color-brand-50); color: var(--color-brand-700); }
 .workspace-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: var(--text-body-sm); line-height: 20px; }

@@ -1,4 +1,6 @@
 import type { PreviewModel } from '@/lib/preview/model'
+import type { PublicSubmission } from '@/lib/listings/types'
+import type { ResultCardData } from '@/lib/property/types'
 import { listingBadges } from '@/lib/property/badges'
 import { attributesOf, type ContactInfo, type OverviewData } from '@/lib/property/overview'
 
@@ -71,5 +73,23 @@ export function contactOfListing(m: Published, listingId: string, postedAt?: str
     rateArea: m.pricing.intent === 'buy' ? m.carpetSqft : undefined,
     target: { listingId },
     note: 'Approval allows publication and does not certify property ownership or accuracy.',
+  }
+}
+
+/**
+ * A published listing as a results card (UI-19: a saved real listing on
+ * /account/saved), from its public submission and photos. Every field is
+ * one the seller gave; photos go through the public photo route, which the
+ * image optimizer can resize for the card.
+ */
+export function cardOfListing(listingId: string, s: PublicSubmission, photos: readonly { id: string }[], activatedAt: string | null): ResultCardData {
+  return {
+    title: s.title, society: s.society_name ?? undefined, localityName: s.locality_name, cityName: s.city_name,
+    intent: s.intent, price: s.price, bedrooms: s.bedrooms ?? 0, bathrooms: s.bathrooms,
+    carpetArea: s.carpet_area, areaUnit: s.area_unit, areaBasis: 'carpet', propertyType: s.property_type,
+    furnishing: s.furnishing, constructionStatus: s.construction_status, floor: s.floor ?? undefined, totalFloors: s.total_floors,
+    sellerType: s.seller_type, sellerName: s.seller_name, postedAt: activatedAt ?? s.created_at,
+    photos: photos.map((p, i) => ({ id: p.id, url: `/api/listings/${listingId}/photos/${p.id}`, alt: `Property photo ${i + 1} — ${s.title}` })),
+    href: `/listing/${listingId}`, saveId: listingId,
   }
 }

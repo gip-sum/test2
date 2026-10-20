@@ -5,7 +5,7 @@ import { addDays, buildPerformance, daysEnding, enquiryRate, niceMax, parseQuery
 const L1 = 'd9140f33-a429-46f3-9514-000000000001', L2 = 'd9140f33-a429-46f3-9514-000000000002', L3 = 'd9140f33-a429-46f3-9514-000000000003'
 const card = (id: string | null, status: PropertyCard['status'], title: string): PropertyCard => ({
   draftId: `c-${title}`, listing: id ? { id, version: 1, current_submission_id: 'e' } : null, status, title, intent: 'buy', price: 1, place: null,
-  since: '2026-10-01', expiresAt: null, daysLeft: null, expiringSoon: false, rejectionReason: null, progress: null, detailsUnavailable: false, enquiries: null, activity: 0, cover: null, photoCount: null,
+  since: '2026-10-01', expiresAt: null, daysLeft: null, expiringSoon: false, rejectionReason: null, progress: null, detailsUnavailable: false, enquiries: null, activity: 0, cover: null, coverId: null, photoCount: null,
 })
 const row = (listing_id: string, day: string, views: number, enquiries = 0): ActivityRow => ({ listing_id, day, views, enquiries })
 

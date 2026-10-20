@@ -58,6 +58,19 @@ export type PropertyMedia = {
   authenticated?: boolean
 }
 
+/**
+ * What a results card shows (UI-19): the fields it displays, where it links
+ * and what its heart saves. A demo listing's summary provides it directly
+ * (resultCardOf); a real published listing through its adapter
+ * (lib/listings/overview.ts, cardOfListing), so a saved real listing is
+ * the same card as a search result without inventing the fields a card
+ * never shows.
+ */
+export type ResultCardData = Pick<PropertySummary,
+  'title' | 'society' | 'localityName' | 'cityName' | 'intent' | 'price' | 'bedrooms' | 'bathrooms' | 'carpetArea' | 'areaUnit' |
+  'areaBasis' | 'propertyType' | 'furnishing' | 'constructionStatus' | 'floor' | 'totalFloors' | 'sellerType' | 'sellerName' |
+  'postedAt' | 'photos' | 'isPriceReduced'> & { href: string; saveId: string }
+
 export type PropertySummary = {
   id: string
   /** Short, non-sequential public identifier used in URLs. */

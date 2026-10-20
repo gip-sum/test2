@@ -140,6 +140,21 @@ export async function listSubmissionSummaries(user:AuthUser,submissionIds:readon
  const list=ids(submissionIds);if(!list)return []
  return rows<SubmissionSummary>(`property_listing_submissions?id=in.${list}&select=id,listing_id,title,intent,price,city_name,locality_name`)
 }
+/**
+ * Published listings as results cards need them (UI-19: Saved): the public
+ * submission, its photos in order and when it went live — three batched
+ * public reads for any number of listings. Only listings public right now.
+ */
+export async function getPublishedCards(listingIds:readonly string[]):Promise<Map<string,{submission:PublicSubmission;photos:Pick<PublicListingPhoto,'id'|'position'>[];activatedAt:string|null}>>{
+ const list=ids(listingIds);if(!list||!authConfig())return new Map()
+ const listings=(await rows<Pick<Listing,'id'|'status'|'current_submission_id'|'expires_at'|'activated_at'>>(`property_listings?id=in.${list}&select=id,status,current_submission_id,expires_at,activated_at`,'public')).filter(l=>effectiveStatus(l)==='ACTIVE'&&l.current_submission_id)
+ const current=ids(listings.map(l=>l.current_submission_id!));if(!current)return new Map()
+ const [submissions,photos]=await Promise.all([
+  rows<PublicSubmission>(`property_listing_submissions?id=in.${current}&select=${publicSubmissionFields}`,'public'),
+  rows<Pick<PublicListingPhoto,'id'|'submission_id'|'position'>>(`property_listing_photos?submission_id=in.${current}&select=id,submission_id,position&order=position`,'public'),
+ ])
+ return new Map(listings.flatMap(l=>{const s=submissions.find(x=>x.id===l.current_submission_id);return s?[[l.id,{submission:s,photos:photos.filter(p=>p.submission_id===s.id).sort((a,b)=>a.position-b.position),activatedAt:l.activated_at}] as const]:[]}))
+}
 /** The photos of the seller's current submissions, in order: the dashboard's cover and photo count (UI-18). */
 export async function listSubmissionPhotos(user:AuthUser,submissionIds:readonly string[]){
  const list=ids(submissionIds);if(!list)return []

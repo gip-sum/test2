@@ -77,6 +77,12 @@ export type PropertyCard = {
    * is none or photos could not be read (UI-18).
    */
   cover: string | null
+  /**
+   * The submitted copy's first photo id, so a live listing's cover can be
+   * shown through its public, resizable route (UI-19: the inbox's small
+   * property thumbnail); null for drafts or when unknown.
+   */
+  coverId: string | null
   /** Photos on that copy or draft; null when they could not be read. */
   photoCount: number | null
 }
@@ -202,6 +208,7 @@ export function buildCards(input: DashboardInput): PropertyCard[] {
       enquiries: !listing || status === 'REMOVED' && !count ? null : input.enquiryCounts === null ? 'unavailable' : { total: count?.total ?? 0, newCount: count?.new_count ?? 0 },
       activity,
       cover: status === 'REMOVED' ? null : cover,
+      coverId: submitted && status !== 'REMOVED' ? photos?.[0] ?? null : null,
       photoCount: photos ? photos.length : null,
     }
   })
