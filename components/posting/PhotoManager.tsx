@@ -360,7 +360,7 @@ function PhotoTile({ item, index, count, canOrder, busy, onDragStart, onDrag, on
         <span aria-hidden className="absolute left-2 top-2 grid size-8 place-items-center rounded-full bg-surface-000/95 text-label font-bold text-ink-900 shadow-e1 tabular">{index + 1}</span>
         {cover && <span className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1 text-caption font-semibold text-on-brand shadow-e1">
           <svg viewBox="0 0 24 24" className="size-3.5" fill="currentColor" aria-hidden><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6-4.5-4.2 6.1-.7z" /></svg>
-          Cover<span className="hidden sm:inline">&nbsp;photo</span>
+          <span>Cover<span className="hidden sm:inline"> photo</span></span>
         </span>}
         {canOrder && count > 1 && (
           // Pointer-only: the tools below reorder from the keyboard.
