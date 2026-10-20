@@ -58,19 +58,24 @@ export function ChipGroup({ name, legend, hint, options, values, errors, variant
           // aria-invalid is not valid on a radio; the group's error is read
           // through the fieldset's aria-describedby, and this only styles it.
           <label key={option.value} className={variant === 'card' ? 'post-option' : 'post-chip'} data-invalid={error ? true : undefined}>
+            {/* A card's radio is named by its title alone and described by
+                its line of meaning; wrapped in the label, both would be read
+                as one long name. */}
             <input
               type="radio"
               name={name}
               value={option.value}
               id={index === 0 ? (firstId ?? fieldId(name as DetailKey)) : undefined}
               defaultChecked={values[name] === option.value}
+              aria-labelledby={variant === 'card' ? `${name}-${option.value}-title` : undefined}
+              aria-describedby={variant === 'card' && option.description ? `${name}-${option.value}-note` : undefined}
               className="sr-only"
             />
             <span aria-hidden="true" className="post-chip-tick">✓</span>
             {variant === 'card' ? (
               <span className="min-w-0">
-                <span className="block font-semibold">{option.label}</span>
-                {option.description && <span className="mt-0.5 block text-body-sm font-normal text-ink-500">{option.description}</span>}
+                <span id={`${name}-${option.value}-title`} className="block font-semibold">{option.label}</span>
+                {option.description && <span id={`${name}-${option.value}-note`} className="mt-0.5 block text-body-sm font-normal text-ink-500">{option.description}</span>}
               </span>
             ) : option.label}
           </label>

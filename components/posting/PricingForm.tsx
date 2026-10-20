@@ -15,9 +15,12 @@ export function PricingForm({ entry, carried, location, values, errors }: {
   entry: CompleteEntry; carried: DetailInput; location: LocationInput; values: PricingInput; errors: PricingErrors
 }) {
   // Label, hint, error and their ARIA come from the shared FormField (UI-09).
-  // An amount carries a ₹ inside the field and reads back as typed.
+  // An amount carries a ₹ inside the field and reads back as typed. The
+  // drawn ₹ is decorative, so the label still names the currency to a
+  // screen reader ("Sale price (₹)", as before UI-17) without repeating it
+  // on screen.
   const amount = (key: PricingKey, label: string, hint: string, opts: { lead?: boolean; monthly?: boolean } = {}) => (
-    <FormField key={key} id={pricingFieldId(key)} messageId={`${key}-pricing`} label={label} hint={hint} error={errors[key]}>
+    <FormField key={key} id={pricingFieldId(key)} messageId={`${key}-pricing`} label={<>{label}<span className="sr-only"> (₹)</span></>} hint={hint} error={errors[key]}>
       {(control) => <>
         <div className="relative">
           <span aria-hidden className={cn('pointer-events-none absolute left-3 top-1/2 mt-1 -translate-y-1/2 font-semibold text-ink-500', opts.lead ? 'text-heading-3' : 'text-body')}>₹</span>

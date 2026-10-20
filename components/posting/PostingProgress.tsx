@@ -64,28 +64,31 @@ export function PostingProgress({ view, photos = false, variant }: { view: Posti
     return (
       <nav aria-label="Posting progress" className="lg:hidden">
         <details className="post-stepbar group rounded-lg border border-border-subtle bg-surface-000 shadow-e1">
-          <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 py-2.5 [&::-webkit-details-marker]:hidden">
-            <span className="min-w-0 flex-1">
-              <span className="block text-overline uppercase text-brand-700">Step {active + 1} of {STAGES.length}</span>
-              <span className="block truncate text-body font-semibold text-ink-900">
-                {current.label}
-                {next && <span className="font-normal text-ink-500"> · Next: {next.label}</span>}
+          <summary className="block cursor-pointer list-none px-4 pb-3 pt-2.5 [&::-webkit-details-marker]:hidden">
+            <span className="flex min-h-11 items-center gap-3">
+              <span className="min-w-0 flex-1">
+                <span className="block text-overline uppercase text-brand-700">Step {active + 1} of {STAGES.length}</span>
+                <span className="block truncate text-body font-semibold text-ink-900">
+                  {current.label}
+                  {next && <span className="font-normal text-ink-500"> · Next: {next.label}</span>}
+                </span>
+              </span>
+              <span className="text-label text-brand-700">
+                <span className="group-open:hidden">All steps</span>
+                <span className="hidden group-open:inline">Hide</span>
               </span>
             </span>
-            <span className="text-label text-brand-700">
-              <span className="group-open:hidden">All steps</span>
-              <span className="hidden group-open:inline">Hide</span>
+            {/* In the summary, not the disclosure: the track is seen with the
+                bar closed, and UI-08's fill only runs where it is drawn (a
+                closed <details> does not render its content). */}
+            <span aria-hidden className="mt-2.5 grid grid-cols-8 gap-1">
+              {STAGES.map((stage, index) => (
+                <span key={stage.id} className="block h-1.5 overflow-hidden rounded-full bg-surface-200">
+                  <span data-filled={index <= active || undefined} className="progress-fill block h-full rounded-full bg-brand-600" />
+                </span>
+              ))}
             </span>
           </summary>
-          <div className="px-4 pb-3">
-            <ol className="grid grid-cols-8 gap-1" aria-hidden>
-              {STAGES.map((stage, index) => (
-                <li key={stage.id} className="block h-1.5 overflow-hidden rounded-full bg-surface-200">
-                  <span data-filled={index <= active || undefined} className="progress-fill block h-full rounded-full bg-brand-600" />
-                </li>
-              ))}
-            </ol>
-          </div>
           <div className="border-t border-border-subtle px-2 py-2">
             <StepList view={view} active={active} />
           </div>
