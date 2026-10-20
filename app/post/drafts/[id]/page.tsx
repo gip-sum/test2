@@ -1,13 +1,12 @@
 import { ReloadDraft } from '@/components/drafts/ReloadDraft'
 import { ErrorState } from '@/components/ui/ErrorState'
 import type { Metadata } from 'next'
-import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { PageShell } from '@/components/layout/PageShell'
 import { DraftEditor } from '@/components/drafts/DraftEditor'
 import { PostingPage } from '@/components/posting/PostingPage'
 import { PhotoManager } from '@/components/posting/PhotoManager'
-import { PostingProgress } from '@/components/posting/PostingProgress'
+import { PHOTO_GUIDE, PostingWorkspace, StepHeading } from '@/components/posting/PostingWorkspace'
 import { getVerifiedUser } from '@/lib/auth/session'
 import { DraftError, getDraft } from '@/lib/drafts/queries'
 import { snapshotOf } from '@/lib/drafts/types'
@@ -28,12 +27,9 @@ export default async function DraftPage({ params }: { params: Promise<{ id: stri
   const snapshot = snapshotOf(draft), resolved = resolvePosting(snapshot.input, kolkataToday())
   const photos = snapshot.path === '/post/photos' && resolved.view.stage === 'pricing-review'
   return <PageShell><DraftEditor key={`${draft.id}:${draft.revision}`} initial={draft}>
-    {photos ? <section className="mx-auto max-w-5xl px-4 pb-28 pt-8 sm:px-8">
-      <Link href={resolved.canonicalUrl} className="inline-flex min-h-11 items-center text-brand-700">← Back to pricing review</Link>
-      <PostingProgress view={resolved.view} photos />
-      <h1 className="mt-8 text-heading-1 font-display text-ink-900">Show your property at its best.</h1>
-      <p className="mt-3 text-body-lg text-ink-700">Your draft keeps these private photos with your property answers.</p>
+    {photos ? <PostingWorkspace view={resolved.view} photos back={resolved.canonicalUrl} backLabel="Pricing review" guide={PHOTO_GUIDE}>
+      <StepHeading title="Show your property at its best." lede="Your draft keeps these private photos with your property answers." />
       <PhotoManager collection={draft.collection_id} />
-    </section> : <PostingPage input={snapshot.input} draft />}
+    </PostingWorkspace> : <PostingPage input={snapshot.input} draft />}
   </DraftEditor></PageShell>
 }

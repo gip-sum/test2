@@ -1382,14 +1382,65 @@ img[data-photo]::before { content: ''; position: absolute; inset: 0; background:
   min-height: 44px;
   padding: 0 16px;
   border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
   background: var(--color-surface-000);
   color: var(--color-ink-900);
-  font-size: var(--text-body-sm);
+  font-size: var(--text-body);
   cursor: pointer;
   transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
 }
 .post-chip:hover { border-color: var(--color-brand-600); }
+/* An answer with a line of meaning (UI-17): furnishing, construction,
+   availability, maintenance, negotiable. The same radio-in-a-label as a
+   chip, as a card; checked is a 2px border, a tick and a tint together. */
+.post-option {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-000);
+  color: var(--color-ink-900);
+  font-size: var(--text-body);
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
+}
+.post-option::before {
+  content: '';
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-000);
+}
+.post-option:hover { border-color: var(--color-brand-600); }
+.post-option .post-chip-tick { display: none; }
+.post-option:has(input:checked) { border: 2px solid var(--color-brand-600); padding: 11px 13px; background: var(--color-brand-50); }
+.post-option:has(input:checked)::before { border: 5px solid var(--color-brand-600); }
+.post-option:has(input:focus-visible) { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
+.post-option[data-invalid]:not(:has(input:checked)) { border-color: var(--color-danger-600); }
+/* First-steps answers lift a little under a pointer that hovers; a tap
+   never leaves a card lifted (Android keeps :hover). */
+.post-choice { transition: border-color var(--duration-fast) var(--ease-standard), box-shadow var(--duration-base) var(--ease-standard), transform var(--duration-base) var(--ease-standard); }
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .post-choice:hover { transform: translateY(-2px); box-shadow: var(--shadow-e2); }
+  .post-choice:hover .post-choice-arrow { transform: translateX(2px); }
+}
+.post-choice-arrow { transition: transform var(--duration-base) var(--ease-standard); }
+/* The photo upload zone (UI-17, after Kokonut UI's File Upload): a file
+   dragged anywhere over the window arms it, over it it is ready to take
+   the drop. Colour and border only — nothing on the page moves. */
+.photo-zone { transition: border-color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard); }
+.photo-zone:hover, .photo-zone[data-armed] { border-color: var(--color-brand-500); }
+.photo-zone[data-over] { border-color: var(--color-brand-600); border-style: solid; background: var(--color-brand-100); }
+.photo-zone[aria-disabled] { cursor: not-allowed; border-color: var(--color-border-strong); background: var(--color-surface-200); }
+/* The photo being dragged rides above the others with a deeper shadow. */
+.photo-tile[data-dragging] { z-index: 2; box-shadow: var(--shadow-e2); }
 .post-chip-tick { display: none; color: var(--color-brand-700); font-weight: 700; }
 .post-chip:has(input:checked) {
   border: 2px solid var(--color-brand-600);
@@ -1463,10 +1514,12 @@ img[data-photo]::before { content: ''; position: absolute; inset: 0; background:
   }
 }
 
-/* Native selects keep this pricing follow-up usable without JavaScript. */
+/* The maintenance amount appears once "Charged separately" is chosen —
+   CSS on the radio (UI-17; it was a select), so it holds without
+   JavaScript; without :has() it simply shows, and the server ignores it. */
 @supports selector(:has(*)) {
   .post-pricing-form .post-if-maintenance { display: none; }
-  .post-pricing-form:has(select[name="maintenance"] option[value="separate"]:checked) .post-if-maintenance { display: block; }
+  .post-pricing-form:has(input[name="maintenance"][value="separate"]:checked) .post-if-maintenance { display: block; }
 }
 /* Phase E: mobile reference layout. Colours remain in the shared token layer. */
 .reference-wordmark { display: flex; flex-shrink: 0; align-items: center; min-height: 44px; border-radius: var(--radius-md); }
@@ -1931,8 +1984,9 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
    (.home-container), mint for the band that says where you are, white for
    the work, forest only where something is chosen. */
 /* The property page's band (UI-16) is the same mint. */
-.search-band, .property-band { background: linear-gradient(180deg, var(--color-brand-50) 0%, color-mix(in srgb, var(--color-brand-50) 45%, var(--color-surface-000)) 100%); border-bottom: 1px solid color-mix(in srgb, var(--color-brand-100) 70%, transparent); }
+.search-band, .property-band, .post-band { background: linear-gradient(180deg, var(--color-brand-50) 0%, color-mix(in srgb, var(--color-brand-50) 45%, var(--color-surface-000)) 100%); border-bottom: 1px solid color-mix(in srgb, var(--color-brand-100) 70%, transparent); }
 .search-band .sample-notice, .property-band .sample-notice { margin-top: 0; }
+.post-stepbar[open] { box-shadow: var(--shadow-e2); }
 
 /* Locality shortcuts: a swipeable row on phones (positioned, so the sr-only
    counts inside are clipped by it — UI-14), wrapping from 640px. */

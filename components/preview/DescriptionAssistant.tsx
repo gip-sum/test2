@@ -35,12 +35,15 @@ export function DescriptionAssistant({id,revision,signature,description,availabl
     }catch(e){setError(e instanceof Error?e.message:'The request could not be completed.')}
     finally {setBusy(false)}
   }
-  return <section className="mt-8 rounded-lg border border-border-subtle p-4 sm:p-5" aria-labelledby="description-heading">
-    <h2 id="description-heading" className="font-display text-heading-3">About this property</h2>
+  // UI-17: a card in the review's seller area, above the buyer preview —
+  // whose own "About this property" section shows what is saved — so the
+  // editor has its own name and heading id.
+  return <section className="min-w-0 rounded-lg border border-border-subtle bg-surface-000 p-5 shadow-e1" aria-labelledby="description-editor-heading">
+    <h2 id="description-editor-heading" className="font-display text-heading-3 text-ink-900">Your description</h2>
     <p id="description-help" className="mt-2 text-body-sm text-ink-700">Write one paragraph, or ask AI to draft it from your saved facts. Review every claim before saving.</p>
-    <label htmlFor="property-description" className="mt-4 block font-semibold">Property description</label>
-    <textarea id="property-description" aria-describedby="description-help description-count" rows={5} value={text} onChange={e=>setText(e.target.value)} className="mt-2 w-full min-w-0 rounded-md border border-border-strong bg-surface-000 p-3 text-ink-900"/>
-    <p id="description-count" className="mt-1 text-caption text-ink-500">{[...text].length.toLocaleString('en-IN')} / {DESCRIPTION_LIMIT.toLocaleString('en-IN')} characters · no line breaks</p>
+    <label htmlFor="property-description" className="mt-4 block text-label text-ink-900">Property description</label>
+    <textarea id="property-description" aria-describedby="description-help description-count" rows={7} value={text} onChange={e=>setText(e.target.value)} className="mt-2 block w-full min-w-0 resize-y rounded-md border border-border-strong bg-surface-000 px-4 py-3 text-base leading-relaxed text-ink-900 focus:border-brand-600 focus:outline-2 focus:outline-offset-1 focus:outline-brand-600"/>
+    <p id="description-count" className={`mt-1.5 text-caption tabular ${[...text].length>DESCRIPTION_LIMIT?'font-semibold text-danger-600':'text-ink-500'}`}>{[...text].length.toLocaleString('en-IN')} / {DESCRIPTION_LIMIT.toLocaleString('en-IN')} characters · no line breaks</p>
     <div className="mt-4 flex flex-wrap gap-3">
       <Button type="button" variant="outline" onClick={()=>act('save')} loading={busy==='save'} aria-disabled={busy==='generate'||undefined} disabled={!validDescription(text)||text.trim()===(description??'')}>Save description</Button>
       <Button type="button" variant="outline" onClick={()=>act('generate')} loading={busy==='generate'} aria-disabled={busy==='save'||undefined} disabled={(working&&!pendingDelivery)||!available||!complete}>{pendingDelivery?'Retry background delivery':'Generate with AI'}</Button>

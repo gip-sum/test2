@@ -18,7 +18,7 @@ export function ConfirmPreview({id,signature,canConfirm,confirmed}:{id:string;si
       confirmedHere.current=true;setDone(true);router.refresh()
     }catch(e){setError(e instanceof Error?e.message:'Could not confirm. Retry.')}finally{setBusy(false)}
   }
-  return <section aria-labelledby="confirmation-heading" className="rounded-lg border border-border-subtle bg-brand-100 p-5">
+  return <section aria-labelledby="confirmation-heading" className="rounded-lg border border-border-subtle bg-surface-000 p-5 shadow-e2">
     <h2 id="confirmation-heading" className="font-display text-heading-3 text-ink-900">Final review</h2>
     <p className="mt-2 text-body-sm text-ink-700">Check the information and photos as a buyer would see them. Confirming this review does not publish your property.</p>
     {done ? <p ref={doneRef} tabIndex={-1} role="status" className="mt-4 font-semibold text-brand-700">Review confirmed. Your property is still private and unpublished.</p> : <>

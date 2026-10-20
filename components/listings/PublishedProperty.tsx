@@ -19,13 +19,19 @@ import { amountOf, contactOfListing, isPublishable, overviewOfListing } from '@/
  * can fill are rendered: no amenities or landmarks until posting collects
  * them.
  *
- * Three callers: a visitor (`contact`: the card, the phone bar and its
+ * Four callers: a visitor (`contact`: the card, the phone bar and its
  * sheet), the listing's owner (`ownerPanel` instead of a form addressed to
- * themselves), and the submitted-copy view (neither). `listingId` with
+ * themselves), the submitted-copy view (neither), and the seller's draft
+ * preview (UI-17: its confirmation as `ownerPanel`, a preview marker in
+ * `band`, the listing's name one level under the page's own heading) — so
+ * what a seller reviews is what a buyer will get. `listingId` with
  * `isPublic` makes the address copyable.
  */
-export function PublishedProperty({ model, postedAt, listingId, isPublic = false, saveAction, ownerPanel, contact = false }: {
+export function PublishedProperty({ model, postedAt, listingId, isPublic = false, saveAction, ownerPanel, contact = false, band, nameLevel }: {
   model: PreviewModel
+  /** Above the photos, inside the band. */
+  band?: ReactNode
+  nameLevel?: 1 | 2
   postedAt?: string
   listingId?: string
   isPublic?: boolean
@@ -41,10 +47,11 @@ export function PublishedProperty({ model, postedAt, listingId, isPublic = false
 
   return (
     <PropertyLayout
+      band={band}
       photos={m.media}
       title={m.title}
       saveAction={saveAction}
-      overview={<PropertyOverview data={overviewOfListing(m, { postedAt, sharePath: isPublic && listingId ? `/listing/${listingId}` : undefined })} />}
+      overview={<PropertyOverview nameLevel={nameLevel} data={overviewOfListing(m, { postedAt, sharePath: isPublic && listingId ? `/listing/${listingId}` : undefined })} />}
       aside={info ? <ContactCard contact={info} headingId="contact-heading" /> : ownerPanel}
       asideLabelledBy={info ? 'contact-heading' : undefined}
       asideOnPhone={!info && Boolean(ownerPanel)}

@@ -8,6 +8,7 @@ import { postingUrl } from '@/lib/posting/entry'
 import type { CompleteEntry } from '@/lib/posting/flow'
 import { FURNISHING_LABEL, FURNISHING_ORDER, PROPERTY_TYPE_LABEL, SELLER_LABEL } from '@/lib/property/types'
 import { ErrorSummary } from './ErrorSummary'
+import { FormSection, StepActions, StepHeading } from './PostingWorkspace'
 
 /**
  * The Phase 12 property facts form.
@@ -22,6 +23,7 @@ import { ErrorSummary } from './ErrorSummary'
  */
 
 const UNIT_LABEL: Record<(typeof AREA_UNITS)[number], string> = { sqft: 'Sq. ft', sqm: 'Sq. m', sqyd: 'Sq. yd' }
+const FURNISHING_NOTE: Record<(typeof FURNISHING_ORDER)[number], string> = { UNFURNISHED: 'No furniture or fittings beyond the basics.', SEMI_FURNISHED: 'Some fittings, such as wardrobes or lights.', FURNISHED: 'Comes with furniture.' }
 const COUNTS = Array.from({ length: 10 }, (_, index) => String(index + 1))
 export const fieldId = (key: DetailKey) => `field-${key}`
 
@@ -31,32 +33,46 @@ export const fieldId = (key: DetailKey) => `field-${key}`
 // and pricing steps already used. Hint and error names (`carpet-error`) are
 // unchanged: the error summary and the checks point at them.
 
-function ChipGroup({ name, legend, hint, options, values, errors }: {
-  name: DetailKey
+/**
+ * A small finite answer as real radios (Phase 12), drawn either as compact
+ * chips (counts, units) or as option cards with a line of meaning (UI-17:
+ * furnishing, construction, availability) — never a select for two to
+ * four answers a seller should see at once. Exported for the pricing step.
+ */
+export function ChipGroup({ name, legend, hint, options, values, errors, variant = 'chip', firstId }: {
+  name: string
   legend: string
   hint?: string
-  options: { value: string; label: string }[]
-  values: DetailInput
-  errors: DetailErrors
+  options: { value: string; label: string; description?: string }[]
+  values: Record<string, string | undefined>
+  errors: Record<string, string | undefined>
+  variant?: 'chip' | 'card'
+  /** The id the error summary links to; the first option carries it. */
+  firstId?: string
 }) {
   const error = errors[name]
   return (
     <FormFieldset messageId={name} legend={legend} hint={hint} error={error}>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className={variant === 'card' ? 'mt-3 grid gap-2 sm:grid-cols-[repeat(auto-fit,minmax(10.5rem,1fr))]' : 'mt-3 flex flex-wrap gap-2'}>
         {options.map((option, index) => (
           // aria-invalid is not valid on a radio; the group's error is read
           // through the fieldset's aria-describedby, and this only styles it.
-          <label key={option.value} className="post-chip" data-invalid={error ? true : undefined}>
+          <label key={option.value} className={variant === 'card' ? 'post-option' : 'post-chip'} data-invalid={error ? true : undefined}>
             <input
               type="radio"
               name={name}
               value={option.value}
-              id={index === 0 ? fieldId(name) : undefined}
+              id={index === 0 ? (firstId ?? fieldId(name as DetailKey)) : undefined}
               defaultChecked={values[name] === option.value}
               className="sr-only"
             />
             <span aria-hidden="true" className="post-chip-tick">✓</span>
-            {option.label}
+            {variant === 'card' ? (
+              <span className="min-w-0">
+                <span className="block font-semibold">{option.label}</span>
+                {option.description && <span className="mt-0.5 block text-body-sm font-normal text-ink-500">{option.description}</span>}
+              </span>
+            ) : option.label}
           </label>
         ))}
       </div>
@@ -91,15 +107,6 @@ function TextField({ name, label, hint, values, errors, optional, type = 'text',
   )
 }
 
-function Group({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
-  return (
-    <section className={`border-t border-border-subtle pt-6 ${className}`}>
-      <h2 className="font-display text-heading-3 text-ink-900">{title}</h2>
-      <div className="mt-4 grid gap-6">{children}</div>
-    </section>
-  )
-}
-
 export function DetailsForm({ entry, values, errors, today, location = {}, pricing = {} }: {
   entry: CompleteEntry
   values: DetailInput
@@ -117,14 +124,14 @@ export function DetailsForm({ entry, values, errors, today, location = {}, prici
   const plan = entry.intent === 'buy' ? 'For sale' : 'For rent'
 
   return <>
-    <h1 id="post-heading" className="font-display text-heading-1 text-ink-900 sm:text-[40px] sm:leading-tight">Tell us about the property.</h1>
-    <p className="mt-3 max-w-xl text-body-lg text-ink-700">Answer for the property as it is today. You can change anything on the next screen.</p>
-    <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm text-ink-700">
-      <span className="font-semibold text-ink-900">{SELLER_LABEL[entry.role]} · {plan} · {PROPERTY_TYPE_LABEL[entry.type]}</span>
-      <Link href={postingUrl({ role: entry.role, intent: entry.intent }, { details: values, location, pricing })} className="inline-flex min-h-11 items-center text-label text-brand-700 underline underline-offset-4">Change property type</Link>
-    </p>
+    <StepHeading title="Tell us about the property." lede="Answer for the property as it is today. You can change anything on the next screen.">
+      <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-body-sm text-ink-700">
+        <span className="inline-flex min-h-8 items-center rounded-full bg-surface-200 px-3 font-semibold text-ink-900">{SELLER_LABEL[entry.role]} · {plan} · {PROPERTY_TYPE_LABEL[entry.type]}</span>
+        <Link href={postingUrl({ role: entry.role, intent: entry.intent }, { details: values, location, pricing })} className="inline-flex min-h-11 items-center text-label text-brand-700 underline underline-offset-4">Change property type</Link>
+      </p>
+    </StepHeading>
 
-    <form method="get" action="/post" noValidate className="post-form mt-7 grid gap-8">
+    <form method="get" action="/post" noValidate className="post-form mt-8 grid gap-7">
       {list.length > 0 && <ErrorSummary errors={list} />}
       <input type="hidden" name="role" value={entry.role} />
       <input type="hidden" name="intent" value={entry.intent} />
@@ -132,29 +139,26 @@ export function DetailsForm({ entry, values, errors, today, location = {}, prici
       {pricingPairs(pricing).map(([key, value]) => <input key={key} type="hidden" name={key} value={value} />)}
       {locationPairs(location).map(([key, value]) => <input key={key} type="hidden" name={key} value={value} />)}
 
-      <Group title="Rooms" className="border-t-0 pt-0">
+      <FormSection first title="Configuration" description={keys.has('bhk') ? 'Bedrooms and bathrooms, as buyers search for them.' : 'A studio has no separate bedroom; give its bathrooms.'}>
         {keys.has('bhk') && <ChipGroup name="bhk" legend="Bedrooms (BHK)" options={COUNTS.map((n) => ({ value: n, label: n }))} values={shown} errors={errors} />}
         <ChipGroup name="baths" legend="Bathrooms" options={COUNTS.map((n) => ({ value: n, label: n }))} values={shown} errors={errors} />
-      </Group>
+      </FormSection>
 
-      <Group title="Area">
-        <p className="-mt-2 text-body-sm text-ink-700">
-          Carpet area is the floor you can actually use, inside the walls. Built-up adds the walls and balconies; super built-up adds a share of lifts, stairs and lobbies. Give carpet area, and the others if you know them.
-        </p>
+      <FormSection title="Area" description="Carpet area is the floor you can use inside the walls. Built-up adds walls and balconies; super built-up adds a share of lifts, stairs and lobbies.">
         <ChipGroup name="unit" legend="Measured in" options={AREA_UNITS.map((unit) => ({ value: unit, label: UNIT_LABEL[unit] }))} values={shown} errors={errors} />
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-3">
           <TextField name="carpet" label="Carpet area" hint="For example 1,240" values={shown} errors={errors} />
           <TextField name="builtup" label="Built-up area" values={shown} errors={errors} optional />
           <TextField name="super" label="Super built-up area" values={shown} errors={errors} optional />
         </div>
-      </Group>
+      </FormSection>
 
-      <Group title="Furnishing">
-        <ChipGroup name="furnishing" legend="How is it furnished?" options={FURNISHING_ORDER.map((f) => ({ value: f, label: FURNISHING_LABEL[f] }))} values={shown} errors={errors} />
-      </Group>
+      <FormSection title="Furnishing" description="What stays with the property.">
+        <ChipGroup name="furnishing" legend="How is it furnished?" variant="card" options={FURNISHING_ORDER.map((f) => ({ value: f, label: FURNISHING_LABEL[f], description: FURNISHING_NOTE[f] }))} values={shown} errors={errors} />
+      </FormSection>
 
-      <Group title="Floors">
-        <div className="grid gap-5 md:grid-cols-2">
+      <FormSection title={unitFloor ? 'Building and floor' : 'Floors'} description={unitFloor ? 'Where the home sits in its building.' : 'The house is the whole building.'}>
+        <div className="grid gap-5 sm:grid-cols-2">
           {unitFloor && <TextField name="floor" label="Which floor is it on?" hint="Enter 0 for the ground floor." values={shown} errors={errors} />}
           <TextField
             name="floors"
@@ -164,11 +168,11 @@ export function DetailsForm({ entry, values, errors, today, location = {}, prici
             errors={errors}
           />
         </div>
-      </Group>
+      </FormSection>
 
-      <Group title="Availability">
+      <FormSection title={entry.intent === 'buy' ? 'Construction' : 'Availability'} description={entry.intent === 'buy' ? 'Ready homes give their age; homes under construction give the expected possession.' : 'Its age, and when a tenant can move in.'}>
         {entry.intent === 'buy' ? <>
-          <ChipGroup name="status" legend="Is it ready to move in?" options={[{ value: 'READY', label: 'Ready to move' }, { value: 'UNDER_CONSTRUCTION', label: 'Under construction' }]} values={shown} errors={errors} />
+          <ChipGroup name="status" legend="Is it ready to move in?" variant="card" options={[{ value: 'READY', label: 'Ready to move', description: 'Construction is complete.' }, { value: 'UNDER_CONSTRUCTION', label: 'Under construction', description: 'Possession is still to come.' }]} values={shown} errors={errors} />
           <div className="post-if-ready">
             <TextField name="age" label="Age of the property, in years" hint="Years since construction was completed. Approximate is fine; enter 0 if it is under a year old." values={shown} errors={errors} />
           </div>
@@ -177,17 +181,16 @@ export function DetailsForm({ entry, values, errors, today, location = {}, prici
           </div>
         </> : <>
           <TextField name="age" label="Age of the property, in years" hint="Years since construction was completed. Approximate is fine; enter 0 if it is under a year old." values={shown} errors={errors} />
-          <ChipGroup name="available" legend="When can a tenant move in?" options={[{ value: 'now', label: 'Available now' }, { value: 'date', label: 'From a date' }]} values={shown} errors={errors} />
+          <ChipGroup name="available" legend="When can a tenant move in?" variant="card" options={[{ value: 'now', label: 'Available now', description: 'Ready for a tenant today.' }, { value: 'date', label: 'From a date', description: 'Give the first day below.' }]} values={shown} errors={errors} />
           <div className="post-if-date">
             <TextField name="from" label="Available from" type="date" min={today} hint="Day, month and year." values={shown} errors={errors} />
           </div>
         </>}
-      </Group>
+      </FormSection>
 
-      <div className="flex flex-col gap-3 border-t border-border-subtle pt-6 sm:flex-row sm:items-center">
+      <StepActions>
         <Button type="submit" variant="supply" size="lg" className="w-full sm:w-auto">Continue to review</Button>
-        <p className="text-body-sm text-ink-500">Nothing is published. Use Save as draft to enable autosave, or check your draft save status above.</p>
-      </div>
+      </StepActions>
     </form>
   </>
 }

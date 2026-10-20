@@ -51,12 +51,7 @@ const DEFERRED_CSS: Record<string, string> = {
 
 // Arbitrary values in TSX, by file. Same rule: listed, reasoned, shrinking.
 const DEFERRED_TSX: Record<string, string[]> = {
-  // Posting step headings and dashboard figures: 1px off display-1 / heading-2. UI-05/UI-09.
-  'components/posting/PostingPage.tsx': ['text-[40px]', 'text-[40px]', 'text-[40px]', 'rounded-[24px]', 'rounded-[24px]'],
-  'components/posting/DetailsForm.tsx': ['text-[40px]'],
-  'components/posting/DetailsReview.tsx': ['text-[40px]'],
-  'components/posting/LocationForm.tsx': ['text-[40px]'],
-  'components/posting/PricingForm.tsx': ['text-[40px]'],
+  // Dashboard figures: 1px off heading-2. UI-05/UI-09.
   'app/dashboard/page.tsx': ['text-[26px]'],
   'app/dashboard/enquiries/page.tsx': ['text-[26px]'],
   // The period tiles moved out of the performance page (UI-10), the same one figure.

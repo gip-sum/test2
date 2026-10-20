@@ -1,5 +1,4 @@
 import type { PricingInput } from '@/lib/posting/pricing'
-import Link from 'next/link'
 import { AreaDisplay } from '@/components/property/AreaDisplay'
 import { formatConfiguration } from '@/lib/format/area'
 import { postingUrl } from '@/lib/posting/entry'
@@ -8,6 +7,8 @@ import type { CompleteEntry } from '@/lib/posting/flow'
 import { CONSTRUCTION_LABEL, FURNISHING_LABEL, PROPERTY_TYPE_LABEL, SELLER_LABEL } from '@/lib/property/types'
 import type { LocationInput } from '@/lib/posting/location'
 import { fieldId } from './DetailsForm'
+import { StepHeading } from './PostingWorkspace'
+import { NextStep, ReviewList, type ReviewRow } from './ReviewParts'
 
 function formatMonth(month: string): string {
   return new Date(`${month}-01T00:00:00Z`).toLocaleDateString('en-IN', { month: 'long', year: 'numeric', timeZone: 'UTC' })
@@ -29,6 +30,7 @@ function ageText(years: number): string {
 }
 
 type Row = { label: string; value: React.ReactNode; edit: string; changeLabel: string }
+const rowsOf = (rows: Row[]): ReviewRow[] => rows.map((r) => ({ ...r, key: r.label }))
 
 /**
  * Everything answered so far, each with its own way back.
@@ -77,32 +79,14 @@ export function DetailsReview({ entry, facts, carried, location = {}, pricing = 
   ]
   if (facts.ageYears !== undefined) details.push({ label: 'Age', value: ageText(facts.ageYears), edit: edit('age'), changeLabel: 'Change Age' })
 
-  const list = (rows: Row[], label: string) => (
-    <dl aria-label={label} className="divide-y divide-border-subtle overflow-hidden rounded-lg border border-border-subtle bg-surface-000 px-5 shadow-e1 sm:px-7">
-      {rows.map((row) => (
-        <div key={row.label} className="flex min-h-20 items-center justify-between gap-4 py-4">
-          <div className="min-w-0">
-            <dt className="text-caption text-ink-500">{row.label}</dt>
-            <dd className="mt-1 font-display text-body-lg font-semibold text-ink-900 tabular">{row.value}</dd>
-          </div>
-          <Link href={row.edit} className="inline-flex min-h-11 shrink-0 items-center rounded-md px-3 text-label text-brand-700 underline-offset-4 hover:underline" aria-label={row.changeLabel}>Change</Link>
-        </div>
-      ))}
-    </dl>
-  )
-
   return <>
-    <h1 id="post-heading" className="font-display text-heading-1 text-ink-900 sm:text-[40px] sm:leading-tight">{heading ?? (finalReview ? 'Check the details and location.' : 'Check the property details.')}</h1>
-    <p className="mt-3 max-w-xl text-body-lg text-ink-700">Check each answer before moving on, and change anything that is not right.</p>
-    <h2 className="mt-8 font-display text-heading-3 text-ink-900">Your choices</h2>
-    <div className="mt-3">{list(choices, 'Your choices')}</div>
-    <h2 className="mt-8 font-display text-heading-3 text-ink-900">Property details</h2>
-    <div className="mt-3">{list(details, 'Property details')}</div>
-    {!finalReview && <div className="mt-6 rounded-lg border border-brand-600/20 bg-brand-100/65 p-5 sm:p-6">
-      <h2 className="font-display text-heading-3 text-ink-900">What happens next?</h2>
-      <p className="mt-2 text-body text-ink-700">Continue to add the property&apos;s location. Nothing is published. Save as draft to keep your progress, or check the save status above when editing a draft.</p>
-      <Link href={postingUrl(entry, { details: carried, location, pricing, step: 'location' })} className="mt-5 inline-flex min-h-12 items-center rounded-full bg-supply-600 px-5 text-label text-on-supply">Continue to location</Link>
-      <Link href={postingUrl(entry, { details: carried, edit: true, location, pricing })} className="mt-5 inline-flex min-h-11 items-center rounded-full border border-brand-600 bg-surface-000 px-5 text-label text-brand-700 hover:bg-brand-100">Edit property details</Link>
-    </div>}
+    <StepHeading title={heading ?? (finalReview ? 'Check the details and location.' : 'Check the property details.')} lede="Check each answer before moving on, and change anything that is not right." />
+    <ReviewList className="mt-8" title="Your choices" rows={rowsOf(choices)} />
+    <ReviewList className="mt-7" title="Property details" rows={rowsOf(details)} />
+    {!finalReview && <NextStep
+      body="Add the property's location next. Nothing is published until you submit it for review."
+      primary={{ href: postingUrl(entry, { details: carried, location, pricing, step: 'location' }), label: 'Continue to location' }}
+      secondary={{ href: postingUrl(entry, { details: carried, edit: true, location, pricing }), label: 'Edit property details' }}
+    />}
   </>
 }

@@ -104,19 +104,28 @@ export function DraftEditor({ initial, children }: { initial: Draft; children: R
   }
   function reload() { clean(); blocked.current = false; latest.current = saved.current; window.location.reload() }
   return <div ref={root}>
-    <div className="mx-auto max-w-[1320px] px-4 pt-5 lg:px-8">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border-subtle bg-brand-100 p-4">
-        <div><p className="font-semibold text-ink-900">Private draft</p><p role="status" className="text-body-sm text-ink-700">{status}</p></div>
+    {/* The workspace's save strip (UI-17): where the draft stands, said
+        once and calmly — a dot and a sentence, no animated "Saved" — and
+        the two ways to leave the editor. */}
+    <div className="border-b border-border-subtle bg-surface-000">
+      <div className="home-container flex flex-wrap items-center gap-x-4 gap-y-2 py-2.5">
+        <p className="flex min-w-0 flex-1 items-center gap-2 text-body-sm">
+          <span aria-hidden className={`size-2 shrink-0 rounded-full ${error ? 'bg-danger-600' : status === 'Saved to your account' ? 'bg-brand-600' : 'bg-supply-600'}`} />
+          <span className="font-semibold text-ink-900">Private draft</span>
+          <span role="status" className="text-ink-700">{status}</span>
+        </p>
         {/* While saving to leave, the pressed button stays focused and busy
             (UI-09); the other is unavailable but keeps its place. */}
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="secondaryBrand" disabled={!!recovery || conflict} loading={exitTo === 'preview'} aria-disabled={((moving || exitTo) && exitTo !== 'preview') || undefined} onClick={() => void leave('preview', `/post/drafts/${initial.id}/preview`)}>Preview property</Button>
-          <Button type="button" variant="secondaryBrand" disabled={!!recovery || conflict} loading={exitTo === 'exit'} aria-disabled={((moving || exitTo) && exitTo !== 'exit') || undefined} onClick={() => void leave('exit', '/post/drafts')}>Save & exit</Button>
+          <Button type="button" variant="secondaryBrand" className="rounded-full" disabled={!!recovery || conflict} loading={exitTo === 'preview'} aria-disabled={((moving || exitTo) && exitTo !== 'preview') || undefined} onClick={() => void leave('preview', `/post/drafts/${initial.id}/preview`)}>Preview property</Button>
+          <Button type="button" variant="secondaryBrand" className="rounded-full" disabled={!!recovery || conflict} loading={exitTo === 'exit'} aria-disabled={((moving || exitTo) && exitTo !== 'exit') || undefined} onClick={() => void leave('exit', '/post/drafts')}>Save & exit</Button>
         </div>
       </div>
-      <noscript><p>JavaScript is required to edit and autosave this draft. <Link href="/post/drafts">Return to drafts</Link>.</p></noscript>
-      {error && <div role="alert" className="mt-3 rounded-md border border-border-strong p-4 text-danger-600"><p>{error}</p>{conflict ? <Button type="button" variant="text" onClick={reload}>Discard unsent edits and load latest</Button> : <Button type="button" variant="text" onClick={async () => { if (await flush()) { if (leaving.current) router.refresh() } }}>Retry save</Button>}</div>}
-      {recovery && <div role="alert" className="mt-3 rounded-md border border-border-strong p-4 text-ink-900"><p>Unsent changes were recovered from this tab. They are not saved to your account.</p><Button type="button" variant="secondaryBrand" onClick={restore} className="mt-2">Restore unsent changes</Button><Button type="button" variant="text" onClick={reload} className="ml-3">Keep account version</Button></div>}
+    </div>
+    <div className="home-container">
+      <noscript><p className="mt-3 text-body-sm text-ink-700">JavaScript is required to edit and autosave this draft. <Link href="/post/drafts" className="text-brand-700 underline">Return to drafts</Link>.</p></noscript>
+      {error && <div role="alert" className="mt-3 rounded-md border border-danger-600/30 bg-danger-100 p-4 text-body-sm text-ink-900"><p className="font-semibold text-danger-600">{error}</p>{conflict ? <Button type="button" variant="text" className="text-brand-700" onClick={reload}>Discard unsent edits and load latest</Button> : <Button type="button" variant="text" className="text-brand-700" onClick={async () => { if (await flush()) { if (leaving.current) router.refresh() } }}>Retry save</Button>}</div>}
+      {recovery && <div role="alert" className="mt-3 rounded-md border border-border-strong bg-surface-000 p-4 text-body-sm text-ink-900"><p>Unsent changes were recovered from this tab. They are not saved to your account.</p><Button type="button" variant="secondaryBrand" onClick={restore} className="mt-2">Restore unsent changes</Button><Button type="button" variant="text" onClick={reload} className="ml-3 text-brand-700">Keep account version</Button></div>}
     </div>
     <div inert={moving || !!recovery || conflict} onChangeCapture={e => changed(e.target)} onSubmitCapture={e => {
       if (!(e.target instanceof HTMLFormElement) || e.target.getAttribute('action') !== '/post') return

@@ -8,18 +8,15 @@ import { getPreview } from '@/lib/preview/queries'
 import { UUID } from '@/lib/media/types'
 import { PageShell } from '@/components/layout/PageShell'
 import { ReloadDraft } from '@/components/drafts/ReloadDraft'
-import { Gallery } from '@/components/property/Gallery'
-import { KeyDetails } from '@/components/property/KeyDetails'
-import { AreaBreakdown } from '@/components/property/AreaBreakdown'
-import { SellerBlock } from '@/components/property/SellerBlock'
-import { PriceDisplay } from '@/components/property/PriceDisplay'
-import { PropertyDisclaimer } from '@/components/property/PropertyDisclaimer'
 import { ConfirmPreview } from '@/components/preview/ConfirmPreview'
+import { PublishedProperty } from '@/components/listings/PublishedProperty'
+import { isPublishable } from '@/lib/listings/overview'
 import { DescriptionAssistant } from '@/components/preview/DescriptionAssistant'
 import { descriptionAIAvailable, latestDescriptionJob } from '@/lib/descriptions/queries'
-import { formatAmount } from '@/lib/format/price'
 export const metadata:Metadata={title:'Private property preview',robots:{index:false,follow:false},referrer:'no-referrer'}
 export const dynamic='force-dynamic'
+// What a seller should read for, in the preview's own order; guidance, not a verdict.
+const CHECKS=['The first photo is the cover buyers see in search.','The price, and the charges beside it.','Bedrooms, bathrooms and carpet area.','The address, exactly as you typed it.']
 export default async function PreviewPage({params}:{params:Promise<{id:string}>}) {
   const {id}=await params;if(!UUID.test(id))notFound()
   const user=await getVerifiedUser();if(!user)redirect(`/login?next=${encodeURIComponent(`/post/drafts/${id}/preview`)}`)
@@ -31,36 +28,54 @@ export default async function PreviewPage({params}:{params:Promise<{id:string}>}
   const {model:m,signature,confirmed}=result,edit=`/post/drafts/${id}`
   let job=null,jobError=''
   try {job=await latestDescriptionJob(user,id)} catch {jobError='Background job status is unavailable. You can still edit your description.'}
-  const amount=m.pricing?(m.pricing.intent==='buy'?m.pricing.price:m.pricing.monthlyRent):undefined
-  return <PageShell><article className="mx-auto max-w-[1320px] px-4 pb-28 pt-5 lg:px-8">
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-brand-100 p-4"><div><p className="font-semibold text-brand-700">Private preview · Not published</p><p className="text-body-sm text-ink-700">Only you can open this preview. It shows your saved information.</p></div><Link href={edit} className="inline-flex min-h-11 items-center px-3 font-semibold text-brand-700">Edit draft</Link></div>
-    {m.warnings.length>0&&<section aria-labelledby="warnings-heading" className="mt-5 rounded-lg border border-border-strong bg-surface-000 p-5"><h2 id="warnings-heading" className="text-heading-3 font-display text-ink-900">Information to complete</h2><ul className="mt-3 list-disc space-y-2 pl-5 text-body-sm text-ink-700">{m.warnings.map((w,i)=><li key={`${w.section}-${i}`}>{w.message} <Link href={w.section==='seller'?'/account':edit} className="inline-flex min-h-11 items-center font-semibold text-brand-700 underline">{w.section==='seller'?'Edit profile':'Edit draft'}</Link></li>)}</ul></section>}
-    <div className="mt-5 grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
-      <div className="min-w-0">
-        <Gallery photos={m.media} title={m.title}/>
-        <header className="mt-5">
-          {m.pricing&&amount!==undefined?<PriceDisplay amount={amount} intent={m.pricing.intent} size="detail" areaForRate={m.pricing.intent==='buy'?m.carpetSqft:undefined}/>:<p className="font-semibold text-ink-500">Complete pricing to preview the amount</p>}
-          {m.pricing&&<div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-body-sm text-ink-700">
-            {m.pricing.intent==='rent'&&<span>Deposit {formatAmount(m.pricing.deposit)}</span>}
-            <span>{m.pricing.maintenance.status==='separate'?`Maintenance ${formatAmount(m.pricing.maintenance.monthly)}/mo`:m.pricing.maintenance.status==='none'?'No maintenance charge':m.pricing.maintenance.status==='included'?'Maintenance included in rent':'Maintenance not specified'}</span>
-            <span>{m.pricing.negotiable?'Negotiable':'Non-negotiable'}</span>
-          </div>}
-          <h1 className="mt-3 break-words font-display text-heading-2 text-ink-900 lg:text-heading-1">{m.title}</h1>
-          {m.locality&&<p className="mt-1 text-body text-ink-700">{m.locality}, {m.city}</p>}
-        </header>
-        <DescriptionAssistant key={`${id}:${result.draft.revision}`} id={id} revision={result.draft.revision} signature={signature} description={m.description??null} available={descriptionAIAvailable()} complete={m.canConfirm} initialJob={job} initialError={jobError}/>
-        <section className="mt-8" aria-labelledby="facts-heading"><h2 id="facts-heading" className="text-heading-3 font-display text-ink-900">Property details</h2>
-          {m.facts?<div className="mt-3"><KeyDetails property={{...m.facts,propertyType:m.entry.type,availableFrom:typeof m.facts.availableFrom==='object'?m.facts.availableFrom.from:undefined,availableNow:m.facts.availableFrom==='now'}}/></div>:<p className="mt-3 text-ink-500">Complete the property details to preview this section.</p>}
-        </section>
-        {m.facts&&amount!==undefined&&<section className="mt-8" aria-labelledby="area-heading"><h2 id="area-heading" className="mb-3 text-heading-3 font-display text-ink-900">Area breakdown</h2><AreaBreakdown property={{...m.facts,price:amount,intent:m.entry.intent}}/></section>}
-        <section className="mt-8" aria-labelledby="location-heading"><h2 id="location-heading" className="text-heading-3 font-display text-ink-900">Location</h2>{m.location?<dl className="mt-3 grid gap-3 sm:grid-cols-2">{[['City',m.city],['Locality',m.locality],['Society / building',m.location.societyName],['Building or street address',m.location.address]].filter(([,v])=>v).map(([k,v])=><div key={k} className="min-w-0 rounded-md border border-border-subtle p-3"><dt className="text-caption text-ink-500">{k}</dt><dd className="mt-1 break-words text-body-sm font-semibold text-ink-900">{v}</dd></div>)}</dl>:<p className="mt-3 text-ink-500">Complete the property location to preview this section.</p>}<p className="mt-3 text-caption text-ink-500">Location is seller-provided and has not been verified.</p></section>
-        <div className="mt-8"><PropertyDisclaimer/></div>
+  const ready=m.warnings.length===0
+  const confirm=<ConfirmPreview key={`${signature}:${confirmed}:${m.canConfirm}`} id={id} signature={signature} confirmed={confirmed} canConfirm={m.canConfirm}/>
+  // UI-17: the seller's review is the buyer's page. The top is the seller's
+  // own (what is missing, the description editor); under it the real
+  // property layout (PublishedProperty, as /listing/[id] renders it), marked
+  // as a preview, with the confirmation where a buyer would find the
+  // contact card. Nothing on the preview is filled in for the seller: what
+  // is missing is listed above it, never drawn into it.
+  return <PageShell>
+    <section aria-labelledby="post-heading" className="border-b border-border-subtle bg-surface-000">
+      <div className="home-container pb-8 pt-5 lg:pb-10 lg:pt-6">
+        <div className="flex min-h-11 items-center justify-between gap-3">
+          <p className="flex min-w-0 items-center gap-2 text-overline uppercase text-brand-700"><span aria-hidden className="h-0.5 w-6 shrink-0 rounded-full bg-brand-500"/><span className="truncate"><span className="hidden sm:inline">Post a property · </span>Final review</span></p>
+          <Link href={edit} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-3 text-label text-ink-700 hover:bg-surface-200 hover:text-brand-700"><svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M15 6l-6 6 6 6"/></svg>Edit draft</Link>
+        </div>
+        <div className="mt-3 max-w-3xl">
+          <h1 id="post-heading" className="font-display text-heading-2 text-ink-900 sm:text-heading-1">Check your listing as buyers will see it.</h1>
+          <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-body text-ink-700">
+            <span className="inline-flex min-h-8 items-center gap-2 rounded-full bg-brand-100 px-3 text-body-sm font-semibold text-brand-700"><svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>Private preview · Not published</span>
+            <span>Only you can open this preview. It shows your saved information.</span>
+          </p>
+        </div>
+        <div className="mt-7 grid gap-5 lg:grid-cols-2 lg:items-start">
+          {ready
+            ? <section aria-labelledby="ready-heading" className="flex gap-4 rounded-lg border border-brand-200 bg-brand-50 p-5">
+                <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-brand-600 text-on-brand"><svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>
+                <div><h2 id="ready-heading" className="font-display text-heading-3 text-ink-900">Nothing is missing</h2><p className="mt-1 text-body-sm text-ink-700">Read the preview below the way a buyer would, then confirm your review beside it. Confirming does not publish your property.</p>
+                  <ul aria-label="What to check" className="mt-4 grid gap-2 text-body-sm text-ink-900">{CHECKS.map(c=><li key={c} className="flex gap-2"><svg viewBox="0 0 24 24" className="mt-0.5 size-4 shrink-0 text-brand-700" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 13l4 4L19 7"/></svg>{c}</li>)}</ul>
+                </div>
+              </section>
+            : <section aria-labelledby="warnings-heading" className="rounded-lg bg-supply-100 p-5">
+                <h2 id="warnings-heading" className="font-display text-heading-3 text-ink-900">Information to complete</h2>
+                <p className="mt-1 text-body-sm text-ink-700">Buyers will not see these notes. Fix them before you confirm.</p>
+                <ul className="mt-3 grid gap-2">{m.warnings.map((w,i)=><li key={`${w.section}-${i}`} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-md bg-surface-000 px-4 py-2 text-body-sm text-ink-900"><span className="flex min-w-0 items-start gap-2"><span aria-hidden className="mt-1.5 size-2 shrink-0 rounded-full bg-supply-600"/>{w.message}</span><Link href={w.section==='seller'?'/account':edit} className="inline-flex min-h-11 items-center font-semibold text-brand-700 underline underline-offset-4">{w.section==='seller'?'Edit profile':'Edit draft'}</Link></li>)}</ul>
+              </section>}
+          <DescriptionAssistant key={`${id}:${result.draft.revision}`} id={id} revision={result.draft.revision} signature={signature} description={m.description??null} available={descriptionAIAvailable()} complete={m.canConfirm} initialJob={job} initialError={jobError}/>
+        </div>
+        {!isPublishable(m)&&<div className="mt-6 grid gap-5 lg:grid-cols-2 lg:items-start">
+          <div className="rounded-lg border border-dashed border-border-strong bg-surface-100 p-6"><h2 className="font-display text-heading-3 text-ink-900">The buyer preview appears here</h2><p className="mt-1 text-body-sm text-ink-700">It needs the property type, who is posting, the details and the price. Complete them and the page buyers will see is drawn below.</p></div>
+          <div>{confirm}</div>
+        </div>}
       </div>
-      <aside className="space-y-4 lg:sticky lg:top-24">
-        {m.entry.role?<SellerBlock property={{sellerType:m.entry.role,sellerName:m.sellerName??undefined}}/>:<p className="rounded-lg border border-border-subtle p-4 text-ink-500">Choose your seller category to preview seller information.</p>}
-        <ConfirmPreview key={`${signature}:${confirmed}:${m.canConfirm}`} id={id} signature={signature} confirmed={confirmed} canConfirm={m.canConfirm}/>
-        <p className="text-caption text-ink-500">Buyer contact and save actions become available only for published listings.</p>
-      </aside>
-    </div>
-  </article></PageShell>
+    </section>
+    <PublishedProperty
+      model={m}
+      nameLevel={2}
+      band={<div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1"><span className="inline-flex min-h-8 items-center gap-1.5 rounded-full bg-brand-700 px-3 text-label font-semibold uppercase tracking-wide text-on-brand"><svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>Preview</span><p className="text-body-sm text-ink-700">What buyers will see once your listing is approved. Contact and save switch on when it is published.</p></div>}
+      ownerPanel={<div className="grid gap-3"><p className="text-overline uppercase text-ink-500">Your controls · not shown to buyers</p>{confirm}</div>}
+    />
+  </PageShell>
 }

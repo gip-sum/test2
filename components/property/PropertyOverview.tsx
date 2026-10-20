@@ -27,8 +27,13 @@ import { CONSTRUCTION_LABEL, PROPERTY_TYPE_LABEL } from '@/lib/property/types'
  * A server component: the only client parts are Copy link and the save
  * heart (on the gallery), each its own small leaf.
  */
-export function PropertyOverview({ data }: { data: OverviewData }) {
+export function PropertyOverview({ data, nameLevel = 1 }: {
+  data: OverviewData
+  /** The seller's preview names the page itself (h1) and the listing under it. */
+  nameLevel?: 1 | 2
+}) {
   const p = data
+  const Name = nameLevel === 1 ? 'h1' : 'h2'
   const studio = p.propertyType === 'STUDIO'
 
   return (
@@ -49,7 +54,7 @@ export function PropertyOverview({ data }: { data: OverviewData }) {
         </p>
       )}
 
-      <h1 className="mt-3 break-words font-display text-heading-2 text-ink-900 lg:mt-4 lg:text-heading-1">{p.name}</h1>
+      <Name className="mt-3 break-words font-display text-heading-2 text-ink-900 lg:mt-4 lg:text-heading-1">{p.name}</Name>
       <p className="mt-1.5 flex items-start gap-1.5 text-body text-ink-700">
         <MapPinIcon className="mt-0.5 size-4.5 shrink-0 text-brand-700" />
         <span className="min-w-0 break-words">{p.place}</span>

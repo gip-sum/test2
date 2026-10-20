@@ -5,6 +5,8 @@ import type { ReactNode } from 'react'
 
 // A separate chunk, fetched only when the first <MotionFeatures> mounts.
 const loadFeatures = () => import('./features').then((mod) => mod.default)
+// The larger set with drag and layout, its own chunk (features-max.ts).
+const loadMax = () => import('./features-max').then((mod) => mod.default)
 
 /**
  * The boundary every animated leaf sits inside.
@@ -37,9 +39,9 @@ const loadFeatures = () => import('./features').then((mod) => mod.default)
  * above-the-fold content from opacity 0, or a slow phone shows a blank area
  * until hydration.
  */
-export function MotionFeatures({ children }: { children: ReactNode }) {
+export function MotionFeatures({ children, max = false }: { children: ReactNode; max?: boolean }) {
   return (
-    <LazyMotion features={loadFeatures} strict>
+    <LazyMotion features={max ? loadMax : loadFeatures} strict>
       {children}
     </LazyMotion>
   )
