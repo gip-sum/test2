@@ -158,10 +158,13 @@ function Figures({ card, views }: { card: Card; views?: Totals }) {
     ? <span key="enq">Enquiry counts unavailable · <Link href="/dashboard/enquiries" className="font-semibold text-brand-700 underline underline-offset-4">Open inbox</Link></span>
     : card.enquiries.total === 0
       ? <span key="enq" className="inline-flex items-center gap-1.5"><MailIcon className="size-4 text-ink-500" />No enquiries yet</span>
-      : <Link key="enq" href={`/dashboard/enquiries?listing=${listing.id}`} className="-my-3 inline-flex min-h-11 items-center gap-1.5 font-semibold text-brand-700 hover:underline">
+      // Named explicitly ("3 enquiries, 2 new, for …"): read from its parts the
+      // badge ran into the count, and a hidden separator came out as " , ".
+      // The visible words stay in the name, in order.
+      : <Link key="enq" href={`/dashboard/enquiries?listing=${listing.id}`} aria-label={`${plural(card.enquiries.total, 'enquiry', 'enquiries')}${card.enquiries.newCount > 0 ? `, ${card.enquiries.newCount} new` : ''}, for ${title}`}
+        className="-my-3 inline-flex min-h-11 items-center gap-1.5 font-semibold text-brand-700 hover:underline">
         <MailIcon className="size-4" />{plural(card.enquiries.total, 'enquiry', 'enquiries')}
         {card.enquiries.newCount > 0 && <span className="rounded-full bg-brand-600 px-2 py-0.5 text-caption font-semibold text-on-brand">{card.enquiries.newCount} new</span>}
-        <span className="sr-only"> for {title}</span>
       </Link>)
   if (!parts.length) return null
   return <p className="mt-2 flex min-w-0 flex-wrap items-center gap-x-4 gap-y-1 text-body-sm text-ink-700">{parts}</p>

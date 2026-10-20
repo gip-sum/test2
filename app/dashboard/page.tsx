@@ -83,7 +83,8 @@ function Workspace({ cards, query, publishing, activity }: { cards: PropertyCard
   return <div className="dash-grid">
     <div className="dash-attention"><AttentionPanel items={attentionItems(cards.filter((c) => c.status !== 'REMOVED'))} /></div>
 
-    <section aria-labelledby="properties-heading" className="dash-list min-w-0">
+    <div className="dash-list min-w-0">
+    <section aria-labelledby="properties-heading" className="min-w-0">
       <div className="dash-panel">
         <StatusNav counts={view.counts} query={query} />
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
@@ -103,13 +104,15 @@ function Workspace({ cards, query, publishing, activity }: { cards: PropertyCard
         </EmptyState>
         : <div className="mt-3 grid gap-3">{view.visible.map((card) => <PropertyCard key={card.draftId} card={card} publishing={publishing} views={card.listing ? byListing.get(card.listing.id) : undefined} />)}</div>}
       <Pagination page={view.page} pageCount={view.pageCount} hrefForPage={(page) => dashboardHref({ ...query, page })} />
+    </section>
 
+      {/* Outside the list it follows: removed listings are not counted there. */}
       {view.removed.length > 0 && <details className="dash-panel mt-4 px-4 py-2">
         <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-ink-900"><h2 className="inline text-body font-semibold">Removed ({view.removed.length})</h2></summary>
         <p className="mt-2 text-body-sm text-ink-700">Removed listings are permanent and are not counted above. Their working drafts and history are kept.</p>
         <div className="mt-3 grid gap-3 pb-2">{view.removed.map((card) => <PropertyCard key={card.draftId} card={card} publishing={publishing} />)}</div>
       </details>}
-    </section>
+    </div>
 
     <div className="dash-interest">
       <InterestPanel state={!submitted ? { kind: 'none' }

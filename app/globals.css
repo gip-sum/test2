@@ -1802,6 +1802,10 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
 .dash-status-link[data-empty]:not([aria-current='page']) .dash-status-count { background: transparent; color: var(--color-ink-500); }
 /* From 640px the row wraps instead of scrolling: every status stays in view. */
 @media (min-width: 640px) { .dash-status { overflow: visible; } .dash-status ul { width: auto; flex-wrap: wrap; } }
+/* The dashboard's header carries two actions (Enquiries, Post a property):
+   on the narrowest phones they wrap under each other instead of pushing
+   the page sideways (320px measured 7px of overflow). Owner workspace only. */
+[data-workspace='owner'] .workspace-page-actions { min-width: 0; flex-shrink: 1; }
 /* A card's "More" menu: the open control reads as pressed. */
 .card-menu[open] > summary { border-color: var(--color-brand-600); background: var(--color-brand-50); color: var(--color-brand-700); }
 .workspace-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: var(--text-body-sm); line-height: 20px; }
