@@ -114,7 +114,10 @@ async function context(token, width = 1280) {
   if (token) await c.addCookies([{ name: 'gb-access', value: token.repeat(48), url: BASE }])
   return c
 }
-const filterCounts = async (page) => Object.fromEntries(await page.getByRole('navigation', { name: 'Filter by status' }).getByRole('link').evaluateAll((links) => links.map((a) => { const [label, n] = [a.childNodes[0].textContent, a.querySelector('span').textContent]; return [label, Number(n)] })))
+// UI-18: each filter link holds its label and its count as two spans.
+const filterCounts = async (page) => Object.fromEntries(await page.getByRole('navigation', { name: 'Filter by status' }).getByRole('link').evaluateAll((links) => links.map((a) => [a.firstElementChild.textContent, Number(a.querySelector('.dash-status-count').textContent)])))
+// A card's secondary actions live behind its "More" control (UI-18).
+const openMenu = async (scope) => { const menu = scope.locator('details[data-card-menu]'); if (!(await menu.evaluate((d) => d.open))) await menu.locator('summary').click() }
 const cards = (page) => page.locator('section[aria-labelledby="properties-heading"] article')
 const card = (page, title) => cards(page).filter({ has: page.getByRole('heading', { name: title, exact: true }) })
 
@@ -130,17 +133,26 @@ try {
   await page.getByRole('heading', { level: 1, name: 'My properties' }).waitFor()
   check('summary counts each property once and leaves Removed out', JSON.stringify(await filterCounts(page)) === JSON.stringify({ All: 7, Drafts: 1, 'Under review': 1, Active: 2, Expired: 1, Rejected: 1, 'Corrections requested': 0, Withdrawn: 1 }), JSON.stringify(await filterCounts(page)))
   check('one card per property', await cards(page).count() === 7)
-  const removed = page.locator('details')
+  const removed = page.locator('.dash-list > details')
   check('Removed is a collapsed group outside the list', await removed.count() === 1 && !(await removed.evaluate((d) => d.open)) && (await removed.locator('summary').innerText()).includes('Removed (1)'))
   check('Withdrawn is derived from history', (await card(page, 'Studio for rent in Park Street').innerText()).includes('Withdrawn'))
   check('a listing past expiry shows Expired before the hourly job', (await card(page, 'Villa for sale in Rajarhat').innerText()).includes('Expired'))
   check('expiring listing is flagged in words', (await card(page, '1 BHK flat for rent in Behala').innerText()).includes('Expires in 3 days'))
-  check('expiring-soon notice counts it', await page.getByText('1 active listing expires within 7 days.').isVisible())
+  // UI-18: the expiry banner became an item in Needs your attention, linked to the listing's publishing page.
+  const attention = page.getByRole('region', { name: 'Needs your attention' })
+  check('Needs your attention flags the expiring listing and links to it', (await attention.innerText()).includes('Expires in 3 days') &&
+    await attention.getByRole('link', { name: 'Review listing for 1 BHK flat for rent in Behala' }).getAttribute('href') === `/post/drafts/${id('c', 4)}/lifecycle`)
+  const attentionText = await attention.innerText()
+  check('Needs your attention lists only actionable states, with their actions', ['Rejected — fix and re-submit', '2 new enquiries'].every((t) => attentionText.includes(t)) &&
+    await attention.getByRole('link', { name: 'Open enquiries for 2 BHK flat for sale in New Town' }).getAttribute('href') === `/dashboard/enquiries?listing=${id('d', 3)}` &&
+    await attention.getByRole('link', { name: /Under review|Submitted/ }).count() === 0)
   check('rejection reason shown in full', (await card(page, '4 BHK flat for sale in Ballygunge').innerText()).includes(longReason))
   check('never-submitted draft shows section progress, not a fake status', (await card(page, '2 BHK flat / apartment for sale in New Town').innerText()).includes('4 of 4 sections complete'))
-  check('enquiry counts come from the database', await card(page, '2 BHK flat for sale in New Town').getByRole('link', { name: /2 enquiries · 2 new/ }).isVisible())
+  check('enquiry counts come from the database', await card(page, '2 BHK flat for sale in New Town').getByRole('link', { name: /2 enquiries, 2 new/ }).isVisible())
   check('a listing with no enquiries says so rather than hiding it', (await card(page, '1 BHK flat for rent in Behala').innerText()).includes('No enquiries yet'))
-  check('withdrawn card links to removal on the publishing page', await card(page, 'Studio for rent in Park Street').getByRole('link', { name: /Remove listing/ }).getAttribute('href') === `/post/drafts/${id('c', 7)}/lifecycle#remove-listing`)
+  await openMenu(card(page, 'Studio for rent in Park Street'))
+  check('withdrawn card links to removal on the publishing page, under More', await card(page, 'Studio for rent in Park Street').getByRole('link', { name: /Remove listing/ }).getAttribute('href') === `/post/drafts/${id('c', 7)}/lifecycle#remove-listing`)
+  await page.keyboard.press('Escape')
 
   // URL is the state.
   await page.getByRole('navigation', { name: 'Filter by status' }).getByRole('link', { name: /^Active/ }).click()
@@ -174,6 +186,7 @@ try {
   // Withdraw through the Phase 18 endpoint, with confirmation.
   await page.goto(BASE + '/dashboard?status=review')
   const review = card(page, '3 BHK flat for sale in Salt Lake')
+  await openMenu(review)
   await review.getByRole('button', { name: /Withdraw/ }).click()
   check('withdraw asks first and moves focus to the question', await page.evaluate(() => document.activeElement?.textContent ?? '').then((t) => t.startsWith('Withdraw “3 BHK flat for sale in Salt Lake”?')))
   await review.getByRole('button', { name: 'Cancel' }).click()
@@ -191,7 +204,7 @@ try {
   await page.keyboard.press('Enter')
   check('withdrawing: the pressed button stays focused, busy and unavailable; a second press sends nothing', busy.text === 'Withdrawing…' && busy.busy === 'true' && busy.unavailable === 'true' && serviceCalls.length === 1, JSON.stringify({ busy, calls: serviceCalls.length }))
   lifecycleDelay = 0
-  await page.getByText('No properties have this status.').waitFor()
+  await page.getByText('Properties you submit wait here while a reviewer checks them.').waitFor()
   await page.waitForFunction(() => document.activeElement?.id === 'properties-heading', null, { timeout: 5000 }).catch(() => {})
   check('after withdrawing, focus is on the list heading (the card left this view) and the outcome is announced', await page.evaluate(() => document.activeElement?.id) === 'properties-heading' &&
     await page.locator('#a11y-announcer').textContent() === '3 BHK flat for sale in Salt Lake withdrawn. It is no longer public.')
@@ -215,7 +228,7 @@ try {
   check('the new enquiry appears in the seller inbox', await page.getByText('Asha Roy', { exact: true }).isVisible() && await page.getByText('Is the flat east facing?').isVisible())
   check('each lead\'s status button is a submit named for its buyer (UI-09)', await page.getByRole('button', { name: 'Update status for Asha Roy', exact: true }).getAttribute('type') === 'submit')
   await page.goto(BASE + '/dashboard?status=active')
-  check('dashboard count includes it', await card(page, '2 BHK flat for sale in New Town').getByRole('link', { name: /3 enquiries · 3 new/ }).isVisible())
+  check('dashboard count includes it', await card(page, '2 BHK flat for sale in New Town').getByRole('link', { name: /3 enquiries, 3 new/ }).isVisible())
 
   await bp.setViewportSize({ width: 390, height: 844 }); await bp.reload()
   await bp.getByRole('button', { name: 'Contact owner' }).click()
@@ -271,7 +284,7 @@ try {
 
   // Honest states.
   countsMissing = true; await page.goto(BASE + '/dashboard?status=active')
-  check('unreadable enquiry counts are reported, not shown as zero', (await card(page, '2 BHK flat for sale in New Town').innerText()).includes('Enquiry counts are unavailable right now.'))
+  check('unreadable enquiry counts are reported, not shown as zero', (await card(page, '2 BHK flat for sale in New Town').innerText()).includes('Enquiry counts unavailable'))
   countsMissing = false
   const other = await context('b'), op = await other.newPage(); await op.goto(BASE + '/dashboard')
   check('another account sees none of these properties', await op.getByRole('heading', { name: 'You have not posted a property yet' }).isVisible() && await op.locator('article').count() === 0)
@@ -279,6 +292,7 @@ try {
   // UI-09: withdrawing a card that stays in view returns focus to that card.
   await page.goto(BASE + '/dashboard')
   const behala = card(page, '1 BHK flat for rent in Behala')
+  await openMenu(behala)
   await behala.getByRole('button', { name: /Withdraw/ }).click()
   await behala.getByRole('button', { name: 'Yes, withdraw' }).click()
   await page.waitForFunction(() => document.activeElement?.id?.startsWith('property-'), null, { timeout: 5000 }).catch(() => {})
@@ -303,13 +317,16 @@ try {
   mkdirSync('/tmp/phase19-shots', { recursive: true })
   for (const width of [320, 360, 375, 390, 412, 430, 768, 1280]) {
     await page.setViewportSize({ width, height: 900 }); await page.goto(BASE + '/dashboard')
-    await page.locator('details summary').click()
+    await page.locator('.dash-list > details > summary').click()
     await assertWorkspace(page, { area: 'owner', check, compactRow: card(page, '2 BHK flat for sale in New Town'), maxRowHeight: 224 })
     const small = await page.locator('main a, main button, main summary').evaluateAll((els) => els.map((e) => ({ text: e.textContent.trim().slice(0, 40), height: e.getBoundingClientRect().height })).filter((e) => e.height > 0 && e.height < 44))
     check(`dashboard controls are at least 44px at ${width}`, small.length === 0, JSON.stringify(small))
     // Every card control is hit where it is drawn — nothing overlaps it —
     // and no card is wider than the screen (UI-09).
+    // A closed "More" menu's links are laid out but not drawn (UI-18); they
+    // are hit-tested below with the menu open.
     const cardControls = await cards(page).locator('a, button').evaluateAll((els) => els.flatMap((el) => {
+      if (el.closest('details:not([open])') && !el.closest('summary')) return []
       el.scrollIntoView({ block: 'center' })
       const r = el.getBoundingClientRect(); if (!r.width) return []
       const at = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
@@ -317,6 +334,17 @@ try {
     }))
     const wide = await cards(page).evaluateAll((els) => els.filter((el) => el.getBoundingClientRect().right > document.documentElement.clientWidth + 1).length)
     check(`card controls are hit where drawn and cards fit the screen at ${width}`, cardControls.length === 0 && wide === 0, JSON.stringify({ cardControls, wide }))
+    // An open menu: every item is hit where drawn, at least 44px, and inside the screen.
+    const menuCard = card(page, '2 BHK flat for sale in New Town')
+    await openMenu(menuCard)
+    const menuItems = await menuCard.locator('.card-menu-panel').locator('a, button').evaluateAll((els) => els.flatMap((el) => {
+      const r = el.getBoundingClientRect(); if (!r.width) return []
+      el.scrollIntoView({ block: 'center' }); const q = el.getBoundingClientRect()
+      const at = document.elementFromPoint(q.left + q.width / 2, q.top + q.height / 2)
+      return [{ text: el.textContent.trim().slice(0, 24), hit: at === el || el.contains(at), tall: q.height >= 44, inside: q.left >= 0 && q.right <= document.documentElement.clientWidth }]
+    }))
+    check(`an open More menu's items are hit where drawn, 44px and on screen at ${width}`, menuItems.length >= 1 && menuItems.every((m) => m.hit && m.tall && m.inside), JSON.stringify(menuItems))
+    await page.keyboard.press('Escape')
     await page.screenshot({ path: `/tmp/phase19-shots/dashboard-${width}.png`, fullPage: true })
     await bp.setViewportSize({ width, height: 900 }); await bp.goto(BASE + `/listing/${id('d', 3)}`)
     check(`listing page has no horizontal overflow at ${width}`, await bp.evaluate(() => document.documentElement.scrollWidth <= innerWidth))

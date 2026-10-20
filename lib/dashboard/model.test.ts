@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { getPostingLocations } from '@/lib/location/queries'
 import type { Draft } from '@/lib/drafts/types'
 import type { Listing, ListingEvent, SubmissionSummary } from '@/lib/listings/types'
-import { arrange, buildCards, dashboardHref, displayStatus, parseQuery, PAGE_SIZE, type DashboardInput } from './model'
+import { arrange, attentionItems, buildCards, dashboardHref, displayStatus, parseQuery, PAGE_SIZE, type DashboardInput } from './model'
 
 const NOW = Date.parse('2026-10-13T12:00:00Z'), DAY = 86_400_000
 const iso = (offsetDays: number) => new Date(NOW + offsetDays * DAY).toISOString()
@@ -123,5 +123,73 @@ describe('URL state', () => {
     expect(dashboardHref({ status: 'all', sort: 'recent', page: 1 })).toBe('/dashboard')
     const href = dashboardHref({ status: 'active', sort: 'expiring', page: 2 })
     expect(parseQuery(Object.fromEntries(new URL(href, 'https://x.test').searchParams))).toEqual({ status: 'active', sort: 'expiring', page: 2 })
+  })
+})
+
+describe('covers and photo counts (UI-18)', () => {
+  const photo = (id: string, key: 'submission_id' | 'collection_id', owner: string, position: number) => ({ id, [key]: owner, position }) as never
+  it('a submitted property shows its submitted copy\'s first photo, never the working draft\'s', () => {
+    const [card] = buildCards(input({
+      drafts: [draft(1, complete)], listings: [listing(1)], submissions: [submission(1)],
+      submissionPhotos: [photo('p-second', 'submission_id', uuid(201), 1), photo('p-first', 'submission_id', uuid(201), 0)],
+      draftPhotos: [photo('d-1', 'collection_id', uuid(901), 0)],
+    }))
+    expect(card).toMatchObject({ cover: `/api/posting/submissions/${uuid(101)}/photos/p-first`, photoCount: 2 })
+  })
+  it('a never-submitted draft shows its own first ready photo; none is zero, unreadable is unknown', () => {
+    const [withPhotos] = buildCards(input({ drafts: [draft(1, complete)], draftPhotos: [photo('d-2', 'collection_id', uuid(901), 1), photo('d-1', 'collection_id', uuid(901), 0)] }))
+    expect(withPhotos).toMatchObject({ cover: '/api/posting/photos/d-1', photoCount: 2 })
+    const [none] = buildCards(input({ drafts: [draft(1, complete)], draftPhotos: [] }))
+    expect(none).toMatchObject({ cover: null, photoCount: 0 })
+    const [unknown] = buildCards(input({ drafts: [draft(1, complete)], draftPhotos: null }))
+    expect(unknown).toMatchObject({ cover: null, photoCount: null })
+  })
+  it('a removed listing has no cover', () => {
+    const [card] = buildCards(input({ drafts: [draft(1, complete)], listings: [listing(1, { status: 'DELETED' })], submissions: [submission(1)], submissionPhotos: [photo('p', 'submission_id', uuid(201), 0)] }))
+    expect(card).toMatchObject({ status: 'REMOVED', cover: null })
+  })
+})
+
+describe('attentionItems (UI-18)', () => {
+  const cards = buildCards(input({
+    drafts: [draft(1, complete), draft(2), draft(3, complete), draft(4, complete), draft(5, complete), draft(6, complete), draft(7, complete)],
+    listings: [
+      listing(3, { status: 'REJECTED', rejection_reason: 'Replace the entrance photo.' }),
+      listing(4, { status: 'ACTIVE', activated_at: iso(-80), expires_at: iso(3) }),
+      listing(5, { status: 'ACTIVE', activated_at: iso(-10), expires_at: iso(30) }),
+      listing(6, { status: 'ACTIVE', activated_at: iso(-95), expires_at: iso(-2) }),
+      listing(7, { status: 'UNDER_REVIEW' }),
+    ],
+    submissions: [3, 4, 5, 6, 7].map((n) => submission(n)),
+    enquiryCounts: [{ listing_id: uuid(105), total: 3, new_count: 2, latest_at: iso(-1) }, { listing_id: uuid(104), total: 1, new_count: 0, latest_at: iso(-5) }],
+    draftPhotos: [{ id: 'd-1', collection_id: uuid(901), position: 0 }],
+  }))
+  const items = attentionItems(cards)
+  it('lists only actionable states, most urgent first', () => {
+    expect(items.map((i) => [i.kind, i.card.draftId])).toEqual([
+      ['returned', uuid(3)], ['expiring', uuid(4)], ['enquiries', uuid(5)], ['expired', uuid(6)], ['draft-incomplete', uuid(2)], ['draft-ready', uuid(1)],
+    ])
+  })
+  it('leaves out what needs nothing: under review, a quiet active listing, read enquiries', () => {
+    expect(items.some((i) => i.card.draftId === uuid(7))).toBe(false)
+    expect(items.filter((i) => i.card.draftId === uuid(4)).map((i) => i.kind)).toEqual(['expiring'])
+  })
+  it('links each item to the action that resolves it', () => {
+    const href = (kind: string) => items.find((i) => i.kind === kind)!.href
+    expect(href('returned')).toBe(`/post/drafts/${uuid(3)}`)
+    expect(href('expiring')).toBe(`/post/drafts/${uuid(4)}/lifecycle`)
+    expect(href('enquiries')).toBe(`/dashboard/enquiries?listing=${uuid(105)}`)
+    expect(href('expired')).toBe(`/post/drafts/${uuid(6)}/lifecycle`)
+    expect(href('draft-incomplete')).toBe(`/post/drafts/${uuid(2)}`)
+    expect(href('draft-ready')).toBe(`/post/drafts/${uuid(1)}/preview`)
+  })
+  it('asks for photos only when a complete draft is known to have none', () => {
+    const [noPhotos] = attentionItems(buildCards(input({ drafts: [draft(1, complete)], draftPhotos: [] })))
+    expect(noPhotos).toMatchObject({ kind: 'draft-photos', action: 'Add photos' })
+    const [unknown] = attentionItems(buildCards(input({ drafts: [draft(1, complete)], draftPhotos: null })))
+    expect(unknown).toMatchObject({ kind: 'draft-ready' })
+  })
+  it('says nothing when nothing is waiting', () => {
+    expect(attentionItems(buildCards(input({ drafts: [draft(7, complete)], listings: [listing(7)], submissions: [submission(7)] })))).toEqual([])
   })
 })

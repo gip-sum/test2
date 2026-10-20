@@ -137,11 +137,14 @@ describe('all listings together', () => {
 })
 
 describe('chart route isolation', () => {
-  it('only the performance page imports the chart, so no other route can ship it', () => {
+  // UI-18 put the chart on My properties too (the buyer-interest panel), so
+  // the seller's two routes may ship it and no other route can.
+  it('only the two seller routes — performance and My properties — import the chart', () => {
     const root = process.cwd()
     const walk = (dir: string): string[] => readdirSync(dir).flatMap((n) => { const p = join(dir, n); return statSync(p).isDirectory() ? walk(p) : /\.tsx?$/.test(n) && !n.endsWith('.test.ts') ? [p] : [] })
-    const importers = [...walk(join(root, 'app')), ...walk(join(root, 'components')), ...walk(join(root, 'lib'))]
-      .filter((f) => /from '@\/components\/analytics\/DailyActivityChart'/.test(readFileSync(f, 'utf8'))).map((f) => relative(root, f))
-    expect(importers).toEqual(['app/dashboard/performance/page.tsx'])
+    const files = [...walk(join(root, 'app')), ...walk(join(root, 'components')), ...walk(join(root, 'lib'))]
+    const importersOf = (module: string) => files.filter((f) => new RegExp(`from '${module.replace(/\//g, '\\/')}'`).test(readFileSync(f, 'utf8'))).map((f) => relative(root, f)).sort()
+    expect(importersOf('@/components/analytics/DailyActivityChart')).toEqual(['app/dashboard/performance/page.tsx', 'components/dashboard/DashboardParts.tsx'])
+    expect(importersOf('@/components/dashboard/DashboardParts')).toEqual(['app/dashboard/page.tsx'])
   })
 })

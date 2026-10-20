@@ -162,6 +162,8 @@ try {
 
   // ── Performance pages ───────────────────────────────────────────────────
   await seller.goto(BASE + '/dashboard')
+  // UI-18: an active card's Performance link is one of its secondary actions, under More.
+  await seller.locator('article').filter({ has: seller.getByRole('heading', { name: '2 BHK flat for sale in New Town', exact: true }) }).locator('details[data-card-menu] > summary').click()
   check('dashboard cards link to each listing’s performance', await seller.getByRole('link', { name: 'Performance 2 BHK flat for sale in New Town' }).getAttribute('href') === `/dashboard/performance?listing=${id('d', 1)}`)
   await seller.getByRole('navigation', { name: 'Seller sections', exact: true }).getByRole('link', { name: 'Performance', exact: true }).click(); await seller.waitForURL('**/dashboard/performance')
   const listingRows = () => seller.getByRole('region', { name: /^Your listings, last/ }).locator('table tbody tr')
@@ -175,7 +177,7 @@ try {
 
   await seller.goto(BASE + `/dashboard/performance?listing=${id('d', 1)}`)
   await seller.getByRole('heading', { level: 1, name: '2 BHK flat for sale in New Town' }).waitFor()
-  const tiles = (await seller.getByRole('region', { name: 'Totals for the last 7 days', exact: true }).locator('dl').innerText()).replace(/\s+/g, ' ')
+  const tiles = (await seller.getByRole('region', { name: 'This listing, last 7 days', exact: true }).locator('dl').innerText()).replace(/\s+/g, ' ')
   check('detail totals: views, enquiries and saves now', tiles.includes(`Views, last 7 days ${todayViews(1)}`) && tiles.includes('Enquiries, last 7 days 0') && tiles.includes('Saved now 1') && tiles.includes('1 buyer has it saved'), tiles)
   check('no enquiry rate below 20 views', await seller.getByText('Enquiry rate appears once the period has at least 20 views.').isVisible())
   check('days before counting began are explained, not shown as zero', await seller.getByText(/Views are counted from .* Earlier days in this period show as not tracked, not as zero\./).isVisible())
@@ -259,7 +261,7 @@ try {
 
   // Counting not started yet: every day is "not tracked", nothing reads 0.
   metaMissing = true; await seller.goto(BASE + `/dashboard/performance?listing=${id('d', 1)}`)
-  const emptyTiles = (await seller.getByRole('region', { name: 'Totals for the last 7 days', exact: true }).locator('dl').innerText()).replace(/\s+/g, ' ')
+  const emptyTiles = (await seller.getByRole('region', { name: 'This listing, last 7 days', exact: true }).locator('dl').innerText()).replace(/\s+/g, ' ')
   check('before counting starts there is no line and no zero: every day is untracked', await chart.getByText('Views were not tracked in this period.').isVisible() && await chart.locator('[data-series="views"]').getAttribute('d') === '' && await chart.locator('[data-untracked]').count() === 1 && emptyTiles.includes('Views, last 7 days Not tracked') && emptyTiles.includes('Previous 7 days: not tracked'), emptyTiles)
   check('a listing with no enquiries says so in words', await chart.getByText('No enquiries in this period.').isVisible())
   metaMissing = false
@@ -277,7 +279,7 @@ try {
 
   await seller.goto(BASE + `/dashboard/performance?listing=${id('d', 2)}`)
   check('the enquiry rate appears from 20 views', await seller.getByText('5 enquiries per 100 views').isVisible())
-  check('previous period stated as a plain figure', (await seller.getByRole('region', { name: 'Totals for the last 7 days', exact: true }).locator('dl').innerText()).includes('Previous 7 days: not tracked'))
+  check('previous period stated as a plain figure', (await seller.getByRole('region', { name: 'This listing, last 7 days', exact: true }).locator('dl').innerText()).includes('Previous 7 days: not tracked'))
   await seller.goto(BASE + `/dashboard/performance?listing=${id('d', 9)}`)
   check('a listing that is not yours is not shown', await seller.getByRole('heading', { name: 'This listing is not available here' }).isVisible())
 
@@ -320,12 +322,15 @@ try {
     await b.setViewportSize({ width, height: 900 }); await b.goto(BASE + L1)
     check(`listing page with save control has no overflow at ${width}`, await b.evaluate(() => document.documentElement.scrollWidth <= innerWidth))
   }
-  // ── Route isolation: the chart downloads only with the performance page ──
+  // ── Route isolation: the chart downloads only with the seller's analytics (performance, My properties) ──
   const scriptsOn = async (page, path) => { await page.goto(BASE + path); return page.locator('script[src]').evaluateAll((list) => list.map((e) => e.src)) }
   const chartChunks = []
   for (const src of await scriptsOn(seller, '/dashboard/performance')) if ((await (await seller.request.get(src)).text()).includes('data-chart-tooltip')) chartChunks.push(src)
   check('the chart code is found on the performance page', chartChunks.length > 0)
-  for (const [page, path] of [[g, '/'], [g, '/buy/kolkata'], [g, L1], [g, '/login'], [g, '/this-page-does-not-exist'], [seller, '/dashboard'], [seller, '/dashboard/enquiries']]) {
+  // UI-18: My properties shows buyer interest with the same chart, so it
+  // downloads there too — and still on no public or other seller route.
+  check('the chart code also downloads with My properties (its buyer-interest panel)', (await scriptsOn(seller, '/dashboard')).some((src) => chartChunks.includes(src)))
+  for (const [page, path] of [[g, '/'], [g, '/buy/kolkata'], [g, L1], [g, '/login'], [g, '/this-page-does-not-exist'], [seller, '/dashboard/enquiries']]) {
     const sources = await scriptsOn(page, path)
     check(`no chart code downloads on ${path}`, sources.length > 0 && !sources.some((src) => chartChunks.includes(src)))
   }

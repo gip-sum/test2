@@ -20,6 +20,8 @@ beforeEach(() => {
     if (url.includes('/property_listing_events?')) return Response.json([{ listing_id: listingId, from_status: 'ACTIVE', to_status: 'DRAFT', created_at: '2026-10-05' }])
     if (url.includes('/property_listing_submissions?')) return Response.json([{ id: submissionId, listing_id: listingId, title: 'Submitted copy', intent: 'buy', price: 6000000, city_name: 'Kolkata', locality_name: 'New Town' }])
     if (url.includes('/rpc/seller_listing_enquiry_counts')) return Response.json([{ listing_id: listingId, total: 2, new_count: 2, latest_at: '2026-10-06' }])
+    if (url.includes('/property_listing_photos?')) return Response.json([{ id: 'f9140f33-a429-46f3-9514-000000000002', submission_id: submissionId, position: 1 }, { id: 'f9140f33-a429-46f3-9514-000000000001', submission_id: submissionId, position: 0 }])
+    if (url.includes('/media_assets?')) return Response.json([])
     throw Error('Unexpected fetch ' + url)
   }))
 })
@@ -52,4 +54,20 @@ it('supplementary reads failing still render, saying what is unavailable', async
   fail = '/rpc/seller_listing_enquiry_counts'
   result = await loadDashboard(user)
   expect(result.ok && result.cards[0]?.enquiries).toBe('unavailable')
+})
+
+it('covers and photo counts: one batched read each, never one per card (UI-18)', async () => {
+  const result = await loadDashboard(user)
+  expect(result.ok && result.cards[0]).toMatchObject({ cover: `/api/posting/submissions/${listingId}/photos/f9140f33-a429-46f3-9514-000000000001`, photoCount: 2 })
+  const urls = vi.mocked(fetch).mock.calls.map(([url]) => String(url))
+  expect(urls.filter((u) => u.includes('/property_listing_photos?'))).toHaveLength(1)
+  expect(urls.find((u) => u.includes('/property_listing_photos?'))).toContain(`submission_id=in.(${submissionId})`)
+  // The only draft is submitted, so no draft-photo read is needed for it.
+  expect(urls.find((u) => u.includes('/media_assets?'))).toBeUndefined()
+})
+
+it('photos failing still render the cards, with no cover and an unknown count', async () => {
+  fail = '/property_listing_photos?'
+  const result = await loadDashboard(user)
+  expect(result.ok && result.cards[0]).toMatchObject({ status: 'WITHDRAWN', cover: null, photoCount: null })
 })
