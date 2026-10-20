@@ -210,23 +210,40 @@ try {
     await page.context().close()
   }
 
-  // ── Photo lightbox ────────────────────────────────────────────────────
+  // ── Photo lightbox (UI-16: Motion, Kokonut Lightbox Grid technique) ──
+  // The photo grows out of the box it was pressed in, the ground fades in
+  // with it, and closing returns it to the frame before the dialog leaves.
   {
     const html = await (await fetch(base + SEARCH)).text()
-    const page = await open(html.match(/href="(\/property\/[^"]+)"/)[1])
-    const trigger = page.getByRole('button', { name: 'View full-screen gallery' })
-    await trigger.click()
-    await page.waitForSelector('.lightbox-layer[data-state="open"]')
-    const names = await page.locator('.lightbox-layer').evaluateAll((els) => els.map((e) => getComputedStyle(e).animationName))
-    check('lightbox: overlay and photo fade in', names.length === 2 && names.every((n) => n === 'motion-fade-in'), JSON.stringify(names))
+    const page = await open(html.match(/href="(\/property\/[^"]+)"/)[1], { width: 1280 })
+    const trigger = page.getByRole('button', { name: /^View (all \d+ photos|photo full screen)$/ })
+    await page.locator('[data-photo-frame] img').first().waitFor()
+    const frameBox = await page.locator('[data-photo-frame]').first().evaluate((el) => { const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width } })
+    // Samples the open photo and the ground every frame for a while.
+    // `press` clicks the trigger from inside the page, so the first sample is
+    // the first frame after the press (a Playwright click returns frames later).
+    const sample = (ms, press = false) => page.evaluate(([ms, press]) => new Promise((resolve) => {
+      if (press) [...document.querySelectorAll('[data-photo-frame] button')].find((b) => /^View (all \d+ photos|photo full screen)$/.test(b.textContent.trim())).click()
+      const out = [], t0 = performance.now()
+      const tick = () => {
+        const photo = document.querySelector('[role="dialog"] .absolute.overflow-hidden'), ground = document.querySelector('[data-radix-portal] .fixed.inset-0.bg-ink-900, .fixed.inset-0.z-\\[60\\]')
+        if (photo) { const r = photo.getBoundingClientRect(); out.push({ x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, ground: ground ? Number(getComputedStyle(ground).opacity) : null }) }
+        if (performance.now() - t0 < ms) requestAnimationFrame(tick); else resolve(out)
+      }
+      requestAnimationFrame(tick)
+    }), [ms, press])
+    const opening = await sample(700, true)
+    const first = opening[0], last = opening.at(-1)
+    const near = (a, b) => Math.hypot(a.x - b.x, a.y - b.y)
+    check('lightbox: the photo grows out of the frame it was pressed in', opening.length > 5 && first.w < last.w * 0.9 && near(first, frameBox) < near(last, frameBox), JSON.stringify({ first, last, frameBox }))
+    check('lightbox: the ground fades in with it', first.ground !== null && first.ground < 0.6 && last.ground > 0.99, JSON.stringify({ first: first.ground, last: last.ground }))
     check('lightbox: focus moves into it', await focusInDialog(page))
     await page.keyboard.press('Escape')
-    await page.waitForFunction(() => [...document.querySelectorAll('.lightbox-layer')].some((e) => e.dataset.state === 'closed'), null, { polling: 'raf' })
-    const out = await page.locator('.lightbox-layer').evaluateAll((els) => els.map((e) => getComputedStyle(e).animationName))
-    check('lightbox: Escape fades it out', out.every((n) => n === 'motion-fade-out'), JSON.stringify(out))
-    await page.locator('.lightbox-layer').first().waitFor({ state: 'detached' })
-    await page.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === 'View full-screen gallery')
-    check('lightbox: focus returns to the photo that opened it', true)
+    const closing = await sample(250)
+    const end = closing.at(-1) ?? last
+    check('lightbox: Escape returns the photo toward the frame, smaller', closing.length > 2 && end.w < last.w && near(end, frameBox) < near(last, frameBox), JSON.stringify({ end, last }))
+    await page.getByRole('dialog').waitFor({ state: 'detached', timeout: 1500 })
+    check('lightbox: focus returns to the button that opened it', await trigger.evaluate((el) => el === document.activeElement))
     await page.context().close()
   }
 
@@ -301,9 +318,10 @@ try {
     await page.context().close()
   }
 
-  // ── Gallery direction and thumbnails (UI-08) ───────────────────────────
+  // ── Gallery direction, swipe and thumbnails (UI-16 Motion; UI-08) ─────
   // A changed photo arrives from the side it came from; the first never
-  // slides; the current thumbnail stays in view without scrolling the page.
+  // moves; a swipe follows the finger; the current thumbnail stays in view
+  // without scrolling the page. At 768px, where the strip is shown.
   const galleryHref = await (async () => {
     const html = await (await fetch(base + SEARCH)).text()
     for (const href of new Set([...html.matchAll(/href="(\/property\/[^"]+)"/g)].map((m) => m[1]))) {
@@ -313,32 +331,51 @@ try {
       if (many >= 4) return href
     }
   })()
-  const slide = (page) => page.evaluate(() => {
-    const frame = document.querySelector('[data-photo-frame]')
-    const img = frame.querySelector(':scope > img')
-    return { direction: frame.dataset.direction ?? null, box: JSON.stringify(frame.getBoundingClientRect()), anims: img.getAnimations().map((a) => ({ name: a.animationName, d: a.effect.getTiming().duration, from: a.effect.getKeyframes()[0]?.transform })) }
+  // Where the inline photo is, two frames after an action.
+  const track = (page) => page.evaluate(() => {
+    const el = document.querySelector('[data-photo-frame] > div'), cs = getComputedStyle(el)
+    return { x: cs.transform === 'none' ? 0 : new DOMMatrixReadOnly(cs.transform).m41, opacity: Number(cs.opacity) }
   })
+  const pressNav = (page, name) => page.evaluate((name) => new Promise((resolve) => {
+    document.querySelector(`button[aria-label="${name}"]`).click()
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const cs = getComputedStyle(document.querySelector('[data-photo-frame] > div'))
+      resolve({ x: cs.transform === 'none' ? 0 : new DOMMatrixReadOnly(cs.transform).m41, opacity: Number(cs.opacity) })
+    }))
+  }), name)
+  // One CDP session per page: a touch begun in one session cannot end in another.
+  const touches = async (page, points) => {
+    page.cdp ??= await page.context().newCDPSession(page)
+    for (const [type, pts] of points) await page.cdp.send('Input.dispatchTouchEvent', { type, touchPoints: pts })
+  }
+  const settled = (page) => page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished))).then(() => page.waitForTimeout(450))
   {
-    const page = await open(galleryHref)
+    const page = await open(galleryHref, { width: 768, context: { hasTouch: true } })
     const frame = page.getByRole('group', { name: /^Photos of/ })
     await frame.locator('img').first().waitFor()
-    const start = await slide(page)
-    check('gallery direction: the first photo never slides', start.direction === null && !start.anims.some((a) => /motion-photo/.test(a.name)), JSON.stringify(start))
-    await page.getByRole('button', { name: 'Next photo' }).click()
-    const next = await slide(page)
-    check('gallery direction: Next brings the photo in from the right, 16px over 200ms', next.anims.some((a) => a.name === 'motion-photo-next' && a.d === 200 && /translateX?\(16px/.test(a.from)) && next.box === start.box, JSON.stringify(next))
-    await page.getByRole('button', { name: 'Previous photo' }).click()
-    const prev = await slide(page)
-    check('gallery direction: Previous brings it in from the left', prev.anims.some((a) => a.name === 'motion-photo-prev' && /translateX?\(-16px/.test(a.from)), JSON.stringify(prev))
-    // A touch swipe right-to-left is "next", as the buttons are.
-    await frame.evaluate((el) => {
-      const r = el.getBoundingClientRect(), y = r.top + r.height / 2
-      const touch = (x) => new Touch({ identifier: 1, target: el, clientX: x, clientY: y })
-      el.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, touches: [touch(r.right - 40)], changedTouches: [touch(r.right - 40)] }))
-      el.dispatchEvent(new TouchEvent('touchend', { bubbles: true, touches: [], changedTouches: [touch(r.left + 60)] }))
-    })
-    const swiped = await slide(page)
-    check('gallery direction: a swipe to the left arrives from the right, like Next', swiped.anims.some((a) => a.name === 'motion-photo-next') && await page.locator('[role="status"]').filter({ hasText: /^Image 2 of/ }).count() === 1, JSON.stringify(swiped))
+    const box = JSON.stringify(await frame.boundingBox())
+    const start = await track(page)
+    check('gallery direction: the first photo sits still, fully shown', start.x === 0 && start.opacity === 1, JSON.stringify(start))
+    const next = await pressNav(page, 'Next photo')
+    check('gallery direction: Next brings the photo in from the right as it fades in', next.x > 8 && next.x <= 72 && next.opacity < 1, JSON.stringify(next))
+    await settled(page)
+    const rest = await track(page)
+    check('gallery direction: it settles in place, and the frame never moves', rest.x === 0 && rest.opacity === 1 && JSON.stringify(await frame.boundingBox()) === box, JSON.stringify(rest))
+    const prev = await pressNav(page, 'Previous photo')
+    check('gallery direction: Previous brings it in from the left', prev.x < -8, JSON.stringify(prev))
+    await settled(page)
+    // A swipe follows the finger, then right-to-left is "next".
+    // On the photo itself: a press on an arrow is a button press, never a drag.
+    const r = await frame.boundingBox(), y = r.y + r.height / 2, x0 = r.x + r.width * 0.7
+    await touches(page, [['touchStart', [{ x: x0, y }]], ['touchMove', [{ x: x0 - 20, y: y + 1 }]], ['touchMove', [{ x: x0 - 120, y: y + 2 }]]])
+    const mid = await track(page)
+    check('gallery swipe: the photo follows the finger', mid.x < -100 && mid.x > -140, JSON.stringify(mid))
+    await touches(page, [['touchEnd', []]])
+    check('gallery swipe: released past the threshold, the next photo comes, from the right', (await track(page)).x > 0 && await page.locator('[role="status"]').filter({ hasText: /^Image 2 of/ }).count() === 1)
+    await settled(page)
+    await touches(page, [['touchStart', [{ x: r.x + 200, y }]], ['touchMove', [{ x: r.x + 205, y: y + 10 }]], ['touchMove', [{ x: r.x + 210, y: y + 140 }]], ['touchEnd', []]])
+    await settled(page)
+    check('gallery swipe: a vertical gesture is a scroll, never a photo change', await page.locator('[role="status"]').filter({ hasText: /^Image 2 of/ }).count() === 1 && (await track(page)).x === 0)
     const count = await page.locator('ul[aria-label="Choose a photo"] li').count()
     await frame.focus()
     const scrollY = await page.evaluate(() => scrollY)
@@ -348,10 +385,24 @@ try {
     const strip = await page.evaluate(() => {
       const s = document.querySelector('ul[aria-label="Choose a photo"]'), c = s.querySelector('[aria-current="true"]')
       const a = s.getBoundingClientRect(), r = c.getBoundingClientRect()
-      return { inView: r.left >= a.left - 1 && r.right <= a.right + 1, scrolled: s.scrollLeft, overflow: s.scrollWidth > s.clientWidth, y: scrollY, page: document.documentElement.scrollWidth <= innerWidth + 1 }
+      return { shown: a.width > 0, inView: r.left >= a.left - 1 && r.right <= a.right + 1, scrolled: s.scrollLeft, overflow: s.scrollWidth > s.clientWidth, y: scrollY, page: document.documentElement.scrollWidth <= innerWidth + 1 }
     })
-    check(`gallery thumbnails: stepping to the last photo keeps its thumbnail in view (${count} photos, strip scrolled ${Math.round(strip.scrolled)}px)`, strip.inView && (!strip.overflow || strip.scrolled > 0), JSON.stringify(strip))
+    check(`gallery thumbnails: the keyboard steps to the last photo and its thumbnail stays in view (${count} photos, strip scrolled ${Math.round(strip.scrolled)}px)`, strip.shown && strip.inView && (!strip.overflow || strip.scrolled > 0), JSON.stringify(strip))
     check('gallery thumbnails: only the strip scrolls — the page stays where it was, no overflow', strip.y === scrollY && strip.page, JSON.stringify(strip))
+    await page.context().close()
+  }
+  // Pull down to close, on a phone's viewer.
+  {
+    const page = await open(galleryHref, { context: { hasTouch: true, isMobile: true } })
+    await page.locator('[data-photo-frame] img').first().waitFor()
+    await page.getByRole('button', { name: /^View all \d+ photos$/ }).click()
+    await page.waitForTimeout(700)
+    await touches(page, [['touchStart', [{ x: 195, y: 420 }]], ['touchMove', [{ x: 196, y: 430 }]], ['touchMove', [{ x: 198, y: 580 }]]])
+    const pulled = await page.evaluate(() => { const r = document.querySelector('[role="dialog"] .absolute.overflow-hidden').getBoundingClientRect(); return { w: r.width, top: r.top } })
+    check('viewer: pulling the photo down shrinks it and moves it with the finger', pulled.w < 380 && pulled.top > 300, JSON.stringify(pulled))
+    await touches(page, [['touchEnd', []]])
+    await page.getByRole('dialog').waitFor({ state: 'detached', timeout: 1500 })
+    check('viewer: and letting go past the threshold closes it, focus back on the button', await page.evaluate(() => /^View all \d+ photos$/.test(document.activeElement?.textContent?.trim() ?? '')))
     await page.context().close()
   }
 
@@ -525,7 +576,12 @@ try {
     // recorded in UI-04's risks, not something the fade introduced.)
     for (const path of ['/', property]) {
       const noJs = await open(path, { context: { javaScriptEnabled: false } })
-      const photos = await noJs.locator('main img').evaluateAll((els) => els.filter((e) => e.getBoundingClientRect().height > 0).map((e) => ({ fade: e.dataset.fade ?? null, opacity: getComputedStyle(e).opacity, loaded: e.complete && e.naturalWidth > 0 })))
+      const photos = await noJs.locator('main img').evaluateAll((els) => els.filter((e) => e.getBoundingClientRect().height > 0).map((e) => {
+        // Effective opacity: a Motion wrapper rendered hidden on the server
+        // would hide its photo while the photo itself reads 1 (UI-16).
+        let o = 1; for (let n = e; n; n = n.parentElement) o *= Number(getComputedStyle(n).opacity)
+        return { fade: e.dataset.fade ?? null, opacity: String(o), loaded: e.complete && e.naturalWidth > 0 }
+      }))
       check(`no JavaScript (${path === '/' ? 'home' : 'property'}): photos load and show at full opacity`, photos.length > 0 && photos.every((ph) => ph.fade === null && ph.opacity === '1' && ph.loaded), JSON.stringify(photos))
       check(`no JavaScript (${path === '/' ? 'home' : 'property'}): the heading is visible`, await noJs.locator('h1').isVisible())
       await noJs.context().close()
@@ -616,13 +672,24 @@ try {
     release()
     await sk.context().close()
 
-    // UI-08 under reduced motion: photos change in place, the progress fills
-    // at once.
-    const rmGallery = await open(galleryHref, { context: reduced })
+    // Under reduced motion photos change in place, nothing follows the
+    // finger, and the viewer only fades (UI-16).
+    const rmGallery = await open(galleryHref, { width: 1280, context: { ...reduced, hasTouch: true } })
     await rmGallery.getByRole('group', { name: /^Photos of/ }).locator('img').first().waitFor()
-    await rmGallery.getByRole('button', { name: 'Next photo' }).click()
-    const still2 = await slide(rmGallery)
-    check('reduced: the next photo does not slide in', !still2.anims.some((a) => /motion-photo/.test(a.name)) && await rmGallery.locator('[role="status"]').filter({ hasText: /^Image 2 of/ }).count() === 1, JSON.stringify(still2))
+    const still2 = await pressNav(rmGallery, 'Next photo')
+    check('reduced: the next photo does not slide in', still2.x === 0 && await rmGallery.locator('[role="status"]').filter({ hasText: /^Image 2 of/ }).count() === 1, JSON.stringify(still2))
+    const rf = await rmGallery.getByRole('group', { name: /^Photos of/ }).boundingBox()
+    const rx = rf.x + rf.width * 0.6
+    await touches(rmGallery, [['touchStart', [{ x: rx, y: rf.y + 100 }]], ['touchMove', [{ x: rx - 20, y: rf.y + 101 }]], ['touchMove', [{ x: rx - 160, y: rf.y + 102 }]]])
+    const unmoved = await track(rmGallery)
+    await touches(rmGallery, [['touchEnd', []]])
+    check('reduced: a swipe changes the photo without the photo following the finger', unmoved.x === 0 && await rmGallery.locator('[role="status"]').filter({ hasText: /^Image 3 of/ }).count() === 1, JSON.stringify(unmoved))
+    await rmGallery.getByRole('button', { name: /^View all \d+ photos$/ }).click()
+    const rmOpen = await rmGallery.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => {
+      const el = document.querySelector('[role="dialog"] .absolute.overflow-hidden'), cs = getComputedStyle(el)
+      resolve({ transform: cs.transform })
+    }))))
+    check('reduced: the viewer opens without moving the photo', rmOpen.transform === 'none' || /^matrix\(1, 0, 0, 1, 0, 0\)$/.test(rmOpen.transform), JSON.stringify(rmOpen))
     await rmGallery.context().close()
     const rmPost = await open('/post', { context: reduced })
     await rmPost.getByRole('link', { name: /I own the property/ }).click()

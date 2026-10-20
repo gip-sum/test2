@@ -109,6 +109,19 @@ try {
     check('"Make cover" leaves the first photo without its button; focus moves to the one that remains',await quiet.evaluate(()=>document.activeElement?.getAttribute('aria-label'))==='Move bedroom.png later')
     await still.close()
   }
+  {
+    // A preview that fails to load is the shared PhotoFallback (UI-16): the
+    // box keeps its size, the browser's broken image is gone, and the
+    // problem is said in words beside it.
+    const broken=await context.newPage()
+    await broken.route('**/api/posting/photos/*',route=>route.request().resourceType()==='image'?route.fulfill({status:500,body:''}):route.continue())
+    await broken.goto(BASE+path)
+    const fb=broken.getByRole('img',{name:/^Preview of .+ — image could not load$/}).first()
+    await fb.waitFor({timeout:8000})
+    const box=await fb.evaluate(el=>{const r=el.getBoundingClientRect(),p=el.parentElement.getBoundingClientRect();return{fills:Math.abs(r.width-p.width)<1&&Math.abs(r.height-p.height)<1&&p.height>100,img:el.parentElement.querySelector('img')===null}})
+    check('a failed preview shows the designed fallback in its box, no broken image, and says so',box.fills&&box.img&&await broken.getByText('Preview unavailable. Reload photos to try again.').first().isVisible(),JSON.stringify(box))
+    await broken.close()
+  }
   const first=[...rows.values()][0]
   const ownImage=await context.request.get(BASE+`/api/posting/photos/${first.id}`);check('owner preview available',ownImage.status()===200&&ownImage.headers()['cache-control'].includes('no-store'))
   const other=await browser.newContext();await other.addCookies([{name:'gb-access',value:'b'.repeat(48),url:BASE}])

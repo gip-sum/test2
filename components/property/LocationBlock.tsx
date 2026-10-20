@@ -1,6 +1,4 @@
 import Link from 'next/link'
-import { buildLandingUrl } from '@/lib/search/query'
-import type { PropertyDetail } from '@/lib/property/types'
 
 /**
  * Where the property is.
@@ -11,21 +9,39 @@ import type { PropertyDetail } from '@/lib/property/types'
  * geographic precision it does not have. Phase 34 adds map search; Phase 35
  * adds distance.
  *
+ * Shared by both property pages (UI-16): a real listing shows the street
+ * address its seller gave, marked unverified; a demo fixture has none.
+ *
  * Landmarks are the seller's own words, not a geocode — they are what a
  * local actually uses to describe a place, and they are more useful than a
  * pin for someone who knows the city.
  */
 export function LocationBlock({
-  property,
-  societyName,
+  society,
+  address,
+  locality,
+  city,
+  landmarks = [],
+  moreHref,
+  addressNote,
 }: {
-  property: PropertyDetail
-  societyName?: string
+  society?: string
+  /** A real listing's street address, as the seller wrote it. */
+  address?: string
+  locality: string
+  city: string
+  /** The seller's own words; a real listing has none yet. */
+  landmarks?: string[]
+  /** More homes in this locality, where the page can link to them. */
+  moreHref?: string
+  /** What the address shown is, and is not. */
+  addressNote: string
 }) {
   const rows = [
-    societyName ? { label: 'Society', value: societyName } : null,
-    { label: 'Locality', value: property.localityName },
-    { label: 'City', value: property.cityName },
+    society ? { label: 'Society', value: society } : null,
+    address ? { label: 'Address', value: address } : null,
+    { label: 'Locality', value: locality },
+    { label: 'City', value: city },
   ].filter(Boolean) as Array<{ label: string; value: string }>
 
   // An address card and the seller's landmarks side by side (UI-16). No
@@ -50,26 +66,21 @@ export function LocationBlock({
             ))}
           </dl>
         </div>
-        <p className="mt-3 text-caption text-ink-500">The exact address is not shown on this page.</p>
-        <Link
-          href={buildLandingUrl({
-            intent: property.intent,
-            city: 'kolkata',
-            locality: property.localitySlug,
-          })}
-          className="mt-auto inline-flex min-h-11 w-fit items-center gap-1.5 rounded-md pt-2 text-label text-brand-700 hover:underline"
-        >
-          See more in {property.localityName}
-          <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-        </Link>
+        <p className="mt-3 text-caption text-ink-500">{addressNote}</p>
+        {moreHref && (
+          <Link href={moreHref} className="mt-auto inline-flex min-h-11 w-fit items-center gap-1.5 rounded-md pt-2 text-label text-brand-700 hover:underline">
+            See more in {locality}
+            <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </Link>
+        )}
       </div>
-      {property.nearbyLandmarks.length > 0 && (
+      {landmarks.length > 0 && (
         <div className="min-w-0 rounded-lg bg-surface-200 p-4 sm:p-5">
           <h3 className="text-overline uppercase text-ink-500">Nearby, in the seller&rsquo;s words</h3>
           <ul className="mt-2 flex flex-col gap-2">
-            {property.nearbyLandmarks.map((landmark) => (
+            {landmarks.map((landmark) => (
               <li key={landmark} className="flex items-start gap-2.5 text-body text-ink-900">
                 <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-brand-600" />
                 <span className="min-w-0">{landmark}</span>

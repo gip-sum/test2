@@ -160,6 +160,8 @@ try {
     check('1280px on /buy/kolkata, Buy is the current page — with an underline bar and a heavier weight, not only colour',
       buy.current === 'page' && buy.bar === '2px' && buy.weight > rent.weight && rent.current === null && rent.bar === null, JSON.stringify({ buy, rent }))
     await page.goto(`${base}/buy/kolkata/2-bhk`)
+    // Another results page: wait out its loading shell's header, as open() does.
+    await page.waitForFunction(() => !document.querySelector('[data-search-fallback]'))
     await page.locator('header.app-bar').waitFor()
     check('1280px deeper in the section (/buy/kolkata/2-bhk), Buy is marked as the current section', (await mark('Buy')).current === 'true')
     await page.goto(`${base}/calculators/emi`)

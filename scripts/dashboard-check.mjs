@@ -35,6 +35,11 @@ const drafts = plan.map(({ n }) => ({ id: id('c', n), owner_id: owner, collectio
 let listings = plan.filter((p) => p.listing).map(({ n, listing }) => ({ id: id('d', n), owner_id: owner, draft_id: id('c', n), current_submission_id: id('e', n), version: 2, created_at: at(-40), updated_at: at(-n), activated_at: null, expires_at: null, rejection_reason: null, ...listing }))
 const submissions = plan.filter((p) => p.listing).map(({ n, title, intent = 'buy' }) => ({ id: id('e', n), listing_id: id('d', n), title, seller_name: 'Test Seller', seller_type: 'OWNER', intent, property_type: 'APARTMENT', bedrooms: 2, bathrooms: 2, area_unit: 'sqft', carpet_area: 1000, built_up_area: null, super_area: null, furnishing: 'UNFURNISHED', floor: 3, total_floors: 8, construction_status: 'READY', age_years: 4, possession_by: null, available_from: intent === 'rent' ? 'now' : null, city_name: 'Kolkata', locality_name: 'New Town', city_id: 'kolkata', locality_id: 'new-town', sub_locality_id: null, society_name: null, address: 'Test building address', latitude: null, longitude: null, price: intent === 'rent' ? 25000 : 6000000, deposit: intent === 'rent' ? 100000 : null, maintenance_status: 'none', maintenance_monthly: null, negotiable: true, created_at: at(-20) }))
 const photos = submissions.map((s) => ({ id: id('9', Number(s.id.slice(-2))), submission_id: s.id, object_path: `${s.id}/photo.jpg`, position: 0, width: 640, height: 480, bytes: jpeg.length }))
+// The rented Behala flat answers more questions than the others and has six
+// photos, so the public page (UI-16 layout) shows the mosaic, a society,
+// maintenance and a description; the New Town flat stays one photo, no society.
+Object.assign(submissions.find((s) => s.listing_id === id('d', 4)), { society_name: 'SAMPLE Palm Court', maintenance_status: 'separate', maintenance_monthly: 2500, description: 'SAMPLE description: a bright rented flat near the market.' })
+for (let k = 1; k <= 5; k++) photos.push({ id: id('8', 40 + k), submission_id: id('e', 4), object_path: `${id('e', 4)}/photo-${k}.jpg`, position: k, width: 640, height: 480, bytes: jpeg.length })
 const events = plan.filter((p) => p.withdrawnFrom).flatMap(({ n, withdrawnFrom }) => [{ id: 2, listing_id: id('d', n), from_status: withdrawnFrom, to_status: 'DRAFT', reason: null, actor_type: 'OWNER', actor_id: owner, created_at: at(-1) }, { id: 1, listing_id: id('d', n), from_status: null, to_status: 'DRAFT', reason: null, actor_type: 'OWNER', actor_id: owner, created_at: at(-30) }])
 const enquiries = [1, 2].map((k) => ({ id: id('7', k), listing_public_id: null, listing_id: id('d', 3), listing_title: '2 BHK flat for sale in New Town', buyer_id: null, seller_id: owner, buyer_name: `Buyer ${k}`, buyer_phone: `+91987654321${k}`, message: null, duplicate_of: null, status: 'new', created_at: at(-k) }))
 const serviceCalls = []
@@ -220,6 +225,45 @@ try {
 
   const own = await c.newPage(); await own.goto(BASE + `/listing/${id('d', 3)}`)
   check('the owner sees their inbox instead of a form addressed to themselves', await own.getByText('This is your listing').isVisible() && await own.getByLabel('Mobile number').count() === 0)
+  check('the owner gets no save heart on their own listing, and the seller section shows beside the panel', await own.getByRole('button', { name: /^Save / }).count() === 0 && await own.getByRole('heading', { name: 'Listed by' }).isVisible())
+
+  // A real listing on the property page's layout and components (UI-16).
+  {
+    const rp = await buyer.newPage(); await rp.setViewportSize({ width: 1280, height: 900 })
+    await rp.goto(BASE + `/listing/${id('d', 4)}`)
+    const text = await rp.locator('article').first().innerText()
+    check('real listing: the named society heads the page; the summary states rent terms the seller gave', await rp.locator('h1').innerText() === 'SAMPLE Palm Court' &&
+      ['Deposit ₹1,00,000', 'Maintenance ₹2,500/mo', 'Negotiable', 'Available now', 'Unfurnished', 'Floor 3 of 8'].every((t) => text.includes(t)), text.slice(0, 400))
+    const gallery = rp.getByRole('region', { name: 'Property photos' })
+    check('real listing: six photos make the desktop mosaic, and all six are in the viewer', await gallery.getByRole('button', { name: /^View photo \d of 6 full screen$|^View all 6 photos, from photo 5$/ }).count() === 4 &&
+      await (async () => { await gallery.getByRole('button', { name: 'View all 6 photos', exact: true }).click(); const n = await rp.getByRole('dialog').getByRole('button', { name: /^View full-screen photo \d of 6$/ }).count(); await rp.keyboard.press('Escape'); await rp.getByRole('dialog').waitFor({ state: 'detached', timeout: 2000 }); return n === 6 })())
+    check('real listing: grouped facts and the area panel; no sections it cannot fill', await rp.getByRole('heading', { name: 'The home' }).isVisible() && await rp.getByRole('heading', { name: 'Area breakdown' }).isVisible() &&
+      await rp.getByRole('heading', { name: 'Amenities' }).count() === 0 && !text.includes('Nearby') && await rp.getByRole('heading', { name: 'About this property' }).isVisible())
+    check('real listing: the seller\'s address, marked unverified', text.includes('Test building address') && text.includes('Seller-provided location. It has not been verified.'))
+    const card = rp.locator('aside')
+    check('real listing: the contact card names the seller and its category, with the approval note, and no invented claims', await card.getByRole('heading', { name: 'Contact the owner' }).isVisible() &&
+      (await card.innerText()).includes('Test Seller') && (await card.innerText()).includes('Approval allows publication') && !/verified seller|rating|responds/i.test(await card.innerText()))
+    check('real listing: a signed-out visitor gets the save heart on the photo and Copy link', await gallery.getByRole('button', { name: /^Save / }).isVisible() && await rp.getByRole('button', { name: /^Copy link/ }).isVisible())
+    await rp.close()
+    const broken = await buyer.newPage(); await broken.setViewportSize({ width: 1280, height: 900 })
+    await broken.route('**/*', (route) => route.request().resourceType() === 'image' && /\/listing|photo/.test(route.request().url()) ? route.fulfill({ status: 500, body: '' }) : route.continue())
+    await broken.goto(BASE + `/listing/${id('d', 3)}`)
+    const fb = broken.locator('[data-photo-frame] [data-photo-fallback]').first()
+    await fb.waitFor({ timeout: 8000 })
+    const kept = await broken.locator('[data-photo-frame]').first().evaluate((el) => el.getBoundingClientRect().height)
+    check('real listing: one photo, failed — the designed fallback keeps the frame; no arrows for one photo', kept > 300 && await broken.getByRole('img', { name: /image could not load/ }).count() > 0 &&
+      await broken.getByRole('button', { name: 'Next photo' }).count() === 0 && await broken.getByRole('button', { name: 'View photo full screen' }).isVisible())
+    await broken.close()
+    const plain = await browser.newContext({ viewport: { width: 390, height: 844 }, javaScriptEnabled: false })
+    const np = await plain.newPage(); await np.goto(BASE + `/listing/${id('d', 4)}`)
+    check('real listing without JavaScript: the content and the enquiry form are on the page', await np.locator('h1').isVisible() && await np.getByLabel('Your name').filter({ visible: true }).isVisible() && await np.getByText('Test building address').isVisible())
+    // Below 1024px the visible form is the <noscript> one; the card's copy in
+    // the desktop column is not displayed.
+    await np.getByLabel('Your name').filter({ visible: true }).fill('No Script Buyer'); await np.getByLabel('Mobile number').filter({ visible: true }).fill('98300 55555')
+    await Promise.all([np.waitForLoadState('load'), np.getByRole('button', { name: 'Send enquiry' }).filter({ visible: true }).click()])
+    check('real listing without JavaScript: the enquiry posts and is confirmed', await np.getByText(/^Enquiry sent/).first().isVisible() && enquiries.at(-1).buyer_name === 'No Script Buyer' && enquiries.at(-1).listing_id === id('d', 4))
+    await plain.close()
+  }
 
   // Lifecycle page anchor the dashboard links to.
   await page.goto(BASE + `/post/drafts/${id('c', 7)}/lifecycle#remove-listing`)

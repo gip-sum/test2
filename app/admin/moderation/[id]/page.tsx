@@ -47,8 +47,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
         <div className="border-y border-border-subtle px-5 py-4"><PriceDisplay amount={amount} intent={p.intent} />
         <p className="mt-2 text-caption text-ink-700">{p.intent === 'rent' ? `Deposit ${formatAmount(p.deposit)} · ` : ''}{p.negotiable ? 'Negotiable' : 'Non-negotiable'} · {p.maintenance.status === 'separate' ? `Maintenance ${formatAmount(p.maintenance.monthly)}/mo` : `Maintenance: ${p.maintenance.status}`}</p></div>
         <div className="p-5"><h3 className="mb-3 text-body font-semibold text-ink-900">Property facts</h3>
-        <KeyDetails property={{ ...f, propertyType: m.entry.type, availableFrom: typeof f.availableFrom === 'object' ? f.availableFrom.from : undefined }} />
-        {f.availableFrom === 'now' && <p className="mt-3 text-body-sm">Available now</p>}{f.possessionBy && <p className="mt-3 text-body-sm">Expected possession: {f.possessionBy}</p>}
+        <KeyDetails property={{ ...f, propertyType: m.entry.type, availableFrom: typeof f.availableFrom === 'object' ? f.availableFrom.from : undefined, availableNow: f.availableFrom === 'now' }} />
         <h3 className="mb-3 mt-5 border-t border-border-subtle pt-4 text-body font-semibold text-ink-900">Area breakdown</h3><AreaBreakdown property={{ ...f, price: amount, intent: p.intent }} />
         <h3 className="mt-5 border-t border-border-subtle pt-4 text-body font-semibold text-ink-900">Location</h3><p className="mt-2 break-words text-body-sm">{s.society_name}</p><p className="break-words text-body-sm">{s.address}</p><p className="break-words text-body-sm">{s.locality_name}, {s.city_name}</p>
         {s.latitude !== null && s.longitude !== null && <p className="mt-2 text-body-sm text-ink-700">Seller-provided coordinates: {s.latitude}, {s.longitude}</p>}

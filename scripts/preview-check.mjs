@@ -49,7 +49,7 @@ try{
  const img=page.locator('section[aria-label="Property photos"] img').first();await img.waitFor()
  await img.evaluate(e=>e.decode())
  check('private image loaded without optimizer',await img.evaluate((e,path)=>e.naturalWidth===640&&new URL(e.currentSrc).origin===location.origin&&new URL(e.currentSrc).pathname===path,`/api/posting/photos/${photoId}`))
- await page.getByRole('button',{name:'View full-screen gallery'}).click();await page.getByRole('dialog').waitFor();await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});check('gallery closes',await page.getByRole('dialog').count()===0)
+ await page.getByRole('button',{name:/^View (all \d+ photos|photo full screen)$/}).click();await page.getByRole('dialog').waitFor();await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});check('gallery closes',await page.getByRole('dialog').count()===0)
  await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Confirm review',exact:true}).click();await page.getByText('Review confirmed. Your property is still private and unpublished.').waitFor()
  check('confirmation persisted',review?.draft_revision===draft.revision)
  await page.reload();check('confirmed state survives refresh',await page.getByText('Review confirmed. Your property is still private and unpublished.').count()===1)

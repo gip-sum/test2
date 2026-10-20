@@ -6,6 +6,7 @@ import {
   PROPERTY_TYPE_LABEL,
   type PropertyDetail,
 } from '@/lib/property/types'
+import { formatDay, formatMonth } from '@/lib/property/overview'
 
 /**
  * The specification sheet.
@@ -26,7 +27,10 @@ import {
  */
 type Row = { label: string; value: React.ReactNode }
 
-export function KeyDetails({ property }: { property: Partial<PropertyDetail> }) {
+export function KeyDetails({ property }: {
+  /** A fixture, or a real listing's facts, which add a possession month and "available now". */
+  property: Partial<PropertyDetail> & { possessionBy?: string; availableNow?: boolean }
+}) {
   const group = () => {
     const rows: Row[] = []
     const add = (label: string, value: React.ReactNode | undefined | null) => {
@@ -63,17 +67,8 @@ export function KeyDetails({ property }: { property: Partial<PropertyDetail> }) 
 
   const terms = group()
   terms.add('Ownership', property.ownershipType ? OWNERSHIP_LABEL[property.ownershipType] : undefined)
-  terms.add(
-    'Available from',
-    property.availableFrom
-      ? new Date(`${property.availableFrom}T00:00:00Z`).toLocaleDateString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-          timeZone: 'UTC',
-        })
-      : undefined,
-  )
+  terms.add('Available from', property.availableNow ? 'Now' : property.availableFrom ? formatDay(property.availableFrom) : undefined)
+  terms.add('Possession by', property.possessionBy ? formatMonth(property.possessionBy) : undefined)
 
   // No area rows: every caller (property page, published listing, preview,
   // moderation) shows AreaBreakdown, which states all three bases and the

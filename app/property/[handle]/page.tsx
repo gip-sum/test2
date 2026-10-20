@@ -4,7 +4,7 @@ import { PageShell } from '@/components/layout/PageShell'
 import { Footer } from '@/components/navigation/Footer'
 import { DevDataNotice } from '@/components/home/DevDataNotice'
 import { Breadcrumbs } from '@/components/navigation/Breadcrumbs'
-import { Gallery } from '@/components/property/Gallery'
+import { AreaHeading, PropertyLayout, Section } from '@/components/property/PropertyLayout'
 import { KeyDetails } from '@/components/property/KeyDetails'
 import { AreaBreakdown } from '@/components/property/AreaBreakdown'
 import { AmenityList } from '@/components/property/AmenityList'
@@ -22,9 +22,9 @@ import { parsePropertyHandle, propertyPath } from '@/lib/property/public-id'
 import { getLocationById } from '@/lib/location/queries'
 import { buildLandingUrl } from '@/lib/search/query'
 import { formatConfiguration } from '@/lib/format/area'
-import { cn } from '@/lib/cn'
 import { BRAND, LAUNCH_CITY } from '@/lib/brand'
 import { PROPERTY_TYPE_LABEL, type PropertyDetail } from '@/lib/property/types'
+import { contactOfProperty, overviewOfProperty } from '@/lib/property/overview'
 
 /**
  * The property page — the central conversion surface.
@@ -105,98 +105,63 @@ export default async function PropertyPage(props: Props) {
     { label: title },
   ]
 
-  const wide = property.photos.filter((m) => m.url).length >= 5
   const name = property.society ?? property.title
+  const contact = contactOfProperty(property)
 
   return (
     <PageShell footer={<Footer />}>
-      <article>
-        {/* The band (UI-16): the results page's mint, in the 1400px frame,
-            holding where you are and the photos — the listing is framed
-            the way its search was. */}
-        <div className="property-band">
-          <div className="home-container pt-3 sm:pb-6 lg:pb-8">
-            <DevDataNotice />
-            <div className="mt-3 lg:mt-4">
-              <Breadcrumbs items={crumbs} currentFromSm />
-            </div>
-            {/* Below the mosaic's five photos the lead photo keeps the
-                content column's width, so the card beside the summary
-                lines up with it either way. */}
-            <div className={cn('mt-3', !wide && 'lg:max-w-[calc(100%-26.5rem)] xl:max-w-[calc(100%-28rem)]')}>
-              <Gallery
-                photos={property.photos}
-                title={title}
-                layout="wide"
-                overlay={<SaveButton id={property.publicId} title={name} visualClassName="bg-surface-000 shadow-e2" />}
-              />
-            </div>
+      <PropertyLayout
+        band={<><DevDataNotice /><div className="mt-3 lg:mt-4"><Breadcrumbs items={crumbs} currentFromSm /></div></>}
+        photos={property.photos}
+        title={title}
+        saveAction={<SaveButton id={property.publicId} title={name} visualClassName="bg-surface-000 shadow-e2" />}
+        overview={<PropertyOverview data={overviewOfProperty(property, society?.name)} />}
+        aside={<ContactCard contact={contact} headingId="contact-heading" />}
+        asideLabelledBy="contact-heading"
+        after={similar.results.length > 0 ? <SimilarProperties results={similar.results} /> : undefined}
+        phoneContact={{ bar: <StickyContactBar contact={contact} />, noScriptCard: <ContactCard contact={contact} /> }}
+      >
+        <Section id="details" title="Property details">
+          <KeyDetails property={property} />
+          <AreaHeading />
+          <div className="mt-3">
+            <AreaBreakdown property={property} />
           </div>
-        </div>
+        </Section>
 
-        <div className="home-container pb-10 pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-x-10 lg:pb-14 lg:pt-7 xl:grid-cols-[minmax(0,1fr)_25.5rem]">
-          <div className="min-w-0">
-            <PropertyOverview property={property} societyName={society?.name} />
-
-            <Section id="details" title="Property details">
-              <KeyDetails property={property} />
-              <h3 id="area-heading" className="mt-7 text-body-lg font-semibold text-ink-900">Area breakdown</h3>
-              <div className="mt-3">
-                <AreaBreakdown property={property} />
-              </div>
-            </Section>
-
-            {property.description && (
-              <Section id="description" title="About this property">
-                <DescriptionBlock text={property.description} />
-              </Section>
-            )}
-
-            {property.amenities.length > 0 && (
-              <Section id="amenities" title="Amenities">
-                <AmenityList amenities={property.amenities} />
-              </Section>
-            )}
-
-            <Section id="location" title="Location">
-              <LocationBlock property={property} societyName={society?.name} />
-            </Section>
-
-            {/* Who is selling, in the reading order on a phone; on desktop
-                the contact card beside the content carries it. */}
-            <Section id="seller" title="Listed by" className="lg:hidden">
-              <SellerBlock property={property} />
-            </Section>
-
-            <div className="mt-10">
-              <PropertyDisclaimer />
-            </div>
-          </div>
-
-          {/* Desktop: the contact card stays beside the content as it
-              scrolls. Below 1024px the bar and its sheet take over. */}
-          <aside aria-labelledby="contact-heading" className="hidden lg:sticky lg:top-24 lg:block">
-            <ContactCard property={property} headingId="contact-heading" />
-          </aside>
-        </div>
-
-        {similar.results.length > 0 && (
-          <div className="border-t border-border-subtle bg-surface-100">
-            <div className="home-container pb-12 pt-10 lg:pb-16 lg:pt-12">
-              <SimilarProperties results={similar.results} />
-            </div>
-          </div>
+        {property.description && (
+          <Section id="description" title="About this property">
+            <DescriptionBlock text={property.description} />
+          </Section>
         )}
-      </article>
 
-      {/* Reserves the strip the fixed bar occupies, so the disclaimer and
-          the footer are never trapped underneath it. */}
-      <div className="h-20 lg:hidden" aria-hidden />
-      {/* Below 1024px the form lives in a sheet, which needs JavaScript; without
-          it the same server-action form is here, so a phone can still enquire
-          (UI-12). <noscript> content is inert while scripts run. */}
-      <noscript><div className="mx-auto max-w-xl px-4 pb-28 pt-2 lg:hidden"><ContactCard property={property} /></div></noscript>
-      <StickyContactBar property={property} />
+        {property.amenities.length > 0 && (
+          <Section id="amenities" title="Amenities">
+            <AmenityList amenities={property.amenities} />
+          </Section>
+        )}
+
+        <Section id="location" title="Location">
+          <LocationBlock
+            society={society?.name}
+            locality={property.localityName}
+            city={property.cityName}
+            landmarks={property.nearbyLandmarks}
+            moreHref={buildLandingUrl({ intent: property.intent, city: 'kolkata', locality: property.localitySlug })}
+            addressNote="The exact address is not shown on this page."
+          />
+        </Section>
+
+        {/* Who is selling, in the reading order on a phone; on desktop
+            the contact card beside the content carries it. */}
+        <Section id="seller" title="Listed by" className="lg:hidden">
+          <SellerBlock property={property} />
+        </Section>
+
+        <div className="mt-10">
+          <PropertyDisclaimer />
+        </div>
+      </PropertyLayout>
 
       <script
         type="application/ld+json"
@@ -205,33 +170,6 @@ export default async function PropertyPage(props: Props) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd(property, title, crumbs)) }}
       />
     </PageShell>
-  )
-}
-
-/**
- * One content section: a rule above, the heading in the display face and
- * the content under it (UI-16). Rules rather than a card per section: the
- * page reads as one document, and the contact card stays the one raised
- * surface on it.
- */
-function Section({
-  id,
-  title,
-  className,
-  children,
-}: {
-  id: string
-  title: string
-  className?: string
-  children: React.ReactNode
-}) {
-  return (
-    <section aria-labelledby={`${id}-heading`} className={cn('mt-10 border-t border-border-subtle pt-8', className)}>
-      <h2 id={`${id}-heading`} className="font-display text-heading-2 text-ink-900">
-        {title}
-      </h2>
-      <div className="mt-4">{children}</div>
-    </section>
   )
 }
 

@@ -124,7 +124,12 @@ try {
   check('gallery arrow changes the announced position', initial !==
     await page.locator('[aria-live="polite"]').filter({ hasText: /^Image / }).innerText())
   check('gallery navigation keeps focus', await next.evaluate((el) => document.activeElement === el))
-  check('twelve-image strip exists', await page.getByRole('button', { name: /^Show photo/ }).count() === 12)
+  // UI-16: the desktop mosaic leads to the viewer, where the twelve
+  // thumbnails are; no strip sits under the mosaic.
+  await page.getByRole('button', { name: 'View all 12 photos', exact: true }).click()
+  check('twelve thumbnails in the viewer', await page.getByRole('dialog').getByRole('button', { name: /^View full-screen photo \d+ of 12$/ }).count() === 12)
+  await page.keyboard.press('Escape')
+  await page.getByRole('dialog').waitFor({ state: 'detached', timeout: 2000 })
   const similarLinks = await page.locator('section[aria-labelledby="similar-heading"] a[href^="/property/"]')
     .evaluateAll((els) => els.map((el) => el.getAttribute('href')))
   check('similar listings exclude the current listing', !similarLinks.includes(FULL))

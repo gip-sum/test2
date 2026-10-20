@@ -6,14 +6,8 @@ import { Badge } from '@/components/ui/Badge'
 import { AreaIcon, BathIcon, BedIcon, CalculatorIcon, MapPinIcon } from '@/components/ui/icons'
 import { emiCalculatorHref } from '@/lib/finance/params'
 import { formatPostedAt } from '@/lib/format/date'
-import { listingBadges } from '@/lib/property/badges'
-import { propertyPath } from '@/lib/property/public-id'
-import {
-  CONSTRUCTION_LABEL,
-  FURNISHING_LABEL,
-  PROPERTY_TYPE_LABEL,
-  type PropertyDetail,
-} from '@/lib/property/types'
+import type { OverviewData } from '@/lib/property/overview'
+import { CONSTRUCTION_LABEL, PROPERTY_TYPE_LABEL } from '@/lib/property/types'
 
 /**
  * The top of the property page (UI-16): what a buyer asks first, in the
@@ -26,62 +20,52 @@ import {
  * on its card and its page. Every line is a field the listing holds; one
  * the seller left blank is left out, never filled with a dash.
  *
+ * One component for both property pages — a demo fixture and a real
+ * published listing — from the OverviewData their adapters build
+ * (lib/property/overview.ts, lib/listings/overview.ts).
+ *
  * A server component: the only client parts are Copy link and the save
  * heart (on the gallery), each its own small leaf.
  */
-export function PropertyOverview({ property, societyName }: { property: PropertyDetail; societyName?: string }) {
-  const p = property
-  const name = p.society ?? p.title
-  const badges = listingBadges(p)
-  const place = [societyName && societyName !== name ? societyName : null, p.localityName, p.cityName].filter(Boolean).join(', ')
-  const available = p.availableFrom
-    ? `Available from ${new Date(`${p.availableFrom}T00:00:00Z`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })}`
-    : null
-  const attributes = [
-    FURNISHING_LABEL[p.furnishing],
-    available,
-    p.floor != null && p.totalFloors != null ? `${p.floor === 0 ? 'Ground floor' : `Floor ${p.floor}`} of ${p.totalFloors}` : null,
-  ].filter(Boolean) as string[]
-  const extras = [
-    p.deposit != null ? `Deposit ₹${p.deposit.toLocaleString('en-IN')}` : null,
-    p.maintenanceMonthly != null ? `Maintenance ₹${p.maintenanceMonthly.toLocaleString('en-IN')}/mo` : null,
-    p.isNegotiable ? 'Negotiable' : null,
-  ].filter(Boolean) as string[]
+export function PropertyOverview({ data }: { data: OverviewData }) {
+  const p = data
+  const studio = p.propertyType === 'STUDIO'
 
   return (
     <header>
       {/* The price leads; New / Price reduced ride beside it rather than
           taking a line of their own above it. */}
       <div className="flex items-start justify-between gap-3">
-        <PriceDisplay amount={p.price} intent={p.intent} size="hero" areaForRate={p.intent === 'buy' ? p.carpetArea : undefined} />
-        {badges.length > 0 && (
+        <PriceDisplay amount={p.price} intent={p.intent} size="hero" areaForRate={p.rateArea} />
+        {p.badges.length > 0 && (
           <div className="mt-1.5 flex flex-wrap justify-end gap-1.5 lg:mt-2.5">
-            {badges.map((b) => <Badge key={b.label} tone={b.tone}>{b.label}</Badge>)}
+            {p.badges.map((b) => <Badge key={b.label} tone={b.tone}>{b.label}</Badge>)}
           </div>
         )}
       </div>
-      {extras.length > 0 && (
+      {p.extras.length > 0 && (
         <p className="mt-1 flex flex-wrap gap-x-2 text-body-sm text-ink-700 tabular">
-          {extras.map((e, i) => <span key={e}>{i > 0 && <span aria-hidden className="mr-2 text-ink-500">·</span>}{e}</span>)}
+          {p.extras.map((e, i) => <span key={e}>{i > 0 && <span aria-hidden className="mr-2 text-ink-500">·</span>}{e}</span>)}
         </p>
       )}
 
-      <h1 className="mt-3 break-words lg:mt-4 font-display text-heading-2 text-ink-900 lg:text-heading-1">{name}</h1>
+      <h1 className="mt-3 break-words font-display text-heading-2 text-ink-900 lg:mt-4 lg:text-heading-1">{p.name}</h1>
       <p className="mt-1.5 flex items-start gap-1.5 text-body text-ink-700">
         <MapPinIcon className="mt-0.5 size-4.5 shrink-0 text-brand-700" />
-        <span className="min-w-0">{place}</span>
+        <span className="min-w-0 break-words">{p.place}</span>
       </p>
 
       {/* What you get, as one specification panel: the results card's mint
           fact row at page scale. A definition list, so each figure is read
           with its label (a list: a <dl> cannot hold the icons). */}
       <ul aria-label="Key facts" className="mt-5 grid grid-cols-3 divide-x divide-brand-200 rounded-lg bg-surface-200 py-3.5">
-        <Spec icon={<BedIcon className="size-5" />} label={p.propertyType === 'STUDIO' ? 'Layout' : 'Bedrooms'}>
-          {p.propertyType === 'STUDIO' ? 'Studio' : `${p.bedrooms} BHK`}
+        <Spec icon={<BedIcon className="size-5" />} label={studio ? 'Layout' : 'Bedrooms'}>
+          {studio || p.bedrooms == null ? 'Studio' : `${p.bedrooms} BHK`}
         </Spec>
         <Spec icon={<BathIcon className="size-5" />} label="Bathrooms">{p.bathrooms}</Spec>
         <Spec icon={<AreaIcon className="size-5" />} label="Carpet area">
-          <AreaDisplay value={p.carpetArea} unit={p.areaUnit} basis="carpet" variant="compact" className="whitespace-nowrap" />
+          {/* Wraps before "(carpet)" at 320px rather than widen the page. */}
+          <AreaDisplay value={p.carpetArea} unit={p.areaUnit} basis="carpet" variant="compact" />
         </Spec>
       </ul>
 
@@ -89,12 +73,12 @@ export function PropertyOverview({ property, societyName }: { property: Property
         <li className="inline-flex min-h-8 items-center rounded-full border border-border-subtle bg-surface-000 px-3 text-body-sm font-semibold text-ink-900">{PROPERTY_TYPE_LABEL[p.propertyType]}</li>
         <li className="inline-flex min-h-8 items-center rounded-full border border-brand-200 bg-brand-50 px-3 text-body-sm font-semibold text-brand-700">{CONSTRUCTION_LABEL[p.constructionStatus]}</li>
       </ul>
-      {attributes.length > 0 && (
-        <p className="mt-3 text-body text-ink-700">{attributes.join(' · ')}</p>
+      {p.attributes.length > 0 && (
+        <p className="mt-3 text-body text-ink-700">{p.attributes.join(' · ')}</p>
       )}
 
       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border-subtle pt-4">
-        <CopyLink path={propertyPath(p.slug, p.publicId)} title={name} variant="pill" />
+        {p.sharePath && <CopyLink path={p.sharePath} title={p.name} variant="pill" />}
         {/* A link to the calculator, not an EMI figure: a figure here
             would need a rate, and no rate on this page would be the
             buyer's own. */}
@@ -104,7 +88,7 @@ export function PropertyOverview({ property, societyName }: { property: Property
             Estimate the monthly EMI
           </Link>
         )}
-        <span className="text-caption text-ink-500 sm:ml-auto">{formatPostedAt(p.postedAt)}</span>
+        {p.postedAt && <span className="text-caption text-ink-500 sm:ml-auto">{formatPostedAt(p.postedAt)}</span>}
       </div>
     </header>
   )
