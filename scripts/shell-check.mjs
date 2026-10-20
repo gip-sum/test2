@@ -128,9 +128,12 @@ try {
     for (const a of await page.locator('#nav-panel-localities a').evaluateAll((els) => els.map((e) => e.getAttribute('href')))) panelHrefs.add(a)
     const pills = await page.locator('#nav-panel-localities .nav-pill').evaluateAll((els) => els.map((e) => e.textContent))
     check('1280px each locality\'s Buy and Rent links say which locality to a screen reader', pills.length > 0 && pills.every((t) => / in \S/.test(t)), JSON.stringify(pills.slice(0, 4)))
-    // A click outside closes.
-    await page.mouse.click(640, 700)
-    check('1280px a click outside closes the panel', !(await page.locator('#nav-panel-localities').isVisible()))
+    // A click outside closes — on the results heading, which is not
+    // interactive (a blind click here hit a whole-card result link).
+    const quiet = await page.locator('main h1').first().boundingBox()
+    const here = page.url()
+    await page.mouse.click(quiet.x + 4, quiet.y + quiet.height / 2)
+    check('1280px a click outside closes the panel', !(await page.locator('#nav-panel-localities').isVisible()) && page.url() === here)
     // Focus leaving the navigation closes.
     await toggle('Home loans').click()
     for (const a of await page.locator('#nav-panel-loans a').evaluateAll((els) => els.map((e) => e.getAttribute('href')))) panelHrefs.add(a)
@@ -214,8 +217,13 @@ try {
     await toggle.click()
     check(`${w} Explore all toggles closed`, !(await panel.isVisible()))
     await toggle.click()
-    await page.mouse.click(width / 2, height - 10)
-    check(`${w} a click outside closes it`, !(await panel.isVisible()))
+    // Outside the navigation and on nothing interactive: the results
+    // heading. A blind click at the bottom of the screen landed on a result
+    // card (a whole-card link since UI-15) and navigated away mid-check.
+    const spot = await page.locator('main h1').first().boundingBox()
+    const before = page.url()
+    await page.mouse.click(spot.x + 4, spot.y + spot.height / 2)
+    check(`${w} a click outside closes it`, !(await panel.isVisible()) && page.url() === before)
     await toggle.click()
     await page.locator('header.app-bar').getByRole('link', { name: 'Post property' }).focus()
     check(`${w} focus leaving the navigation closes it`, !(await panel.isVisible()))
