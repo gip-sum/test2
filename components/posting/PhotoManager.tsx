@@ -72,6 +72,7 @@ export function PhotoManager({ collection }: { collection: string }) {
   useLayoutEffect(() => { itemsRef.current = items }, [items])
   // The order when a drag began, to save or roll back to when it ends.
   const dragFrom = useRef<Item[] | null>(null)
+  const lastSwap = useRef<{ id: string; at: number } | null>(null)
   // A file dragged anywhere over the window arms the drop zone; over the
   // zone itself it is ready to take it (Kokonut File Upload's states).
   const [armed, setArmed] = useState(false)
@@ -200,18 +201,28 @@ export function PhotoManager({ collection }: { collection: string }) {
   // Drag to reorder (UI-17): the photo follows the pointer from its handle,
   // the others make room as it passes over them, and the order is saved
   // when it is let go — or put back if saving fails, as a button move is.
-  function dragStart() { if (canOrder) dragFrom.current = itemsRef.current }
-  function dragOver(id: string, info: PanInfo) {
+  function dragStart() { if (canOrder) { dragFrom.current = itemsRef.current; lastSwap.current = null } }
+  function dragOver(id: string, info: PanInfo, time: number) {
     if (!dragFrom.current) return
-    // Near the top or bottom of the screen the page scrolls, so a photo
-    // can travel past what a phone shows at once.
-    const y = info.point.y - window.scrollY
-    if (y > window.innerHeight - 72) window.scrollBy(0, 16)
-    else if (y < 72) window.scrollBy(0, -16)
-    const at = document.elementsFromPoint(info.point.x - window.scrollX, info.point.y - window.scrollY)
+    // No edge auto-scroll: Motion re-runs a drag on scroll, so scrolling
+    // from here fed itself and ran the page away (UI-17, measured). A photo
+    // beyond the screen moves with Earlier, Later or Make cover.
+    // The photo under the dragged one's centre, not under the pointer: the
+    // handle sits in a corner, and the slot that opens should be the one
+    // the photo is seen to cover.
+    const self = list.current?.querySelector<HTMLElement>(`[data-flip-key="${id}"]`)
+    const box = self?.getBoundingClientRect()
+    const x = box ? box.left + box.width / 2 : info.point.x - window.scrollX, y = box ? box.top + box.height / 2 : info.point.y - window.scrollY
+    // Clamped to the screen: part of a tall photo can hang off its edge, and
+    // nothing is found at a point outside the viewport.
+    const at = document.elementsFromPoint(Math.min(Math.max(x, 1), window.innerWidth - 1), Math.min(Math.max(y, 1), window.innerHeight - 1))
       .map(el => (el as HTMLElement).closest<HTMLElement>('[data-flip-key]')).find(el => el && el.dataset.flipKey !== id)
     const target = at?.dataset.flipKey
     if (!target) return
+    // The photo just swapped out is still sliding away under this one for
+    // the layout animation's length; swapping with it again would bounce.
+    if (lastSwap.current && lastSwap.current.id === target && time - lastSwap.current.at < 450) return
+    lastSwap.current = { id: target, at: time }
     setItems(previous => {
       const from = previous.findIndex(i => i.id === id), to = previous.findIndex(i => i.id === target)
       if (from < 0 || to < 0 || from === to) return previous
@@ -285,7 +296,7 @@ export function PhotoManager({ collection }: { collection: string }) {
           canOrder={canOrder}
           busy={busy}
           onDragStart={dragStart}
-          onDrag={(info) => dragOver(item.id, info)}
+          onDrag={(info, time) => dragOver(item.id, info, time)}
           onDragEnd={() => void dragEnd(item.id)}
           onEarlier={() => { if (canOrder) void move(index, index - 1, 'earlier') }}
           onLater={() => { if (canOrder) void move(index, index + 1, 'later') }}
@@ -322,7 +333,7 @@ export function PhotoManager({ collection }: { collection: string }) {
  */
 function PhotoTile({ item, index, count, canOrder, busy, onDragStart, onDrag, onDragEnd, onEarlier, onLater, onCover, onRetry, onRemove, onPreviewFail }: {
   item: Item; index: number; count: number; canOrder: boolean; busy: boolean
-  onDragStart: () => void; onDrag: (info: PanInfo) => void; onDragEnd: () => void
+  onDragStart: () => void; onDrag: (info: PanInfo, time: number) => void; onDragEnd: () => void
   onEarlier: () => void; onLater: () => void; onCover: () => void; onRetry: () => void; onRemove: () => void; onPreviewFail: () => void
 }) {
   const controls = useDragControls()
@@ -344,7 +355,7 @@ function PhotoTile({ item, index, count, canOrder, busy, onDragStart, onDrag, on
       dragSnapToOrigin
       dragMomentum={false}
       onDragStart={() => { setDragging(true); onDragStart() }}
-      onDrag={(_, info) => onDrag(info)}
+      onDrag={(event, info) => onDrag(info, event.timeStamp)}
       onDragEnd={() => { setDragging(false); onDragEnd() }}
       data-flip-key={item.id}
       data-dragging={dragging || undefined}
