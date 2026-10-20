@@ -22,8 +22,9 @@ function kolkataDate(offsetDays = 0) {
 }
 
 async function chip(page, legend, label) {
-  // Click the visible chip, as a person would; the radio inside is visually hidden.
-  await page.getByRole('group', { name: legend }).locator('label.post-chip').filter({ has: page.getByRole('radio', { name: label, exact: true }) }).click()
+  // Click the visible chip or option card (UI-17), as a person would; the
+  // radio inside is visually hidden.
+  await page.getByRole('group', { name: legend }).locator('label.post-chip, label.post-option').filter({ has: page.getByRole('radio', { name: label, exact: true }) }).click()
 }
 
 try {
@@ -36,8 +37,26 @@ try {
   // and the menu reaches everything else.
   await check('mobile way out stays visible: the home logo and the menu',
     await page.locator('header').getByRole('link', { name: /home$/ }).isVisible() && await page.locator('header').getByRole('button', { name: 'Menu' }).isVisible())
-  await check('current progress is announced', await page.locator('nav[aria-label="Posting progress"] [aria-current="step"]').count() === 1)
-  await check('progress shows eight stages', await page.locator('nav[aria-label="Posting progress"] li').count() === 8)
+  // UI-17: a compact step bar on phones and a rail from 1024px. Both are in
+  // the page; only one is displayed at a width, so only one is announced.
+  const progress = page.locator('nav[aria-label="Posting progress"]').filter({ visible: true })
+  await check('one progress navigation at a width', await progress.count() === 1)
+  await check('the phone bar states the step in words', /step 1 of 8\s*about you/i.test(await progress.locator('summary').innerText()))
+  await check('the closed bar shows its track, filled to the current step', await progress.locator('summary .progress-fill').count() === 8 && await progress.locator('summary .progress-fill[data-filled]').count() === 1 && await progress.locator('summary .progress-fill').first().isVisible())
+  await progress.locator('summary').click()
+  const steps = progress.locator('details > div > div ol li')
+  await check('the bar opens to all eight stages', await steps.count() === 8 && await steps.first().isVisible())
+  await check('current progress is announced', await progress.locator('[aria-current="step"]').count() === 1 && (await progress.locator('[aria-current="step"]').innerText()).includes('You are here'))
+  await progress.locator('summary').click()
+  {
+    const desk = await browser.newPage({ viewport: { width: 1280, height: 900 } })
+    await desk.goto(`${base}/post?role=OWNER&intent=buy&type=APARTMENT`)
+    const rail = desk.locator('nav[aria-label="Posting progress"]').filter({ visible: true })
+    await check('1280: the rail is the one progress navigation, with eight stages', await rail.count() === 1 && await rail.locator('li').count() === 8)
+    await check('1280: done stages link back; the current one is marked in words', await rail.getByRole('link', { name: /^Return to / }).count() === 3 && (await rail.locator('[aria-current="step"]').innerText()).includes('Details') && (await rail.locator('[aria-current="step"]').innerText()).includes('You are here'))
+    await check('1280: a done stage returns to its step with the answers kept', (await rail.getByRole('link', { name: 'Return to Property type' }).getAttribute('href')) === '/post?role=OWNER&intent=buy')
+    await desk.close()
+  }
 
   await page.getByRole('link', { name: /I own the property/ }).click()
   await page.getByRole('heading', { name: 'What would you like to do?' }).waitFor()
@@ -96,7 +115,7 @@ try {
   await check('a valid submission lands on a canonical review link', new URL(review).search === '?role=OWNER&intent=buy&type=APARTMENT&bhk=3&baths=2&unit=sqft&carpet=1240&super=1650&furnishing=SEMI_FURNISHED&floor=4&floors=12&status=READY&age=6')
   await check('review states every fact with its area basis', await page.getByText('3 BHK · 2 Baths').isVisible() && await page.getByText('1,240 sqft carpet').isVisible() && await page.getByText('1,650 sqft super built-up').isVisible() && await page.getByText('Floor 4 of 12 floors').isVisible() && await page.getByText('6 years old').isVisible())
   await check('an unstated basis says so', await page.getByText('Not stated').count() === 1)
-  await check('review makes publication state explicit', (await page.getByText(/Nothing is published\. Save as draft/).count()) === 1)
+  await check('review makes publication state explicit', (await page.locator('section[aria-labelledby="post-heading"]').getByText(/Nothing is published until you submit it for review\./).count()) === 1)
   await page.reload()
   await check('refresh keeps the review', page.url() === review && await page.getByRole('heading', { name: REVIEW }).isVisible())
 
@@ -128,6 +147,10 @@ try {
   await page.getByLabel('Locality', { exact: true }).selectOption('new-town')
   await page.getByLabel('Sub-locality (optional)', { exact: true }).selectOption('salt-lake-sector-v')
   await page.getByLabel('Building or street address').fill('Building 4, Main Road')
+  // Coordinates fold into an optional "Map position" disclosure (UI-17),
+  // closed until opened or until it holds a value or an error.
+  await check('map position starts folded away', await page.locator('details.post-coords').evaluate((el) => !el.open) && !(await page.getByLabel('Latitude (optional)').isVisible()))
+  await page.locator('details.post-coords summary').click()
   await page.getByLabel('Latitude (optional)').fill('22.580000')
   await page.getByRole('button', { name: 'Review details and location' }).click()
   await page.locator('.post-error-summary').waitFor()

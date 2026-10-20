@@ -49,11 +49,18 @@ async function context(token){const c=await browser.newContext({viewport:{width:
 const path=`/post/drafts/${id}/preview`,api='/api/posting/description'
 try{
  const owner=await context('a'),page=await owner.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(BASE+path)
- await page.getByRole('heading',{name:'About this property'}).waitFor()
+ // UI-17: the seller's editor is "Your description", above the buyer
+ // preview, whose own "About this property" section shows what is saved.
+ await page.getByRole('heading',{name:'Your description'}).waitFor()
  check('honest disabled AI state',await page.getByRole('button',{name:'Generate with AI'}).isDisabled())
  const editor=page.getByLabel('Property description'),save=page.getByRole('button',{name:'Save description'})
  await editor.fill('SAMPLE seller description.');const firstSave=page.waitForResponse(r=>r.url().endsWith(api)&&r.request().method()==='POST');await save.click();await firstSave
  await page.reload();check('manual description persists',await editor.inputValue()==='SAMPLE seller description.')
+ {
+   const buyer=page.locator('section[aria-labelledby="description-heading"]')
+   check('the buyer preview shows the saved description under its own heading',await buyer.getByRole('heading',{name:'About this property'}).isVisible()&&(await buyer.innerText()).includes('SAMPLE seller description.')&&await buyer.locator('textarea').count()===0)
+   check('editor and buyer section are distinct, with unique ids',await page.locator('#description-editor-heading').count()===1&&await page.locator('#description-heading').count()===1)
+ }
  await page.getByRole('checkbox').check();await page.getByRole('button',{name:'Confirm review',exact:true}).click();await page.getByText('Review confirmed. Your property is still private and unpublished.').waitFor()
  await editor.fill('SAMPLE edited description.');await save.click();await page.getByRole('button',{name:'Confirm review',exact:true}).waitFor()
  check('saving invalidates earlier confirmation',review.draft_revision!==draft.revision)
@@ -74,9 +81,9 @@ try{
  check('guest job denied',(await guest.request.get(BASE+api+'/jobs/'+jobId)).status()===401)
  check('cross-origin denied',(await owner.request.post(BASE+api,{headers:{Origin:'https://other.test'},data:payload})).status()===403)
  check('oversized body rejected',(await owner.request.post(BASE+api,{headers:{Origin:BASE},data:{...payload,description:'a'.repeat(12001)}})).status()===413)
- job=null;await page.reload();await editor.fill('a'.repeat(2001));check('overlong text cannot save',await save.isDisabled());await editor.fill('SAMPLE final text.')
+ job=null;await page.reload();await editor.fill('a'.repeat(2001));check('overlong text cannot save',await save.isDisabled());check('the count says so in the danger colour',(await page.locator('#description-count').getAttribute('class')).includes('text-danger-600')&&(await page.locator('#description-count').innerText()).startsWith('2,001 / 2,000'));await editor.fill('SAMPLE final text.')
  mkdirSync('/tmp/description-shots',{recursive:true})
- for(const width of [390,412,768,1280]){await page.setViewportSize({width,height:900});check('no page overflow '+width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));check('44px editor actions '+width,await page.locator('section[aria-labelledby="description-heading"] button').evaluateAll(es=>es.every(e=>e.getBoundingClientRect().height>=44)));await page.screenshot({path:`/tmp/description-shots/editor-${width}.png`,fullPage:true})}
+ for(const width of [390,412,768,1280]){await page.setViewportSize({width,height:900});check('16px editor text '+width,await editor.evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=16));check('no page overflow '+width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));check('44px editor actions '+width,await page.locator('section[aria-labelledby="description-editor-heading"] button').evaluateAll(es=>es.every(e=>e.getBoundingClientRect().height>=44)));await page.screenshot({path:`/tmp/description-shots/editor-${width}.png`,fullPage:true})}
  await editor.focus();await page.keyboard.press('Tab');check('keyboard reaches save',await save.evaluate(e=>e===document.activeElement))
  check('no client runtime errors',errors.length===0)
  console.log(count+' description browser checks passed')

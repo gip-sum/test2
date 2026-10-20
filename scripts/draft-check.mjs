@@ -58,6 +58,8 @@ try {
  page.on('dialog',d=>d.accept());await page.reload();await page.getByText(/Unsent changes were recovered/).waitFor()
  await page.getByRole('button',{name:'Restore unsent changes'}).click();await page.locator('[name=carpet]').waitFor();await waitSaved(page)
  check('unsent recovery saved',rows.get(id).carpet==='876')
+ // On a phone the steps are in the step bar's "All steps" disclosure (UI-17).
+ await page.locator('nav[aria-label="Posting progress"]').filter({visible:true}).locator('summary').click()
  await page.getByRole('link',{name:'Return to Your plan'}).click();await page.getByRole('heading',{name:'What would you like to do?'}).waitFor()
  check('step navigation stays in draft',new URL(page.url()).pathname===`/post/drafts/${id}`)
  await page.getByRole('link',{name:'Rent out a property'}).click();await page.getByRole('heading',{name:'What kind of place is it?'}).waitFor()

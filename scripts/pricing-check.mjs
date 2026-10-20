@@ -5,6 +5,9 @@ const base = process.env.BASE_URL ?? 'http://127.0.0.1:3100'
 const details = 'role=OWNER&intent=buy&type=APARTMENT&bhk=2&baths=2&unit=sqft&carpet=1000&furnishing=UNFURNISHED&floor=3&floors=8&status=READY&age=4&city=kolkata&locality=new-town&address=Test+building+address'
 let passed = 0
 const check = (label, condition) => { if (!condition) throw new Error(`FAIL ${label}`); console.log(`ok ${label}`); passed++ }
+// Maintenance and negotiation are radio option cards (UI-17; selects before).
+// Click the visible card, as a person would — it works without JavaScript.
+const choose = (page, legend, label) => page.getByRole('group', { name: legend }).locator('label.post-option').filter({ has: page.getByRole('radio', { name: label, exact: true }) }).click()
 mkdirSync('/tmp/gharbazaar-pricing-shots', { recursive: true })
 try {
   // Native form flow also runs with JavaScript disabled.
@@ -27,10 +30,10 @@ try {
       check('error link focuses price', await page.getByLabel('Sale price (₹)', { exact: true }).evaluate((el) => el === document.activeElement))
     }
     await page.getByLabel('Sale price (₹)', { exact: true }).fill('62,50,000')
-    await page.getByLabel('Monthly maintenance', { exact: true }).selectOption('separate')
+    await choose(page, 'Monthly maintenance', 'Charged separately')
     check('separate maintenance reveals amount', await page.getByLabel('Monthly maintenance amount (₹)', { exact: true }).isVisible())
     await page.getByLabel('Monthly maintenance amount (₹)', { exact: true }).fill('2.5')
-    await page.getByLabel('Is the price negotiable?').selectOption('yes')
+    await choose(page, 'Is the price negotiable?', 'Yes, negotiable')
     await page.getByRole('button', { name: 'Review property and pricing' }).click()
     await page.locator('#maintenanceAmount-pricing-error').waitFor()
     check('invalid amount keeps grouped sale price', await page.getByLabel('Sale price (₹)', { exact: true }).inputValue() === '62,50,000')
@@ -40,7 +43,7 @@ try {
     const review = page.url()
     const pricing = page.getByRole('definition').filter({ hasText: 'Exact amount' })
     check('exact price and carpet rate visible', (await pricing.textContent()).includes('₹62,50,000') && (await page.getByRole('main').textContent()).includes('₹6,250 / sq. ft'))
-    check('one h1 and all three reviews', await page.locator('h1').count() === 1 && await page.locator('dl').count() === 4)
+    check('one h1 and all three reviews', await page.locator('h1').count() === 1 && await page.locator('section[aria-labelledby="post-heading"] dl').count() === 4)
     check('canonical whole rupees', new URL(review).searchParams.get('saleprice') === '6250000')
     await page.getByRole('link', { name: 'Change Carpet area', exact: true }).click()
     await page.getByRole('button', { name: 'Continue to review' }).click()
@@ -48,7 +51,7 @@ try {
     await page.getByRole('button', { name: 'Review details and location' }).click()
     await page.getByRole('link', { name: 'Continue to pricing' }).click()
     check('earlier form submissions retain pricing', await page.getByLabel('Sale price (₹)', { exact: true }).inputValue() === '6250000')
-    await page.getByLabel('Monthly maintenance', { exact: true }).selectOption('unknown')
+    await choose(page, 'Monthly maintenance', 'Not known yet')
     check('changing maintenance hides stale amount', !(await page.getByLabel('Monthly maintenance amount (₹)', { exact: true }).isVisible()))
     await page.getByRole('button', { name: 'Review property and pricing' }).click()
     await page.getByRole('heading', { name: 'Check the property and pricing.' }).waitFor()
@@ -61,13 +64,14 @@ try {
     await page.goto(`${base}/post?${rental}&step=pricing`)
     await page.getByLabel('Monthly rent (₹)', { exact: true }).fill('25,000')
     await page.getByLabel('Security deposit (₹)', { exact: true }).fill('0')
-    await page.getByLabel('Monthly maintenance', { exact: true }).selectOption('included')
-    await page.getByLabel('Is the price negotiable?').selectOption('no')
+    await choose(page, 'Monthly maintenance', 'Included in rent')
+    await choose(page, 'Is the price negotiable?', 'No, fixed price')
     await page.getByRole('button', { name: 'Review property and pricing' }).click()
     await page.getByRole('heading', { name: 'Check the property and pricing.' }).waitFor()
     const rentalReview = page.url()
     const text = await page.locator('dl[aria-label="Property pricing"]').textContent()
-    check('rental review has monthly rate, no deposit and included maintenance', text.includes('₹25 / sq. ft per month') && text.includes('No deposit — ₹0') && text.includes('Included in monthly rent'))
+    // The rate is a note under the pricing list since UI-17, not a row in it.
+    check('rental review has monthly rate, no deposit and included maintenance', (await page.locator('section[aria-labelledby="post-heading"]').textContent()).includes('Rate on carpet area: ₹25 / sq. ft per month') && text.includes('No deposit — ₹0') && text.includes('Included in monthly rent'))
     check('no runtime errors', errors.length === 0)
     if (javaScriptEnabled) {
       for (const width of [390, 412, 768, 1280]) {

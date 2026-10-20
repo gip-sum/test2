@@ -49,7 +49,7 @@ const mock = http.createServer(async (request,response) => {
 })
 await new Promise(resolve=>mock.listen(3300,'127.0.0.1',resolve))
 const browser=await chromium.launch({executablePath:CHROME})
-const check=(name,ok)=>{if(!ok)throw Error(name);passed++;console.log('ok',name)}
+const check=(name,ok,detail)=>{if(!ok)throw Error(detail?`${name} — ${detail}`:name);passed++;console.log('ok',name)}
 const origin=new URL(BASE).origin, collection=randomUUID()
 const query='role=OWNER&intent=buy&type=APARTMENT&bhk=2&baths=2&unit=sqft&carpet=1000&furnishing=UNFURNISHED&floor=3&floors=8&status=READY&age=4&city=kolkata&locality=new-town&address=Test+building+address&saleprice=6000000&maintenance=none&negotiable=yes&step=pricing-review'
 const path=`/post/photos?${query}&collection=${collection}`
@@ -62,7 +62,11 @@ try {
   const context=await browser.newContext({viewport:{width:390,height:844}})
   await context.addCookies([{name:'gb-access',value:'a'.repeat(48),url:BASE}])
   const page=await context.newPage();await page.goto(BASE+path)
-  await page.getByText('No photos yet.',{exact:false}).waitFor()
+  await page.getByText('No photos yet',{exact:true}).waitFor()
+  check('the empty state says what to add first',await page.getByText('Start with a clear view of the home, then add rooms and amenities. The first photo becomes the cover.').isVisible())
+  // UI-17: the labelled file input is drawn as a drop zone (Kokonut UI File
+  // Upload technique); pressing the zone opens the same native input.
+  check('the drop zone is the file input\'s label, and the input keeps its guidance',await page.locator('label[for="property-photos"]').isVisible()&&await page.getByLabel(/Add property photos/).evaluate(el=>el.id==='property-photos'&&el.getAttribute('aria-describedby')==='photo-guidance'))
   const red=await sharp({create:{width:2400,height:1600,channels:3,background:'#c14d39'}}).png().withMetadata().toBuffer()
   const blue=await sharp({create:{width:1600,height:1200,channels:3,background:'#276a9c'}}).png().toBuffer()
   const file=(name,buffer)=>({name,mimeType:'image/png',buffer})
@@ -75,22 +79,31 @@ try {
   await page.getByRole('button',{name:'Make bedroom.png cover',exact:true}).click()
   await page.getByRole('status').filter({hasText:'moved to position 1'}).waitFor()
   check('reorder persisted', [...rows.values()].find(row=>row.original_name==='bedroom.png').position===0)
+  check('the cover is marked on the first photo, and only there',await page.locator('ol[aria-label="Property photos"] li').first().getByText('Cover photo').isVisible()&&await page.locator('ol[aria-label="Property photos"] li').getByText('Cover photo').count()===1)
   await page.reload();await page.getByText('Uploaded ·',{exact:false}).nth(1).waitFor()
   check('collection preserves saved order on refresh',(await page.locator('ol[aria-label="Property photos"] li').first().innerText()).includes('bedroom.png'))
 
   // UI-08: a moved photo travels to its new place, focus stays on the
   // control pressed, and a failed save puts the photo back and says so.
+  // UI-17: the travel is Motion's layout animation (it was a WAAPI FLIP):
+  // the list is in its final order at once, and the photos that changed
+  // place are displaced by a transform for a few frames, then not at all.
+  // An identity matrix left for a frame is not movement.
+  const travelling=()=>new Promise(resolve=>{let most=0,frames=0;const tick=()=>{most=Math.max(most,[...document.querySelectorAll('[data-flip-key]')].filter(li=>{const t=getComputedStyle(li).transform;if(t==='none')return false;const m=new DOMMatrixReadOnly(t);return Math.abs(m.e)>0.5||Math.abs(m.f)>0.5||Math.abs(m.a-1)>0.005||Math.abs(m.d-1)>0.005}).length);if(++frames<12)requestAnimationFrame(tick);else resolve(most)};requestAnimationFrame(tick)})
   const names=()=>page.locator('ol[aria-label="Property photos"] li').evaluateAll(items=>items.map(item=>item.querySelector('p')?.textContent.replace(/^\d+\. /,'')))
   const focused=()=>page.evaluate(()=>document.activeElement?.getAttribute('aria-label'))
   reorderDelay=600
   await page.getByRole('button',{name:'Move bedroom.png later',exact:true}).focus()
-  const moved=await page.getByRole('button',{name:'Move bedroom.png later',exact:true}).evaluate(el=>new Promise(resolve=>{
+  const moved=await page.getByRole('button',{name:'Move bedroom.png later',exact:true}).evaluate((el,travel)=>{
     el.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));el.click()
-    requestAnimationFrame(()=>resolve({flips:[...document.querySelectorAll('[data-flip-key]')].reduce((n,item)=>n+item.getAnimations().filter(a=>a.id==='flip').length,0),raised:el.closest('[data-flip-key]').style.zIndex,first:document.querySelector('[data-flip-key] p')?.textContent}))
-  }))
-  check('a moved photo is in its new place at once and travels there (both photos animate, the moved one above)',moved.flips===2&&moved.raised==='1'&&moved.first.includes('living-room.png'))
+    let first;requestAnimationFrame(()=>{first=document.querySelector('[data-flip-key] p')?.textContent})
+    return new Function(`return (${travel})()`)().then(most=>({most,first}))
+  },travelling.toString())
+  check('a moved photo is in its new place at once and travels there (both photos move)',moved.most===2&&moved.first.includes('living-room.png'))
   check('while the order saves, the controls refuse presses but keep focus where it was',await focused()==='Move bedroom.png earlier'&&await page.getByRole('button',{name:'Move bedroom.png earlier',exact:true}).getAttribute('aria-disabled')==='true')
   await page.getByRole('status').filter({hasText:'bedroom.png moved to position 2'}).waitFor()
+  // Throws on timeout: every photo must come to rest in its cell.
+  await page.waitForFunction(()=>[...document.querySelectorAll('[data-flip-key]')].every(li=>getComputedStyle(li).transform==='none'),null,{timeout:3000})
   check('at the end of the list, focus moves to the control that can still move it',await focused()==='Move bedroom.png earlier'&&[...rows.values()].find(row=>row.original_name==='bedroom.png').position===1)
   reorderDelay=0;failReorder=true
   await page.keyboard.press('Enter')
@@ -99,11 +112,41 @@ try {
   await page.keyboard.press('Enter');await page.getByRole('status').filter({hasText:'bedroom.png moved to position 1'}).waitFor()
   check('the keyboard alone reorders: Enter moves it, focus follows it to the first place',JSON.stringify(await names())===JSON.stringify(['bedroom.png','living-room.png'])&&await focused()==='Move bedroom.png later')
   {
+    // UI-17: drag by the handle. The photo follows the pointer, the other
+    // makes room as it passes, the new order is saved on release — and put
+    // back, with a message, if saving fails. Drag is an addition: the
+    // buttons above remain the way to reorder from a keyboard.
+    const items=page.locator('ol[aria-label="Property photos"] li')
+    const drag=async(from,to)=>{
+      await page.locator('ol[aria-label="Property photos"]').scrollIntoViewIfNeeded()
+      // Measure only once every photo is at rest: a reorder just made is
+      // still travelling, and its handle is not yet where it will stay.
+      await page.waitForFunction(()=>[...document.querySelectorAll('[data-flip-key]')].every(li=>getComputedStyle(li).transform==='none'),null,{timeout:3000})
+      const handle=items.nth(from).locator('.photo-handle'),h=await handle.boundingBox(),a=await items.nth(from).boundingBox(),b=await items.nth(to).boundingBox()
+      await page.mouse.move(h.x+h.width/2,h.y+h.height/2);await page.mouse.down()
+      for(let i=1;i<=12;i++){await page.mouse.move(h.x+h.width/2+(b.x-a.x)*i/12,h.y+h.height/2+(b.y-a.y)*i/12);await page.waitForTimeout(16)}
+      await page.waitForTimeout(350)
+      const during={lifted:await page.locator('ol[aria-label="Property photos"] li[data-dragging]').count(),order:await names()}
+      await page.mouse.up();return during
+    }
+    check('the drag handle is a 44px target, for pointers only',await items.first().locator('.photo-handle').evaluate(el=>{const r=el.getBoundingClientRect();return r.width>=44&&r.height>=44&&el.getAttribute('aria-hidden')==='true'}))
+    const during=await drag(1,0)
+    check('dragging lifts the photo and the other makes room before release',during.lifted===1&&JSON.stringify(during.order)===JSON.stringify(['living-room.png','bedroom.png']),JSON.stringify(during))
+    await page.getByRole('status').filter({hasText:'living-room.png moved to position 1'}).waitFor()
+    check('the dragged order is saved and announced',[...rows.values()].find(row=>row.original_name==='living-room.png').position===0&&await page.locator('ol[aria-label="Property photos"] li[data-dragging]').count()===0)
+    check('the cover follows the order',await items.first().getByText('Cover photo').isVisible()&&(await items.first().innerText()).includes('living-room.png'))
+    failReorder=true
+    await drag(1,0)
+    await page.getByRole('status').filter({hasText:'The photos are back in their previous order.'}).waitFor()
+    check('a drag whose save fails puts the photos back and says so',JSON.stringify(await names())===JSON.stringify(['living-room.png','bedroom.png'])&&[...rows.values()].find(row=>row.original_name==='living-room.png').position===0)
+    await page.getByRole('button',{name:'Make bedroom.png cover',exact:true}).click();await page.getByRole('status').filter({hasText:'bedroom.png moved to position 1'}).waitFor()
+  }
+  {
     const still=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'})
     await still.addCookies([{name:'gb-access',value:'a'.repeat(48),url:BASE}])
     const quiet=await still.newPage();await quiet.goto(BASE+path);await quiet.getByText('Uploaded ·',{exact:false}).nth(1).waitFor()
-    const calm=await quiet.getByRole('button',{name:'Move bedroom.png later',exact:true}).evaluate(el=>new Promise(resolve=>{el.click();requestAnimationFrame(()=>resolve({flips:document.getAnimations().filter(a=>a.id==='flip').length,first:document.querySelector('[data-flip-key] p')?.textContent}))}))
-    check('reduced motion: the photo changes place at once, with no movement',calm.flips===0&&calm.first.includes('living-room.png'))
+    const calm=await quiet.getByRole('button',{name:'Move bedroom.png later',exact:true}).evaluate((el,travel)=>{el.click();let first;requestAnimationFrame(()=>{first=document.querySelector('[data-flip-key] p')?.textContent});return new Function(`return (${travel})()`)().then(most=>({most,first}))},travelling.toString())
+    check('reduced motion: the photo changes place at once, with no movement',calm.most===0&&calm.first.includes('living-room.png'))
     await quiet.getByRole('status').filter({hasText:'moved to position 2'}).waitFor()
     await quiet.getByRole('button',{name:'Make bedroom.png cover',exact:true}).click();await quiet.getByRole('status').filter({hasText:'moved to position 1'}).waitFor()
     check('"Make cover" leaves the first photo without its button; focus moves to the one that remains',await quiet.evaluate(()=>document.activeElement?.getAttribute('aria-label'))==='Move bedroom.png later')
@@ -147,16 +190,46 @@ try {
   check('after a removal focus moves to the photo that took its place, not the top of the page',/^Remove (bedroom|balcony)\.png$/.test(await focused()))
   await page.locator('#property-photos').setInputFiles({name:'bad.svg',mimeType:'image/svg+xml',buffer:Buffer.from('<svg/>')})
   await page.getByRole('status').filter({hasText:'Choose a JPEG'}).waitFor();check('unsupported original rejected before upload',rows.size===2)
+  {
+    // UI-17: files dropped on the zone or pasted into it go through the same
+    // checks and upload as chosen files, and arrive at the end of the list.
+    const terrace=(await sharp({create:{width:1200,height:900,channels:3,background:'#8a5a2b'}}).png().toBuffer()).toString('base64')
+    const states=await page.evaluate(async(b64)=>{
+      const frame=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)))
+      const dt=new DataTransfer();dt.items.add(new File([Uint8Array.from(atob(b64),c=>c.charCodeAt(0))],'terrace.png',{type:'image/png'}))
+      const zone=document.querySelector('label[for="property-photos"]')
+      window.dispatchEvent(new DragEvent('dragenter',{dataTransfer:dt,bubbles:true}));await frame()
+      const armed=zone.hasAttribute('data-armed')
+      zone.dispatchEvent(new DragEvent('dragover',{dataTransfer:dt,bubbles:true,cancelable:true}));await frame()
+      const over=zone.hasAttribute('data-over')&&zone.textContent.includes('Drop to add these photos')
+      zone.dispatchEvent(new DragEvent('drop',{dataTransfer:dt,bubbles:true,cancelable:true}));await frame()
+      return{armed,over,after:!zone.hasAttribute('data-armed')&&!zone.hasAttribute('data-over')}
+    },terrace)
+    check('a file dragged over the window arms the zone; over the zone it is ready to drop',states.armed&&states.over&&states.after)
+    await page.getByText('Uploaded ·',{exact:false}).nth(2).waitFor()
+    check('a dropped photo is uploaded and added at the end',rows.size===3&&(await names()).at(-1)==='terrace.png')
+    const study=(await sharp({create:{width:1200,height:900,channels:3,background:'#5b4a8a'}}).png().toBuffer()).toString('base64')
+    await page.evaluate(b64=>{const dt=new DataTransfer();dt.items.add(new File([Uint8Array.from(atob(b64),c=>c.charCodeAt(0))],'study.png',{type:'image/png'}));document.querySelector('label[for="property-photos"]').dispatchEvent(new ClipboardEvent('paste',{clipboardData:dt,bubbles:true,cancelable:true}))},study)
+    await page.getByText('Uploaded ·',{exact:false}).nth(3).waitFor()
+    check('a pasted photo is uploaded and added at the end',rows.size===4&&(await names()).at(-1)==='study.png')
+    // Rows on a phone, cards from 640px.
+    const shape=async()=>page.locator('ol[aria-label="Property photos"] li').first().evaluate(li=>{const img=li.firstElementChild.getBoundingClientRect(),text=li.lastElementChild.getBoundingClientRect();return img.right<=text.left+1?'row':img.bottom<=text.top+1?'card':'?'})
+    check('390: each photo is a row, the picture beside its tools',await shape()==='row')
+    await page.setViewportSize({width:768,height:844});check('768: each photo is a card, the picture above its tools',await shape()==='card')
+  }
   for(const width of [320,360,375,390,412,430,768,1280]) {
     await page.setViewportSize({width,height:844});check(`${width}: no overflow`,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1))
     if(width===320){
       // Mid-move, the travelling photo is drawn between cells: still no
       // sideways scroll (UI-08).
-      const during=await page.locator('ol[aria-label="Property photos"] li').first().getByRole('button',{name:/later$/}).evaluate(el=>new Promise(resolve=>{el.click();requestAnimationFrame(()=>resolve({moving:document.getAnimations().filter(a=>a.id==='flip').length,fits:document.documentElement.scrollWidth<=innerWidth+1}))}))
+      const during=await page.locator('ol[aria-label="Property photos"] li').first().getByRole('button',{name:/later$/}).evaluate((el,travel)=>{el.click();let fits=true;const watch=()=>{fits=fits&&document.documentElement.scrollWidth<=innerWidth+1;if(!done)requestAnimationFrame(watch)};let done=false;requestAnimationFrame(watch);return new Function(`return (${travel})()`)().then(moving=>{done=true;return{moving,fits}})},travelling.toString())
       check('320: no overflow while a photo travels',during.moving>0&&during.fits)
       await page.getByRole('status').filter({hasText:'moved to position 2'}).waitFor()
+      // Sizes are read at rest: in flight Motion may scale a tile whose
+      // height differs from the cell it is entering.
+      await page.waitForFunction(()=>[...document.querySelectorAll('[data-flip-key]')].every(li=>getComputedStyle(li).transform==='none'),null,{timeout:3000})
     }
-    check(`${width}: action targets at least 44px`,await page.locator('ol[aria-label="Property photos"] button').evaluateAll(nodes=>nodes.every(node=>node.getBoundingClientRect().height>=44)))
+    check(`${width}: action targets at least 44px`,await page.locator('ol[aria-label="Property photos"] button, ol[aria-label="Property photos"] .photo-handle').evaluateAll(nodes=>nodes.every(node=>{const r=node.getBoundingClientRect();return r.height>=44&&r.width>=44})))
     await page.evaluate(()=>window.scrollTo(0,0))
     await page.screenshot({path:`/tmp/phase15-shots/photos-${width}.png`,fullPage:true})
   }
