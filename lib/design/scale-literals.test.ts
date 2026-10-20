@@ -52,10 +52,8 @@ const DEFERRED_CSS: Record<string, string> = {
 // Arbitrary values in TSX, by file. Same rule: listed, reasoned, shrinking.
 const DEFERRED_TSX: Record<string, string[]> = {
   // Dashboard figures: 1px off heading-2. UI-05/UI-09.
-  'app/dashboard/page.tsx': ['text-[26px]'],
   'app/dashboard/enquiries/page.tsx': ['text-[26px]'],
   // The period tiles moved out of the performance page (UI-10), the same one figure.
-  'components/analytics/PeriodSummary.tsx': ['text-[26px]'],
   // The login form card. UI-07 owns the login screen; UI-03 leaves it exactly as it is.
   'components/auth/LoginForm.tsx': ['rounded-[24px]', 'text-[36px]', 'leading-[1.1]', 'text-[22px]'],
   // The Videos placeholder tile (16px, Tailwind's default 2xl step). UI-05 cards.

@@ -33,16 +33,24 @@ async function rest(path: string, body?: object) {
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 const count = (n: unknown) => Number.isSafeInteger(n) && (n as number) >= 0
 
-export async function loadPerformance(user: AuthUser, range: Range): Promise<PerformanceData> {
+export type ActivityData =
+  | { ok: true; activity: ActivityRow[]; saveCounts: SaveCount[] | null; viewsSince: string | null; today: string }
+  | { ok: false; reason: 'not-ready' | 'activity' }
+
+/**
+ * The measured activity of the seller's listings over `range` days and the
+ * `range` before it, with save counts and when view counting began. Split
+ * from loadPerformance (UI-18) so My properties can show buyer interest
+ * beside the cards it has already loaded, without loading them twice.
+ */
+export async function loadActivity(range: Range): Promise<ActivityData> {
   const today = kolkataToday()
   // The current period and the one before it, in one read.
-  const [dashboard, activityResponse, savesResponse, metaResponse] = await Promise.all([
-    loadDashboard(user),
+  const [activityResponse, savesResponse, metaResponse] = await Promise.all([
     rest('rpc/seller_listing_activity', { p_from: addDays(today, -(2 * range - 1)), p_to: today }),
     rest('rpc/seller_listing_save_counts', {}),
     rest('listing_analytics_meta?select=views_since'),
   ])
-  if (!dashboard.ok) return { ok: false, reason: 'dashboard' }
   // 404: the Phase 20 function does not exist yet (migration not applied).
   if (!activityResponse?.ok) return { ok: false, reason: activityResponse?.status === 404 ? 'not-ready' : 'activity' }
   let activity: ActivityRow[]
@@ -62,5 +70,12 @@ export async function loadPerformance(user: AuthUser, range: Range): Promise<Per
     const at = Array.isArray(rows) && typeof rows[0]?.views_since === 'string' ? new Date(rows[0].views_since) : null
     if (at && !Number.isNaN(at.getTime())) viewsSince = kolkataToday(at)
   } catch { /* Without a start date every day reads "not tracked": never a false zero. */ }
-  return { ok: true, cards: dashboard.cards, activity, saveCounts, viewsSince, today }
+  return { ok: true, activity, saveCounts, viewsSince, today }
+}
+
+export async function loadPerformance(user: AuthUser, range: Range): Promise<PerformanceData> {
+  const [dashboard, activity] = await Promise.all([loadDashboard(user), loadActivity(range)])
+  if (!dashboard.ok) return { ok: false, reason: 'dashboard' }
+  if (!activity.ok) return activity
+  return { ...activity, cards: dashboard.cards }
 }

@@ -58,7 +58,19 @@ import { cn } from '@/lib/cn'
 import { ChartScrubber } from './ChartScrubber'
 import { Mark } from './chart-marks'
 
-export function DailyActivityChart({ points, period, id }: { points: DayPoint[]; period: string; id: string }) {
+export function DailyActivityChart({ points, period, id, size = 'regular' }: {
+  points: DayPoint[]
+  period: string
+  id: string
+  /**
+   * `compact` (UI-18): shorter plots for the dashboard's side column. Only
+   * the heights change; scales, gaps, marks, the slider and the readout are
+   * the same chart.
+   */
+  size?: 'regular' | 'compact'
+}) {
+  const compact = size === 'compact'
+  const tall = compact ? 'h-24' : 'h-40', short = compact ? 'h-12' : 'h-20'
   const count = points.length
   const views = points.map((p) => p.views), enquiries = points.map((p) => p.enquiries)
   const viewScale = scaleFor(views), enquiryScale = scaleFor(enquiries)
@@ -72,8 +84,8 @@ export function DailyActivityChart({ points, period, id }: { points: DayPoint[];
     <ChartScrubber points={points} period={period} id={id}>
       <div aria-hidden className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-x-2">
         <Key className="col-span-2" mark="line">Views</Key>
-        <YAxis scale={viewScale} className="h-40" />
-        <div data-plot="views" className="relative h-40">
+        <YAxis scale={viewScale} className={tall} />
+        <div data-plot="views" className={cn('relative', tall)}>
           <Grid />
           {gaps.map((g) => <div key={g.start} data-untracked className="chart-untracked absolute inset-y-0" style={{ left: `${(g.start / count) * 100}%`, width: `${(g.length / count) * 100}%` }} />)}
           <svg viewBox={`0 0 ${count} 100`} preserveAspectRatio="none" className="absolute inset-0 size-full overflow-visible">
@@ -82,9 +94,9 @@ export function DailyActivityChart({ points, period, id }: { points: DayPoint[];
           </svg>
           {markedDays(views).map((i) => <span key={i} data-dot="day" className="absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-chart-1 ring-2 ring-surface-000" style={{ left: `${xAt(i, count)}%`, top: `${yAt(views[i]!, viewScale.top)}%` }} />)}
         </div>
-        <Key className="col-span-2 mt-4" mark="column">Enquiries</Key>
-        <YAxis scale={enquiryScale} className="h-20" />
-        <div data-plot="enquiries" className="relative h-20">
+        <Key className={cn('col-span-2', compact ? 'mt-3' : 'mt-4')} mark="column">Enquiries</Key>
+        <YAxis scale={enquiryScale} className={short} />
+        <div data-plot="enquiries" className={cn('relative', short)}>
           <Grid />
           <div className="absolute inset-0 flex items-end">
             {enquiries.map((e, i) => <div key={points[i]!.day} className={cn('flex h-full min-w-0 flex-1 items-end justify-center', count > 31 ? '@md:px-px' : 'px-px')}>

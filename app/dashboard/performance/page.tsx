@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { OwnerShell } from '@/components/workspace/OwnerShell'
@@ -17,6 +18,33 @@ export const metadata: Metadata = { title: 'Listing performance', robots: { inde
 export const dynamic = 'force-dynamic'
 
 const link = 'inline-flex min-h-11 items-center font-semibold text-brand-700 underline underline-offset-4'
+const chip = 'inline-flex min-h-11 items-center rounded-full px-3 text-label font-semibold text-brand-700 hover:bg-brand-50'
+
+/**
+ * One period's analytics as one panel (UI-18): its heading and scope, the
+ * figures, the chart (UI-10, Bklit-derived, unchanged) with its note on
+ * untracked days, how the figures are counted, and the daily table that
+ * holds every value the chart draws. Before, these were five boxes stacked
+ * on the workspace ground, and the counting note sat above the period tabs.
+ */
+function AnalyticsPanel({ headingId, title, scope, summary, untracked, chart, chartHeadingId, chartTitle, table }: {
+  headingId: string; title: string; scope?: string; summary: ReactNode; untracked: ReactNode; chart: ReactNode
+  chartHeadingId?: string; chartTitle?: string; table: ReactNode
+}) {
+  return <section aria-labelledby={headingId} className="dash-panel">
+    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 pt-4">
+      <h2 id={headingId} className="font-display font-semibold text-ink-900">{title}</h2>
+      {scope && <p className="text-caption text-ink-500">{scope}</p>}
+    </div>
+    <div className="px-4 pt-3">{summary}{untracked}</div>
+    <div className="mt-4 border-t border-border-subtle px-4 pb-2 pt-4">
+      {chartHeadingId && <h2 id={chartHeadingId} className="sr-only">{chartTitle}</h2>}
+      {chart}
+    </div>
+    <details className="border-t border-border-subtle px-4 py-1.5 text-body-sm text-ink-700"><summary className="inline-flex min-h-11 cursor-pointer items-center text-label font-semibold text-brand-700">How these figures are counted</summary><p className="max-w-3xl pb-3">A view is one browser opening a listing’s public page on one day (India time). Your own visits and known crawlers are not counted, and a listing is counted only while it is public. Saves are buyers who have it saved right now.</p></details>
+    {table}
+  </section>
+}
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
 const viewsText = (t: Totals) => t.views === null ? 'not tracked' : plural(t.views, 'view', 'views')
 const day = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString('en-IN', { timeZone: 'UTC', dateStyle: 'medium' })
@@ -36,14 +64,14 @@ export default async function PerformancePage({ searchParams }: { searchParams: 
 
   return <OwnerShell current="performance" title={selected ? selected.card.title : 'Listing performance'} description="Measured views, enquiries and saves for your submitted listings."
     actions={query.listing ? <Link href={performanceHref({ range: query.range })} className={link}>All listings</Link> : undefined}>
-    <nav aria-label="Period" className="workspace-tabs">
-      <ul className="flex flex-wrap gap-x-1">{RANGES.map((range) => {
+    {/* The period, as a segmented control of links (URL state, Phase 20). */}
+    <nav aria-label="Period" className="mb-4 flex flex-wrap items-center gap-3">
+      <ul className="inline-flex rounded-full border border-border-subtle bg-surface-000 p-1">{RANGES.map((range) => {
         const current = range === query.range
         return <li key={range}><Link href={performanceHref({ ...query, range })} aria-current={current ? 'page' : undefined}
-          className={cn('inline-flex min-h-11 items-center border-b-2 px-4 text-label font-semibold', current ? 'border-brand-700 text-brand-700' : 'border-transparent text-ink-700 hover:text-ink-900')}>Last {range} days<PeriodPending /></Link></li>
+          className={cn('inline-flex min-h-11 items-center rounded-full px-4 text-label font-semibold', current ? 'bg-brand-600 text-on-brand' : 'text-ink-700 hover:bg-surface-100 hover:text-ink-900')}>Last {range} days<PeriodPending /></Link></li>
       })}</ul>
     </nav>
-    <details className="mb-4 text-body-sm text-ink-700"><summary className="inline-flex min-h-11 cursor-pointer items-center font-semibold text-brand-700">How these figures are counted</summary><p className="max-w-3xl pb-3">A view is one browser opening a listing’s public page on one day (India time). Your own visits and known crawlers are not counted, and a listing is counted only while it is public. Saves are buyers who have it saved right now.</p></details>
 
     <div className="analytics-body">
     {!data.ok ? <ErrorState surface="workspace" title={data.reason === 'not-ready' ? 'Performance data is not available yet' : 'Performance could not be loaded'}
@@ -64,28 +92,26 @@ function Overview({ listings, query, savesKnown, viewsSince }: { listings: Listi
   const series = combineSeries(listings)
   const current = sumTotals(listings.map((l) => l.current)), previous = sumTotals(listings.map((l) => l.previous))
   return <>
-    <section aria-labelledby="totals-heading" className="mb-5">
-      <h2 id="totals-heading" className="mb-3 text-body font-semibold text-ink-900">All listings together, last {query.range} days</h2>
-      <PeriodSummary current={current} views={viewsChange(current, previous, query.range)} enquiries={enquiriesChange(current, previous)} range={query.range}
-        saves={savesKnown ? listings.reduce((n, l) => n + (l.saves ?? 0), 0) : null} rate={enquiryRate(current)} />
-      <Untracked totals={current} viewsSince={viewsSince} />
-      <div className="workspace-panel mt-3 p-4"><DailyActivityChart id="all-activity" points={series} period={`all listings, last ${query.range} days`} /></div>
-      <DailyTable points={series} range={query.range} />
-    </section>
+    <AnalyticsPanel headingId="totals-heading" title={`All listings together, last ${query.range} days`} scope={`${listings.length} ${listings.length === 1 ? 'listing' : 'listings'}`}
+      summary={<PeriodSummary current={current} views={viewsChange(current, previous, query.range)} enquiries={enquiriesChange(current, previous)} range={query.range}
+        saves={savesKnown ? listings.reduce((n, l) => n + (l.saves ?? 0), 0) : null} rate={enquiryRate(current)} />}
+      untracked={<Untracked totals={current} viewsSince={viewsSince} />}
+      chart={<DailyActivityChart id="all-activity" points={series} period={`all listings, last ${query.range} days`} />}
+      table={<DailyTable points={series} range={query.range} />} />
     <ListingTable listings={listings} query={query} />
   </>
 }
 
 function ListingTable({ listings, query }: { listings: ListingPerformance[]; query: PerformanceQuery }) {
-  return <section aria-labelledby="overview-heading" className="workspace-panel overflow-hidden">
-    <div className="workspace-toolbar px-4 pt-3"><h2 id="overview-heading" className="text-body font-semibold text-ink-900">Your listings, last {query.range} days</h2><p className="text-caption text-ink-500">{listings.length} {listings.length === 1 ? 'listing' : 'listings'}</p></div>
-    <p className="px-4 pb-3 text-caption text-ink-700">Removed listings and never-submitted drafts are not shown.</p>
+  return <section aria-labelledby="overview-heading" className="dash-panel mt-4 overflow-hidden">
+    <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 pt-4"><h2 id="overview-heading" className="font-display font-semibold text-ink-900">Your listings, last {query.range} days</h2><p className="text-caption text-ink-500">{listings.length} {listings.length === 1 ? 'listing' : 'listings'}</p></div>
+    <p className="px-4 pb-3 pt-1 text-caption text-ink-700">Removed listings and never-submitted drafts are not shown. Choose a listing to see its own days.</p>
     <table className="workspace-table hidden w-full border-collapse text-left text-body-sm md:table">
       <thead><tr className="border-b border-border-strong text-ink-700">
         <th scope="col" className="py-2 pl-4 pr-3 font-semibold">Listing</th><th scope="col" className="px-3 py-2 text-right font-semibold">Views</th><th scope="col" className="px-3 py-2 text-right font-semibold">Enquiries</th><th scope="col" className="py-2 pl-3 pr-4 text-right font-semibold">Saved now</th>
       </tr></thead>
       <tbody>{listings.map((l) => <tr key={l.listingId} className="border-b border-border-subtle align-top">
-        <th scope="row" className="py-3 pl-4 pr-3 font-normal"><StatusBadge status={l.card.status} /><Link href={performanceHref({ range: query.range, listing: l.listingId })} className={cn(link, 'break-words')}>{l.card.title}</Link></th>
+        <th scope="row" className="py-3 pl-4 pr-3 font-normal"><span className="mr-2"><StatusBadge status={l.card.status} /></span><Link href={performanceHref({ range: query.range, listing: l.listingId })} className={cn(link, 'break-words')}>{l.card.title}</Link></th>
         <td className="tabular px-3 py-3 text-right text-ink-900">{l.current.views ?? 'Not tracked'}</td>
         <td className="tabular px-3 py-3 text-right text-ink-900">{l.current.enquiries}</td>
         <td className="tabular py-3 pl-3 pr-4 text-right text-ink-900">{l.saves ?? 'Unavailable'}</td>
@@ -102,24 +128,20 @@ function ListingTable({ listings, query }: { listings: ListingPerformance[]; que
 function Detail({ listing: l, query, viewsSince }: { listing: ListingPerformance; query: PerformanceQuery; viewsSince: string | null }) {
   const { card } = l
   return <>
-    <div className="workspace-toolbar mb-4">
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
+    <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
       <StatusBadge status={card.status} />
-      {card.status === 'ACTIVE' && <Link href={`/listing/${l.listingId}`} className={link}>View public page</Link>}
-      <Link href={`/post/drafts/${card.draftId}/lifecycle`} className={link}>Publishing status</Link>
-      <Link href={`/dashboard/enquiries?listing=${l.listingId}`} className={link}>Enquiries inbox</Link>
-      </div>
+      <span className="flex flex-wrap items-center gap-x-1">
+        {card.status === 'ACTIVE' && <Link href={`/listing/${l.listingId}`} className={chip}>View public page</Link>}
+        <Link href={`/post/drafts/${card.draftId}/lifecycle`} className={chip}>Publishing status</Link>
+        <Link href={`/dashboard/enquiries?listing=${l.listingId}`} className={chip}>Enquiries inbox</Link>
+      </span>
     </div>
-    <section aria-labelledby="totals-heading">
-      <h2 id="totals-heading" className="sr-only">Totals for the last {query.range} days</h2>
-      <PeriodSummary current={l.current} views={viewsChange(l.current, l.previous, query.range)} enquiries={enquiriesChange(l.current, l.previous)} saves={l.saves} rate={l.rate} range={query.range} />
-      <Untracked totals={l.current} viewsSince={viewsSince} />
-    </section>
-    <section aria-labelledby="trend-heading" className="mt-5">
-      <h2 id="trend-heading" className="text-body font-semibold text-ink-900">Day by day</h2>
-      <div className="workspace-panel mt-3 p-4"><DailyActivityChart id="listing-activity" points={l.series} period={`last ${query.range} days`} /></div>
-      <DailyTable points={l.series} range={query.range} />
-    </section>
+    <AnalyticsPanel headingId="totals-heading" title={`This listing, last ${query.range} days`} scope={card.place ?? undefined}
+      summary={<PeriodSummary current={l.current} views={viewsChange(l.current, l.previous, query.range)} enquiries={enquiriesChange(l.current, l.previous)} saves={l.saves} rate={l.rate} range={query.range} />}
+      untracked={<Untracked totals={l.current} viewsSince={viewsSince} />}
+      chart={<DailyActivityChart id="listing-activity" points={l.series} period={`last ${query.range} days`} />}
+      chartHeadingId="trend-heading" chartTitle="Day by day"
+      table={<DailyTable points={l.series} range={query.range} />} />
   </>
 }
 
@@ -130,8 +152,8 @@ function Untracked({ totals, viewsSince }: { totals: Totals; viewsSince: string 
 
 /** Every figure the chart draws, in a table: the chart is never the only way to read a day. */
 function DailyTable({ points, range }: { points: DayPoint[]; range: number }) {
-  return <details className="workspace-panel mt-3 px-4 py-2">
-    <summary className="flex min-h-11 cursor-pointer items-center font-semibold text-ink-900">Daily figures</summary>
+  return <details className="border-t border-border-subtle px-4 py-1.5">
+    <summary className="flex min-h-11 cursor-pointer items-center text-label font-semibold text-brand-700">Daily figures</summary>
     <div className="mt-2 max-h-96 overflow-y-auto">
       <table className="w-full border-collapse text-left text-body-sm">
         <caption className="sr-only">Views and enquiries per day, last {range} days</caption>

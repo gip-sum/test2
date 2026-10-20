@@ -140,6 +140,11 @@ export async function listSubmissionSummaries(user:AuthUser,submissionIds:readon
  const list=ids(submissionIds);if(!list)return []
  return rows<SubmissionSummary>(`property_listing_submissions?id=in.${list}&select=id,listing_id,title,intent,price,city_name,locality_name`)
 }
+/** The photos of the seller's current submissions, in order: the dashboard's cover and photo count (UI-18). */
+export async function listSubmissionPhotos(user:AuthUser,submissionIds:readonly string[]){
+ const list=ids(submissionIds);if(!list)return []
+ return rows<Pick<PublicListingPhoto,'id'|'submission_id'|'position'>>(`property_listing_photos?submission_id=in.${list}&select=id,submission_id,position&order=position&limit=2000`)
+}
 /** Whether the signed-in user owns this listing; false on any failure, so the buyer form is the default. */
 export async function ownsListing(user:AuthUser,id:string){
  if(!UUID.test(id))return false

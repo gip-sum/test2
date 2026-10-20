@@ -21,6 +21,18 @@ export async function listPhotos(user: AuthUser, collection: string): Promise<Ph
   if (!response.ok) throw new MediaError('Photo storage is temporarily unavailable. Your listing has not been published.')
   return await response.json() as Photo[]
 }
+/**
+ * The ready photos of several collections at once, in order (UI-18: the
+ * dashboard's cover and photo count for never-submitted drafts). One read
+ * for every card, never one per draft.
+ */
+export async function listCollectionPhotos(user: AuthUser, collections: readonly string[]): Promise<Pick<Photo, 'id' | 'collection_id' | 'position'>[]> {
+  const valid = collections.filter((c) => /^[0-9a-f-]{36}$/i.test(c))
+  if (!valid.length) return []
+  const response = await request(`/rest/v1/media_assets?${owner(user)}&collection_id=in.(${valid.join(',')})&status=eq.ready&select=id,collection_id,position&order=position,created_at&limit=1000`)
+  if (!response.ok) throw new MediaError('Photo storage is temporarily unavailable.')
+  return await response.json() as Pick<Photo, 'id' | 'collection_id' | 'position'>[]
+}
 async function findPhoto(user: AuthUser, id: string): Promise<(Photo & { sha256: string }) | null> {
   const response = await request(`/rest/v1/media_assets?${owner(user)}&id=eq.${id}&select=${selection}`)
   if (!response.ok) throw new MediaError('Photo storage is temporarily unavailable.')

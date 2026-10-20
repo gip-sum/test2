@@ -20,7 +20,9 @@ export function PeriodSummary({ current, views, enquiries, saves, rate, range }:
   rate: number | null
   range: Range
 }) {
-  return <dl className="workspace-summary">
+  // UI-18: tiles inside the period's analytics panel, two across on a
+  // phone and four from 1024px; the wording is unchanged.
+  return <dl className="grid grid-cols-2 gap-2 lg:grid-cols-4">
     <Tile label={`Views, last ${range} days`} value={current.views === null ? 'Not tracked' : String(current.views)} note={<ChangeNote change={views} range={range} unit={['view', 'views']} />} />
     <Tile label={`Enquiries, last ${range} days`} value={String(current.enquiries)} note={<ChangeNote change={enquiries} range={range} unit={['enquiry', 'enquiries']} />} />
     <Tile label="Saved now" value={saves === null ? 'Unavailable' : String(saves)}
@@ -40,9 +42,9 @@ function ChangeNote({ change, range, unit }: { change: Change; range: Range; uni
 }
 
 function Tile({ label, value, unit, small, note }: { label: string; value: string; unit?: string; small?: boolean; note: ReactNode }) {
-  return <div>
+  return <div className="min-w-0 rounded-md border border-border-subtle bg-surface-100 px-3 py-3">
     <dt className="text-body-sm text-ink-700">{label}</dt>
-    <dd className={small ? 'mt-2 text-body font-semibold text-ink-900' : 'mt-1 text-[26px] font-semibold leading-tight text-ink-900'}>{value}{unit && <>{' '}<span className="text-body-sm font-normal text-ink-700">{unit}</span></>}</dd>
+    <dd className={small ? 'mt-2 text-body font-semibold text-ink-900' : 'mt-1 font-display text-heading-2 font-semibold leading-tight text-ink-900 tabular'}>{value}{unit && <>{' '}<span className="text-body-sm font-normal text-ink-700">{unit}</span></>}</dd>
     <dd className="mt-1 text-caption text-ink-500">{note}</dd>
   </div>
 }

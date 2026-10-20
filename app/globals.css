@@ -1770,6 +1770,40 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
 .workspace-counts > div { display: flex; align-items: center; gap: 10px; padding: 14px 16px; }
 .workspace-counts dt { order: 2; font-size: var(--text-caption); }
 .workspace-counts dd { order: 1; margin-top: 0; font-family: var(--font-display); font-size: var(--text-heading-3); line-height: 1.2; }
+
+/* The seller dashboard (UI-18). One white panel per job — attention, the
+   list, buyer interest — on the workspace ground. Stacked below 1280px
+   (attention, list, interest: DOM order, so a screen reader meets them in
+   the same order); from 1280px the list takes the main column and the two
+   panels sit beside it. */
+.dash-grid { display: grid; min-width: 0; gap: 16px; grid-template-areas: 'attention' 'list' 'interest'; }
+.dash-attention { grid-area: attention; min-width: 0; }
+.dash-list { grid-area: list; }
+.dash-interest { grid-area: interest; min-width: 0; }
+@media (min-width: 1280px) {
+  .dash-grid { grid-template-columns: minmax(0, 1fr) 21rem; grid-template-areas: 'list attention' 'list interest'; grid-template-rows: auto 1fr; align-items: start; gap: 16px 20px; }
+}
+@media (min-width: 1440px) { .dash-grid { grid-template-columns: minmax(0, 1fr) 23rem; } }
+.dash-panel { min-width: 0; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); background: var(--color-surface-000); }
+.dash-panel h2 { font-size: var(--text-body-lg); line-height: 1.35; }
+/* Status filters: one row of links with counts. On a phone the row scrolls
+   inside its own (positioned) box, snapping to the gutter, never the page. */
+.dash-status { position: relative; overflow-x: auto; border-bottom: 1px solid var(--color-border-subtle); scrollbar-width: none; scroll-padding-inline: 12px; }
+.dash-status::-webkit-scrollbar { display: none; }
+.dash-status ul { display: flex; width: max-content; min-width: 100%; gap: 2px; padding: 6px 8px 0; }
+.dash-status-link { position: relative; display: inline-flex; min-height: 44px; align-items: center; gap: 8px; border-radius: var(--radius-sm); padding: 8px 10px 10px; font-size: var(--text-body-sm); font-weight: 600; white-space: nowrap; color: var(--color-ink-700); }
+.dash-status-link:hover { color: var(--color-ink-900); background: var(--color-surface-100); }
+.dash-status-link::after { content: ''; position: absolute; inset: auto 8px -1px; height: 2px; border-radius: var(--radius-full); background: transparent; }
+.dash-status-link[aria-current='page'] { color: var(--color-brand-700); }
+.dash-status-link[aria-current='page']::after { background: var(--color-brand-600); }
+.dash-status-count { min-width: 22px; border-radius: var(--radius-full); background: var(--color-surface-200); padding: 1px 7px; text-align: center; font-size: var(--text-caption); color: var(--color-ink-900); }
+.dash-status-link[aria-current='page'] .dash-status-count { background: var(--color-brand-600); color: var(--color-on-brand); }
+.dash-status-link[data-empty]:not([aria-current='page']) { color: var(--color-ink-500); font-weight: 500; }
+.dash-status-link[data-empty]:not([aria-current='page']) .dash-status-count { background: transparent; color: var(--color-ink-500); }
+/* From 640px the row wraps instead of scrolling: every status stays in view. */
+@media (min-width: 640px) { .dash-status { overflow: visible; } .dash-status ul { width: auto; flex-wrap: wrap; } }
+/* A card's "More" menu: the open control reads as pressed. */
+.card-menu[open] > summary { border-color: var(--color-brand-600); background: var(--color-brand-50); color: var(--color-brand-700); }
 .workspace-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: var(--text-body-sm); line-height: 20px; }
 .workspace-table thead { background: var(--color-workspace-sidebar); color: var(--color-ink-700); }
 .workspace-table th { font-weight: 600; }

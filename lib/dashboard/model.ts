@@ -71,6 +71,14 @@ export type PropertyCard = {
   /** null when there is no listing to have enquiries; 'unavailable' when counts could not be read. */
   enquiries: { total: number; newCount: number } | 'unavailable' | null
   activity: number
+  /**
+   * The first photo buyers see (a submitted copy's), or a never-submitted
+   * draft's first ready photo — an owner-only image URL — or null when there
+   * is none or photos could not be read (UI-18).
+   */
+  cover: string | null
+  /** Photos on that copy or draft; null when they could not be read. */
+  photoCount: number | null
 }
 
 export type DashboardInput = {
@@ -82,6 +90,10 @@ export type DashboardInput = {
   submissions: SubmissionSummary[] | null
   /** null when the enquiry counts could not be read. */
   enquiryCounts: EnquiryCount[] | null
+  /** Photos of the current submissions, by position; null or absent when they could not be read. */
+  submissionPhotos?: { id: string; submission_id: string; position: number }[] | null
+  /** Ready photos of the drafts' collections, by position; null or absent when they could not be read. */
+  draftPhotos?: { id: string; collection_id: string; position: number }[] | null
   places: readonly Location[]
   today: string
   now: number
@@ -136,6 +148,13 @@ export function buildCards(input: DashboardInput): PropertyCard[] {
   const listingByDraft = new Map(input.listings.map((l) => [l.draft_id, l]))
   const submissions = new Map((input.submissions ?? []).map((s) => [s.id, s]))
   const counts = new Map((input.enquiryCounts ?? []).map((c) => [c.listing_id, c]))
+  const photosOf = <K extends string>(rows: readonly ({ id: string; position: number } & Record<K, string>)[] | null | undefined, key: K) => {
+    if (!rows) return null
+    const map = new Map<string, string[]>()
+    for (const row of [...rows].sort((a, b) => a.position - b.position)) map.set(row[key], [...(map.get(row[key]) ?? []), row.id])
+    return map
+  }
+  const submissionPhotos = photosOf(input.submissionPhotos, 'submission_id'), draftPhotos = photosOf(input.draftPhotos, 'collection_id')
   const lastDraftEvent = new Map<string, DashboardInput['draftEvents'][number]>()
   for (const event of input.draftEvents) if (event.to_status === 'DRAFT' && !lastDraftEvent.has(event.listing_id)) lastDraftEvent.set(event.listing_id, event)
 
@@ -164,6 +183,12 @@ export function buildCards(input: DashboardInput): PropertyCard[] {
       : status === 'WITHDRAWN' ? event?.created_at ?? listing!.updated_at
       : listing!.updated_at
     const count = listing ? counts.get(listing.id) : undefined
+    // A submitted property shows what buyers see — its submission's photos —
+    // never the working draft's; a never-submitted draft shows its own.
+    const photos = submitted
+      ? (submissionPhotos ? submissionPhotos.get(listing!.current_submission_id!) ?? [] : null)
+      : draft ? (draftPhotos ? draftPhotos.get(draft.collection_id) ?? [] : null) : null
+    const cover = photos?.[0] ? (submitted ? `/api/posting/submissions/${listing!.id}/photos/${photos[0]}` : `/api/posting/photos/${photos[0]}`) : null
     const activity = Math.max(draft ? Date.parse(draft.updated_at) : 0, listing ? Date.parse(listing.updated_at) : 0)
     return {
       draftId,
@@ -176,8 +201,37 @@ export function buildCards(input: DashboardInput): PropertyCard[] {
       detailsUnavailable,
       enquiries: !listing || status === 'REMOVED' && !count ? null : input.enquiryCounts === null ? 'unavailable' : { total: count?.total ?? 0, newCount: count?.new_count ?? 0 },
       activity,
+      cover: status === 'REMOVED' ? null : cover,
+      photoCount: photos ? photos.length : null,
     }
   })
+}
+
+/**
+ * What is waiting for the seller (UI-18), in the order it matters: a
+ * listing sent back, one about to expire, buyers waiting for a reply, one
+ * that has expired, and drafts not yet submitted. Every item is a fact the
+ * cards already hold, with the action that resolves it; nothing is
+ * estimated or invented.
+ */
+export type AttentionKind = 'returned' | 'expiring' | 'enquiries' | 'expired' | 'draft-incomplete' | 'draft-photos' | 'draft-ready'
+export type AttentionItem = { kind: AttentionKind; card: PropertyCard; href: string; action: string }
+const ATTENTION_ORDER: AttentionKind[] = ['returned', 'expiring', 'enquiries', 'expired', 'draft-incomplete', 'draft-photos', 'draft-ready']
+export function attentionItems(cards: readonly PropertyCard[]): AttentionItem[] {
+  const items: AttentionItem[] = []
+  for (const card of cards) {
+    const base = `/post/drafts/${card.draftId}`
+    if (card.status === 'REJECTED' || card.status === 'CHANGES_REQUESTED') items.push({ kind: 'returned', card, href: base, action: 'Edit draft' })
+    if (card.status === 'ACTIVE' && card.expiringSoon) items.push({ kind: 'expiring', card, href: `${base}/lifecycle`, action: 'Review listing' })
+    if (card.listing && card.enquiries && card.enquiries !== 'unavailable' && card.enquiries.newCount > 0) items.push({ kind: 'enquiries', card, href: `/dashboard/enquiries?listing=${card.listing.id}`, action: 'Open enquiries' })
+    if (card.status === 'EXPIRED') items.push({ kind: 'expired', card, href: `${base}/lifecycle`, action: 'Review & re-submit' })
+    if (card.status === 'DRAFT' && card.progress) {
+      if (card.progress.complete < card.progress.total) items.push({ kind: 'draft-incomplete', card, href: base, action: 'Continue editing' })
+      else if (card.photoCount === 0) items.push({ kind: 'draft-photos', card, href: base, action: 'Add photos' })
+      else items.push({ kind: 'draft-ready', card, href: `${base}/preview`, action: 'Review preview' })
+    }
+  }
+  return items.sort((a, b) => ATTENTION_ORDER.indexOf(a.kind) - ATTENTION_ORDER.indexOf(b.kind) || b.card.activity - a.card.activity)
 }
 
 export type Dashboard = {

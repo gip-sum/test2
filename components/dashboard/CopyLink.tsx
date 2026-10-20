@@ -15,7 +15,7 @@ import { LinkIcon } from '@/components/ui/icons'
  * an outlined pill with a link icon. No share sheet or social SDK — a link
  * is what every messaging app takes.
  */
-export function CopyLink({ path, title, variant = 'text' }: { path: string; title: string; variant?: 'text' | 'pill' }) {
+export function CopyLink({ path, title, variant = 'text' }: { path: string; title: string; variant?: 'text' | 'pill' | 'inline' }) {
   const [state, setState] = useState<{ kind: 'idle' | 'copied' } | { kind: 'manual'; url: string }>({ kind: 'idle' })
   const inputId = useId()
   async function copy() {
@@ -26,7 +26,10 @@ export function CopyLink({ path, title, variant = 'text' }: { path: string; titl
   return <>
     {variant === 'pill'
       ? <Button type="button" variant="secondaryBrand" onClick={copy} className="gap-2 rounded-full"><LinkIcon className="size-4.5" />Copy link<span className="sr-only"> to {title}</span></Button>
-      : <Button type="button" variant="text" onClick={copy} className="text-brand-700">Copy link<span className="sr-only"> to {title}</span></Button>}
+      : variant === 'inline'
+        // A seller card's secondary action (UI-18): the card's link style, not underlined text.
+        ? <Button type="button" variant="text" onClick={copy} className="rounded-md px-2 text-label font-semibold text-brand-700 no-underline hover:bg-brand-50">Copy link<span className="sr-only"> to {title}</span></Button>
+        : <Button type="button" variant="text" onClick={copy} className="text-brand-700">Copy link<span className="sr-only"> to {title}</span></Button>}
     <span role="status" className="inline-flex min-h-11 items-center text-body-sm text-ink-700 empty:hidden">{state.kind === 'copied' ? 'Link copied' : ''}</span>
     {state.kind === 'manual' && <span className="flex basis-full flex-col gap-1">
       <label htmlFor={inputId} className="text-body-sm text-ink-700">Copying is not available here. Select and copy this link:</label>
