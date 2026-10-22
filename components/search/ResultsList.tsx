@@ -13,7 +13,7 @@ import type { PropertySummary } from '@/lib/property/types'
  * the grid's priority photos preloaded on phones that never showed them
  * (UI-06).
  */
-export function ResultsList({ results }: { results: PropertySummary[] }) {
+export function ResultsList({ results, areaOf }: { results: PropertySummary[]; areaOf?: (localitySlug: string) => string | undefined }) {
   return (
     <>
       <h2 className="sr-only">Results</h2>
@@ -23,7 +23,10 @@ export function ResultsList({ results }: { results: PropertySummary[] }) {
           the page and the fixed bottom bar by 8px. */}
       <ul className="results-list grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5 xl:grid-cols-3">
         {results.map((p, i) => (
-          <li key={p.id}>
+          // data-area (map view, UI-21): the map area this card is drawn in,
+          // so the map can outline the chosen area's cards and a focused
+          // card can mark its marker.
+          <li key={p.id} data-area={areaOf?.(p.localitySlug)}>
             <ResultCard property={p} priority={i < 3} />
           </li>
         ))}

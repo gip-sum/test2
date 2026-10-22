@@ -322,3 +322,31 @@ describe('landingSlugFor', () => {
     expect(landingSlugFor({ priceMax: 5_000_000, priceMin: undefined })).toBe('under-50-lakh')
   })
 })
+
+describe('the map view (UI-21)', () => {
+  const parse = (href: string) => {
+    const url = new URL(href, 'https://example.invalid')
+    const [, intent, city, ...segments] = url.pathname.split('/')
+    return parseSearchQuery({ intent: intent!, city: city!, segments, params: url.searchParams, isKnownLocality })
+  }
+
+  it('reads view=map and nothing else as the map', () => {
+    expect(parse('/buy/kolkata?view=map').view).toBe('map')
+    expect(parse('/buy/kolkata?view=list').view).toBeUndefined()
+    expect(parse('/buy/kolkata?view=satellite').view).toBeUndefined()
+    expect(parse('/buy/kolkata').view).toBeUndefined()
+  })
+
+  it('round-trips with every filter, and a filter change keeps the mode', () => {
+    const q: SearchQuery = { ...EMPTY_QUERY, localities: ['salt-lake'], bedrooms: [2], sort: 'price_asc', page: 2, view: 'map' }
+    expect(roundTrip(q)).toEqual(q)
+    expect(buildSearchUrl(withFilterChange(q, { bedrooms: [3] }))).toBe('/buy/kolkata/salt-lake?bhk=3&sort=price_asc&view=map')
+  })
+
+  it('never writes the list, and is never canonical', () => {
+    expect(buildSearchUrl({ ...EMPTY_QUERY })).toBe('/buy/kolkata')
+    expect(canonicalSearchUrl(parse('/buy/kolkata/flats?view=map'))).toBe('/buy/kolkata/flats')
+    expect(canonicalSearchUrl(parse('/buy/kolkata?bhk=2&view=map'))).toBe('/buy/kolkata/2-bhk')
+    expect(canonicalSearchUrl(parse('/buy/kolkata?loc=new-town,salt-lake&view=map'))).not.toContain('view')
+  })
+})

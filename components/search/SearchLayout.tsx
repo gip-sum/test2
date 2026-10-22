@@ -7,7 +7,7 @@ import { FilterControls, type FilterPatch } from '@/components/filters/FilterCon
 import { Chip } from '@/components/ui/Chip'
 import { Sheet } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
-import { ChevronDownIcon, SlidersIcon } from '@/components/ui/icons'
+import { ChevronDownIcon, MapPinIcon, SlidersIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/cn'
 import type { Facets } from '@/lib/property/search'
 import { IntentSwitch } from './IntentSwitch'
@@ -43,6 +43,7 @@ export function SearchLayout({
   cityName,
   localityNames,
   notice,
+  map,
   children,
 }: {
   query: SearchQuery
@@ -54,6 +55,8 @@ export function SearchLayout({
   localityNames: Record<string, string>
   /** The sample-data notice, rendered by the server (it reads the data seam). */
   notice?: ReactNode
+  /** The map view's map and area index (UI-21), rendered by the server. */
+  map?: ReactNode
   children: ReactNode
 }) {
   const router = useRouter()
@@ -137,6 +140,7 @@ export function SearchLayout({
   const shortcuts = query.localities.length
     ? []
     : [...facets.localities.entries()].filter(([, n]) => n > 0).sort((a, b) => b[1] - a[1]).slice(0, 6)
+  const mapView = query.view === 'map'
   const place = query.localities.length
     ? query.localities.map((s) => names.get(s) ?? s).join(', ')
     : 'All localities'
@@ -201,8 +205,12 @@ export function SearchLayout({
       </header>
 
       <div className="home-container pb-12 pt-4 lg:pt-8">
-        <div className="lg:grid lg:grid-cols-[18.5rem_minmax(0,1fr)] lg:items-start lg:gap-8">
-          <aside ref={rail} aria-label="Filters" className="search-rail hidden lg:block">
+        {/* List view: the UI-15 frame, filter rail and results. Map view
+            (UI-21): the results beside the map from 1024px, with the
+            filters in the sheet on every width; on a phone the map takes
+            the results' place and List brings them back. */}
+        <div className={mapView ? cn(map && 'search-split') : 'lg:grid lg:grid-cols-[18.5rem_minmax(0,1fr)] lg:items-start lg:gap-8'}>
+          {!mapView && <aside ref={rail} aria-label="Filters" className="search-rail hidden lg:block">
             <div className="flex items-center justify-between gap-2 border-b border-border-subtle px-5 py-4">
               <h2 className="flex items-center gap-2.5 font-display text-heading-3 text-ink-900">
                 <span aria-hidden className="grid size-8 place-items-center rounded-full bg-brand-50 text-brand-700"><SlidersIcon className="size-4" /></span>
@@ -221,9 +229,9 @@ export function SearchLayout({
                 idPrefix="rail"
               />
             </div>
-          </aside>
+          </aside>}
 
-          <div className="min-w-0">
+          <div className="search-split-list min-w-0">
             {/* Filters (phones and tablets), the range shown and Sort, on one
                 row. A native select is as wide as its LONGEST option ("Price
                 per sqft: low to high"), so the sort form takes the remaining
@@ -231,11 +239,12 @@ export function SearchLayout({
                 (min-w-0 all the way down): with a fixed or shrink-0 select it
                 pushed the page, and the fixed bottom bar with it, sideways
                 below ~350px. */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <ViewSwitch query={query} className="max-sm:w-full lg:order-last" />
               <Button
                 ref={filtersButton}
                 variant="secondary"
-                className="shrink-0 rounded-full lg:hidden"
+                className={cn('shrink-0 rounded-full', !mapView && 'lg:hidden')}
                 onClick={() => setSheetOpen(true)}
                 aria-haspopup="dialog"
               >
@@ -247,7 +256,7 @@ export function SearchLayout({
                   </span>
                 )}
               </Button>
-              {total > 0 && (
+              {total > 0 && !mapView && (
                 <p className="text-body-sm text-ink-700 max-lg:hidden">
                   Showing <span className="font-semibold text-ink-900 tabular">{from}–{to}</span> of{' '}
                   <span className="font-semibold text-ink-900 tabular">{total.toLocaleString('en-IN')}</span>
@@ -258,7 +267,7 @@ export function SearchLayout({
                   JavaScript: the other parameters ride along as hidden
                   fields and the Sort button exists only when scripting is
                   off. With JavaScript the select applies on change. */}
-              <form method="get" action={sortBase.pathname} className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-2 lg:flex-none">
+              <form method="get" action={sortBase.pathname} className={cn('ml-auto flex min-w-0 flex-1 items-center justify-end gap-2', !mapView && 'lg:flex-none')}>
                 {[...sortBase.searchParams].map(([name, value]) => <input key={name} type="hidden" name={name} value={value} />)}
                 <label className="search-sort w-full lg:w-auto">
                   <span className="shrink-0 text-ink-500">Sort</span>
@@ -307,12 +316,14 @@ export function SearchLayout({
                 multi-filter session flash constantly; keeping them visible
                 and inert preserves the user's place. */}
             <div
-              className={cn('mt-4 transition-opacity lg:mt-5', pending && 'pointer-events-none opacity-55')}
+              id="search-results"
+              className={cn('mt-4 transition-opacity lg:mt-5', mapView && map && 'max-lg:hidden', pending && 'pointer-events-none opacity-55')}
               aria-busy={pending}
             >
               {children}
             </div>
           </div>
+          {mapView && map && <div className={cn('search-split-map', pending && 'pointer-events-none opacity-55')}>{map}</div>}
         </div>
       </div>
 
@@ -406,6 +417,35 @@ function ClearAll({ href, onClear, focusAfter }: { href: string; onClear: () => 
     >
       <span className="inline-flex h-8 items-center rounded-full px-3 group-hover:bg-brand-100 group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-focus-ring">Clear all</span>
     </a>
+  )
+}
+
+/**
+ * List | Map (UI-21). Links, because the mode is in the URL: they work
+ * without JavaScript, a shared map link opens on the map, and back returns
+ * to the list. Same page, same results: switching keeps the filters, sort
+ * and page, and focus stays on the switch (the frame does not remount).
+ * The Buy | Rent switch's pill, reused.
+ */
+function ViewSwitch({ query, className }: { query: SearchQuery; className?: string }) {
+  const map = query.view === 'map'
+  return (
+    <nav aria-label="Show results as" className={cn('search-intent search-view', className)}>
+      <Link href={buildSearchUrl({ ...query, view: undefined })} scroll={false} aria-current={map ? undefined : 'page'} className="search-intent-link">
+        <span><ListGlyph />List</span>
+      </Link>
+      <Link href={buildSearchUrl({ ...query, view: 'map' })} scroll={false} aria-current={map ? 'page' : undefined} className="search-intent-link">
+        <span><MapPinIcon className="size-4" />Map</span>
+      </Link>
+    </nav>
+  )
+}
+
+function ListGlyph() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" aria-hidden>
+      <path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" />
+    </svg>
   )
 }
 

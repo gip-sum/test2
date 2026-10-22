@@ -1,0 +1,73 @@
+/* Search's map view (UI-21): the List | Map switch, the split layout, the
+   map, its markers and preview, and the area index. Imported by the results
+   page only (components/search/SearchPage.tsx), so no other route loads it;
+   every value is a token from app/globals.css. */
+/* List | Map reuses the Buy | Rent pill; full width on a
+   phone, where it sits on its own row above Filters and Sort. */
+.search-view .search-intent-link > span { display: flex; gap: 6px; }
+@media (max-width: 639.98px) { .search-view .search-intent-link { flex: 1; } .search-view .search-intent-link > span { width: calc(100% - 4px); justify-content: center; } }
+
+/* The results beside the map from 1024px. The map column is sticky, as the
+   rail is in list view: the map, then the area index scrolling inside its
+   own share of the height. On a phone the map takes the results' place
+   and everything flows. */
+.search-split { --map-chosen-outline: 3px solid var(--color-forest); --map-chosen-offset: 3px; display: grid; gap: 20px; }
+.search-map .map-frame { position: relative; height: min(62svh, 34rem); overflow: hidden; border-radius: var(--radius-lg); border: 1px solid var(--color-border-subtle); background: var(--color-surface-200); box-shadow: var(--shadow-e1); }
+.search-areas { margin-top: 20px; }
+@media (min-width: 1024px) {
+  .search-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); align-items: start; gap: 28px; }
+  .search-split .results-list { grid-template-columns: repeat(auto-fill, minmax(16.5rem, 1fr)); }
+  .search-split-map { position: sticky; top: 96px; }
+  .search-map { display: flex; height: calc(100dvh - 112px); min-height: 34rem; flex-direction: column; }
+  .search-map .map-view { position: relative; display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; }
+  .search-map .map-frame { height: auto; min-height: 20rem; flex: 1 1 auto; }
+  .search-areas { flex: 0 1 auto; max-height: 38%; overflow-y: auto; overscroll-behavior: contain; margin-top: 16px; padding-right: 4px; scrollbar-width: thin; }
+}
+.map-frame .map-canvas { position: absolute; inset: 0; }
+.map-status { position: absolute; inset: 0; display: grid; place-items: center; font-size: var(--text-body-sm); color: var(--color-ink-700); }
+.map-failed { position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; background: var(--color-surface-200); }
+/* A failed map keeps no controls: zoom buttons over a notice would be dead ends. */
+.map-frame[data-status="failed"] .maplibregl-control-container { display: none; }
+
+/* MapLibre's own controls at the product's sizes: 44px zoom buttons, the
+   basemap credit in the caption size, never collapsed. */
+.map-frame .maplibregl-ctrl-group button { width: 44px; height: 44px; }
+.map-frame .maplibregl-ctrl-group { border-radius: var(--radius-md); box-shadow: var(--shadow-e1); }
+.map-frame .maplibregl-ctrl-attrib { font-size: var(--text-caption); }
+
+/* A marker: a 44px button around a 32px count. Chosen is drawn by shape —
+   inverted, ringed, larger and named — as well as aria-pressed, never by
+   colour alone; a linked card (focused or hovered) enlarges and names its
+   marker. */
+.map-marker { display: grid; width: 44px; height: 44px; place-items: center; border: 0; background: transparent; padding: 0; cursor: pointer; outline: none; }
+.map-marker-count { display: grid; min-width: 32px; height: 32px; place-items: center; border: 2px solid var(--color-surface-000); border-radius: var(--radius-full); background: var(--color-forest); padding-inline: 7px; font-size: var(--text-label); font-weight: 700; color: var(--color-on-forest); box-shadow: var(--shadow-e2); transition: transform var(--duration-fast) var(--ease-standard); }
+.map-marker-name { position: absolute; bottom: calc(100% - 4px); left: 50%; translate: -50% 0; white-space: nowrap; border-radius: var(--radius-full); background: var(--color-surface-000); padding: 2px 8px; font-size: var(--text-caption); font-weight: 600; color: var(--color-ink-900); box-shadow: var(--shadow-e1); opacity: 0; pointer-events: none; transition: opacity var(--duration-fast) var(--ease-standard); }
+.map-marker:focus-visible .map-marker-count { outline: 2px solid var(--color-focus-ring); outline-offset: 3px; }
+.map-marker:focus-visible .map-marker-name, .map-marker.is-linked .map-marker-name, .map-marker.is-selected .map-marker-name { opacity: 1; }
+.map-marker.is-linked { z-index: 1; }
+.map-marker.is-linked .map-marker-count { transform: scale(1.15); }
+.map-marker.is-selected { z-index: 2; }
+.map-marker.is-selected .map-marker-count { border: 3px solid var(--color-forest); background: var(--color-surface-000); color: var(--color-forest); transform: scale(1.2); }
+@media (hover: hover) and (pointer: fine) {
+  .map-marker:hover { z-index: 1; }
+  .map-marker:hover .map-marker-name { opacity: 1; }
+  .map-marker:not(.is-selected):hover .map-marker-count { transform: scale(1.1); }
+}
+
+/* The chosen area. On a phone and tablet, a card held above the bottom bar,
+   so it is in view wherever the map is scrolled (the map's credit is at its
+   top there); beside the list, over the map's top-left corner, which the
+   first view leaves clear (LocalityMap, previewReserve). */
+.map-preview { position: fixed; right: 12px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); left: 12px; z-index: 40; max-height: min(60svh, 24rem); overflow-y: auto; border-radius: var(--radius-lg); border: 1px solid var(--color-border-subtle); background: var(--color-surface-000); padding: 16px; box-shadow: var(--shadow-e3); animation: motion-pop-in var(--duration-fast) var(--ease-enter); }
+@media (min-width: 640px) { .map-preview { left: auto; width: 24rem; } }
+@media (min-width: 1024px) {
+  .map-preview { position: absolute; top: 12px; right: auto; bottom: auto; left: 12px; z-index: 3; width: min(22rem, 45%); max-height: calc(100% - 24px); }
+}
+
+/* The area index: the map's equivalent, one link per area. */
+.search-area-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr)); gap: 8px; margin-top: 10px; }
+.search-area-link { display: grid; min-height: 44px; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; column-gap: 8px; border-radius: var(--radius-md); border: 1px solid var(--color-border-subtle); background: var(--color-surface-000); padding: 8px 12px; font-size: var(--text-body-sm); transition: border-color var(--duration-fast) var(--ease-standard); }
+.search-area-link > :last-child { grid-column: 1 / -1; }
+.search-area-count { font-size: var(--text-caption); font-weight: 600; color: var(--color-ink-700); }
+.search-area-link:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) { .search-area-link:hover { border-color: var(--color-border-strong); } }

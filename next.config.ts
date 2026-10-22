@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
     deviceSizes: [390, 412, 640, 768, 1024, 1280, 1440],
     imageSizes: [96, 160, 200, 256, 320, 480],
   },
+  // The map's vendored MapLibre modules (UI-21, lib/map/config.ts). The
+  // version is in the path, so a file there never changes.
+  async headers() {
+    return [{ source: '/vendor/maplibre-gl/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] }]
+  },
 }
 
 export default nextConfig

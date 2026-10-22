@@ -8,7 +8,10 @@ import { ResultsList } from '@/components/search/ResultsList'
 import { ZeroResults } from '@/components/search/ZeroResults'
 import { Pagination } from '@/components/ui/Pagination'
 import { searchProperties } from '@/lib/property/search'
-import { getLocationBySlug, getAllLocalitySlugs, getLocalityNameMap } from '@/lib/location/queries'
+import { getLocationBySlug, getAllLocalitySlugs, getLocalityNameMap, getMapLocality } from '@/lib/location/queries'
+import { SearchMap } from '@/components/search/map/SearchMap'
+import '@/components/search/map/map.css'
+import { groupForMap } from '@/lib/search/areas'
 import { describeSearch } from '@/lib/search/describe'
 import { buildSearchUrl, canonicalSearchUrl, parseSearchQuery, type SearchQuery } from '@/lib/search/query'
 import type { Intent } from '@/lib/property/types'
@@ -71,8 +74,10 @@ export async function searchMetadata(intent: Intent, props: SearchRouteProps): P
     alternates: { canonical: canonicalSearchUrl(query) },
     // A paginated or re-sorted view has nothing new to index, but its links
     // are still worth following.
+    // The map view is the same results drawn differently (UI-21): nothing
+    // new to index either.
     robots:
-      outcome.page > 1 || query.sort !== 'relevance' ? { index: false, follow: true } : undefined,
+      outcome.page > 1 || query.sort !== 'relevance' || query.view === 'map' ? { index: false, follow: true } : undefined,
   }
 }
 
@@ -84,6 +89,14 @@ export async function SearchPage({ intent, ...props }: { intent: Intent } & Sear
   const what = describeSearch(query, cityName, names)
   const heading = what.charAt(0).toUpperCase() + what.slice(1)
   const localityNames = Object.fromEntries(names)
+
+  // Map view only (UI-21): every match grouped by the locality it is drawn
+  // at, and which of this page's cards fall in each area.
+  const mapView = query.view === 'map' && outcome.total > 0
+  const areas = mapView ? groupForMap(outcome.localityMatches, getMapLocality, names) : null
+  const areaOf = (slug: string) => getMapLocality(slug)?.slug ?? slug
+  const onPage: Record<string, number> = {}
+  if (mapView) for (const p of outcome.results) onPage[areaOf(p.localitySlug)] = (onPage[areaOf(p.localitySlug)] ?? 0) + 1
 
   return (
     <PageShell footer={<Footer />}>
@@ -97,6 +110,7 @@ export async function SearchPage({ intent, ...props }: { intent: Intent } & Sear
         cityName={cityName}
         localityNames={localityNames}
         notice={<DevDataNotice />}
+        map={areas && <SearchMap areas={areas} query={{ ...query, page: outcome.page }} onPage={onPage} />}
       >
         {outcome.total === 0 ? (
           <ZeroResults
@@ -108,7 +122,7 @@ export async function SearchPage({ intent, ...props }: { intent: Intent } & Sear
           />
         ) : (
           <>
-            <ResultsList results={outcome.results} />
+            <ResultsList results={outcome.results} areaOf={mapView ? areaOf : undefined} />
             <Pagination
               variant="pill"
               page={outcome.page}

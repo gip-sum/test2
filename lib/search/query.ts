@@ -65,6 +65,14 @@ export type SearchQuery = {
   sort: SortKey
   /** 1-based. Page 1 is never written to the URL. */
   page: number
+  /**
+   * List or map (UI-21). Not a filter: it changes how the same results are
+   * shown, never which. In the URL like everything else here, so a shared
+   * map link opens on the map, back returns to the list, and every filter
+   * link on the page keeps the mode. The list is the default and is never
+   * written.
+   */
+  view?: 'map'
 }
 
 export const SORT_LABEL: Record<SortKey, string> = {
@@ -287,6 +295,7 @@ export function parseSearchQuery(input: {
   if (sort && (SORT_ORDER as string[]).includes(sort)) q.sort = sort as SortKey
 
   q.page = intIn(readParam(params, 'page'), 1, 10_000) ?? 1
+  if (readParam(params, 'view') === 'map') q.view = 'map'
 
   // A reversed range is a typo, not an intent to match nothing. Swapping is
   // the only silent correction in here, and it never removes a constraint.
@@ -341,6 +350,7 @@ export function toSearchParams(q: SearchQuery, opts?: { omitLocalities?: boolean
   if (q.availableBy && q.intent === 'rent') p.set('by', q.availableBy)
   if (q.sort !== 'relevance') p.set('sort', q.sort)
   if (q.page > 1) p.set('page', String(q.page))
+  if (q.view === 'map') p.set('view', 'map')
   return p
 }
 
@@ -417,12 +427,12 @@ export function landingSlugFor(patch: Partial<SearchQuery>): string | undefined 
  * to the first page of its base search, and is noindexed by the page.
  */
 export function canonicalSearchUrl(query: SearchQuery): string {
-  const base = { ...query, page: 1, sort: 'relevance' as const }
+  const base = { ...query, page: 1, sort: 'relevance' as const, view: undefined }
   if (base.localities.length > 1) return buildSearchUrl(base)
   const empty = emptyQuery(base.intent, base.city)
   const patch: Partial<SearchQuery> = {}
   for (const key of Object.keys(base) as Array<keyof SearchQuery>) {
-    if (key === 'intent' || key === 'city' || key === 'localities' || key === 'sort' || key === 'page') continue
+    if (key === 'intent' || key === 'city' || key === 'localities' || key === 'sort' || key === 'page' || key === 'view') continue
     if (base[key] === undefined || base[key] === false || JSON.stringify(base[key]) === JSON.stringify(empty[key])) continue
     Object.assign(patch, { [key]: base[key] })
   }

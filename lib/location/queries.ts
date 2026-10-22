@@ -1,5 +1,6 @@
 import { KOLKATA_LOCATIONS, POPULAR_LOCALITY_SLUGS } from './kolkata'
-import type { Location } from './types'
+import type { LocalityCentre, Location } from './types'
+import { LOCALITY_CENTRES } from './centres'
 
 /**
  * Location reads.
@@ -129,4 +130,18 @@ export function getPostingLocations(): Location[] {
   return KOLKATA_LOCATIONS.filter((place) =>
     place.type === 'CITY' || place.type === 'LOCALITY' || place.type === 'SUB_LOCALITY',
   ).slice().sort((a, b) => a.name.localeCompare(b.name))
+}
+
+/**
+ * The locality a place is drawn at on the map (UI-21): itself for a
+ * LOCALITY, its LOCALITY ancestor for a sub-locality or society. The map
+ * never places anything more precisely than this. `centre` is absent when
+ * the locality has no cited point (lib/location/centres.ts, UNPLACED).
+ */
+export type MapLocality = { slug: string; name: string; centre?: LocalityCentre }
+
+export function getMapLocality(slug: string): MapLocality | undefined {
+  let place = getLocationBySlug(slug)
+  while (place && place.type !== 'LOCALITY') place = place.parentSlug ? getLocationBySlug(place.parentSlug) : undefined
+  return place && { slug: place.slug, name: place.name, centre: LOCALITY_CENTRES[place.slug] }
 }

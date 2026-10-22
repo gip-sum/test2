@@ -25,5 +25,6 @@ export default defineConfig([
   ...nextVitals,
   ...nextTs,
   { rules: { 'no-restricted-imports': ['error', animationImports] } },
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', '.shots/**', 'tmp/**']),
+  // public/vendor: MapLibre's own built modules, copied at build (UI-21).
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', '.shots/**', 'tmp/**', 'public/vendor/**']),
 ])

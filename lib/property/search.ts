@@ -402,6 +402,31 @@ export type SearchOutcome = {
   nearbyLocalities: NearbyLocality[]
   /** Listings for this intent with every filter cleared. */
   totalUnfiltered: number
+  /** Every match (all pages) counted by its locality slug, for the map (UI-21). */
+  localityMatches: LocalityMatch[]
+}
+
+/**
+ * How many of the matches sit in one locality slug, and their price span.
+ *
+ * Counted over the WHOLE result set, not the page: the map answers "where
+ * are the homes that match", and a map of page 2's twenty-four would move
+ * its markers every time the user paged. The same GROUP BY in SQL later.
+ */
+export type LocalityMatch = { slug: string; count: number; minPrice: number; maxPrice: number }
+
+function countByLocality(rows: PropertySummary[]): LocalityMatch[] {
+  const m = new Map<string, LocalityMatch>()
+  for (const p of rows) {
+    const hit = m.get(p.localitySlug)
+    if (!hit) m.set(p.localitySlug, { slug: p.localitySlug, count: 1, minPrice: p.price, maxPrice: p.price })
+    else {
+      hit.count += 1
+      hit.minPrice = Math.min(hit.minPrice, p.price)
+      hit.maxPrice = Math.max(hit.maxPrice, p.price)
+    }
+  }
+  return [...m.values()]
 }
 
 export function searchProperties(
@@ -434,5 +459,6 @@ export function searchProperties(
         ? suggestLocalities(q, { now, corpus: options?.corpus })
         : [],
     totalUnfiltered: corpus.length,
+    localityMatches: countByLocality(matched),
   }
 }

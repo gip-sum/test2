@@ -25,6 +25,8 @@ export function IntentSwitch({ query, className }: { query: SearchQuery; classNa
           localities: query.localities,
           propertyTypes: query.propertyTypes,
           bedrooms: query.bedrooms,
+          // The map stays the map: a mode, not a filter (UI-21).
+          view: query.view,
         })
   return (
     <nav aria-label="Buy or rent" className={cn('search-intent', className)}>
