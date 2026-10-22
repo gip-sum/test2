@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { Wordmark } from '@/components/navigation/Wordmark'
 import { SavedProvider } from '@/components/property/SavedProvider'
-import { ArrowRightIcon, BuildingIcon, GridIcon, HomeIcon, LayersIcon, MailIcon, PlusIcon, SlidersIcon, UserIcon } from '@/components/ui/icons'
+import { ArrowRightIcon, BuildingIcon, GridIcon, HomeIcon, LayersIcon, MailIcon, PlusIcon, ShieldIcon, SlidersIcon, UserIcon } from '@/components/ui/icons'
 import { BRAND } from '@/lib/brand'
 import { cn } from '@/lib/cn'
 import { WorkspaceNavigation } from './WorkspaceNavigation'
@@ -28,8 +28,8 @@ export function WorkspaceShell({ area, current, title, sections, role, descripti
   return <SavedProvider><div data-app-root data-workspace={area} className="workspace-shell">
     <a href="#workspace-main" className="workspace-skip">Skip to workspace content</a>
     <aside className="workspace-sidebar" aria-label={admin ? 'Admin workspace' : 'Seller workspace'}>
-      <div className="workspace-brand"><Wordmark /><span className="workspace-mobile-role">{admin ? 'Admin' : 'Workspace'}</span></div>
-      <div className="workspace-nav-caption">{admin ? 'Manage marketplace' : 'Your workspace'}</div>
+      <div className="workspace-brand"><Wordmark onDark={admin} /><span className="workspace-mobile-role">{admin ? 'Admin' : 'Workspace'}</span></div>
+      <div className="workspace-nav-caption">{admin ? <><ShieldIcon className="size-4" />Admin console</> : 'Your workspace'}</div>
       <WorkspaceNavigation label={admin ? 'Admin sections' : 'Seller sections'}>
         <ul>{sections.map(section => {
           const Icon = ICONS[section.key]
@@ -40,12 +40,14 @@ export function WorkspaceShell({ area, current, title, sections, role, descripti
           </Link></li>
         })}</ul>
       </WorkspaceNavigation>
-      <div className="workspace-sidebar-footer"><p className="font-display text-body-sm font-semibold text-ink-900">{BRAND.name}</p><p className="text-caption text-ink-500">{BRAND.tagline}</p><Link href="/" className="workspace-marketplace-link">Browse marketplace<ArrowRightIcon className="size-4" /></Link></div>
+      <div className="workspace-sidebar-footer">{admin
+        ? <p className="workspace-staff-note">Staff only. Every page checks your staff role on the server.</p>
+        : <><p className="font-display text-body-sm font-semibold text-ink-900">{BRAND.name}</p><p className="text-caption text-ink-500">{BRAND.tagline}</p></>}<Link href="/" className="workspace-marketplace-link">Browse marketplace<ArrowRightIcon className="size-4" /></Link></div>
     </aside>
     <div className="workspace-body">
       <header className="workspace-topbar">
         <p className="workspace-breadcrumb"><span>{admin ? 'Admin' : 'Workspace'}</span><span aria-hidden="true">/</span><strong>{currentLabel}</strong></p>
-        <div className="workspace-topbar-actions"><span className="workspace-role">{admin ? `Staff only · signed in as ${role?.toLowerCase() ?? 'admin'}` : 'Seller workspace'}</span><Link href="/account" className="workspace-account-link" aria-label="My account"><UserIcon className="size-4" /><span>My account</span></Link><Link href="/" className="workspace-browse-link" aria-label="Browse marketplace"><ArrowRightIcon className="size-5" /></Link></div>
+        <div className="workspace-topbar-actions">{admin ? <span className="workspace-role workspace-role-pill"><ShieldIcon className="size-3.5" />{role === 'MODERATOR' ? 'Moderator' : 'Admin'}<span className="sr-only">, staff only</span></span> : <span className="workspace-role">Seller workspace</span>}<Link href="/account" className="workspace-account-link" aria-label="My account"><UserIcon className="size-4" /><span>My account</span></Link><Link href="/" className="workspace-browse-link" aria-label="Browse marketplace"><ArrowRightIcon className="size-5" /></Link></div>
       </header>
       <main id="workspace-main" tabIndex={-1} className="workspace-main">
         <div className="workspace-page-heading"><div className="min-w-0"><h1 className="workspace-title">{title}</h1>{description && <p className="workspace-description">{description}</p>}</div>{actions && <div className="workspace-page-actions">{actions}</div>}</div>

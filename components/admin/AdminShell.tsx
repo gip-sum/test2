@@ -4,17 +4,23 @@ import { cn } from '@/lib/cn'
 import { CHECK_WORD, type CheckState } from '@/lib/admin/model'
 import { ErrorState } from '@/components/ui/ErrorState'
 
+// The work comes first (UI-20): the queue is a reviewer's main job, so it
+// sits second, named for what it is; "Moderation" read as a policy page.
 const SECTIONS = [
   { key: 'overview', label: 'Overview', href: '/admin' },
+  { key: 'moderation', label: 'Review queue', href: '/admin/moderation' },
   { key: 'listings', label: 'Listings', href: '/admin/listings' },
-  { key: 'moderation', label: 'Moderation', href: '/admin/moderation' },
-  { key: 'users', label: 'Users & sellers', href: '/admin/users' },
+  { key: 'users', label: 'Accounts', href: '/admin/users' },
   { key: 'system', label: 'System', href: '/admin/system' },
 ] as const satisfies readonly WorkspaceSection[]
 
-/** The admin console's frame: who is signed in as what, and where they are. */
-export function AdminShell({ current, title, role, children }: { current: typeof SECTIONS[number]['key']; title: string; role: string; children: ReactNode }) {
-  return <WorkspaceShell area="admin" current={current} title={title} role={role}
+/**
+ * The admin console's frame: who is signed in as what, and where they are.
+ * A navigation frame only — every page calls requireStaff itself, and a
+ * moderator sees only the queue in it because that is all they may open.
+ */
+export function AdminShell({ current, title, role, description, actions, children }: { current: typeof SECTIONS[number]['key']; title: string; role: string; description?: string; actions?: ReactNode; children: ReactNode }) {
+  return <WorkspaceShell area="admin" current={current} title={title} role={role} description={description} actions={actions}
     sections={SECTIONS.filter(section => role === 'ADMIN' || section.key === 'moderation')}>{children}</WorkspaceShell>
 }
 

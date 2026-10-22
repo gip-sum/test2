@@ -8,7 +8,17 @@ import { fieldControlClass, FormCheckbox, FormField, FormFieldset } from '@/comp
 
 type Field = 'days' | 'reason' | 'accepted'
 const FIELD_ID: Record<Field, string> = { days: 'review-days', reason: 'review-reason', accepted: 'review-confirm' }
-const ACTIONS = [['APPROVE', 'Approve'], ['REJECT', 'Reject'], ['REQUEST_CORRECTION', 'Request corrections']] as const
+/**
+ * The three decisions, each with what it does (UI-20) — the consequence
+ * beside the choice, in words, so no one has to infer it from a colour or
+ * remember the lifecycle. Order: the one that publishes, then the two that
+ * return the listing to its seller.
+ */
+const ACTIONS = [
+  ['APPROVE', 'Approve', 'Publishes this submitted copy to buyers for the days you set.'],
+  ['REQUEST_CORRECTION', 'Request corrections', 'Not published. Returned to the seller with your reason to fix and re-submit.'],
+  ['REJECT', 'Reject', 'Not published. The seller sees it was rejected, with your reason, and may re-submit.'],
+] as const
 
 /**
  * A staff decision on one submitted copy (Phase 22; busy and focus, UI-11).
@@ -78,13 +88,21 @@ export function ReviewDecision({ listing, submission, version }: { listing: stri
     finally { setBusy(false) }
   }
 
-  return <form onSubmit={submit} noValidate aria-busy={busy} className="rounded-lg border border-border-subtle bg-surface-000 p-5">
-    <h2 id="review-decision-heading" tabIndex={-1} className="font-display text-heading-2 text-ink-900">Review decision</h2>
-    <div aria-disabled={locked || undefined} className="mt-4 space-y-4">
+  const consequence = action === 'APPROVE' ? `Buyers will see this listing for ${/^\d+$/.test(days) ? `${days} days` : 'the days you set'} once you approve.`
+    : action === 'REJECT' ? 'The listing stays private and the seller is told it was rejected.' : 'The listing stays private and goes back to the seller to correct.'
+  return <form onSubmit={submit} noValidate aria-busy={busy} className="admin-decision">
+    <div className="admin-decision-head">
+      <h2 id="review-decision-heading" tabIndex={-1} className="font-display text-heading-3 font-semibold text-ink-900">Your decision</h2>
+      <p className="mt-0.5 text-caption text-ink-700">Recorded against this submitted copy and shown in its history.</p>
+    </div>
+    <div aria-disabled={locked || undefined} className="space-y-4 p-4">
       <FormFieldset messageId="review-action" legend="Choose a decision">
-        {ACTIONS.map(([value, text]) => <label key={value} className="flex min-h-11 items-center gap-3 text-body-sm text-ink-900">
-          <input type="radio" name="decision" value={value} checked={action === value} onChange={() => edit(null, () => setAction(value))} className="size-5 accent-brand-600" />{text}
-        </label>)}
+        <div className="mt-2 grid gap-2">
+          {ACTIONS.map(([value, text, note]) => <label key={value} data-action={value} className="admin-choice">
+            <input type="radio" name="decision" value={value} checked={action === value} onChange={() => edit(null, () => setAction(value))} className="mt-0.5 size-5 shrink-0 accent-brand-600" />
+            <span className="min-w-0"><span className="block text-body-sm font-semibold text-ink-900">{text}</span><span className="block text-caption text-ink-700">{note}</span></span>
+          </label>)}
+        </div>
       </FormFieldset>
       {action === 'APPROVE' && <FormField id={FIELD_ID.days} label="Public validity in days" error={problems.days}
         hint="Approval makes this submitted copy public for 1–180 days. It does not certify ownership or property accuracy.">
@@ -98,9 +116,13 @@ export function ReviewDecision({ listing, submission, version }: { listing: stri
         {(control) => <input {...control} type="checkbox" checked={accepted} onChange={(e) => { if (locked) return; setAccepted(e.target.checked); setProblems((p) => { const next = { ...p }; delete next.accepted; return next }) }} className="size-5 shrink-0 accent-brand-600" />}
       </FormCheckbox>
     </div>
-    <Button type="submit" loading={busy} aria-disabled={saved || undefined} className="mt-3 px-5">{busy ? 'Saving decision…' : label}</Button>
-    <p role="status" className="mt-3 text-body-sm text-ink-700">{saved ? 'Decision recorded. Refreshing the review.' : busy ? 'Saving the review decision.' : ''}</p>
-    {error && <div role="alert" className="mt-3 text-body-sm text-danger-600"><p>{error}</p>
-      <Button type="button" variant="secondaryBrand" className="mt-2 px-3" onClick={() => { afterRefresh(['review-decision-heading', 'listing-status']); router.refresh() }}>Refresh review</Button></div>}
+    <div className="admin-decision-foot">
+      {/* What pressing will do, said again beside the button: a consequential action is never only a colour. */}
+      <p className="text-body-sm text-ink-900">{consequence}</p>
+      <Button type="submit" variant={action === 'REJECT' ? 'danger' : action === 'REQUEST_CORRECTION' ? 'secondary' : 'primary'} loading={busy} aria-disabled={saved || undefined} fullWidth className="mt-3">{busy ? 'Saving decision…' : label}</Button>
+      <p role="status" className="mt-2 text-body-sm text-ink-700">{saved ? 'Decision recorded. Refreshing the review.' : busy ? 'Saving the review decision.' : ''}</p>
+      {error && <div role="alert" className="mt-3 text-body-sm text-danger-600"><p>{error}</p>
+        <Button type="button" variant="secondaryBrand" className="mt-2 px-3" onClick={() => { afterRefresh(['review-decision-heading', 'listing-status']); router.refresh() }}>Refresh review</Button></div>}
+    </div>
   </form>
 }

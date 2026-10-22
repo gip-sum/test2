@@ -295,3 +295,18 @@ export function LinkIcon({ className }: IconProps) {
 export function PhotosIcon({ className }: IconProps) {
   return <svg {...base} className={className}><rect x="3.5" y="3.5" width="7" height="7" rx="1" /><rect x="13.5" y="3.5" width="7" height="7" rx="1" /><rect x="3.5" y="13.5" width="7" height="7" rx="1" /><rect x="13.5" y="13.5" width="7" height="7" rx="1" /></svg>
 }
+
+/** How long something has waited, in the review queue (UI-20). */
+export function ClockIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><circle cx="12" cy="12" r="8.25" /><path d="M12 7.5V12l3 2" /></svg>
+}
+
+/** Needs attention: a triangle with a mark, beside words that say what (UI-20). */
+export function AlertIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><path d="M10.3 4.2 2.9 17.5A2 2 0 004.6 20.5h14.8a2 2 0 001.7-3L13.7 4.2a2 2 0 00-3.4 0zM12 9.5v4M12 17h.01" /></svg>
+}
+
+/** Staff-only surfaces: a shield (UI-20). */
+export function ShieldIcon({ className }: IconProps) {
+  return <svg {...base} className={className}><path d="M12 3.5 5 6.2v5.3c0 4.3 3 7.8 7 9 4-1.2 7-4.7 7-9V6.2z" /></svg>
+}

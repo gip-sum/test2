@@ -80,9 +80,12 @@ export function AccountControls({ id, version, status: initialStatus, role: init
     router.refresh()
   }
 
-  return <form onSubmit={submit} noValidate aria-busy={busy} className="rounded-lg border border-border-subtle bg-surface-000 p-5">
-    <h2 id="manage-account-heading" tabIndex={-1} className="font-display text-heading-2 text-ink-900">Manage account</h2>
-    <fieldset aria-disabled={locked || undefined} className="mt-4 min-w-0 space-y-4">
+  return <form onSubmit={submit} noValidate aria-busy={busy} className="admin-decision">
+    <div className="admin-decision-head">
+      <h2 id="manage-account-heading" tabIndex={-1} className="font-display text-heading-3 font-semibold text-ink-900">Manage account</h2>
+      <p className="mt-0.5 text-caption text-ink-700">Changes take effect at once and are recorded in this account’s private history.</p>
+    </div>
+    <fieldset aria-disabled={locked || undefined} className="min-w-0 space-y-4 p-4">
       <legend className="sr-only">Account change</legend>
       <FormField id={FIELD_ID.change} label="Marketplace status" error={problems.change}
         hint="Suspension blocks protected marketplace actions immediately, including existing sessions. Provider sign-in and already published listings remain available. Restoring access does not verify the account.">
@@ -99,9 +102,13 @@ export function AccountControls({ id, version, status: initialStatus, role: init
         {(control) => <input {...control} type="checkbox" checked={accepted} onChange={(e) => { if (locked) return; setAccepted(e.target.checked); setProblems((p) => { const next = { ...p }; delete next.accepted; return next }) }} className="size-5 shrink-0 accent-brand-600" />}
       </FormCheckbox>
     </fieldset>
-    <Button type="submit" loading={busy} aria-disabled={saved || conflict || undefined} className="mt-4 px-5">{busy ? 'Saving change…' : 'Save account change'}</Button>
-    <p role="status" className="mt-3 text-body-sm text-ink-700">{saved ? 'Account change recorded.' : busy ? 'Saving account change.' : ''}</p>
-    {error && <div role="alert" className="mt-3 text-body-sm text-danger-600"><p>{error}</p>
-      <Button type="button" variant="secondaryBrand" className="mt-2 px-3" onClick={refresh}>Refresh account</Button></div>}
+    <div className="admin-decision-foot">
+      {/* Suspension is the consequential change: said beside the button, not left to the select's colourless value. */}
+      <p className="text-body-sm text-ink-900">{status !== initialStatus ? (status === 'SUSPENDED' ? 'This suspends the account: protected marketplace actions stop immediately, including in existing sessions.' : 'This restores marketplace access. It does not verify the account.') : (role || null) !== initialRole ? 'This changes the seller role only; marketplace access is unchanged.' : 'Choose a different status or seller role to change this account.'}</p>
+      <Button type="submit" variant={status !== initialStatus && status === 'SUSPENDED' ? 'danger' : 'primary'} loading={busy} aria-disabled={saved || conflict || undefined} fullWidth className="mt-3">{busy ? 'Saving change…' : 'Save account change'}</Button>
+      <p role="status" className="mt-2 text-body-sm text-ink-700">{saved ? 'Account change recorded.' : busy ? 'Saving account change.' : ''}</p>
+      {error && <div role="alert" className="mt-3 text-body-sm text-danger-600"><p>{error}</p>
+        <Button type="button" variant="secondaryBrand" className="mt-2 px-3" onClick={refresh}>Refresh account</Button></div>}
+    </div>
   </form>
 }

@@ -1826,6 +1826,131 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
   .inbox-row[data-shown]::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 3px; background: var(--color-brand-600); }
 }
 .inbox-row:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: -2px; }
+/* The admin console (UI-20): an internal operations room, not a second
+   seller dashboard. A forest sidebar says "staff" before any word does; the
+   working surfaces stay white and dense, with hairline rows instead of
+   cards, so a reviewer scans a queue rather than browses it. Admin only:
+   every rule is under [data-workspace='admin'] or an admin-* class. */
+[data-workspace='admin'] .workspace-sidebar { border-right-color: var(--color-forest); background: var(--color-forest); color: var(--color-on-forest); }
+[data-workspace='admin'] .workspace-brand { border-bottom-color: var(--color-forest-line); }
+[data-workspace='admin'] .workspace-nav-caption { display: flex; align-items: center; gap: 8px; color: var(--color-mint); font-size: var(--text-overline); font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+[data-workspace='admin'] .workspace-nav-link { color: color-mix(in srgb, var(--color-on-forest) 80%, transparent); }
+[data-workspace='admin'] .workspace-nav-link:hover { background: color-mix(in srgb, var(--color-on-forest) 9%, transparent); color: var(--color-on-forest); }
+[data-workspace='admin'] .workspace-nav-link.is-current { background: color-mix(in srgb, var(--color-mint) 18%, transparent); color: var(--color-on-forest); }
+[data-workspace='admin'] .workspace-nav-link.is-current::before { background: var(--color-mint); }
+[data-workspace='admin'] .workspace-nav-link:focus-visible { outline: 2px solid var(--color-mint); outline-offset: -2px; }
+[data-workspace='admin'] .workspace-sidebar-footer { border-top-color: var(--color-forest-line); }
+[data-workspace='admin'] .workspace-marketplace-link { color: var(--color-mint); }
+.workspace-staff-note { font-size: var(--text-caption); line-height: 18px; color: color-mix(in srgb, var(--color-on-forest) 72%, transparent); }
+.workspace-role-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: var(--radius-full); background: var(--color-forest); padding: 4px 10px; color: var(--color-on-forest); font-weight: 600; }
+@media (max-width: 1023px) {
+  [data-workspace='admin'] .workspace-sidebar { border-bottom-color: var(--color-forest); background: var(--color-forest); }
+  [data-workspace='admin'] .workspace-nav-link.is-current::before { background: var(--color-mint); }
+  [data-workspace='admin'] .workspace-account-link, [data-workspace='admin'] .workspace-browse-link { border-color: var(--color-forest-line); color: var(--color-on-forest); }
+}
+/* A container: rows take columns when their panel is wide, not the window —
+   the overview's queue preview sits in a narrower column than the queue. */
+.admin-panel { min-width: 0; container-type: inline-size; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); background: var(--color-surface-000); }
+.admin-panel-head { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 16px; padding: 12px 20px; }
+.admin-panel-title { font-family: var(--font-display); font-size: var(--text-body-lg); font-weight: 600; line-height: 1.35; color: var(--color-ink-900); outline: none; }
+.admin-panel-body { padding: 0 20px 20px; }
+/* The overview: the work in the main column, the figures beside it. */
+.admin-overview { display: grid; min-width: 0; gap: 16px; }
+.admin-overview-main, .admin-overview-side { display: grid; min-width: 0; align-content: start; gap: 16px; }
+@media (min-width: 1280px) { .admin-overview { grid-template-columns: minmax(0, 1fr) 22rem; gap: 20px; } }
+.admin-attention { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 16px 20px; }
+.admin-attention-mark { display: grid; width: 40px; height: 40px; flex-shrink: 0; place-items: center; border-radius: var(--radius-md); background: var(--color-brand-50); color: var(--color-brand-700); }
+.admin-figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: hidden; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); background: var(--color-border-subtle); gap: 1px; }
+.admin-figure { min-width: 0; background: var(--color-surface-000); padding: 14px 16px; }
+.admin-facts { display: grid; }
+.admin-facts li { display: flex; min-height: 36px; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--color-border-subtle); font-size: var(--text-body-sm); color: var(--color-ink-700); }
+.admin-facts li:first-child { border-top: 0; }
+.admin-facts strong { color: var(--color-ink-900); font-weight: 600; }
+.admin-pipeline { display: grid; gap: 16px 20px; }
+@media (min-width: 640px) { .admin-pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .admin-pipeline { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.admin-pipeline-link { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); padding: 6px 12px; font-size: var(--text-body-sm); font-weight: 600; color: var(--color-ink-700); }
+.admin-pipeline-link:hover { border-color: var(--color-brand-600); background: var(--color-brand-50); color: var(--color-brand-700); }
+/* How long a submission has waited; overdue in words and with a mark. */
+.admin-wait { display: inline-flex; min-width: 0; align-items: flex-start; gap: 6px; color: var(--color-ink-500); }
+.admin-wait.is-overdue { color: var(--color-warn-600); }
+.admin-overdue { display: block; font-size: var(--text-caption); font-weight: 600; color: var(--color-warn-600); }
+/* Rows: listings and accounts as one link each, in columns from 1024px. */
+.admin-row-head { display: none; }
+.admin-rows { border-top: 1px solid var(--color-border-subtle); }
+.admin-row { position: relative; display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; border-bottom: 1px solid var(--color-border-subtle); padding: 12px 16px; }
+.admin-rows > .admin-row:last-child { border-bottom: 0; }
+.admin-row:hover { background: color-mix(in srgb, var(--color-brand-50) 70%, var(--color-surface-000)); }
+.admin-row:focus-within { background: var(--color-brand-50); }
+.admin-row.is-overdue { box-shadow: inset 3px 0 0 var(--color-warn-600); }
+.admin-row-link { font-size: var(--text-body-sm); font-weight: 600; color: var(--color-ink-900); outline: none; }
+.admin-row-link::after { content: ''; position: absolute; inset: 0; }
+.admin-row-link:focus-visible::after { outline: 2px solid var(--color-focus-ring); outline-offset: -2px; }
+.admin-row:hover .admin-row-link { color: var(--color-brand-700); text-decoration: underline; text-underline-offset: 4px; }
+.admin-row-lead { display: flex; min-width: 0; align-items: center; gap: 10px; grid-column: 1 / -1; }
+.admin-row-place { display: grid; width: 26px; height: 26px; flex-shrink: 0; place-items: center; border-radius: var(--radius-full); background: var(--color-surface-200); font-size: var(--text-caption); font-weight: 600; color: var(--color-ink-700); }
+.admin-row-price { justify-self: end; text-align: right; }
+.admin-row-go { display: none; align-items: center; gap: 4px; justify-self: end; border: 1px solid var(--color-brand-700); border-radius: var(--radius-sm); padding: 6px 10px; font-size: var(--text-label); font-weight: 600; color: var(--color-brand-700); }
+.admin-row:hover .admin-row-go { background: var(--color-brand-600); color: var(--color-on-brand); border-color: var(--color-brand-600); }
+.admin-avatar { display: grid; width: 36px; height: 36px; flex-shrink: 0; place-items: center; border-radius: var(--radius-full); background: var(--color-brand-50); font-family: var(--font-display); font-weight: 600; color: var(--color-brand-700); }
+.admin-avatar.is-large { width: 56px; height: 56px; font-size: var(--text-heading-2); }
+.admin-row.is-accounts { grid-template-columns: auto minmax(0, 1fr) auto; }
+.admin-row.is-accounts > :nth-child(n + 4) { grid-column: 2 / -1; }
+.admin-staff { display: inline-flex; align-items: center; gap: 4px; border-radius: var(--radius-full); background: var(--color-forest); padding: 1px 8px; font-size: var(--text-caption); font-weight: 600; color: var(--color-on-forest); }
+@container (min-width: 880px) {
+  .admin-row-head { display: grid; gap: 12px; align-items: center; border-top: 1px solid var(--color-border-subtle); background: var(--color-workspace-sidebar); padding: 8px 16px; font-size: var(--text-caption); font-weight: 600; color: var(--color-ink-700); }
+  .admin-row-head + .admin-rows { border-top: 1px solid var(--color-border-subtle); }
+  .admin-row-head.is-queue, .admin-row.is-queue { grid-template-columns: 11rem minmax(0, 1fr) 8rem 11rem 8rem 6.5rem; }
+  .admin-row-head.is-listings, .admin-row.is-listings { grid-template-columns: 11rem minmax(0, 1fr) 8rem 11rem 9rem 6.5rem; }
+  .admin-row-head.is-accounts, .admin-row.is-accounts { grid-template-columns: 36px minmax(0, 1fr) 8rem 11rem 11rem 5.5rem; }
+  .admin-row { gap: 12px; padding: 10px 16px; }
+  .admin-row-lead { grid-column: auto; }
+  .admin-row.is-accounts > :nth-child(n + 4) { grid-column: auto; }
+  .admin-row-go { display: inline-flex; }
+}
+@container (max-width: 879px) { .admin-row.is-queue > :nth-child(4), .admin-row.is-listings > :nth-child(4) { grid-column: 1 / -1; } .admin-row.is-queue > :nth-child(5), .admin-row.is-listings > :nth-child(5) { grid-column: 1 / -1; } }
+/* The search bar of the accounts list. */
+.admin-filter { display: grid; gap: 12px; border-bottom: 1px solid var(--color-border-subtle); padding: 16px 20px; }
+@media (min-width: 768px) { .admin-filter { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: end; } .admin-filter-search { grid-column: 1 / -1; } }
+@media (min-width: 1280px) { .admin-filter { grid-template-columns: minmax(0, 1fr) 11rem 12rem auto; } .admin-filter-search { grid-column: auto; } }
+/* The review workspace: the case, a jump bar, then the submission beside the decision. */
+.admin-case { border: 1px solid var(--color-border-subtle); border-radius: var(--radius-md); background: linear-gradient(180deg, var(--color-brand-50), var(--color-surface-000) 70%); padding: 20px; }
+.admin-jump { position: relative; overflow-x: auto; margin: 12px 0 16px; scrollbar-width: none; scroll-padding-inline: 4px; }
+.admin-jump::-webkit-scrollbar { display: none; }
+.admin-jump ul { display: flex; width: max-content; gap: 6px; }
+.admin-jump a { display: inline-flex; min-height: 44px; align-items: center; gap: 6px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-full); background: var(--color-surface-000); padding: 0 14px; font-size: var(--text-body-sm); font-weight: 600; white-space: nowrap; color: var(--color-ink-700); }
+.admin-jump a:hover { border-color: var(--color-brand-600); color: var(--color-brand-700); }
+.admin-review-grid { display: grid; min-width: 0; align-items: start; gap: 16px; }
+.admin-review-side { display: grid; min-width: 0; gap: 12px; }
+@media (min-width: 1280px) {
+  .admin-review-grid { grid-template-columns: minmax(0, 1fr) 23rem; gap: 20px; }
+  .admin-review-side { position: sticky; top: 80px; }
+}
+.admin-terms { display: grid; gap: 12px 24px; }
+@media (min-width: 640px) { .admin-terms { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.admin-terms dt { font-size: var(--text-caption); color: var(--color-ink-700); }
+.admin-terms dd { margin-top: 2px; overflow-wrap: anywhere; font-size: var(--text-body-sm); font-weight: 600; color: var(--color-ink-900); }
+.admin-checks { border-top: 1px solid var(--color-border-subtle); }
+.admin-check { display: flex; min-width: 0; align-items: flex-start; gap: 10px; border-bottom: 1px solid var(--color-border-subtle); padding: 10px 20px; }
+.admin-checks > .admin-check:last-child { border-bottom: 0; }
+.admin-check-mark { display: grid; width: 22px; height: 22px; flex-shrink: 0; place-items: center; border-radius: var(--radius-full); font-size: var(--text-caption); font-weight: 700; }
+.admin-check-mark.is-ok { background: var(--color-trust-100); color: var(--color-trust-600); }
+.admin-check-mark.is-missing { background: var(--color-warn-100); color: var(--color-warn-600); }
+.admin-check-mark.is-neutral, .admin-check-mark.is-info { background: var(--color-surface-200); color: var(--color-ink-700); }
+/* The decision: set apart from everything informational — its own panel,
+   a heading, the choices with their consequences, and the act at the foot. */
+.admin-decision { overflow: hidden; border: 2px solid var(--color-ink-900); border-radius: var(--radius-md); background: var(--color-surface-000); }
+.admin-decision-head { border-bottom: 1px solid var(--color-border-subtle); background: var(--color-workspace-sidebar); padding: 12px 16px; }
+.admin-decision-foot { border-top: 1px solid var(--color-border-subtle); background: var(--color-workspace-sidebar); padding: 12px 16px 16px; }
+.admin-choice { display: flex; min-height: 44px; cursor: pointer; align-items: flex-start; gap: 10px; border: 1px solid var(--color-border-subtle); border-radius: var(--radius-sm); padding: 10px 12px; }
+.admin-choice:hover { border-color: var(--color-border-strong); }
+.admin-choice:has(:checked) { border-color: var(--color-brand-600); background: var(--color-brand-50); }
+.admin-choice[data-action='REJECT']:has(:checked) { border-color: var(--color-danger-600); background: var(--color-danger-100); }
+.admin-choice:has(:focus-visible) { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
+.admin-timeline { border-top: 1px solid var(--color-border-subtle); }
+.admin-timeline > li { position: relative; border-bottom: 1px solid var(--color-border-subtle); padding: 14px 20px 14px 40px; }
+.admin-timeline > li:last-child { border-bottom: 0; }
+.admin-timeline > li::before { content: ''; position: absolute; top: 20px; left: 20px; width: 9px; height: 9px; border-radius: var(--radius-full); background: var(--color-brand-600); }
 /* A card's "More" menu: the open control reads as pressed. */
 .card-menu[open] > summary { border-color: var(--color-brand-600); background: var(--color-brand-50); color: var(--color-brand-700); }
 .workspace-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: var(--text-body-sm); line-height: 20px; }
