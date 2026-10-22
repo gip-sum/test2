@@ -99,10 +99,10 @@ await new Promise((resolve) => mock.listen(3300, '127.0.0.1', resolve))
 const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] })
 let assertions = 0
 let failures = 0
-function check(name, success) {
+function check(name, success, detail = '') {
   assertions++
   if (!success) failures++
-  console.log(`  ${success ? 'ok  ' : 'FAIL'} ${name}`)
+  console.log(`  ${success ? 'ok  ' : 'FAIL'} ${name}${success || !detail ? '' : ` ${detail}`}`)
 }
 try {
   const context = await browser.newContext({ viewport: { width: 390, height: 844 } })
@@ -123,7 +123,12 @@ try {
   await page.getByRole('textbox', { name: 'Six-digit code' }).fill('123456')
   await page.getByRole('button', { name: 'Verify and continue' }).click()
   await page.waitForURL('**/account')
-  check('valid code creates signed-in account state', await page.getByText(USER.email).isVisible())
+  // UI-19: the identity band names the account; the security panel repeats the address beside its confirmation.
+  check('valid code creates signed-in account state', await page.locator('main header').getByText(USER.email).isVisible() && await page.getByRole('region', { name: /Sign-in/ }).getByText(USER.email).isVisible())
+  check('account groups the existing links, each a whole row, and nothing invented', JSON.stringify(await page.locator('main section ul a').evaluateAll((els) => els.map((a) => a.getAttribute('href')))) === JSON.stringify(['/account/saved', '/account/enquiries', '/account/activity', '/dashboard', '/dashboard/enquiries', '/post']) &&
+    await page.getByRole('region', { name: 'Your activity' }).isVisible() && await page.getByRole('region', { name: 'Selling' }).isVisible() && await page.getByRole('region', { name: 'Profile' }).isVisible() &&
+    await page.locator('main main').count() === 0 && await page.locator('h1').count() === 1)
+  check('an unknown sign-up date is not claimed: no "Member since"', await page.getByText(/Member since/).count() === 0)
   check('new buyer has editable profile and no invented activity', await page.getByRole('textbox', { name: 'Full name' }).isVisible() &&
     await page.getByText('Not available yet').count() === 2)
   await page.getByRole('textbox', { name: 'Full name' }).fill('Ananya Roy')
@@ -136,6 +141,7 @@ try {
   check('profile saved for verified user only', savedProfile?.id === USER.id && savedProfile?.contact_phone === '+919876543210' &&
     savedProfile?.email_updates === true)
   await page.reload()
+  check('the identity band takes the saved name and its initial', await page.locator('main header').getByText('Ananya Roy', { exact: true }).isVisible() && (await page.locator('main header [aria-hidden]').first().innerText()) === 'A')
   check('profile and preferences persist after reload', await page.getByRole('textbox', { name: 'Full name' }).inputValue() === 'Ananya Roy' &&
     await page.getByLabel('I am interested in').inputValue() === 'buy' &&
     await page.getByLabel('Preferred locality').inputValue() === 'new-town')
@@ -265,6 +271,18 @@ try {
     await page.goBack()
     await page.waitForURL('**/account/activity')
   }
+  // UI-19: the account and the hub word the same figures from the same reads (lib/account/counts).
+  const figure = (text) => text.match(/None yet|\d+ (or more )?(saved homes?|enquir(y|ies))/)?.[0] ?? null
+  const hubFigures = hubLinks.slice(0, 2).map((l) => figure(l.text))
+  await page.goto(BASE + '/account')
+  const accountFigures = await Promise.all(['/account/saved', '/account/enquiries'].map(async (href) => figure(await page.locator(`main section ul a[href="${href}"]`).innerText())))
+  // A figure whose read failed is left out on both (this simulator does not answer the enquiry read); agreeing on that is right too.
+  check('Account and Activity show the same saved and enquiry counts', JSON.stringify(accountFigures) === JSON.stringify(hubFigures) && hubFigures[0] !== null, JSON.stringify({ hubFigures, accountFigures }))
+  for (const width of [320, 360, 390, 430]) {
+    await page.setViewportSize({ width, height: 844 })
+    const fit = await page.evaluate(() => ({ over: document.documentElement.scrollWidth - innerWidth, rows: [...document.querySelectorAll('main section ul a')].map((a) => [Math.round(a.getBoundingClientRect().height), Math.round(a.getBoundingClientRect().width)]) }))
+    check(`account at ${width}: settings rows full width, 44px or more, no overflow`, fit.over <= 0 && fit.rows.every(([h, w]) => h >= 44 && w >= width - 40), JSON.stringify(fit))
+  }
   await page.setViewportSize({ width: 1280, height: 844 })
   // Back where the next checks expect to be.
   await page.goto(BASE + '/account')
@@ -277,7 +295,7 @@ try {
   }
   await expireAccessToken()
   await page.reload()
-  check('expired token refreshes session', refreshes >= 1 && await page.getByText(USER.email).isVisible())
+  check('expired token refreshes session', refreshes >= 1 && await page.locator('main header').getByText(USER.email).isVisible())
   await expireAccessToken()
   await page.goto(BASE + '/login')
   check('login entry refreshes and redirects an existing session', new URL(page.url()).pathname === '/account' && refreshes >= 2)
@@ -319,7 +337,7 @@ try {
   const googleCompleted = await googlePage.waitForURL('**/account', { timeout: 8000 }).then(() => true).catch(() => false)
   if (!googleCompleted) console.log(`  Google diagnostic: path=${new URL(googlePage.url()).pathname}, exchanges=${pkceExchanges}, verifierMatched=${pkceMatched}, authorizations=${googleAuthorizations}`)
   check('Google PKCE code exchanges for account session', pkceExchanges === 1 && googleAuthorizations === 2 &&
-    googleCompleted && callbackUrl === BASE + '/api/auth/google/callback' && Boolean(expectedChallenge) && await googlePage.getByText(USER.email).isVisible())
+    googleCompleted && callbackUrl === BASE + '/api/auth/google/callback' && Boolean(expectedChallenge) && await googlePage.locator('main header').getByText(USER.email).isVisible())
   check('Google verifier consumed and token held HTTP-only', (await googleContext.cookies()).some((cookie) => cookie.name === 'gb-access' && cookie.httpOnly) &&
     !(await googleContext.cookies()).some((cookie) => cookie.name === 'gb-google-verifier'))
   const replay = await googlePage.request.get(BASE + '/api/auth/google/callback?code=google-code', { maxRedirects: 0 })

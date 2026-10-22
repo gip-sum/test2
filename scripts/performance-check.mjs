@@ -157,6 +157,17 @@ try {
   check('the save survives reload', await b.getByRole('button', { name: 'Remove 2 BHK flat for sale in New Town from saved' }).getAttribute('aria-pressed') === 'true')
   await b.goto(BASE + '/account/saved')
   check('the saved page lists the real listing with a link to it', await b.getByRole('link', { name: '2 BHK flat for sale in New Town' }).getAttribute('href') === L1 && await b.getByText('1 saved property').isVisible())
+  // UI-19: the same results card as Search, its photo at card width from the
+  // listing's own photo route — never the shared optimizer, whose cache would
+  // outlive the listing.
+  const savedCard = b.locator('[data-flip-key] article.result-card'), savedImg = savedCard.locator('img').first()
+  await savedImg.evaluate((i) => i.complete || new Promise((r) => { i.onload = r; i.onerror = r }))
+  const photoSrc = new URL(await savedImg.evaluate((i) => i.currentSrc))
+  check('the saved listing is a results card whose photo comes sized from the listing photo route', await savedCard.count() === 1 &&
+    photoSrc.pathname.startsWith(`${L1.replace('/listing/', '/api/listings/')}/photos/`) && Number(photoSrc.searchParams.get('w')) > 0 && await savedCard.getByRole('button', { name: /^Remove .* from saved$/ }).isVisible(), photoSrc.href)
+  const sized = await b.request.get(photoSrc.href)
+  check('the sized photo is a JPEG, still checked per request and never cacheable', sized.status() === 200 && sized.headers()['content-type'] === 'image/jpeg' && sized.headers()['cache-control'] === 'private, no-store')
+  check('a width the route does not offer is refused', (await b.request.get(`${photoSrc.origin}${photoSrc.pathname}?w=333`)).status() === 404)
   await g.goto(BASE + L1); await g.getByRole('button', { name: 'Save 2 BHK flat for sale in New Town' }).click(); await g.waitForURL('**/login**')
   check('a signed-out visitor is sent to log in to save', new URL(g.url()).searchParams.get('next') === L1)
 
@@ -287,6 +298,7 @@ try {
   listings = listings.map((l) => (l.id === id('d', 1) ? { ...l, status: 'DRAFT', activated_at: null, expires_at: null } : l))
   await b.goto(BASE + '/account/saved')
   check('a saved listing that is no longer public stays, saying so', await b.getByRole('heading', { name: 'Listing no longer available' }).isVisible())
+  check('and its sized photo stops at once', (await b.request.get(photoSrc.href)).status() === 404)
   await b.getByRole('button', { name: 'Remove unavailable listing from saved' }).click(); await waitFor(() => savedListings.length === 0, 'unsave')
   check('it can still be removed', savedListings.length === 0)
   const before = viewCalls.length, viewsBefore = todayViews(1); await o.goto(BASE + L1)

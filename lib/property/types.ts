@@ -56,6 +56,8 @@ export type PropertyMedia = {
   isSample?: boolean
   /** Direct image endpoint with per-request access checks; bypass shared image optimization. */
   authenticated?: boolean
+  /** Such an endpoint that also resizes on `?w=` (the public listing photo route): loaded at the slot's width through it (UI-19, lib/listings/photo-widths). */
+  sizedByRoute?: boolean
 }
 
 /**

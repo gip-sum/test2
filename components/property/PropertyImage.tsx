@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { cn } from '@/lib/cn'
 import { markPendingImage, revealImage } from '@/lib/motion/image-fade'
+import { listingPhotoLoader } from '@/lib/listings/photo-widths'
 import { PhotoFallback } from './PhotoFallback'
 
 /**
@@ -35,6 +36,7 @@ export function PropertyImage({
   className,
   isSample,
   sampleTag = 'left',
+  sizedByRoute,
 }: {
   src: string | null | undefined
   alt: string
@@ -45,6 +47,8 @@ export function PropertyImage({
   isSample?: boolean
   /** Which bottom corner the "Sample" label takes — cards with a price chip over the photo need the other one. */
   sampleTag?: 'left' | 'right'
+  /** `src` is the public listing photo route, which resizes itself: srcset entries go to it, not to the shared optimizer (lib/listings/photo-widths). */
+  sizedByRoute?: boolean
 }) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null)
   return (
@@ -57,7 +61,7 @@ export function PropertyImage({
     >
       {src && failedSrc !== src ? (
         <>
-          <Image ref={markPendingImage} onLoad={revealImage} data-photo="" src={src} alt={alt} fill sizes={sizes} priority={priority} onError={() => setFailedSrc(src)} className="object-cover" />
+          <Image ref={markPendingImage} onLoad={revealImage} data-photo="" src={src} alt={alt} loader={sizedByRoute ? listingPhotoLoader : undefined} fill sizes={sizes} priority={priority} onError={() => setFailedSrc(src)} className="object-cover" />
           {isSample && <span className={cn('absolute bottom-2 rounded-sm bg-ink-900/85 px-1.5 py-0.5 text-caption font-semibold text-ink-inverse', sampleTag === 'right' ? 'right-2' : 'left-2')}>Sample</span>}
         </>
       ) : src ? (

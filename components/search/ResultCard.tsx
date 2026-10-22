@@ -71,6 +71,7 @@ export function ResultCard({ property, priority, heading = 'h3' }: { property: P
           src={cover?.url}
           alt={cover?.alt ?? title}
           isSample={cover?.isSample}
+          sizedByRoute={cover?.sizedByRoute}
           priority={priority}
           className="aspect-[16/10] md:aspect-[3/2]"
           sizes="(min-width: 1280px) 330px, (min-width: 768px) 45vw, 100vw"

@@ -34,8 +34,8 @@ export type PropertyContext = {
   intent: 'buy' | 'rent' | null
   /** The listing's dashboard status, for a real listing the seller owns. */
   status: DashboardCard['status'] | null
-  /** A public, resizable image: a live listing's cover or a demo photo. */
-  image: { url: string; isSample?: boolean } | null
+  /** A public image: a demo photo, or a live listing's cover from its photo route at thumbnail width. */
+  image: { url: string; isSample?: boolean; sizedByRoute?: boolean } | null
   /** Its public page, only while it has one. */
   href: string | null
   listingId: string | null
@@ -45,9 +45,9 @@ export type PropertyContext = {
  * The enquiry's property from what the seller already has: a demo
  * fixture's summary, or the seller's own dashboard card for a real listing
  * (its current title, place, price and status). A live listing's cover
- * goes through its public photo route, so the thumbnail is resized by the
- * image optimizer rather than shipping the full photo; a listing that is
- * not public shows no photo. Falls back to the title the enquiry recorded.
+ * comes from its public photo route at thumbnail width (the route resizes
+ * it after its own check; lib/listings/photo-widths) rather than shipping
+ * the full photo; a listing that is not public shows no photo. Falls back to the title the enquiry recorded.
  */
 export function propertyContext(lead: Lead, cards: readonly DashboardCard[]): PropertyContext {
   if (lead.listing_public_id) {
@@ -57,7 +57,7 @@ export function propertyContext(lead: Lead, cards: readonly DashboardCard[]): Pr
   const card = lead.listing_id ? cards.find((c) => c.listing?.id === lead.listing_id) : undefined
   if (card && lead.listing_id) {
     const live = card.status === 'ACTIVE'
-    return { title: card.title, place: card.place, price: card.price, intent: card.intent, status: card.status, image: live && card.coverId ? { url: `/api/listings/${lead.listing_id}/photos/${card.coverId}` } : null, href: live ? `/listing/${lead.listing_id}` : null, listingId: lead.listing_id }
+    return { title: card.title, place: card.place, price: card.price, intent: card.intent, status: card.status, image: live && card.coverId ? { url: `/api/listings/${lead.listing_id}/photos/${card.coverId}`, sizedByRoute: true } : null, href: live ? `/listing/${lead.listing_id}` : null, listingId: lead.listing_id }
   }
   return { title: lead.listing_title, place: null, price: null, intent: null, status: null, image: null, href: null, listingId: lead.listing_id }
 }
@@ -141,7 +141,7 @@ export function EnquiryDetail({ lead, property, filtered }: { lead: Lead; proper
         <div className="mt-2 flex min-w-0 items-start gap-3 rounded-md border border-border-subtle p-3">
           <div className="relative w-20 shrink-0 overflow-hidden rounded-md sm:w-24">
             {property.image
-              ? <PropertyImage src={property.image.url} alt="" isSample={property.image.isSample} sizes="96px" className="aspect-[4/3]" />
+              ? <PropertyImage src={property.image.url} alt="" isSample={property.image.isSample} sizedByRoute={property.image.sizedByRoute} sizes="96px" className="aspect-[4/3]" />
               : <span className="flex aspect-[4/3] items-center justify-center bg-surface-200 text-ink-500"><BuildingIcon className="size-6" /></span>}
           </div>
           <div className="min-w-0 flex-1">

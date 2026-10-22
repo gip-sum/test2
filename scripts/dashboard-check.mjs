@@ -120,6 +120,97 @@ const filterCounts = async (page) => Object.fromEntries(await page.getByRole('na
 const openMenu = async (scope) => { const menu = scope.locator('details[data-card-menu]'); if (!(await menu.evaluate((d) => d.open))) await menu.locator('summary').click() }
 const cards = (page) => page.locator('section[aria-labelledby="properties-heading"] article')
 const card = (page, title) => cards(page).filter({ has: page.getByRole('heading', { name: title, exact: true }) })
+// The enquiries inbox (UI-19): a list of whole-row links, and the open enquiry.
+const inboxRows = (page) => page.getByRole('list', { name: 'Enquiries' }).getByRole('link')
+const digits = async (locator) => (await locator.innerText()).match(/\d+/)?.[0] ?? null
+
+/**
+ * The inbox as approved in UI-19, with three enquiries on the New Town
+ * flat (Asha Roy newest, with a message; Buyer 1 and 2 without), all new.
+ * Server-rendered selection in the URL: the list beside the open enquiry
+ * from 1024px, the list alone on a phone with the enquiry on its own page.
+ */
+async function inboxChecks(page) {
+  const all = BASE + '/dashboard/enquiries'
+  await page.setViewportSize({ width: 1280, height: 900 }); await page.goto(all)
+  check('inbox: the newest enquiry is open beside the list, marked where it is open but not claimed as chosen', await inboxRows(page).count() === 3 &&
+    await page.locator('#enquiry-heading').innerText() === 'Asha Roy' && await page.locator('.inbox-row[data-shown]').count() === 1 && await page.locator('.inbox-row[aria-current]').count() === 0)
+  const states = await inboxRows(page).evaluateAll((els) => els.map((e) => e.innerText.split('\n')[0]))
+  check('inbox: every row states New, Contacted or Closed in words; a new one is set in bold', states.every((t) => /^(New|Contacted|Closed)/.test(t)) &&
+    await inboxRows(page).first().evaluate((a) => [...a.querySelectorAll('span')].some((s) => s.textContent === 'Asha Roy' && Number(getComputedStyle(s).fontWeight) >= 600)), JSON.stringify(states))
+  check('inbox: a row without a message says so rather than showing nothing', await inboxRows(page).nth(1).getByText('No message — the buyer left their number.').isVisible())
+  // Property context: the live listing, its resized cover, and its page.
+  const about = page.getByRole('region', { name: 'About' })
+  const img = about.locator('img')
+  await img.evaluate((i) => i.complete || new Promise((r) => { i.onload = r; i.onerror = r }))
+  const src = new URL(await img.evaluate((i) => i.currentSrc))
+  check('inbox: property context names the listing, its status and price, and links to its page', (await about.innerText()).includes('2 BHK flat for sale in New Town') && (await about.innerText()).includes('Active') &&
+    await about.getByRole('link', { name: 'View listing' }).getAttribute('href') === `/listing/${id('d', 3)}`)
+  // From the listing's own photo route at thumbnail width: it resizes after its
+  // per-request check, so the copy never outlives the listing in a shared cache.
+  check('inbox: the cover comes from the public photo route at thumbnail width, not the shared optimizer', src.pathname.startsWith(`/api/listings/${id('d', 3)}/photos/`) && Number(src.searchParams.get('w')) <= 256, src.href)
+  // One unread figure: the inbox bar, the sidebar and the dashboard header.
+  const bar = await digits(page.getByText(/unread notifications?$/)), side = await digits(page.locator('nav a[href="/dashboard/enquiries"]').first())
+  await page.goto(BASE + '/dashboard')
+  const header = (await page.locator('[aria-label$="unread notifications"]').first().getAttribute('aria-label')).match(/\d+/)?.[0], dashSide = await digits(page.locator('nav a[href="/dashboard/enquiries"]').first())
+  check('inbox: one unread figure in the inbox, its sidebar, and the dashboard header and sidebar', bar === '3' && side === bar && header === bar && dashSide === bar, JSON.stringify({ bar, side, header, dashSide }))
+
+  // Choosing an enquiry: in the URL, marked current, its form named for it.
+  await page.goto(all)
+  await inboxRows(page).nth(1).click(); await page.waitForURL(`**/dashboard/enquiries?enquiry=${id('7', 1)}`)
+  check('inbox: a chosen enquiry is in the URL, aria-current in the list and open', await page.locator('.inbox-row[aria-current="true"]').getAttribute('href') === `/dashboard/enquiries?enquiry=${id('7', 1)}` &&
+    await page.locator('#enquiry-heading').innerText() === 'Buyer 1' && await page.getByText('The buyer sent no message, only their number.').isVisible())
+  const status = page.getByRole('group', { name: 'Lead status' })
+  check('inbox: lead status is three choices with the current one chosen, and a submit named for the buyer', await status.getByRole('radio').count() === 3 &&
+    await status.getByRole('radio', { name: /^New/ }).isChecked() && await page.getByRole('button', { name: 'Update status for Buyer 1', exact: true }).getAttribute('type') === 'submit' &&
+    await page.locator('form:has([name="enquiryId"]) [name="enquiryId"]').inputValue() === id('7', 1))
+  await page.reload()
+  check('inbox: refresh lands on the same enquiry', await page.locator('#enquiry-heading').innerText() === 'Buyer 1')
+  // On back the URL changes before the restored page renders: wait for the page, not the address.
+  await page.goBack(); await page.waitForURL((u) => !u.search.includes('enquiry='))
+  await page.waitForFunction(() => document.querySelector('#enquiry-heading')?.textContent === 'Asha Roy', null, { timeout: 5000 }).catch(() => {})
+  check('inbox: back returns to the newest', await page.locator('#enquiry-heading').innerText() === 'Asha Roy')
+  // Keyboard: rows are tab stops, each with a visible ring.
+  await inboxRows(page).first().focus(); await page.keyboard.press('Tab')
+  check('inbox: Tab moves row to row, with a visible focus ring', await page.evaluate(() => document.activeElement?.classList.contains('inbox-row') && getComputedStyle(document.activeElement).outlineStyle !== 'none' && document.activeElement.textContent.includes('Buyer 1')))
+  // Narrowed to a listing: the filter survives choosing, and the way out is offered.
+  await page.goto(BASE + `/dashboard/enquiries?listing=${id('d', 3)}&enquiry=${id('7', 2)}`)
+  check('inbox: narrowed to a listing, choosing keeps the filter; All enquiries leads out; the per-listing link is not repeated', await page.locator('#enquiry-heading').innerText() === 'Buyer 2' &&
+    (await inboxRows(page).evaluateAll((els, listing) => els.every((a) => a.getAttribute('href').includes(`listing=${listing}`)), id('d', 3))) &&
+    await page.getByRole('region', { name: /This listing/ }).getByRole('link', { name: 'All enquiries' }).getAttribute('href') === '/dashboard/enquiries' &&
+    await page.getByRole('link', { name: 'All enquiries for this listing' }).count() === 0)
+
+  // A phone: the list is the page; an enquiry opens alone, with a way back.
+  await page.setViewportSize({ width: 390, height: 844 }); await page.goto(all)
+  const tints = await inboxRows(page).evaluateAll((els) => els.map((a) => getComputedStyle(a).backgroundColor))
+  check('inbox on a phone: the list alone, nothing open or marked', await inboxRows(page).first().isVisible() && !(await page.locator('#enquiry-heading').isVisible()) &&
+    await page.locator('.inbox-row[aria-current]').count() === 0 && new Set(tints).size === 1, JSON.stringify(tints))
+  await inboxRows(page).nth(2).click(); await page.waitForURL(/enquiry=/)
+  const back = page.getByRole('region', { name: 'Buyer 2' }).getByRole('link', { name: 'All enquiries', exact: true })
+  check('inbox on a phone: the enquiry opens on its own with a 44px All enquiries link', await page.locator('#enquiry-heading').isVisible() && !(await inboxRows(page).first().isVisible()) && (await back.boundingBox()).height >= 44)
+  await back.click(); await page.waitForURL((u) => !u.search.includes('enquiry='))
+  await inboxRows(page).first().waitFor({ timeout: 5000 }).catch(() => {})
+  check('inbox on a phone: All enquiries returns to the list', await inboxRows(page).first().isVisible())
+  for (const [width, url] of [320, 360, 390, 430, 768, 1024, 1280, 1440].flatMap((w) => [[w, all], [w, `${all}?enquiry=${id('7', 1)}`]])) {
+    await page.setViewportSize({ width, height: 900 }); await page.goto(url)
+    const r = await page.evaluate(() => ({ over: document.documentElement.scrollWidth - innerWidth, h1: document.querySelectorAll('h1').length,
+      small: [...document.querySelectorAll('main a, main button, main label:has(input)')].filter((e) => { const b = e.getBoundingClientRect(); return b.height > 0 && b.height < 44 }).map((e) => e.textContent.trim().slice(0, 30)) }))
+    check(`inbox at ${width}${url.includes('enquiry') ? ', enquiry open' : ''}: no overflow, one h1, controls 44px`, r.over <= 0 && r.h1 === 1 && r.small.length === 0, JSON.stringify(r))
+  }
+  await page.setViewportSize({ width: 1280, height: 900 })
+
+  // Without JavaScript: choose an enquiry and reach its form.
+  const plain = await browser.newContext({ viewport: { width: 390, height: 844 }, javaScriptEnabled: false })
+  await plain.addCookies([{ name: 'gb-access', value: 'a'.repeat(48), url: BASE }])
+  const np = await plain.newPage(); await np.goto(all)
+  await inboxRows(np).first().click(); await np.waitForURL(/enquiry=/)
+  check('inbox without JavaScript: an enquiry opens with its number, message and status form', await np.locator('#enquiry-heading').innerText() === 'Asha Roy' && await np.getByText('+919830012345').isVisible() && await np.getByRole('radio').count() === 3)
+  await plain.close()
+  // Another seller: none of these, chosen by URL or not.
+  const other = await context('b'), op = await other.newPage(); await op.goto(`${all}?enquiry=${id('7', 1)}`)
+  check('inbox: another account sees none of these enquiries, even by URL', await op.getByRole('heading', { name: 'No enquiries received' }).isVisible() && await op.getByText('Buyer 1').count() === 0)
+  await other.close()
+}
 
 try {
   const guest = await context(), g = await guest.newPage()
@@ -174,7 +265,7 @@ try {
   // Enquiry count → filtered inbox.
   await card(page, '2 BHK flat for sale in New Town').getByRole('link', { name: /2 enquiries/ }).click()
   await page.waitForURL(`**/dashboard/enquiries?listing=${id('d', 3)}`)
-  check('enquiry count opens the inbox narrowed to that listing', await page.getByRole('heading', { level: 1, name: 'Enquiries for 2 BHK flat for sale in New Town' }).isVisible() && await page.locator('main article').count() === 2)
+  check('enquiry count opens the inbox narrowed to that listing', await page.getByRole('heading', { level: 1, name: 'Enquiries for 2 BHK flat for sale in New Town' }).isVisible() && await inboxRows(page).count() === 2)
 
   // Copy link.
   await c.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: new URL(BASE).origin })
@@ -206,8 +297,13 @@ try {
   lifecycleDelay = 0
   await page.getByText('Properties you submit wait here while a reviewer checks them.').waitFor()
   await page.waitForFunction(() => document.activeElement?.id === 'properties-heading', null, { timeout: 5000 }).catch(() => {})
-  check('after withdrawing, focus is on the list heading (the card left this view) and the outcome is announced', await page.evaluate(() => document.activeElement?.id) === 'properties-heading' &&
-    await page.locator('#a11y-announcer').textContent() === '3 BHK flat for sale in Salt Lake withdrawn. It is no longer public.')
+  // announce() clears the live region and writes the sentence 50ms after focus
+  // moves (so a repeated sentence is heard again); reading in that gap saw an
+  // empty region on a cold server. Wait for the sentence, not the first frame.
+  await page.waitForFunction(() => document.getElementById('a11y-announcer')?.textContent, null, { timeout: 2000 }).catch(() => {})
+  const landed = await page.evaluate(() => ({ focus: document.activeElement?.id || document.activeElement?.tagName, said: document.getElementById('a11y-announcer')?.textContent }))
+  check('after withdrawing, focus is on the list heading (the card left this view) and the outcome is announced', landed.focus === 'properties-heading' &&
+    landed.said === '3 BHK flat for sale in Salt Lake withdrawn. It is no longer public.', JSON.stringify(landed))
   check('an emptied filter says which: the shared empty state, under the list heading', await page.getByRole('heading', { level: 3, name: 'Nothing under review' }).isVisible() &&
     await page.getByRole('link', { name: 'Show all properties' }).isVisible())
   check('withdraw sends the card version through the lifecycle endpoint', serviceCalls.length === 1 && serviceCalls[0].p_action === 'withdraw' && serviceCalls[0].p_version === 2)
@@ -225,10 +321,13 @@ try {
   check('guest enquiry on an active listing is recorded for its owner', stored.buyer_name === 'Asha Roy' && stored.buyer_phone === '+919830012345' && stored.seller_id === owner && stored.listing_id === id('d', 3))
   check('confirmation says the owner has it', await bp.getByText(/can see it in their inbox/).isVisible())
   await page.goto(BASE + `/dashboard/enquiries?listing=${id('d', 3)}`)
-  check('the new enquiry appears in the seller inbox', await page.getByText('Asha Roy', { exact: true }).isVisible() && await page.getByText('Is the flat east facing?').isVisible())
+  // The newest enquiry opens beside the list from 1024px (UI-19).
+  check('the new enquiry appears in the seller inbox, open with its full message', await inboxRows(page).first().getByText('Asha Roy', { exact: true }).isVisible() &&
+    await page.locator('#enquiry-heading').innerText() === 'Asha Roy' && await page.locator('main blockquote').innerText() === 'Is the flat east facing?')
   check('each lead\'s status button is a submit named for its buyer (UI-09)', await page.getByRole('button', { name: 'Update status for Asha Roy', exact: true }).getAttribute('type') === 'submit')
   await page.goto(BASE + '/dashboard?status=active')
   check('dashboard count includes it', await card(page, '2 BHK flat for sale in New Town').getByRole('link', { name: /3 enquiries, 3 new/ }).isVisible())
+  await inboxChecks(page)
 
   await bp.setViewportSize({ width: 390, height: 844 }); await bp.reload()
   await bp.getByRole('button', { name: 'Contact owner' }).click()

@@ -79,8 +79,9 @@ export function contactOfListing(m: Published, listingId: string, postedAt?: str
 /**
  * A published listing as a results card (UI-19: a saved real listing on
  * /account/saved), from its public submission and photos. Every field is
- * one the seller gave; photos go through the public photo route, which the
- * image optimizer can resize for the card.
+ * one the seller gave; photos come from the public photo route at the
+ * card's width (it resizes them itself; never the shared optimizer, whose
+ * cache would outlive the listing — lib/listings/photo-widths).
  */
 export function cardOfListing(listingId: string, s: PublicSubmission, photos: readonly { id: string }[], activatedAt: string | null): ResultCardData {
   return {
@@ -89,7 +90,7 @@ export function cardOfListing(listingId: string, s: PublicSubmission, photos: re
     carpetArea: s.carpet_area, areaUnit: s.area_unit, areaBasis: 'carpet', propertyType: s.property_type,
     furnishing: s.furnishing, constructionStatus: s.construction_status, floor: s.floor ?? undefined, totalFloors: s.total_floors,
     sellerType: s.seller_type, sellerName: s.seller_name, postedAt: activatedAt ?? s.created_at,
-    photos: photos.map((p, i) => ({ id: p.id, url: `/api/listings/${listingId}/photos/${p.id}`, alt: `Property photo ${i + 1} — ${s.title}` })),
+    photos: photos.map((p, i) => ({ id: p.id, url: `/api/listings/${listingId}/photos/${p.id}`, alt: `Property photo ${i + 1} — ${s.title}`, authenticated: true, sizedByRoute: true })),
     href: `/listing/${listingId}`, saveId: listingId,
   }
 }

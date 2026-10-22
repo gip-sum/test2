@@ -669,7 +669,7 @@ try {
     await check('while the code is verified, the button is busy and unavailable and keeps focus', await verify.getAttribute('aria-busy') === 'true' && await verify.getAttribute('aria-disabled') === 'true' &&
       await verify.evaluate((el) => el === document.activeElement))
     await page.waitForURL('**/account')
-    await check('the right code signs in and returns to the requested page', new URL(page.url()).pathname === '/account' && await page.getByText(USER.email).isVisible())
+    await check('the right code signs in and returns to the requested page', new URL(page.url()).pathname === '/account' && await page.locator('main header').getByText(USER.email).isVisible())
     await page.close()
     provider.verifyDelay = 0
     provider.otp = 'ok'

@@ -110,16 +110,21 @@ try {
   await sellerContext.addCookies([{ name: 'gb-access', value: 'b'.repeat(48), url: BASE, httpOnly: true }])
   const inbox = await sellerContext.newPage()
   await inbox.goto(BASE + '/dashboard/enquiries')
-  // Scoped to the lead card: the first "Follow-up" on the page is the
-  // column header, aria-hidden and not displayed below 1024px, so
-  // `.first()` measured an invisible element at 390px and this always failed.
-  check('seller inbox shows assigned lead and notification', await inbox.getByText('1 unread notification').isVisible() && await inbox.locator('article').getByText(/^Follow-up ·/).isVisible())
+  // UI-19: on a phone the inbox is its list of enquiries; the assigned
+  // lead is a follow-up from the same number, marked on its row in words.
+  const leadRow = inbox.getByRole('list', { name: 'Enquiries' }).getByRole('link').filter({ hasText: 'Follow-up' })
+  check('seller inbox shows assigned lead and notification', await inbox.getByText('1 unread notification').isVisible() && await leadRow.isVisible() && (await leadRow.innerText()).startsWith('New'))
   await inbox.getByRole('button', { name: 'Mark notifications read' }).click()
-  await inbox.getByText('0 unread notifications').waitFor()
+  // The unread bar is shown only while something is unread.
+  await inbox.getByText(/unread notification/).waitFor({ state: 'detached' })
   check('seller can acknowledge notification', notifications[0].read_at !== null)
-  await inbox.getByRole('combobox', { name: 'Lead status' }).selectOption('contacted')
-  await inbox.getByRole('button', { name: 'Update status' }).click()
-  await inbox.getByRole('combobox', { name: 'Lead status' }).waitFor()
+  // The lead's status: open the enquiry on its own page, choose, update (UI-19 radios).
+  await leadRow.click()
+  await inbox.waitForURL(/[?&]enquiry=/)
+  await inbox.getByRole('radio', { name: /^Contacted/ }).check()
+  await inbox.getByRole('button', { name: /^Update status/ }).click()
+  await inbox.locator('article[aria-labelledby="enquiry-heading"] header').getByText('Contacted', { exact: true }).waitFor()
+  check('the open enquiry shows its new status, chosen again in the form', await inbox.getByRole('radio', { name: /^Contacted/ }).isChecked())
   await sent.reload()
   check('buyer sees updated status across sessions', await sent.getByText(/Status: contacted/).isVisible())
   check('seller status change persists with history', leads[1].status === 'contacted' && events.some((event) => event.enquiry_id === leads[1].id && event.status === 'contacted'))
