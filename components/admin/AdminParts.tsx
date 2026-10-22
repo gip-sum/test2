@@ -66,15 +66,15 @@ export function ListingRows({ rows, now, queue = false, start = 0, label }: { ro
         const overdue = queue && now - Date.parse(r.submitted_at) > REVIEW_OVERDUE_MS
         return <li key={r.id} className={cn('admin-row', queue ? 'is-queue' : 'is-listings', overdue && 'is-overdue')}>
           <div className="admin-row-lead">
-            {queue ? <><span className="admin-row-place tabular" aria-hidden>{start + i + 1}</span><Waiting since={r.submitted_at} now={now} compact /></> : <StatusBadge status={r.status} />}
+            {queue ? <><span className="admin-row-place tabular" aria-hidden>{start + i + 1}</span><span className="sr-only">Waiting </span><Waiting since={r.submitted_at} now={now} compact /></> : <StatusBadge status={r.status} />}
           </div>
           <div className="min-w-0">
             <Link href={`/admin/moderation/${r.id}`} className="admin-row-link">{r.title}</Link>
             <p className="truncate text-caption text-ink-700">{r.locality_name}, {r.city_name} · {r.intent === 'buy' ? 'For sale' : 'For rent'}</p>
           </div>
           <div className="admin-row-price"><span className="sr-only">Price: </span><PriceDisplay amount={r.price} intent={r.intent} className="[&_p]:text-body-sm [&_p]:font-semibold lg:items-end" /></div>
-          <div className="min-w-0 text-caption text-ink-700"><span className="sr-only">Seller: </span><span className="block truncate text-body-sm text-ink-900">{r.seller_name}</span>{SELLER_LABEL[r.seller_type]}</div>
-          <div className="text-caption text-ink-700">
+          <div className="admin-row-seller min-w-0 text-caption text-ink-700"><span className="sr-only">Seller: </span><span className="admin-row-seller-name text-body-sm text-ink-900">{r.seller_name}</span><span aria-hidden className="admin-row-sep"> · </span>{SELLER_LABEL[r.seller_type]}</div>
+          <div className="admin-row-date text-caption text-ink-700">
             {queue ? <><span className="sr-only">Submitted </span>{moment(r.submitted_at)}</>
               : <>Submitted {day(r.submitted_at)}{r.expires_at && (r.status === 'ACTIVE' || r.status === 'EXPIRED') ? <span className="block">{r.status === 'ACTIVE' ? 'Expires' : 'Expired'} {day(r.expires_at)}</span> : null}</>}
           </div>

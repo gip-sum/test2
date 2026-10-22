@@ -66,6 +66,13 @@ try{
  await page.getByRole('link',{name:'SAMPLE submitted home',exact:true}).filter({visible:true}).click();await page.getByRole('heading',{name:'Review submitted listing',exact:true}).waitFor()
  check('review shows the saved facts and description',await page.getByText(draft.description,{exact:true}).isVisible())
  const image=page.locator('section[aria-label="Property photos"] img').first();await image.evaluate(e=>e.decode());check('private immutable JPEG loads',await image.evaluate(e=>e.naturalWidth===640))
+ // UI-20: the review workspace — jump links that work as plain anchors, the facts worth checking said in words, and each decision's consequence beside it.
+ const jumps=await page.getByRole('navigation',{name:'Sections of this submission'}).getByRole('link').evaluateAll(l=>l.map(a=>a.getAttribute('href')))
+ check('every section jump link has its target',JSON.stringify(jumps)===JSON.stringify(['#photos','#terms','#facts','#area','#location','#description','#history'])&&(await Promise.all(jumps.map(h=>page.locator(h).count()))).every(n=>n===1))
+ const facts=(await page.getByRole('region',{name:'Before you decide'}).innerText()).replace(/\s+/g,' ')
+ check('before you decide states facts, not a score',/\d+ photos?/.test(facts)&&/Description supplied|No description/.test(facts)&&/earlier decision/.test(facts)&&!/score|risk|recommend/i.test(facts),facts)
+ const described=await page.getByRole('group',{name:'Choose a decision'}).getByRole('radio').evaluateAll(r=>r.map(e=>[e.value,document.getElementById(e.getAttribute('aria-describedby'))?.textContent]))
+ check('each of the three decisions is described by its consequence',JSON.stringify(described.map(d=>d[0]))===JSON.stringify(['APPROVE','REQUEST_CORRECTION','REJECT'])&&described[0][1].startsWith('Publishes')&&described.slice(1).every(d=>d[1].startsWith('Not published')))
  // UI-11: the decision button is never disabled as a hint; a press checks the input, sends nothing, marks the field and focuses it.
  const sentBefore=requests.length,confirmBox=page.getByRole('checkbox')
  await page.getByRole('button',{name:'Approve listing',exact:true}).click()
@@ -75,6 +82,7 @@ try{
  await page.getByLabel('Public validity in days').fill('90')
  check('editing a field asks for a fresh confirmation and clears that field\'s error',!await confirmBox.isChecked()&&await page.locator('#review-days-error').count()===0)
  await page.getByRole('radio',{name:'Reject',exact:true}).check();await confirmBox.check();await page.getByRole('button',{name:'Reject listing',exact:true}).click()
+ check('Reject is the consequential act: a danger button, its consequence said beside it',/bg-danger-600/.test(await page.getByRole('button',{name:'Reject listing',exact:true}).getAttribute('class'))&&(await page.locator('.admin-decision-foot').innerText()).includes('stays private'))
  check('a rejection without a reason is marked on the reason and focuses it',requests.length===sentBefore&&await page.getByLabel('Reason for the seller (required)').evaluate(e=>e===document.activeElement&&e.getAttribute('aria-invalid')==='true'&&e.getAttribute('aria-describedby').split(' ').includes('review-reason-error')))
  check('decision fields use the shared 16px field frame',await page.getByLabel('Reason for the seller (required)').evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=16&&e.getBoundingClientRect().height>=44))
  for(const width of [320,360,375,390,412,430,768,1280]){await page.setViewportSize({width,height:900});check('review does not overflow '+width,await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));check('decision labels have 44px targets '+width,await page.locator('form label').evaluateAll(labels=>labels.filter(e=>e.querySelector('input[type="radio"],input[type="checkbox"]')).every(e=>e.getBoundingClientRect().height>=44)))}
@@ -104,7 +112,7 @@ try{
  down=true;await page.goto(url);check('failed review is an error, not an empty property',await page.getByRole('heading',{name:'Review unavailable',exact:true}).isVisible());down=false
  revoked=true;check('revocation blocks photo immediately',(await staff.request.get(privatePhoto)).status()===404);revoked=false
  check('foreign origin cannot decide',(await staff.request.post(BASE+'/api/admin/moderation',{headers:{Origin:'https://foreign.test'},data:input})).status()===403)
- await page.goto(BASE+'/admin/moderation');check('empty review queue is honest',await page.getByText('Nothing is waiting for review.').isVisible()&&await page.getByRole('heading',{level:3,name:'The queue is empty',exact:true}).isVisible())
+ await page.goto(BASE+'/admin/moderation');check('empty review queue is honest',await page.getByRole('heading',{name:'No listings awaiting review',exact:true}).isVisible()&&await page.getByText(/stays private until someone decides/).isVisible()&&await page.locator('main ol.admin-rows').count()===0)
  // UI-11: no admin code or admin data reaches public or seller pages.
  reset();const scriptsOn=async(pg,path)=>{await pg.goto(BASE+path);return pg.locator('script[src]').evaluateAll(list=>list.map(e=>e.src))}
  const adminChunks=[];for(const src of await scriptsOn(page,`/admin/moderation/${listingId}`))if((await(await staff.request.get(src)).text()).includes('/api/admin/moderation'))adminChunks.push(src)
@@ -112,8 +120,8 @@ try{
  const guestPeek=await guest.newPage()
  for(const [pg,path] of [[guestPeek,'/'],[guestPeek,'/buy/kolkata'],[guestPeek,'/login'],[guestPeek,'/this-page-does-not-exist'],[ownerPage,'/dashboard'],[ownerPage,'/dashboard/performance']]){const sources=await scriptsOn(pg,path);check('no admin code downloads on '+path,sources.length>0&&!sources.some(src=>adminChunks.includes(src)))}
  const sellerHtml=await(await seller.request.get(BASE+'/dashboard')).text()
- check('the seller dashboard carries no staff navigation, staff ids or decision history',!/Admin sections|Decision history|Review decision/.test(sellerHtml)&&!sellerHtml.includes(mod))
- check('a seller asking for the review page gets the ordinary 404',(await ownerPage.goto(url)).status()===404&&await ownerPage.getByText('Review decision').count()===0)
+ check('the seller dashboard carries no staff navigation, staff ids or decision history',!/Admin sections|Decision history|Your decision|Choose a decision/.test(sellerHtml)&&!sellerHtml.includes(mod))
+ check('a seller asking for the review page gets the ordinary 404',(await ownerPage.goto(url)).status()===404&&await ownerPage.getByText('Your decision').count()===0)
  await guestPeek.close()
  console.log(`Phase 22 moderation browser checks: ${count} passed`)
 }finally{await browser.close();await new Promise(r=>mock.close(r))}

@@ -41,18 +41,21 @@ export default async function AdminOverviewPage() {
   const allClear = waiting === 0 && state === 'ok'
 
   return <AdminShell current="overview" title="Overview" role={role} description="What needs you, what is waiting for review, and where every listing stands. Every figure is read now.">
-    {!overview ? <Unreadable what="The overview" /> : <div className="admin-overview">
+    {/* An unreadable overview loses its figures, never the attention panel:
+        the system checks and the way to the queue have their own reads. */}
+    {!overview && <div className="mb-4"><Unreadable what="The overview" /></div>}
+    <div className="admin-overview">
       <div className="admin-overview-main">
         <AdminPanel id="attention-heading" title="Needs attention" flush>
           <ul className="divide-y divide-border-subtle">
             <li className="admin-attention">
               <span aria-hidden className="admin-attention-mark"><LayersIcon className="size-5" /></span>
               <div className="min-w-0 flex-1 basis-64">
-                <p className="text-body font-semibold text-ink-900">{waiting ? <><span className="tabular">{plural(waiting, 'listing', 'listings')}</span> waiting for review</> : 'Nothing is waiting for review'}</p>
-                {overview.queue.oldest_since && waiting ? <p className="mt-1 flex flex-wrap items-center gap-x-2 text-body-sm text-ink-700">Oldest has waited <Waiting since={overview.queue.oldest_since} now={now} /></p>
+                <p className="text-body font-semibold text-ink-900">{waiting === null ? 'The review queue count could not be read' : waiting ? <><span className="tabular">{plural(waiting, 'listing', 'listings')}</span> waiting for review</> : 'Nothing is waiting for review'}</p>
+                {overview?.queue.oldest_since && waiting ? <p className="mt-1 flex flex-wrap items-center gap-x-2 text-body-sm text-ink-700">Oldest has waited <Waiting since={overview.queue.oldest_since} now={now} /></p>
                   : <p className="mt-1 text-body-sm text-ink-700">New submissions appear here, oldest first.</p>}
               </div>
-              <Link href="/admin/moderation" className={buttonClassName({ variant: waiting ? 'primary' : 'secondary', className: 'shrink-0 max-sm:w-full' })}>Open review queue</Link>
+              <Link href="/admin/moderation" className={buttonClassName({ variant: waiting !== 0 ? 'primary' : 'secondary', className: 'shrink-0 max-sm:w-full' })}>Open review queue</Link>
             </li>
             <li className="admin-attention">
               <span aria-hidden className="admin-attention-mark"><SlidersIcon className="size-5" /></span>
@@ -74,7 +77,7 @@ export default async function AdminOverviewPage() {
               : <ListingRows rows={next.rows.slice(0, 3)} now={now} queue label="Next submissions to review, oldest first" />}
         </AdminPanel>
 
-        <AdminPanel id="pipeline-heading" title="Where listings stand" action={<PanelLink href="/admin/listings">All listings</PanelLink>}>
+        {overview && <AdminPanel id="pipeline-heading" title="Where listings stand" action={<PanelLink href="/admin/listings">All listings</PanelLink>}>
           <div className="admin-pipeline">
             {PIPELINE.map((group) => <section key={group.title} aria-label={group.title} className="min-w-0">
               <h3 className="text-caption font-semibold uppercase tracking-wide text-ink-500">{group.title}</h3>
@@ -85,10 +88,10 @@ export default async function AdminOverviewPage() {
             </section>)}
           </div>
           <p className="mt-4 border-t border-border-subtle pt-3 text-caption text-ink-700">{plural(overview.drafts_never_submitted, 'draft has', 'drafts have')} never been submitted; drafts stay private to their seller and are not listed here.</p>
-        </AdminPanel>
+        </AdminPanel>}
       </div>
 
-      <div className="admin-overview-side">
+      {overview && <div className="admin-overview-side">
         <dl className="admin-figures">
           <Figure label="Published listings" value={overview.listings.ACTIVE ?? 0} note="Active, in front of buyers" />
           <Figure label="Accounts" value={overview.users.total} note={`${overview.users.new_7_days} new in 7 days`} />
@@ -112,7 +115,7 @@ export default async function AdminOverviewPage() {
           </ul>
           <p className="mt-3 text-caption text-ink-500">Counts only. Buyer details stay with the seller who received them; enquiries reaching no seller are on demo listings without one.</p>
         </AdminPanel>
-      </div>
-    </div>}
+      </div>}
+    </div>
   </AdminShell>
 }

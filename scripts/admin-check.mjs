@@ -85,13 +85,23 @@ try {
   const page = await (await context('b')).newPage(), errors = []
   page.on('pageerror', (e) => errors.push(e.message))
   await page.goto(BASE + '/admin')
-  await page.getByRole('heading', { level: 1, name: 'Admin overview' }).waitFor()
-  check('staff see the console and their role', await page.getByText('Staff only · signed in as admin').isVisible() && await page.getByRole('navigation', { name: 'Admin sections' }).getByRole('link', { name: 'Overview' }).getAttribute('aria-current') === 'page')
+  await page.getByRole('heading', { level: 1, name: 'Overview' }).waitFor()
+  // UI-20: the role is a pill in the top bar ("Admin", read as staff only); the console names the five real destinations.
+  check('staff see the console and their role', (await page.locator('.workspace-role-pill').textContent()) === 'Admin, staff only' && await page.getByRole('navigation', { name: 'Admin sections' }).getByRole('link', { name: 'Overview' }).getAttribute('aria-current') === 'page' &&
+    JSON.stringify(await page.getByRole('navigation', { name: 'Admin sections' }).getByRole('link').allInnerTexts()) === JSON.stringify(['Overview', 'Review queue', 'Listings', 'Accounts', 'System']))
   const text = (await page.locator('main').innerText()).replace(/\s+/g, ' ')
-  check('the queue is described in words with its oldest wait', text.includes('2 listings are waiting for review.') && text.includes('Oldest wait: 3 days 2 hours — over 2 days.'), text)
-  check('lead figures are counts only', text.includes('5 enquiries in the last 7 days; 12 in 30 days.') && text.includes('3 enquiries in 30 days reached no seller') && !/\+91/.test(text))
-  check('user figures are counts only', text.includes('42 accounts in total; 6 new in the last 7 days.') && !text.includes('private@example.com'))
-  check('the system summary reports the worst state, not OK', text.includes('need attention (worst: problem)'))
+  const attention = (await page.getByRole('region', { name: 'Needs attention' }).innerText()).replace(/\s+/g, ' ')
+  check('needs attention gives the queue in words, its oldest wait marked overdue in words, and the way to it', attention.includes('2 listings waiting for review') && attention.includes('3 days 2 hours') && attention.includes('Overdue · over 2 days') &&
+    await page.getByRole('link', { name: 'Open review queue' }).getAttribute('href') === '/admin/moderation', attention)
+  check('needs attention names each failing system check, worst state in words, with the way to the system page', attention.includes('system checks need attention') && attention.includes('Problem') && attention.includes('Expired listings marked') &&
+    await page.getByRole('link', { name: 'See system status' }).getAttribute('href') === '/admin/system', attention)
+  const next = page.getByRole('list', { name: 'Next submissions to review, oldest first' }).getByRole('link')
+  check('next in the queue: the oldest submissions, oldest first, each straight to its review', JSON.stringify(await next.allInnerTexts()) === JSON.stringify(['Listing 1', 'Listing 2']) && (await next.first().getAttribute('href')).startsWith('/admin/moderation/'))
+  check('every listing status count links to its filtered list', await page.getByRole('region', { name: 'Where listings stand' }).getByRole('link', { name: /^Active/ }).getAttribute('href') === '/admin/listings?status=active' &&
+    (await page.getByRole('region', { name: 'Where listings stand' }).innerText()).replace(/\s+/g, ' ').includes('Active 30'))
+  const enquiries = (await page.getByRole('region', { name: 'Enquiry activity' }).innerText()).replace(/\s+/g, ' ')
+  check('lead figures are counts only', enquiries.includes('Last 7 days 5') && enquiries.includes('Last 30 days 12') && enquiries.includes('Reached no seller · 30 days 3') && !/\+91/.test(text))
+  check('user figures are counts only', (await page.getByRole('region', { name: 'Accounts' }).innerText()).replace(/\s+/g, ' ').includes('Registered 42') && text.includes('6 new in 7 days') && !text.includes('private@example.com'))
   check('no Reports placeholder before Phase 24', !/\bReports\b/.test(text))
 
   // Listings: filter, order, pages — all in the URL.
@@ -100,23 +110,28 @@ try {
   check('every status has a real count', (await page.getByRole('navigation', { name: 'Filter by status' }).innerText()).replace(/\s+/g, ' ').includes('All 36 Under review 2 Active 30 Expired 1 Rejected 1 Corrections requested 0 Withdrawn 1 Removed 1'))
   await page.getByRole('link', { name: /^Under review/ }).click(); await page.waitForURL('**/admin/listings?status=review')
   await page.getByRole('heading', { level: 2, name: /Under review/ }).waitFor()
-  const queueRows = page.locator('table tbody tr')
-  check('the review filter reads oldest first with waiting times', await queueRows.count() === 2 && (await queueRows.first().innerText()).includes('Listing 1') && (await queueRows.first().innerText()).includes('3 days 2 hours — over 2 days'))
+  // UI-20: one row per listing, the whole row one link.
+  const rows = () => page.locator('main ol.admin-rows > li')
+  const queueRows = rows()
+  check('the review filter reads oldest first with waiting times, overdue said in words', await queueRows.count() === 2 && (await queueRows.first().innerText()).includes('Listing 1') && (await queueRows.first().innerText()).includes('3 days 2 hours') && (await queueRows.first().innerText()).includes('Overdue'))
   await page.goto(BASE + '/admin/listings?status=active')
-  check('25 rows per page', await page.locator('table tbody tr').count() === 25)
+  check('25 rows per page, each one link', await rows().count() === 25 && await rows().first().getByRole('link').count() === 1)
   await page.getByRole('link', { name: 'Page 2' }).click(); await page.waitForURL('**/admin/listings?status=active&page=2')
   await page.getByRole('link', { name: 'Page 2' }).and(page.locator('[aria-current="page"]')).waitFor()
-  check('the second page holds the rest', await page.locator('table tbody tr').count() === 5)
+  check('the second page holds the rest', await rows().count() === 5)
   await page.reload()
-  check('filter and page survive reload', await page.locator('table tbody tr').count() === 5 && await page.getByRole('link', { name: /^Active/ }).getAttribute('aria-current') === 'page')
+  check('filter and page survive reload', await rows().count() === 5 && await page.getByRole('link', { name: /^Active/ }).getAttribute('aria-current') === 'page')
   await page.goto(BASE + '/admin/listings?status=nonsense&page=99')
-  check('unknown filters fall back to all, and a page past the end is empty, not an error', await page.getByRole('heading', { level: 2, name: /All submitted listings \(36\)/ }).isVisible() && await page.getByText('No listings have this status.').isVisible())
+  check('unknown filters fall back to all, and a page past the end is empty, not an error', await page.getByRole('heading', { level: 2, name: /All submitted listings \(36\)/ }).isVisible() && await page.getByText('Submitted listings appear here.', { exact: false }).isVisible())
   check('the empty page is the shared EmptyState, titled for a page past the end, with a way back', await page.getByRole('heading', { level: 3, name: 'No listings on this page', exact: true }).isVisible() && await page.getByRole('link', { name: 'Show all listings', exact: true }).getAttribute('href') === '/admin/listings')
 
   // Moderation queue.
   await page.goto(BASE + '/admin/moderation')
-  check('the queue opens immutable copies for staff decisions', await page.getByText(/Open a submitted copy to review its facts and photos/).isVisible())
-  check('the queue lists both waiting listings, oldest first', (await page.locator('table tbody tr').allInnerTexts()).map((t) => t.includes('Listing 1') ? 1 : t.includes('Listing 2') ? 2 : 0).join() === '1,2')
+  check('the queue explains the job: oldest first, private while waiting', await page.getByText(/Submitted listings waiting for a decision, oldest first/).isVisible() && await page.getByText(/Listings stay private while they wait/).isVisible())
+  const queue = page.getByRole('list', { name: 'Waiting for review, oldest first' }).getByRole('listitem')
+  check('the queue lists both waiting listings, oldest first, numbered, the overdue one said in words', JSON.stringify(await queue.getByRole('link').allInnerTexts()) === JSON.stringify(['Listing 1', 'Listing 2']) &&
+    (await queue.first().innerText()).includes('Overdue') && !(await queue.nth(1).innerText()).includes('Overdue') && await page.locator('main ol.admin-rows').getAttribute('start') === '1')
+  check('the queue summary counts overdue only because the whole queue is on the page', (await page.getByRole('region', { name: /Waiting for review/ }).locator('.admin-panel-head').innerText()).replace(/\s+/g, ' ').includes('1 overdue'))
 
   // System status.
   await page.goto(BASE + '/admin/system')
@@ -129,7 +144,9 @@ try {
 
   // Honest failure states.
   overviewDown = true; await page.goto(BASE + '/admin')
-  check('an unreadable overview says so and the rest still renders', await page.getByRole('alert').getByText('The overview could not be loaded.').isVisible() && await page.getByRole('heading', { name: 'System status' }).isVisible())
+  // An unreadable overview loses its figures, never the attention panel: system checks and the queue link have their own reads.
+  check('an unreadable overview says so and the rest still renders', await page.getByRole('alert').getByText('The overview could not be loaded.').isVisible() && await page.getByRole('heading', { name: 'Needs attention' }).isVisible() &&
+    (await page.getByRole('region', { name: 'Needs attention' }).innerText()).includes('system checks need attention') && (await page.getByRole('region', { name: 'Needs attention' }).innerText()).includes('could not be read') && await page.getByRole('link', { name: 'Open review queue' }).isVisible())
   overviewDown = false
 
   mkdirSync('/tmp/phase21-shots', { recursive: true })
@@ -137,8 +154,15 @@ try {
     await page.setViewportSize({ width, height: 900 })
     for (const path of ['/admin', '/admin/listings?status=review', '/admin/moderation', '/admin/system']) {
       await page.goto(BASE + path)
-      await assertWorkspace(page, { area: 'admin', check, ...(path.startsWith('/admin/listings') || path === '/admin/moderation' ? { compactRow: page.locator('table tbody tr').first(), maxRowHeight: 160 } : {}) })
-      const small = await page.locator('main a, main button').evaluateAll((els) => els.map((e) => ({ text: e.textContent.trim().slice(0, 40), height: e.getBoundingClientRect().height })).filter((e) => e.height > 0 && e.height < 44))
+      await assertWorkspace(page, { area: 'admin', check, ...(path.startsWith('/admin/listings') || path === '/admin/moderation' ? { compactRow: page.locator('main ol.admin-rows > li').first(), maxRowHeight: 160 } : {}) })
+      // A row's title link stretches over its row (UI-20): its target is the row, so measure the row and hit-test that a point on it reaches the link.
+      const small = await page.locator('main a, main button').evaluateAll((els) => els.map((e) => {
+        const target = e.matches('.admin-row-link') ? e.closest('li') : e
+        if (target !== e) target.scrollIntoView({ block: 'center' })
+        const r = target.getBoundingClientRect()
+        const hits = target === e || document.elementFromPoint(r.left + r.width * 0.75, r.top + r.height / 2)?.closest('a') === e
+        return { text: e.textContent.trim().slice(0, 40), height: r.height, hits }
+      }).filter((e) => e.height > 0 && (e.height < 44 || !e.hits)))
       check(`controls are at least 44px at ${width} on ${path}`, small.length === 0, JSON.stringify(small))
       await page.screenshot({ path: `/tmp/phase21-shots/${path.split('?')[0].replaceAll('/', '_')}-${width}.png`, fullPage: true })
     }

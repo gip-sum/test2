@@ -1883,7 +1883,8 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
 .admin-row:hover { background: color-mix(in srgb, var(--color-brand-50) 70%, var(--color-surface-000)); }
 .admin-row:focus-within { background: var(--color-brand-50); }
 .admin-row.is-overdue { box-shadow: inset 3px 0 0 var(--color-warn-600); }
-.admin-row-link { font-size: var(--text-body-sm); font-weight: 600; color: var(--color-ink-900); outline: none; }
+/* A name or title with no break opportunity (an email used as a name) wraps instead of widening a phone's page. */
+.admin-row-link { overflow-wrap: anywhere; font-size: var(--text-body-sm); font-weight: 600; color: var(--color-ink-900); outline: none; }
 .admin-row-link::after { content: ''; position: absolute; inset: 0; }
 .admin-row-link:focus-visible::after { outline: 2px solid var(--color-focus-ring); outline-offset: -2px; }
 .admin-row:hover .admin-row-link { color: var(--color-brand-700); text-decoration: underline; text-underline-offset: 4px; }
@@ -1908,7 +1909,16 @@ main:has([data-period-pending]) .analytics-body { opacity: 0.55; pointer-events:
   .admin-row.is-accounts > :nth-child(n + 4) { grid-column: auto; }
   .admin-row-go { display: inline-flex; }
 }
-@container (max-width: 879px) { .admin-row.is-queue > :nth-child(4), .admin-row.is-listings > :nth-child(4) { grid-column: 1 / -1; } .admin-row.is-queue > :nth-child(5), .admin-row.is-listings > :nth-child(5) { grid-column: 1 / -1; } }
+/* A narrow panel: the seller and the date share one line under the title,
+   so a phone row stays a scannable three lines, not a tall card. */
+.admin-row-seller-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-row-sep { display: none; }
+@container (max-width: 879px) {
+  .admin-row-seller { display: flex; min-width: 0; align-items: baseline; white-space: nowrap; }
+  .admin-row-seller-name { display: inline; min-width: 0; font-size: var(--text-caption); }
+  .admin-row-sep { display: inline; }
+  .admin-row-date { justify-self: end; white-space: nowrap; }
+}
 /* The search bar of the accounts list. */
 .admin-filter { display: grid; gap: 12px; border-bottom: 1px solid var(--color-border-subtle); padding: 16px 20px; }
 @media (min-width: 768px) { .admin-filter { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: end; } .admin-filter-search { grid-column: 1 / -1; } }

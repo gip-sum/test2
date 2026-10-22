@@ -103,9 +103,11 @@ try{
  await p.waitForFunction(()=>document.activeElement?.id==='account-status-value')
  check('restoring access also hands focus to the changed status',(await p.locator('#account-status-value').innerText()).includes('Active'))
  await suspended.goto(BASE+'/account/access');check('same token recovers after restoration',new URL(suspended.url()).pathname==='/account')
- await p.goto(BASE+'/admin/users?status=ACTIVE&role=AGENT');check('role and status filter results',await p.getByRole('heading',{name:'Accounts (1)',exact:true}).isVisible())
- check('account status is the shared badge, its meaning in words',(await p.locator('table tbody tr td').first().textContent()).trim()==='Status: Active'&&await p.locator('table tbody .bg-status-live-bg').count()===1)
- await p.goto(BASE+'/admin/users?q=nobody-matches');check('empty search is explicit',await p.getByText('No accounts match these filters.',{exact:true}).isVisible()&&await p.getByRole('heading',{level:3,name:'No accounts found',exact:true}).isVisible())
+ await p.goto(BASE+'/admin/users?status=ACTIVE&role=AGENT');check('role and status filter results',await p.getByRole('heading',{name:'Matching accounts (1)',exact:true}).isVisible())
+ // UI-20: identity-led rows, one link each; the status is the shared badge, read as "Status: Active".
+ const row=p.getByRole('list',{name:'Accounts'}).getByRole('listitem').first()
+ check('account status is the shared badge, its meaning in words',(await row.locator('div').filter({has:p.locator('.bg-status-live-bg')}).first().textContent()).trim()==='Status: Active'&&await p.locator('main .admin-rows .bg-status-live-bg').count()===1&&await row.getByRole('link').count()===1)
+ await p.goto(BASE+'/admin/users?q=nobody-matches');check('empty search is explicit',await p.getByText(/^No accounts match these filters\. Search by part of a name or email/).isVisible()&&await p.getByRole('heading',{level:3,name:'No accounts found',exact:true}).isVisible())
  down=true;await p.reload();check('read failure distinct from no accounts',await p.locator('main [role="alert"]').isVisible()&&!(await p.locator('body').textContent()).includes('No accounts match these filters.'));down=false
  const missing=await p.goto(BASE+'/admin/users/'+id('0'));check('missing account is 404',missing.status()===404)
  await p.goto(BASE+'/admin/users/'+admin);check('self/staff management absent',await p.getByRole('heading',{name:'Manage account'}).count()===0)
@@ -118,7 +120,8 @@ try{
   for(const path of ['/admin/users', '/admin/users/'+seller]){
    await p.goto(BASE+path)
    await assertWorkspace(p,{area:'admin',check})
-   const short=await p.locator('main button, main select, main input:not([type=checkbox]), main a').evaluateAll(nodes=>nodes.filter(n=>n.getBoundingClientRect().height>0&&n.getBoundingClientRect().height<43.5).map(n=>n.textContent))
+   // An account row's link stretches over its row (UI-20): measure the row and hit-test that it reaches the link.
+   const short=await p.locator('main button, main select, main input:not([type=checkbox]), main a').evaluateAll(nodes=>nodes.filter(n=>{const t=n.matches('.admin-row-link')?n.closest('li'):n;if(t!==n)t.scrollIntoView({block:'center'});const r=t.getBoundingClientRect();const hits=t===n||document.elementFromPoint(r.left+r.width*.75,r.top+r.height/2)?.closest('a')===n;return r.height>0&&(r.height<43.5||!hits)}).map(n=>n.textContent))
    check('44px controls '+width+path,short.length===0)
   }
   await p.screenshot({path:'.shots/phase23/account-'+width+'.png',fullPage:true})

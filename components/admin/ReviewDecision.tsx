@@ -98,9 +98,10 @@ export function ReviewDecision({ listing, submission, version }: { listing: stri
     <div aria-disabled={locked || undefined} className="space-y-4 p-4">
       <FormFieldset messageId="review-action" legend="Choose a decision">
         <div className="mt-2 grid gap-2">
+          {/* The radio's name is the decision; its consequence is its description, so a screen reader hears "Reject, radio button" and then what it does. */}
           {ACTIONS.map(([value, text, note]) => <label key={value} data-action={value} className="admin-choice">
-            <input type="radio" name="decision" value={value} checked={action === value} onChange={() => edit(null, () => setAction(value))} className="mt-0.5 size-5 shrink-0 accent-brand-600" />
-            <span className="min-w-0"><span className="block text-body-sm font-semibold text-ink-900">{text}</span><span className="block text-caption text-ink-700">{note}</span></span>
+            <input type="radio" name="decision" value={value} checked={action === value} onChange={() => edit(null, () => setAction(value))} aria-describedby={`decision-${value}-note`} className="mt-0.5 size-5 shrink-0 accent-brand-600" />
+            <span className="min-w-0"><span className="block text-body-sm font-semibold text-ink-900">{text}</span><span id={`decision-${value}-note`} aria-hidden className="block text-caption text-ink-700">{note}</span></span>
           </label>)}
         </div>
       </FormFieldset>
