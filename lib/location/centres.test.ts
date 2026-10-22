@@ -5,6 +5,45 @@ import { getMapLocality } from './queries'
 
 const localities = KOLKATA_LOCATIONS.filter((l) => l.type === 'LOCALITY')
 
+/**
+ * The independent reference each point was checked against (UI-21 Stage B):
+ * the locality's coordinates as published on Wikipedia unless noted, read
+ * 22 October 2026. Distances and sources: docs/data/locality-centres.md.
+ * A point that drifts more than 2 km from its reference fails here; one
+ * that cannot be brought back belongs in UNPLACED.
+ */
+const REFERENCE: Record<string, [number, number]> = {
+  'new-town': [22.5894, 88.4748],
+  'salt-lake': [22.58, 88.42],
+  'lake-town': [22.603037, 88.404029], // findlatitudeandlongitude.com
+  'dum-dum': [22.6352, 88.4143],
+  madhyamgram: [22.7, 88.45],
+  barasat: [22.72, 88.48], // WorldAtlas
+  ballygunge: [22.529, 88.362],
+  tollygunge: [22.498, 88.346],
+  jadavpur: [22.5025, 88.3676],
+  garia: [22.4629, 88.3968],
+  behala: [22.4981, 88.3108],
+  alipore: [22.5392, 88.3273],
+  santoshpur: [22.491, 88.383],
+  narendrapur: [22.4391, 88.3968],
+  sonarpur: [22.4409, 88.4246],
+  joka: [22.453, 88.301],
+  thakurpukur: [22.465, 88.307],
+  'park-street': [22.55445, 88.34985], // the street's metro station
+  maniktala: [22.585, 88.375],
+  shyambazar: [22.601, 88.374],
+  ultadanga: [22.59225, 88.389528],
+  howrah: [22.58, 88.32944],
+  'uttarpara-kotrung': [22.67, 88.35],
+  barrackpore: [22.76, 88.37],
+  serampore: [22.75, 88.3333],
+}
+const km = ([a, b]: [number, number], [c, d]: [number, number]) => {
+  const r = Math.PI / 180, h = Math.sin(((c - a) * r) / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin(((d - b) * r) / 2) ** 2
+  return 2 * 6371 * Math.asin(Math.sqrt(h))
+}
+
 describe('locality centres', () => {
   it('accounts for every locality: a cited point or a stated reason, never both', () => {
     for (const l of localities) {
@@ -29,6 +68,11 @@ describe('locality centres', () => {
       expect(c.lat > 22.3 && c.lat < 22.95 && c.lng > 88.15 && c.lng < 88.6, slug).toBe(true)
       expect(c.reference.length, slug).toBeGreaterThan(3)
     }
+  })
+
+  it('keeps every point within 2 km of its independent reference', () => {
+    expect(Object.keys(REFERENCE).sort()).toEqual(Object.keys(LOCALITY_CENTRES).sort())
+    for (const [slug, c] of Object.entries(LOCALITY_CENTRES)) expect(km([c.lat, c.lng], REFERENCE[slug]!), slug).toBeLessThanOrEqual(2)
   })
 
   it('uses no point twice: a shared point is a placeholder, not a place', () => {

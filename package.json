@@ -16,6 +16,7 @@
     "shots": "node scripts/shot.mjs",
     "light-check": "node scripts/light-check.mjs",
     "search-check": "node scripts/search-check.mjs",
+    "map-check": "node scripts/map-check.mjs",
     "bundle-report": "node scripts/bundle-report.mjs",
     "style-diff": "node scripts/style-diff.mjs",
     "property-check": "node scripts/property-check.mjs",

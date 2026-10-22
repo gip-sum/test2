@@ -94,6 +94,10 @@ jobs:
       - run: npm run shots
       - run: npm run light-check
       - run: npm run search-check
+      # The map view (UI-21): marker counts and prices against the cards on
+      # every page, selection and keyboard, the phone layout, and the basemap,
+      # WebGL2 and JavaScript failing without taking Search with them.
+      - run: npm run map-check
       # The homepage on phones: the search launcher on the first screen, the
       # filter sheet and locality picker, swipeable rails, opaque header and
       # bottom bar, and tile counts that match their results pages.

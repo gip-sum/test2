@@ -136,6 +136,11 @@ export function LocalityMap({ markers, query }: { markers: MapMarker[]; query: S
             // A key press (detail 0) moves on into the preview; a pointer
             // press stays on the map.
             focusPreview.current = event.detail === 0
+            // MapLibre cancels the pointer press on the map (it starts a
+            // drag), so the marker would never take focus the way a button
+            // does; without it the pressed state was unreachable and Escape
+            // went to <body>.
+            if (event.detail !== 0) button.focus({ preventScroll: true })
             setSelected((s) => (s === m.slug ? null : m.slug))
           })
           elements.current.set(m.slug, button)
@@ -215,12 +220,25 @@ export function LocalityMap({ markers, query }: { markers: MapMarker[]; query: S
     setSelected(null)
     back?.focus()
   }
+  // Escape closes an open preview wherever focus is, unless something else
+  // (the Filters sheet, say) has already handled the key.
+  useEffect(() => {
+    if (!selected) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape' || event.defaultPrevented || (event.target instanceof Element && event.target.closest('[role="dialog"]'))) return
+      const back = elements.current.get(selected)
+      setSelected(null)
+      back?.focus()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [selected])
   const area = markers.find((m) => m.slug === selected)
   const homes = (n: number) => `${n.toLocaleString('en-IN')} ${n === 1 ? 'home' : 'homes'}`
   const only = area && withFilterChange(query, { localities: area.members })
 
   return (
-    <div className="map-view" onKeyDown={(event) => { if (event.key === 'Escape' && selected) close() }}>
+    <div className="map-view">
       {/* The chosen area's cards in the list, drawn by a rule rather than
           by touching the server-rendered cards. Slugs are [a-z0-9-]. */}
       <link rel="stylesheet" href={`${MAPLIBRE_BASE}/maplibre-gl.css`} precedence="default" />

@@ -40,14 +40,22 @@
    colour alone; a linked card (focused or hovered) enlarges and names its
    marker. */
 .map-marker { display: grid; width: 44px; height: 44px; place-items: center; border: 0; background: transparent; padding: 0; cursor: pointer; outline: none; }
-.map-marker-count { display: grid; min-width: 32px; height: 32px; place-items: center; border: 2px solid var(--color-surface-000); border-radius: var(--radius-full); background: var(--color-forest); padding-inline: 7px; font-size: var(--text-label); font-weight: 700; color: var(--color-on-forest); box-shadow: var(--shadow-e2); transition: transform var(--duration-fast) var(--ease-standard); }
-.map-marker-name { position: absolute; bottom: calc(100% - 4px); left: 50%; translate: -50% 0; white-space: nowrap; border-radius: var(--radius-full); background: var(--color-surface-000); padding: 2px 8px; font-size: var(--text-caption); font-weight: 600; color: var(--color-ink-900); box-shadow: var(--shadow-e1); opacity: 0; pointer-events: none; transition: opacity var(--duration-fast) var(--ease-standard); }
+.map-marker-count { display: grid; min-width: 32px; height: 32px; place-items: center; border: 2px solid var(--color-surface-000); border-radius: var(--radius-full); background: var(--color-forest); padding-inline: 7px; font-size: var(--text-label); font-weight: 700; color: var(--color-on-forest); box-shadow: var(--shadow-e2); }
+.map-marker-name { position: absolute; bottom: calc(100% - 4px); left: 50%; translate: -50% 0; white-space: nowrap; border-radius: var(--radius-full); background: var(--color-surface-000); padding: 2px 8px; font-size: var(--text-caption); font-weight: 600; color: var(--color-ink-900); box-shadow: var(--shadow-e1); opacity: 0; pointer-events: none; }
 .map-marker:focus-visible .map-marker-count { outline: 2px solid var(--color-focus-ring); outline-offset: 3px; }
 .map-marker:focus-visible .map-marker-name, .map-marker.is-linked .map-marker-name, .map-marker.is-selected .map-marker-name { opacity: 1; }
 .map-marker.is-linked { z-index: 1; }
 .map-marker.is-linked .map-marker-count { transform: scale(1.15); }
 .map-marker.is-selected { z-index: 2; }
 .map-marker.is-selected .map-marker-count { border: 3px solid var(--color-forest); background: var(--color-surface-000); color: var(--color-forest); transform: scale(1.2); }
+/* Movement only for those who have not asked for less: the markers ease
+   between sizes and the preview pops in. Under reduced motion both simply
+   change. */
+@media (prefers-reduced-motion: no-preference) {
+  .map-marker-count { transition: transform var(--duration-fast) var(--ease-standard); }
+  .map-marker-name { transition: opacity var(--duration-fast) var(--ease-standard); }
+  .map-preview { animation: motion-pop-in var(--duration-fast) var(--ease-enter); }
+}
 @media (hover: hover) and (pointer: fine) {
   .map-marker:hover { z-index: 1; }
   .map-marker:hover .map-marker-name { opacity: 1; }
@@ -58,7 +66,7 @@
    so it is in view wherever the map is scrolled (the map's credit is at its
    top there); beside the list, over the map's top-left corner, which the
    first view leaves clear (LocalityMap, previewReserve). */
-.map-preview { position: fixed; right: 12px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); left: 12px; z-index: 40; max-height: min(60svh, 24rem); overflow-y: auto; border-radius: var(--radius-lg); border: 1px solid var(--color-border-subtle); background: var(--color-surface-000); padding: 16px; box-shadow: var(--shadow-e3); animation: motion-pop-in var(--duration-fast) var(--ease-enter); }
+.map-preview { position: fixed; right: 12px; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); left: 12px; z-index: 40; max-height: min(60svh, 24rem); overflow-y: auto; border-radius: var(--radius-lg); border: 1px solid var(--color-border-subtle); background: var(--color-surface-000); padding: 16px; box-shadow: var(--shadow-e3); }
 @media (min-width: 640px) { .map-preview { left: auto; width: 24rem; } }
 @media (min-width: 1024px) {
   .map-preview { position: absolute; top: 12px; right: auto; bottom: auto; left: 12px; z-index: 3; width: min(22rem, 45%); max-height: calc(100% - 24px); }
