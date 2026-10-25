@@ -7,11 +7,12 @@ import * as m from 'motion/react-m'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode, type SyntheticEvent } from 'react'
 import { MotionFeatures } from '@/components/motion/MotionFeatures'
 import { CameraIcon, ExpandIcon, PhotosIcon } from '@/components/ui/icons'
-import { markPendingImage, revealImage } from '@/lib/motion/image-fade'
+import { photoRef, revealImage } from '@/lib/motion/image-fade'
 import { TRANSITION } from '@/lib/motion/tokens'
 import { cn } from '@/lib/cn'
 import type { PropertyMedia } from '@/lib/property/types'
 import { PhotoFallback } from './PhotoFallback'
+import { listingPhotoLoader } from '@/lib/listings/photo-widths'
 import {
   ARRIVE_OFFSET, AXIS_LOCK, CLOSE, DISMISS_DISTANCE, DISMISS_SPEED, OPEN, SETTLE,
   fitRect, onScreen, openClip, releaseStep, sourceFrame, stageMargin, type Rect,
@@ -495,12 +496,16 @@ function MediaPhoto({ media, failed, onError, onRatio, sizes, priority, compact,
   dark?: boolean
   hint?: string
 }) {
+  // An access-checked photo is never preloaded: its route answers no-store,
+  // so the browser cannot hand the preloaded response to the <img> and
+  // downloaded the photo twice (UI-22). It loads eagerly at high priority
+  // instead, from the HTML.
   if (!media.url || failed) {
     return <PhotoFallback alt={media.alt} size={thumb ? 'icon' : compact ? 'compact' : 'full'} tone={dark ? 'dark' : 'light'} hint={hint} />
   }
   return (
     <>
-      <Image ref={markPendingImage} onLoad={(event: SyntheticEvent<HTMLImageElement>) => { revealImage(event); const img = event.currentTarget; if (img.naturalWidth) onRatio?.(media.id, img.naturalWidth / img.naturalHeight) }} draggable={false} data-photo="" unoptimized={media.authenticated} src={media.url} alt={decorative ? '' : media.alt} fill sizes={sizes} priority={priority} loading={priority ? 'eager' : 'lazy'} onError={onError} className={contain ? 'object-contain' : 'object-cover'} />
+      <Image ref={photoRef(onError)} onLoad={(event: SyntheticEvent<HTMLImageElement>) => { revealImage(event); const img = event.currentTarget; if (img.naturalWidth) onRatio?.(media.id, img.naturalWidth / img.naturalHeight) }} draggable={false} data-photo="" unoptimized={media.authenticated && !media.sizedByRoute} loader={media.sizedByRoute ? listingPhotoLoader : undefined} src={media.url} alt={decorative ? '' : media.alt} fill sizes={sizes} priority={priority && !media.authenticated} fetchPriority={priority ? 'high' : undefined} loading={priority ? 'eager' : 'lazy'} className={contain ? 'object-contain' : 'object-cover'} />
       {media.isSample && <span className={cn('absolute left-2 top-2 rounded-sm bg-ink-900/85 font-semibold text-ink-inverse', compact ? 'px-1 py-0.5 text-(length:--text-overline)' : 'left-3 top-3 px-2 py-1 text-caption')}>{compact ? 'Sample' : 'Sample image — not a real property'}</span>}
     </>
   )

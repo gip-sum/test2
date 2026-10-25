@@ -182,7 +182,10 @@ function Combobox({
       <div className={cn(!inline && 'sticky top-0 z-10 border-b border-border-subtle bg-surface-000 p-4')}>
         <div
           className={cn(
-            'flex min-h-12 flex-wrap items-center gap-2 rounded-md border bg-surface-000 px-3 py-1.5 focus-within:border-brand-600',
+            // The text box draws no ring of its own (it sits among chips), so
+            // its frame draws the product's 2px focus ring (UI-22: a border
+            // tint alone was the weakest focus state on the site).
+            'flex min-h-12 flex-wrap items-center gap-2 rounded-md border bg-surface-000 px-3 py-1.5 focus-within:border-brand-600 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-focus-ring',
             showList ? 'border-brand-600' : 'border-border-subtle',
           )}
         >

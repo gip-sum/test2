@@ -21,32 +21,22 @@ const DEFERRED_CSS: Record<string, string> = {
   // Permanent: the focus outline hugs text links; the base layer lets components override it.
   ':focus-visible | 2px': 'focus ring shape',
   // 16px tiles and cards sit between md (12) and lg (20): either is a 4px change. UI-05 decides the card radius.
-  '.calc-peek | 16px': 'UI-05 cards', '.calc-sibling | 16px': 'UI-05 cards', '.discovery-band | 16px': 'UI-05 cards',
-  '.type-tile | 16px': 'UI-05 cards', '.why-point | 16px': 'UI-05 cards',
+  '.calc-peek | 16px': 'UI-05 cards', '.calc-sibling | 16px': 'UI-05 cards',
   // The approved compact workspace uses 8px panels by design (concept 1). UI-09 revisits the workspace.
   '.workspace-panel | 8px': 'UI-09 workspace', '.workspace-toolbar | 8px': 'UI-09 workspace', '.workspace-summary | 8px': 'UI-09 workspace',
   '.workspace-empty | 8px': 'UI-09 workspace', '.workspace-content .rounded-lg | 8px': 'UI-09 workspace',
   // Phase E reference controls (client-approved). UI-06 revisits the public pages.
-  '.reference-search-trigger | 8px': 'UI-06 public', '.reference-home .compact-card > div:first-child | 8px': 'UI-06 public',
-  '.seller-invitation @media (min-width: 768px) | 26px': 'UI-06 public',
   // Display and compact sizes off the 13-step type scale. Each is 1–3px from a
   // step, and several are Phase E reference sizes; moving them changes
   // approved layouts, so they move with their components in UI-05/06/09.
-  '.activity-homes .compact-card h3 | 14px': 'UI-06', '.all-localities a | 14px': 'UI-06', '.all-localities summary | 14px': 'UI-06',
-  '.calc-cta | 14px': 'UI-05', '.calc-figures dd | 14px': 'UI-06', '.calc-reason | 14px': 'UI-06', '.calc-schedule summary | 14px': 'UI-06',
-  '.count-tile-label | 14px': 'UI-06', '.hub-sell-link | 14px': 'UI-06', '.nav-panel-hub .hub-label | 14px': 'UI-06', '.reference-login | 14px': 'UI-06',
-  '.calc-hero-unit | 16px': 'UI-06', '.hub-post .hub-label | 16px': 'UI-06', '.locality-panel h3 | 16px': 'UI-06',
+  '.activity-homes .compact-card h3 | 14px': 'UI-06',
+  '.calc-cta | 14px': 'UI-05', '.calc-figures dd | 14px': 'UI-06', '.calc-reason | 14px': 'UI-06', '.calc-schedule summary | 14px': 'UI-06', '.hub-sell-link | 14px': 'UI-06', '.nav-panel-hub .hub-label | 14px': 'UI-06', '.reference-login | 14px': 'UI-06',
+  '.calc-hero-unit | 16px': 'UI-06', '.hub-post .hub-label | 16px': 'UI-06',
   '.activity-homes h2 | 18px': 'UI-06', '.activity-welcome h1 | 18px': 'UI-06', '.marketplace-dialog > header h2 | 18px': 'UI-05',
-  '.menu-welcome strong | 18px': 'UI-06', '.workspace-content :where(h2) | 18px': 'UI-09', '.workspace-counts dd @media (max-width: 639px) | 18px': 'UI-09',
-  '.possession-section strong | 19px': 'UI-06', '.discovery-band-title h2 | 21px': 'UI-06', '.home-content h2 | 21px': 'UI-06',
-  '.reference-home .home-section-head h2, .possession-section h2 | 21px': 'UI-06', '.footer-intro p @media (max-width: 767px) | 23px': 'UI-06',
-  '.workspace-title @media (max-width: 639px) | 23px': 'UI-09', '.home-content h2 @media (min-width: 640px) | 26px': 'UI-06',
-  '.reference-home .home-section-head h2 @media (min-width: 1024px) | 26px': 'UI-06', '.seller-invitation h2 | 26px': 'UI-06',
-  '.reference-banner h1 | 27px': 'UI-06', '.footer-intro p | 28px': 'UI-06', '.home-content h2 @media (min-width: 1024px) | 30px': 'UI-06',
-  '.calc-hero | 34px': 'UI-06', '.seller-invitation h2 @media (min-width: 768px) | 36px': 'UI-06', '.calc-hero @media (min-width: 1024px) | 40px': 'UI-06',
-  '.reference-banner h1 @media (min-width: 1024px) | 40px': 'UI-06', '.seller-invitation h2 @media (min-width: 1101px) | 42px': 'UI-06',
+  '.menu-welcome strong | 18px': 'UI-06', '.workspace-content :where(h2) | 18px': 'UI-09', '.workspace-counts dd @media (max-width: 639px) | 18px': 'UI-09', '.footer-intro p @media (max-width: 767px) | 23px': 'UI-06',
+  '.workspace-title @media (max-width: 639px) | 23px': 'UI-09', '.footer-intro p | 28px': 'UI-06',
+  '.calc-hero | 34px': 'UI-06', '.calc-hero @media (min-width: 1024px) | 40px': 'UI-06',
   // Permanent: a decorative 140px glyph inside the seller band's orbit, not text.
-  '.seller-orbit span | 140px': 'decorative glyph',
 }
 
 // Arbitrary values in TSX, by file. Same rule: listed, reasoned, shrinking.

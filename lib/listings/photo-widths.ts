@@ -1,9 +1,10 @@
 /**
- * The widths the public listing photo route resizes to (UI-19), and the
- * next/image loader that asks it for them.
+ * The widths the listing photo routes resize to (UI-19; the private routes
+ * since UI-22), and the next/image loader that asks them for them.
  *
- * That route checks on every request that the listing is still public and
- * answers `no-store`. Through the shared image optimizer the resized copy
+ * Every one of those routes checks access on every request — the listing
+ * is still public, the viewer owns the draft or submission, the viewer is
+ * staff — and answers `private, no-store`, resized copies included. Through the shared image optimizer the resized copy
  * would be cached and served publicly for hours — a withdrawn listing's
  * photos, or one removed in moderation, would outlive it. So a card that
  * needs a small photo asks the route itself (`?w=`), and next/image builds
@@ -21,6 +22,12 @@ export function listingPhotoWidth(value: string | null): number | null | undefin
   return LISTING_PHOTO_WIDTHS.includes(width) && String(width) === value ? width : undefined
 }
 
+/** Appends `w` to whatever the route already takes (the admin route's `?submission=`). */
 export function listingPhotoLoader({ src, width }: { src: string; width: number }) {
-  return `${src}?w=${width}`
+  return `${src}${src.includes('?') ? '&' : '?'}w=${width}`
+}
+
+/** A srcset for a plain <img> on one of those routes, for the few slots that are not next/image. */
+export function listingPhotoSrcSet(src: string, widths: readonly number[]) {
+  return widths.map((width) => `${listingPhotoLoader({ src, width })} ${width}w`).join(', ')
 }

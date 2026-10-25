@@ -65,7 +65,10 @@ try{
  await page.goto(BASE+'/admin/moderation?page=2');check('pagination stays in URL',page.url().includes('page=2'))
  await page.getByRole('link',{name:'SAMPLE submitted home',exact:true}).filter({visible:true}).click();await page.getByRole('heading',{name:'Review submitted listing',exact:true}).waitFor()
  check('review shows the saved facts and description',await page.getByText(draft.description,{exact:true}).isVisible())
- const image=page.locator('section[aria-label="Property photos"] img').first();await image.evaluate(e=>e.decode());check('private immutable JPEG loads',await image.evaluate(e=>e.naturalWidth===640))
+ const image=page.locator('section[aria-label="Property photos"] img').first();await image.evaluate(e=>e.decode())
+// UI-22: the review gallery asks the staff route for the slot's width (`&w=`) instead of the original; it is never enlarged past the 640px fixture and stays private.
+const shown=new URL(await image.evaluate(e=>e.currentSrc));const sizedPhoto=await page.request.get(shown.href)
+check('private immutable JPEG loads, sized by the staff route',shown.pathname.startsWith('/api/admin/moderation/')&&Number(shown.searchParams.get('w'))>0&&await image.evaluate(e=>e.naturalWidth>0&&e.naturalWidth<=640)&&sizedPhoto.headers()['cache-control']==='private, no-store'&&sizedPhoto.headers()['content-type']==='image/jpeg',shown.href)
  // UI-20: the review workspace — jump links that work as plain anchors, the facts worth checking said in words, and each decision's consequence beside it.
  const jumps=await page.getByRole('navigation',{name:'Sections of this submission'}).getByRole('link').evaluateAll(l=>l.map(a=>a.getAttribute('href')))
  check('every section jump link has its target',JSON.stringify(jumps)===JSON.stringify(['#photos','#terms','#facts','#area','#location','#description','#history'])&&(await Promise.all(jumps.map(h=>page.locator(h).count()))).every(n=>n===1))

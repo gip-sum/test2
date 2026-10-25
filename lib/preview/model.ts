@@ -32,7 +32,7 @@ export function buildPreview(draft: Draft, photos: Photo[], sellerName: string |
   const locality = location ? places.find(p => p.id === location.localityId)?.name : null
   const city = location ? places.find(p => p.id === location.cityId)?.name : null
   const title = [entry.type === 'STUDIO' ? 'Studio' : facts?.bedrooms ? `${facts.bedrooms} BHK` : null, entry.type ? PROPERTY_TYPE_LABEL[entry.type].toLowerCase() : 'Property', entry.intent === 'buy' ? 'for sale' : entry.intent === 'rent' ? 'for rent' : null, locality ? `in ${locality}` : null].filter(Boolean).join(' ')
-  const media: PropertyMedia[] = ready.map((p,i) => ({ id:p.id, url:`/api/posting/photos/${p.id}`, alt:`Property photo ${i+1} — ${title}`, authenticated:true }))
+  const media: PropertyMedia[] = ready.map((p,i) => ({ id:p.id, url:`/api/posting/photos/${p.id}`, alt:`Property photo ${i+1} — ${title}`, authenticated:true, sizedByRoute:true }))
   const carpetSqft = facts ? facts.carpetArea * (facts.areaUnit === 'sqm' ? 10.7639 : facts.areaUnit === 'sqyd' ? 9 : 1) : undefined
   return { description, entry, facts, pricing, location, locality, city, title, media, sellerName:name, carpetSqft, warnings, canConfirm:warnings.length===0 }
 }

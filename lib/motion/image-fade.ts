@@ -21,3 +21,22 @@ export function revealImage(event: SyntheticEvent<HTMLImageElement> | { currentT
   const img = event.currentTarget
   if (img.dataset.fade === 'pending') img.dataset.fade = 'in'
 }
+
+/**
+ * A photo's ref that also reports failure (UI-22), in place of next/image's
+ * `onError`. With `onError` set, next/image re-assigns `img.src` after
+ * hydration so that an error raised before React attached is not lost —
+ * which restarts the request. For a cacheable photo the cache absorbs it;
+ * an access-checked photo answers `no-store`, so every one of them was
+ * downloaded twice. This checks for an image that already failed, then
+ * listens for a later failure, and never touches `src`.
+ */
+export function photoRef(onFail: () => void) {
+  return (img: HTMLImageElement | null) => {
+    if (!img) return
+    markPendingImage(img)
+    if (img.complete && img.naturalWidth === 0 && img.currentSrc) { onFail(); return }
+    img.addEventListener('error', onFail)
+    return () => img.removeEventListener('error', onFail)
+  }
+}

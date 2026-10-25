@@ -12,6 +12,7 @@ import { countUnreadNotifications, listLeads } from '@/lib/enquiry/queries'
 import { listSaved, listSavedListings } from '@/lib/saved/queries'
 import { getAllLocalitySlugs, getLocationBySlug } from '@/lib/location/queries'
 import { Button } from '@/components/ui/Button'
+import { ErrorState } from '@/components/ui/ErrorState'
 import { CheckIcon, ChevronRightIcon, GridIcon, HeartIcon, HomeIcon, KeyIcon, MailIcon, PlusIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/cn'
 
@@ -89,7 +90,8 @@ export default async function AccountPage() {
         <section aria-label="Profile">
           <p aria-hidden className="px-1 text-overline font-semibold uppercase tracking-[0.12em] text-ink-500">Profile</p>
           <div className="mt-2.5 rounded-lg border border-border-subtle bg-surface-000 p-5 shadow-e1 sm:p-7">
-            {!result.ok && <p role="alert" className="mb-6 rounded-md border border-border-strong bg-warn-100 p-4 text-body-sm text-ink-900">Your saved details are temporarily unavailable. Please try again later.</p>}
+            {/* The shared failure state (UI-05), not a one-off warning box (UI-22). */}
+            {!result.ok && <ErrorState surface="inline" className="mb-6">Your saved details are temporarily unavailable. Please try again later.</ErrorState>}
             <ProfileForm profile={result.ok ? result.profile : null} localities={localities} disabled={!result.ok} />
           </div>
         </section>

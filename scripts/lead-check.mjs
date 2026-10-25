@@ -126,7 +126,8 @@ try {
   await inbox.locator('article[aria-labelledby="enquiry-heading"] header').getByText('Contacted', { exact: true }).waitFor()
   check('the open enquiry shows its new status, chosen again in the form', await inbox.getByRole('radio', { name: /^Contacted/ }).isChecked())
   await sent.reload()
-  check('buyer sees updated status across sessions', await sent.getByText(/Status: contacted/).isVisible())
+  // UI-22: the buyer's page says the seller's status in the inbox's words, and what it means, never the raw code.
+  check('buyer sees updated status across sessions', await sent.getByText('Contacted', { exact: true }).isVisible() && await sent.getByText(/the seller has marked it answered/).isVisible() && await sent.getByText(/Status: contacted/).count() === 0)
   check('seller status change persists with history', leads[1].status === 'contacted' && events.some((event) => event.enquiry_id === leads[1].id && event.status === 'contacted'))
   for (const width of [390, 412, 768, 1280]) {
     await inbox.setViewportSize({ width, height: 844 })

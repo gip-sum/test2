@@ -10,6 +10,7 @@ import { cn } from '@/lib/cn'
 import { WithdrawAction } from './WithdrawAction'
 import { CopyLink } from './CopyLink'
 import { CardMenu } from './CardMenu'
+import { listingPhotoLoader, listingPhotoSrcSet } from '@/lib/listings/photo-widths'
 
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' })
 const moment = (iso: string) => `${new Date(iso).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })} IST`
@@ -134,13 +135,17 @@ export function PropertyCard({ card, publishing, views }: {
   </article>
 }
 
+const COVER_WIDTHS = [96, 160, 200, 256, 320, 480]
+
 function Cover({ card }: { card: Card }) {
   return <div className="relative aspect-[4/3] self-start overflow-hidden rounded-md bg-surface-200">
     {card.cover
-      // An owner-only image endpoint: the public optimizer cannot fetch it.
+      // An owner-only image endpoint: the public optimizer cannot fetch it,
+      // so the route itself sizes it (`?w=`, UI-22) — a 88px or 152px slot
+      // loaded the original, up to 1920px wide.
       // A failed image is covered by the media ground (img[data-photo], UI-16).
       // eslint-disable-next-line @next/next/no-img-element
-      ? <img src={card.cover} alt="" data-photo loading="lazy" decoding="async" className="relative size-full object-cover" />
+      ? <img src={listingPhotoLoader({ src: card.cover, width: 320 })} srcSet={listingPhotoSrcSet(card.cover, COVER_WIDTHS)} sizes="(min-width: 640px) 152px, 88px" alt="" data-photo loading="lazy" decoding="async" className="relative size-full object-cover" />
       : <span className="flex size-full flex-col items-center justify-center gap-1 text-ink-500">
         <BuildingIcon className="size-6 sm:size-7" />
         <span className="hidden text-caption sm:block">{card.photoCount === 0 ? 'No photos yet' : 'No photo'}</span>

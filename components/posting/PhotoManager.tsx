@@ -10,6 +10,10 @@ import { TRANSITION } from '@/lib/motion/tokens'
 import { cn } from '@/lib/cn'
 import { Button } from '@/components/ui/Button'
 import { PhotoFallback } from '@/components/property/PhotoFallback'
+import { listingPhotoLoader, listingPhotoSrcSet } from '@/lib/listings/photo-widths'
+
+/** A tile is ~14rem wide on a phone (its 160px height, cropped) and ~18rem in the grid. */
+const TILE_WIDTHS = [256, 320, 390, 480, 640]
 
 /*
  * The seller's photo manager (UI-08, redrawn in UI-17).
@@ -365,8 +369,12 @@ function PhotoTile({ item, index, count, canOrder, busy, onDragStart, onDrag, on
       <div className="relative h-full min-h-40 overflow-hidden bg-surface-200 sm:aspect-[4/3] sm:h-auto sm:min-h-0">
         {/* Local blobs and authenticated private image endpoints cannot use the public image optimizer. */}
         {/* A preview that fails is the shared PhotoFallback (UI-16), not the browser's broken icon. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {item.url && !item.previewFailed && <img src={item.url} alt={`Preview of ${item.name}`} draggable={false} className="h-full w-full object-cover" onError={onPreviewFail} />}
+        {/* A saved photo comes sized from its own owner-checked route (`?w=`, UI-22); a local blob is already in memory. */}
+        {item.url && !item.previewFailed && (item.url.startsWith('blob:')
+          // eslint-disable-next-line @next/next/no-img-element
+          ? <img src={item.url} alt={`Preview of ${item.name}`} draggable={false} className="h-full w-full object-cover" onError={onPreviewFail} />
+          // eslint-disable-next-line @next/next/no-img-element
+          : <img src={listingPhotoLoader({ src: item.url, width: 480 })} srcSet={listingPhotoSrcSet(item.url, TILE_WIDTHS)} sizes="(min-width: 640px) 18rem, 14rem" alt={`Preview of ${item.name}`} draggable={false} className="h-full w-full object-cover" onError={onPreviewFail} />)}
         {item.url && item.previewFailed && <PhotoFallback alt={`Preview of ${item.name}`} size="compact" />}
         <span aria-hidden className="absolute left-2 top-2 grid size-8 place-items-center rounded-full bg-surface-000/95 text-label font-bold text-ink-900 shadow-e1 tabular">{index + 1}</span>
         {cover && <span className="absolute bottom-2 left-2 inline-flex items-center gap-1.5 rounded-full bg-brand-600 px-3 py-1 text-caption font-semibold text-on-brand shadow-e1">
